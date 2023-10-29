@@ -1,0 +1,42 @@
+#+title: Vyasa
+
+#+BEGIN_QUOTE
+Wherever there be anything you dost not comprehend, cease to continue writing
+
+-- Vyasa, Adi Parva - Mahabharatam
+#+END_QUOTE
+
+* Forms of Prior Art
+** [[http://worrydream.com/refs/Nelson-ComputerLibDreamMachines1975.pdf#page=57][Xanadu Pattern]]
+
+Ted Nelson the granddaddy of hypertext media, need I say more. The introduction to [[https://cs.brown.edu/people/nmeyrowi/LiteraryMachinesChapter2.pdf#page=12][Literary Machines]] is instructive to delineating the problem boundaries for literature
+
+** [[https://gwern.net/design][Design of Gwern.net]]
+
+Gwern has incorporated sidenotes instead of footnotes on wide windows, drop caps, smallcaps, collapsible sections, automatic inflation-adjusted currency, Wikipedia-style link icons & infoboxes, custom syntax highlighting, extensive local archives to fight linkrot (archive engine), and an ecosystem of “popup”/“popin” annotations & previews of links for frictionless browsing—the net effect of hierarchical structures with collapsing and instant popup access to excerpts enables iceberg-like pages where most information is hidden but the reader can easily drill down as deep as they wish.
+
+** [[https://edwardtufte.github.io/tufte-css/][Tufte.css]]
+
+Edward Tufte has developed a distinctive style in his works: simple, with well-set typography, extensive sidenotes, and elegant representations of graphs and charts
+
+** [[https://ctext.org/introduction][CText]]
+
+Dr. Donald Sturgeon has compiled a great corpus of ancient (in particular pre-Qin and Han dynasty) Chinese texts in an organized and searchable format which has been composed through an parallel passage interface, word lists for semantic linking and ancient text database.
+
+
+** [[https://www.iwritewordsgood.com/apl/patterns/apl101.htm][Pattern Language]]
+
+Christopher Alexander's pattern language arranges a series of  steps, in a certain way that allows the process of unfolding to proceed. The rules are ordered – sequenced – to unfold each part of the environment being created, smoothly and coherently [[https://www.livingneighborhoods.org/ht-0/morphogenesis-two.htm][enlarging the whole]].
+
+* Matter of Prior Art
+** [[http://www.shivkumar.org/music/Thiruppavai-04-AazhiMazhaiKanna-Varali.htm][Shivkumar's Archives]]
+
+Shivkumar Kalyanaraman has compiled and archived a wealth of song recordings, paired with word-by-word meanings
+
+** [[https://shaivam.org/hindu-prayer-hub/detail/521][Shaivam]]
+
+Built and maintained by devotees since 1996 a wealth of textual archives
+
+** [[https://www.holy-bhagavad-gita.org/chapter/5/verse/8-9][Holy Bhagavad Gita]]
+
+A tremendous effort by Jagadguru Kripaluji Trust
