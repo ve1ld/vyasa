@@ -18,6 +18,13 @@ defmodule VyasaWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/texts", TextLive.Index, :index
+    live "/texts/new", TextLive.Index, :new
+    live "/texts/:id/edit", TextLive.Index, :edit
+
+    live "/texts/:id", TextLive.Show, :show
+    live "/texts/:id/show/edit", TextLive.Show, :edit
+
   end
 
   # Other scopes may use custom stacks.

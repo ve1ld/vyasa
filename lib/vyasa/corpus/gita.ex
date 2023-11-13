@@ -6,7 +6,7 @@ defmodule Vyasa.Corpus.Gita do
   |> Jason.decode!()
 
   def verses(chapter_no) when is_integer(chapter_no) do
-    verses = @verse[to_string(chapter_no)]
+    @verse[to_string(chapter_no)]
   end
   def verses(_), do: []
 

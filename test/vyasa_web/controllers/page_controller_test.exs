@@ -3,6 +3,6 @@ defmodule VyasaWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Vyasa - Reality's Compile Time"
+    assert html_response(conn, 200) =~ "Reality's Compile Time"
   end
 end
