@@ -18,6 +18,8 @@ defmodule VyasaWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/gita/", GitaLive.Index, :index
+    live "/gita/:id", GitaLive.Show, :show
     live "/texts", TextLive.Index, :index
     live "/texts/new", TextLive.Index, :new
     live "/texts/:id/edit", TextLive.Index, :edit
