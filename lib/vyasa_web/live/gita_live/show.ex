@@ -16,8 +16,9 @@ defmodule VyasaWeb.GitaLive.Show do
     </.header>
 
     <.list :for={{_dom_id, text} <- @streams.verses}>
-        <:item title={"#{text.chapter_number}.#{text.verse_number}"}><%= text.transliteration %></:item>
-        <:item title={""}><%= text.word_meanings %></:item>
+        <:item title={"#{text.chapter_number}.#{text.verse_number}"}><p class="font-dn text-2xl"><%= text.text |> String.split("।।") |> List.first()  %></p></:item>
+        <:item><%= text.transliteration %></:item>
+        <:item><%= text.word_meanings %></:item>
     </.list>
 
     <.back navigate={~p"/gita"}>Back to Gita</.back>

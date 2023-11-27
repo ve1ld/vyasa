@@ -2,4 +2,12 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
+/* fonts declared from priv/assets/fonts */
+
+@font-face {
+ font-family: "Gotu";
+ src: url('/fonts/gotu/Gotu-Regular.woff2') format('woff2'),
+      url('/fonts/gotu/Gotu-Regular.woff') format('woff'),
+      url('/fonts/gotu/Gotu-Regular.ttf') format('ttf');
+}
+/* This file is for your main   application CSS */

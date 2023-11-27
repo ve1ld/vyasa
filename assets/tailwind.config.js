@@ -13,12 +13,17 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'dn': ['"Gotu"', 'sans-serif'],
+        'tl': ['"Tamil Font"', 'sans-serif'],
+      },
       colors: {
         brand: "#FD4F00",
       }
     },
   },
   plugins: [
+    require("@tailwindcss/typography"),
     require("@tailwindcss/forms"),
     // Allows prefixing tailwind classes with LiveView classes to add rules
     // only when LiveView classes are applied, for example:
