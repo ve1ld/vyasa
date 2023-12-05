@@ -26,7 +26,7 @@ defmodule VyasaWeb.GitaLive.Show do
   end
   #<.link patch={~p"/gita/#{@chapter.id}"} phx-click={JS.push_focus()}> <.button>Annotate</.button> </.link>
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
+  def handle_params(%{"chapter_id" => id}, _, socket) do
     {:noreply, socket
     |> assign(:chapter, Gita.chapters(id))
     |> stream(:verses, Gita.verses(id))}

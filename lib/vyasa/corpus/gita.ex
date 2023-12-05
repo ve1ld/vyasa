@@ -50,9 +50,26 @@ defmodule Vyasa.Corpus.Gita do
     @verses[String.to_atom(to_string(chapter_no))]
     |> Enum.map(&struct!(Gita.Verse, &1))
   end
+
   def verses(chapter_no) do
     @verses[String.to_atom(chapter_no)]
     |> Enum.map(&struct!(Gita.Verse, &1))
+  end
+
+  def verse(chapter_no, verse_no) when is_binary(verse_no) and is_binary(chapter_no) do
+    IO.puts("testing... #{chapter_no}, #{verse_no} \n\n")
+
+    verse = @verses[String.to_atom(chapter_no)]
+    |> Enum.find(fn %{:verse_number => verse_num} -> Integer.to_string(verse_num) === verse_no end)
+
+    IO.inspect(verse)
+
+    verse
+  end
+
+  def verse(_,_) do
+    %Vyasa.Corpus.Gita.Verse{}
+
   end
 
 end
