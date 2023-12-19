@@ -3,9 +3,8 @@
  */
 import { getSharer } from "./web_share.js";
 
-let Hooks = {};
 
-Hooks.ShareQuoteButton = {
+ShareQuoteButton = {
   mounted() {
     let callback = () => console.log("share quote!");
     if ("share" in navigator) { // uses webshare api:
@@ -31,4 +30,4 @@ Hooks.ShareQuoteButton = {
   },
 };
 
-export default Hooks;
+export default ShareQuoteButton;
