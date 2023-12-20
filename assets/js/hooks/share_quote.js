@@ -7,6 +7,7 @@ import { getSharer } from "./web_share.js";
 ShareQuoteButton = {
   mounted() {
     let callback = () => console.log("share quote!");
+
     if ("share" in navigator) { // uses webshare api:
       callback = () => {
         const shareTitle = this.el.getAttribute("data-share-title");
@@ -19,7 +20,7 @@ ShareQuoteButton = {
         window.shareUrl = sharer;
         window.shareUrl(shareUrl);
       };
-    } else if ("clipboard" in navigator) {
+    } else if ("clipboard" in navigator) { // copies to clipboard:
       callback = () => {
         const verse = JSON.parse(this.el.getAttribute("data-verse"));
         navigator.clipboard.writeText(verse.text);
