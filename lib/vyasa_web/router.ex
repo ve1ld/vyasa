@@ -20,6 +20,8 @@ defmodule VyasaWeb.Router do
     get "/", PageController, :home
     live "/gita/", GitaLive.Index, :index
     live "/gita/:id", GitaLive.Show, :show
+    live "/gita/:id/sangh/new", GitaLive.Show, :new_sangh
+    live "/gita/:id/sangh/:sangh_id", GitaLive.Show, :sangh
     live "/texts", TextLive.Index, :index
     live "/texts/new", TextLive.Index, :new
     live "/texts/:id/edit", TextLive.Index, :edit
