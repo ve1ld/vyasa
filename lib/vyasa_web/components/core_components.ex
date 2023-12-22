@@ -441,6 +441,30 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a sidenote w action slots for interaction with sidenote
+  """
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+  slot :subtitle
+  slot :actions
+
+  def sidenote(assigns) do
+    ~H"""
+    <header class={[@actions != [] && "sidenote", @class]}>
+      <div>
+        <h1 class="text-lg font-semibold sidenote text-zinc-800">
+          <%= render_slot(@inner_block) %>
+        </h1>
+        <p :if={@subtitle != []} class="mt-2 text-sm sidenote leading-6 text-zinc-600">
+          <%= render_slot(@subtitle) %>
+        </p>
+      </div>
+      <div class="flex-none"><%= render_slot(@actions) %></div>
+    </header>
+    """
+  end
+
   @doc ~S"""
   Renders a table with generic styling.
 
@@ -536,6 +560,7 @@ defmodule VyasaWeb.CoreComponents do
   def list(assigns) do
     ~H"""
     <div class="mt-14">
+      <%= render_slot(@inner_block) %>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500"><%= item.title %></dt>
