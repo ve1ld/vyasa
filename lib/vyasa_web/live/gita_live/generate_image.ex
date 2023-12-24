@@ -65,7 +65,7 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
     y_resolved = Integer.to_string(initial_y + vert_line_space * offset)
 
     """
-    <text textLength="500px" lengthAdjust="spacingAndGlyphs" font-style="normal" font-weight="normal" xml:space="preserve" text-anchor="start" font-family="'Alumni Sans'" font-size="70" y="#{y_resolved}" x="100" stroke-width="0" stroke="#000" fill="#f8fafc">#{text}</text>
+    <text textLength="500px" lengthAdjust="spacingAndGlyphs" font-style="normal" font-weight="normal" xml:space="preserve" text-anchor="start" font-family="Gotu" font-size="70" y="#{y_resolved}" x="100" stroke-width="0" stroke="#000" fill="#f8fafc">#{text}</text>
     """
   end
 

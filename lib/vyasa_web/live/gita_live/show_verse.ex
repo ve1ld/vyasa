@@ -45,5 +45,7 @@ defmodule VyasaWeb.GitaLive.ShowVerse do
       text = socket.assigns.verse.text
       ImageGenerator.generate_opengraph_image(filename, text)
     end
+
+    filename
   end
 end
