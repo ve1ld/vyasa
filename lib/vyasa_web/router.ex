@@ -14,8 +14,13 @@ defmodule VyasaWeb.Router do
     plug :accepts, ["json"]
   end
 
+
+
   scope "/", VyasaWeb do
     pipe_through :browser
+
+
+    get "/images/:filename", OgImageController, :show
 
     get "/", PageController, :home
     live "/gita/", GitaLive.Index, :index
@@ -46,6 +51,7 @@ defmodule VyasaWeb.Router do
 
     scope "/dev" do
       pipe_through :browser
+
 
       live_dashboard "/dashboard", metrics: VyasaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview

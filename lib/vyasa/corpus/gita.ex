@@ -57,7 +57,7 @@ defmodule Vyasa.Corpus.Gita do
   end
 
   def verse(chapter_no, verse_no) when is_binary(verse_no) and is_binary(chapter_no) do
-    IO.puts("testing... #{chapter_no}, #{verse_no} \n\n")
+    IO.puts("checking verse resolution... #{chapter_no}, #{verse_no} \n\n")
 
     verse = @verses[String.to_atom(chapter_no)]
     |> Enum.find(fn %{:verse_number => verse_num} -> Integer.to_string(verse_num) === verse_no end)

@@ -7,7 +7,7 @@ defmodule Vyasa.MixProject do
       version: "0.1.0-alpha.1",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-       elixirc_options: [
+      elixirc_options: [
         warnings_as_errors: true
       ],
       start_permanent: Mix.env() == :prod,
@@ -53,7 +53,10 @@ defmodule Vyasa.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:image, "~> 0.37"},
+      {:vix, "~> 0.5"},
+      {:kino, "~> 0.12.0"}
     ]
   end
 
@@ -71,7 +74,11 @@ defmodule Vyasa.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind default", "esbuild default"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify --loader:.ttf=file", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "esbuild default --minify --loader:.ttf=file",
+        "phx.digest"
+      ]
     ]
   end
 end
