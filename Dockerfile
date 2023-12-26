@@ -81,6 +81,14 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR "/app"
 RUN chown nobody /app
 
+
+# copies over font files, updates debian runner's font cache:
+RUN echo "...syncing font file(s)"
+COPY ./priv/static/fonts/gotu/* /usr/share/fonts/truetype/
+RUN apt-get update && apt-get install -y fontconfig
+RUN fc-cache -f -v
+RUN echo "...[DONE] syncing font file(s)"
+
 # set runner ENV
 ENV MIX_ENV="prod"
 
