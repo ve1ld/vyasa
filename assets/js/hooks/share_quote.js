@@ -22,8 +22,15 @@ ShareQuoteButton = {
       };
     } else if ("clipboard" in navigator) { // copies to clipboard:
       callback = () => {
-        const verse = JSON.parse(this.el.getAttribute("data-verse"));
-        navigator.clipboard.writeText(verse.text);
+        const {
+          chapter_number: chapterNum,
+          verse_number: verseNum,
+          transliteration,
+          text,
+        } = JSON.parse(this.el.getAttribute("data-verse"));
+
+        const content = `[Gita Chapter ${chapterNum} Verse ${verseNum}] \n${text}\n${transliteration}\nRead more at ${document.URL}`
+        navigator.clipboard.writeText(content);
       };
     }
 
