@@ -9,10 +9,11 @@ defmodule VyasaWeb.GitaLive.Show do
 
   @impl true
   def handle_params(%{"chapter_id" => id}, _, socket) do
-    {:noreply, socket
-    |> assign(:chapter, Gita.chapters(id))
-    |> stream(:verses, Gita.verses(id))
-    |> assign_meta()}
+    {:noreply,
+     socket
+     |> assign(:chapter, Gita.chapters(id))
+     |> stream(:verses, Gita.verses(id))
+     |> assign_meta()}
   end
 
   defp assign_meta(socket) do
