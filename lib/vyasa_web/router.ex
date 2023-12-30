@@ -20,7 +20,7 @@ defmodule VyasaWeb.Router do
     pipe_through :browser
 
 
-    get "/images/:filename", OgImageController, :show
+    get "/og/:filename", OgImageController, :show
 
     get "/", PageController, :home
     live "/gita/", GitaLive.Index, :index

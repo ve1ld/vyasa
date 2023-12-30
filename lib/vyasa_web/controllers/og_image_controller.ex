@@ -3,31 +3,39 @@ defmodule VyasaWeb.OgImageController do
   alias Vyasa.Corpus.Gita
   alias VyasaWeb.GitaLive.ImageGenerator
 
+  action_fallback VyasaWeb.FallbackController
+
   def show(conn, %{"filename" => filename}) do
-    target_url = System.tmp_dir() |> Path.join(filename)
+    case fetch_image_jit(filename) do
+      {:ok, target_url } ->
+        conn
+        |> put_resp_content_type("image/png")
+        |> send_file(200, target_url)
 
-    case File.exists?(target_url) do
-      true ->
-        conn
-        |> put_resp_content_type("image/png")
-        |> send_file(200, target_url)
-      _ ->
-        create_image_just_in_time(filename)
-        conn
-        |> put_resp_content_type("image/png")
-        |> send_file(200, target_url)
+      err -> err
     end
-
   end
 
-  @opengraph_filename_prefix "opengraph_file"
+
   @image_file_ext ".png"
-  def create_image_just_in_time(filename) do
-    [chapter_num, verse_num] = Regex.scan(~r/\d+/, filename) |> List.flatten()
-    verse = Gita.verse(chapter_num, verse_num)
-    filename =
-      @opengraph_filename_prefix <>
-        "-" <> chapter_num <> "-" <> verse_num <> @image_file_ext
-    ImageGenerator.generate_opengraph_image(filename, verse.text)
+  def fetch_image_jit(filename) do
+    target_url = System.tmp_dir() |> Path.join(filename)
+    if File.exists?(target_url) do
+      {:ok, target_url}
+    else
+      [chapter_num, verse_num] = Regex.scan(~r/\d+/, filename) |> List.flatten()
+      # TODO file name needs to have an identifier for the title of the text for a text based lookup currently defaults just to gita
+      case Gita.verse(chapter_num, verse_num) do
+        %{text: text} ->
+          # TODO create pathname encoder decoder adapter functions
+          # TODO also needs unique title id
+          filename = chapter_num <> "-" <> verse_num <> @image_file_ext
+          ImageGenerator.generate_opengraph_image!(filename, text)
+          # notice
+          {:ok, target_url}
+        _ ->
+          {:error, :null_image}
+      end
+    end
   end
- end
+end

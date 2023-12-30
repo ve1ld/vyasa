@@ -26,24 +26,22 @@ defmodule VyasaWeb.GitaLive.ShowVerse do
       title: "Chapter #{chapter} | Verse #{verse}",
       description: text,
       type: "website",
-      image: url(~p"/images/#{get_image_url(socket, chapter, verse)}"),
+      image: url(~p"/og/#{get_image_url(socket, chapter, verse)}"),
       url: url(socket, ~p"/gita/#{chapter}/#{verse}")
     })
   end
 
-  @opengraph_filename_prefix "opengraph_file"
+  # TODO Encoder decoder pair need to by synced with independent adapter module
   @image_file_ext ".png"
   defp get_image_url(socket, chapter_num, verse_num) do
-    filename =
-      @opengraph_filename_prefix <>
-        "-" <> Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> @image_file_ext
+    filename = Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> @image_file_ext
     target_url = System.tmp_dir() |> Path.join(filename)
 
     if File.exists?(target_url) do
       target_url
     else
       text = socket.assigns.verse.text
-      ImageGenerator.generate_opengraph_image(filename, text)
+      ImageGenerator.generate_opengraph_image!(filename, text)
     end
 
     filename
