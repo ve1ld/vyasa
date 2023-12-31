@@ -11,9 +11,9 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
     Returns a url string that can be used for the open-graph image meta-tag.
     Currently stores images locally in a temp directory.
     """
-  def generate_opengraph_image!(filename, title \\ @fallback_text) do
-        url =
-      title
+  def generate_opengraph_image!(filename, content \\ @fallback_text) do
+      url =
+      content
       |> generate_svg()
       |> write_opengraph_image(filename)
 
@@ -29,9 +29,9 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
     target_url
   end
 
-  defp generate_svg(title) do
+  defp generate_svg(content) do
     svg_text_nodes =
-      title
+      content
       |> ImageGenerator.wrap_text(@col_width)
       |> Enum.with_index()
       |> Enum.map(fn

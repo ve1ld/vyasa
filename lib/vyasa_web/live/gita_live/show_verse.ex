@@ -2,6 +2,7 @@ defmodule VyasaWeb.GitaLive.ShowVerse do
   use VyasaWeb, :live_view
   alias Vyasa.Corpus.Gita
   alias VyasaWeb.GitaLive.ImageGenerator
+  alias Vyasa.Adapters.OgAdapter
 
   @impl true
   def mount(_params, _session, socket) do
@@ -31,11 +32,9 @@ defmodule VyasaWeb.GitaLive.ShowVerse do
     })
   end
 
-  # TODO Encoder decoder pair need to by synced with independent adapter module
-  @image_file_ext ".png"
   defp get_image_url(socket, chapter_num, verse_num) do
-    filename = Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> @image_file_ext
-    target_url = System.tmp_dir() |> Path.join(filename)
+    filename = OgAdapter.encode_filename(:gita, [chapter_num, verse_num])
+    target_url = OgAdapter.get_og_file_url(filename)
 
     if File.exists?(target_url) do
       target_url
