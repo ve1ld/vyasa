@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres_container
+    build:
+      context: ./GanapatiSQL
+      dockerfile: Localfile
+      #image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-root}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  minio1:
+    image: minio/minio:RELEASE.2022-05-08T23-50-31Z
+    volumes:
+      - data1-1:/data1
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: secrettunnel
+      MINIO_SECRET_KEY: secrettunnel
+    command: server /data1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+    postgres:
+    pgadmin:
+    data1-1:
