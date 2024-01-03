@@ -20,3 +20,7 @@ data-share-title={"Gita Chapter #{@verse.chapter_number} #{@verse.title}"}
     Back to Gita Chapter <%= @verse.chapter_number %>
 </.back>
 <.back navigate={~p"/gita"}>Back to Gita</.back>
+<.live_component
+  module={VyasaWeb.YouTubePlayer}
+  id={"temp-id"}
+/>
