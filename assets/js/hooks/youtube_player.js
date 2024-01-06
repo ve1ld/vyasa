@@ -23,10 +23,9 @@ YouTubePlayer = {
     let iframeInitialiserScript = document.createElement("script");
     document.body.appendChild(iframeInitialiserScript);
     const stringifiedScript = `
-    let player;
     function onYouTubeIframeAPIReady() {
       console.log(">>> iframe api ready, time to create iframe...");
-      player = new YT.Player("player", {
+      window.youtubePlayer = new YT.Player("player", {
         height: "390",
         width: "640",
         videoId: "M7lc1UVf-VE",
@@ -40,7 +39,7 @@ YouTubePlayer = {
       });
     }
 
-    console.log(">>> player: ", player);
+    console.log(">>> window-attached youtube player: ", window.youtubePlayer);
 
     // 4. The API will call this function when the video player is ready.
     function onPlayerReady(event) {
@@ -54,16 +53,25 @@ YouTubePlayer = {
     let done = false;
     function onPlayerStateChange(event) {
       if (event.data == YT.PlayerState.PLAYING && !done) {
-        setTimeout(stopVideo, 6000);
+        setTimeout(myTimedCallback, 1000);
         done = true;
       }
     }
-    function stopVideo() {
-      player.stopVideo();
+    function myTimedCallback() {
+      console.log("triggerred myTimedCallback()")
+      console.log(">> check player reference:", window.youtubePlayer)
     }
     `
     const functionCode = document.createTextNode(stringifiedScript);
     iframeInitialiserScript.appendChild(functionCode)
+    const goo = () => {
+      console.log(">>> check global player reference: ", window.youtubePlayer)
+      console.log("seeking to 123s...")
+      window.youtubePlayer.seekTo(123, true);
+      console.log("done seeking")
+    }
+
+    setTimeout(goo, 6000)
   },
 };
 
