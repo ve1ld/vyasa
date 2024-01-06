@@ -9,6 +9,9 @@ assignees: ''
 
 ### Present Context
 
+<details>
+<summary>Helping words...</summary>
+
 Where we collectively investigate and interrogate the problem space and iteratively scope our approach.
 
 Breakdown to landmarks that communicate shared context we are working towards through 2-tiered task list, CRUD list elements as development unfolds.
@@ -25,7 +28,15 @@ Strike the scope of code that reveals the most about the problem/solution FIRST 
 
 ```
 ---
+
+</details>
+
 ### Groundwork
+
+<details>
+<summary> Helping words...</summary>
+
+
 
 Introduce us to the problem space. Write out what you already know about the terrain you are the recce commander enriching us with details beyond the fog of war.
 
@@ -42,8 +53,15 @@ Emphasis on previous or current practice to discover what is ugly, missing, or u
 INPUT UR ANSWER HERE
 ```
 ---
+
+
+</details>
+
+
 ### Reflection
 
+<details>
+<summary> Helping words...</summary>
 Where the eternal wheel returns back to practice and what we finally implemented is to be outlined. You are the historian or archivist bringing clarity to future-yous and us about your foray.
 
 Emphasis on approaching timeless solutions for well-defined problem space through distillation by decanting that which is un-needed and abstracting that which is essential to approaching the problem space. 
@@ -53,5 +71,8 @@ Add any reflections and internal links to future potential and blindsides.
 ```
 INPUT UR ANSWER HERE
 ```
+
+</details>
+
 
 
