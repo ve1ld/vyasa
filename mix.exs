@@ -56,7 +56,9 @@ defmodule Vyasa.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:image, "~> 0.37"},
       {:vix, "~> 0.5"},
-      {:kino, "~> 0.12.0"}
+      {:kino, "~> 0.12.0"},
+      {:cors_plug, "~> 3.0"},
+      {:httpoison, "~> 2.0"}
     ]
   end
 
