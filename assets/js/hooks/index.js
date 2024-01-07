@@ -1,8 +1,12 @@
 import ShareQuoteButton from "./share_quote.js";
-import YouTubeFrame from "./youtube_player.js";
+import {
+  RenderYouTubePlayer,
+  TriggerYouTubeFunction,
+} from "./youtube_player.js";
 
 let Hooks = {};
 Hooks.ShareQuoteButton = ShareQuoteButton;
-Hooks.YouTubePlayer = YouTubePlayer;
+Hooks.RenderYouTubePlayer = RenderYouTubePlayer;
+Hooks.TriggerYouTubeFunction = TriggerYouTubeFunction;
 
 export default Hooks;

@@ -1,8 +1,9 @@
 /**
  * Contains client-side logic for the youtube iframe embeded player.
+ * It shall contain multiple hooks, all revolving around various youtube player
+ * functionalities that we wish to have.
  */
-
-YouTubePlayer = {
+export const RenderYouTubePlayer = {
   mounted() {
     console.log(">>> mounted YouTubePlayer JS-Hook!!", this);
     // 2. This code loads the IFrame Player API code asynchronously.
@@ -64,15 +65,62 @@ YouTubePlayer = {
     `
     const functionCode = document.createTextNode(stringifiedScript);
     iframeInitialiserScript.appendChild(functionCode)
-    const goo = () => {
-      console.log(">>> check global player reference: ", window.youtubePlayer)
-      console.log("seeking to 123s...")
-      window.youtubePlayer.seekTo(123, true);
-      console.log("done seeking")
-    }
-
-    setTimeout(goo, 6000)
   },
 };
 
-export default YouTubePlayer;
+export const TriggerYouTubeFunction = {
+  mounted() {
+    if (!isYouTubeFnCallable(this.el.dataset)) {
+      console.warn("YouTube function can not be triggerred.")
+      return
+    }
+    const {functionName, eventName} = this.el.dataset
+    const callback = callbacks[functionName]
+    const getOptions = () => ({...this.el.dataset, player: window.youtubePlayer})
+    this.el.addEventListener(eventName, () => callback(getOptions()))
+  }
+}
+
+/// NOTE: the player interface can be found @ https://developers.google.com/youtube/iframe_api_reference#Functions
+const callbacks = {
+  seekTo: function(options) {
+    const {targetTimeStamp, player} = options;
+    const target = Number(targetTimeStamp)
+    console.log("seeking to: ", target)
+    return player.seekTo(target)
+  },
+  loadVideoById: function(options) {
+    const {
+      targetTimeStamp: startSeconds,
+      videoId,
+      player,
+    } = options;
+    console.log(`Loading video with id ${videoId} at t=${startSeconds}s`)
+    player.loadVideoById({videoId, startSeconds})
+  }
+}
+
+/**
+ * Validates if required parameters exist.
+ * */
+const isYouTubeFnCallable = (dataset) => {
+  const {functionName, eventName} = dataset;
+  const areFnAndEventNamesProvided = functionName && eventName
+  if(!areFnAndEventNamesProvided) {
+    console.warn("Need to provide both valid function name and event name");
+    return false
+  }
+  const supportedEvents = ["click"]
+  if (!supportedEvents.includes(eventName)) {
+    console.warn(`${eventName} is not a supported event. Supported events include ${supportedEvents}.`);
+    return false
+  }
+  const supportedFunctionNames = Object.keys(callbacks)
+  if (!supportedFunctionNames.includes(functionName)) {
+    console.warn(`${functionName} is not a supported youtube function. Supported functions include ${supportedFunctionNames}.`);
+    return false;
+  }
+
+
+  return true
+}
