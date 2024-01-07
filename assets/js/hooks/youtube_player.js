@@ -76,7 +76,7 @@ export const TriggerYouTubeFunction = {
     }
     const {functionName, eventName} = this.el.dataset
     const callback = callbacks[functionName]
-    const getOptions = () => ({...this.el.dataset, player: window.youtubePlayer})
+    const getOptions = () => ({hook: this,...this.el.dataset, player: window.youtubePlayer})
     this.el.addEventListener(eventName, () => callback(getOptions()))
   }
 }
@@ -97,6 +97,19 @@ const callbacks = {
     } = options;
     console.log(`Loading video with id ${videoId} at t=${startSeconds}s`)
     player.loadVideoById({videoId, startSeconds})
+  },
+  getAllStats: function(options)  { // this is a custom function
+    const {
+      hook,
+      player,
+    } = options;
+    const stats = {
+      duration: player.getDuration(),
+      videoUrl: player.getVideoUrl(),
+      currentTime: player.getCurrentTime(),
+    }
+    console.log(">>> Retrieved stats:", stats)
+    hook.pushEventTo("#statsHover", "reportVideoStatus", stats)
   }
 }
 
@@ -110,7 +123,7 @@ const isYouTubeFnCallable = (dataset) => {
     console.warn("Need to provide both valid function name and event name");
     return false
   }
-  const supportedEvents = ["click"]
+  const supportedEvents = ["click", "mouseover"]
   if (!supportedEvents.includes(eventName)) {
     console.warn(`${eventName} is not a supported event. Supported events include ${supportedEvents}.`);
     return false

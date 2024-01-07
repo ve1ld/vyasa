@@ -1,6 +1,7 @@
 defmodule VyasaWeb.YouTubePlayer do
     use VyasaWeb, :live_component
 
+    @impl true
     def render(assigns) do
       ~H"""
       <div>
@@ -18,6 +19,7 @@ defmodule VyasaWeb.YouTubePlayer do
           Load New Video @ Start
         </.button>
         <br/>
+        <.button id="statsHover" phx-hook={"TriggerYouTubeFunction"} data-event-name={"mouseover"} data-function-name={"getAllStats"}> Hover to get stats </.button>
         <br/>
         <div
           crossorigin="anonymous"
@@ -27,4 +29,11 @@ defmodule VyasaWeb.YouTubePlayer do
       </div>
       """
     end
+
+  @impl true
+  def handle_event("reportVideoStatus", payload, socket) do
+    IO.inspect(payload)
+    {:noreply, socket}
+  end
+
  end
