@@ -7,23 +7,6 @@ defmodule VyasaWeb.GitaLive.Index do
     {:ok, stream(socket, :chapters, Gita.chapters())}
   end
 
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <.header>
-    <%= @page_title %>
-    </.header>
-
-    <.table
-    id="texts"
-    rows={@streams.chapters}
-    row_click={fn {_id, text} -> JS.navigate(~p"/gita/#{text}") end}
-    >
-    <:col :let={{_id, text}} label="Title"><%= text.name_transliterated %></:col>
-    <:col :let={{_id, text}} label="Description"><%= text.name_meaning %></:col>
-    </.table>
-    """
-  end
 
   @impl true
   def handle_params(params, _url, socket) do
@@ -34,5 +17,16 @@ defmodule VyasaWeb.GitaLive.Index do
     socket
     |> assign(:page_title, "Chapters in Gita")
     |> assign(:text, nil)
+    |> assign_meta()
+
+  end
+
+  defp assign_meta(socket) do
+    assign(socket, :meta, %{
+      title: "Gita",
+      description: "The Song Celestial",
+      type: "website",
+      url: url(socket, ~p"/gita/"),
+    })
   end
 end

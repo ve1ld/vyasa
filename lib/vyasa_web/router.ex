@@ -3,6 +3,7 @@ defmodule VyasaWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {VyasaWeb.Layouts, :root}
@@ -14,12 +15,18 @@ defmodule VyasaWeb.Router do
     plug :accepts, ["json"]
   end
 
+
+
   scope "/", VyasaWeb do
     pipe_through :browser
 
+
+    get "/og/:filename", OgImageController, :show
+
     get "/", PageController, :home
     live "/gita/", GitaLive.Index, :index
-    live "/gita/:id", GitaLive.Show, :show
+    live "/gita/:chapter_id", GitaLive.Show, :show
+    live "/gita/:chapter_id/:verse_id", GitaLive.ShowVerse, :show_verse
     live "/texts", TextLive.Index, :index
     live "/texts/new", TextLive.Index, :new
     live "/texts/:id/edit", TextLive.Index, :edit
@@ -45,6 +52,7 @@ defmodule VyasaWeb.Router do
 
     scope "/dev" do
       pipe_through :browser
+
 
       live_dashboard "/dashboard", metrics: VyasaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
