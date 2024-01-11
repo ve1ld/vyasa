@@ -1,3 +1,19 @@
+<style>
+ .tooltip {
+  display: none;
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: cyan;
+  color: black;
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 90%;
+ }
+</style>
+
 <.header>
     <:subtitle><%= @verse.chapter_number %>:<%= @verse.verse_number %></:subtitle>
     <p class="font-dn text-2xl"><%= @verse.text |> String.split("।।") |> List.first() %></p>
@@ -10,11 +26,15 @@
 <.button
 phx-hook="ShareQuoteButton"
 id="ShareQuoteButton"
+aria-describedby="tooltip"
 data-verse={Jason.encode!(@verse)}
 data-share-title={"Gita Chapter #{@verse.chapter_number} #{@verse.title}"}
 >
     Share
 </.button>
+<div class="tooltip" id={"tooltip-ShareQuoteButton"}>
+    It's me, tooltip content...
+</div>
 
 <.back navigate={~p"/gita/#{@verse.chapter_number}"}>
     Back to Gita Chapter <%= @verse.chapter_number %>
