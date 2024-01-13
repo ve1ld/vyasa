@@ -17,6 +17,7 @@ defmodule Vyasa.Repo.Migrations.CreateSanghSessions do
       add :id, :uuid, primary_key: true
       add :active, :boolean, default: false
       add :body, :text, null: false
+      add :p_type, :string
       add :path, :ltree
       add :session_id, references(:sessions, column: :id, type: :uuid)
       add :text_title, references(:texts, column: :title, type: :string)
@@ -31,4 +32,4 @@ defmodule Vyasa.Repo.Migrations.CreateSanghSessions do
     create index(:comments, [:text_title, :session_id, :chapter_number])
 
   end
-end
+ end
