@@ -14,18 +14,15 @@ defmodule VyasaWeb.GitaLive.Show do
       <%= @chapter.name_transliterated %>
         <:subtitle> <%= @chapter.chapter_summary %></:subtitle>
     </.header>
-
-
     <.list :for={{_dom_id, text} <- @streams.verses}>
         <:item title={"#{text.chapter_number}.#{text.verse_number}"}><p class="font-dn text-2xl"><%= text.text |> String.split("।।") |> List.first()  %></p></:item>
         <:item><%= text.transliteration %></:item>
         <:item><%= text.word_meanings %></:item>
         <.sidenote>
       <%= @chapter.name_transliterated %>
-        <:subtitle> <%= @chapter.chapter_summary %></:subtitle>
+        <:quote> <%= text.transliteration %></:quote>
     </.sidenote>
     </.list>
-
     <.back navigate={~p"/gita"}>Back to Gita</.back>
     """
   end

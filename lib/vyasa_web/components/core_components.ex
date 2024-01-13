@@ -446,24 +446,318 @@ defmodule VyasaWeb.CoreComponents do
   """
   attr :class, :string, default: nil
   slot :inner_block, required: true
+  slot :quote
   slot :subtitle
   slot :actions
 
+  # def sidenote(assigns) do
+  #   ~H"""
+  #   <header class={[@actions != [] && "sidenote", @class]}>
+  #     <div>
+  #       <h1 class="text-lg font-semibold sidenote text-zinc-800">
+  #         <%= render_slot(@inner_block) %>
+  #       </h1>
+  #       <p :if={@subtitle != []} class="mt-2 text-sm sidenote leading-6 text-zinc-600">
+  #         <%= render_slot(@subtitle) %>
+  #       </p>
+  #     </div>
+  #     <div class="flex-none"><%= render_slot(@actions) %></div>
+  #   </header>
+  #   """
+  # end
+  #
   def sidenote(assigns) do
     ~H"""
-    <header class={[@actions != [] && "sidenote", @class]}>
-      <div>
-        <h1 class="text-lg font-semibold sidenote text-zinc-800">
-          <%= render_slot(@inner_block) %>
-        </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm sidenote leading-6 text-zinc-600">
-          <%= render_slot(@subtitle) %>
-        </p>
+    <header class={[@actions == [] && "w-64 bg-white rounded-md shadow-xl p-px", @class]}>
+      <!-- Comment Header -->
+      <div class="text-black">
+        <div class="rounded pt-0 pb-3">
+          <!-- User Info Section -->
+          <div class="flex flex-col pt-2">
+            <div class="flex items-start text-sm leading-5">
+              <div class="flex-grow">
+                <!-- User Profile Section -->
+                <div class="flex items-center pt-1 pr-4 pb-0 pl-3 select-none">
+                  <div class="mr-2">
+                    <div class="w-5 h-5 overflow-hidden">
+                      <!-- User Profile Image -->
+                      <img src="https://yt3.ggpht.com/3L3vTo8jRmmhs1DPOyriFSxav8BZK87btsSd3taeiwo9a2T5bjzCBKscy1NeFZJbKMlTVKhg=s88-c-k-c0x00ffffff-no-rj" class="block object-cover w-full h-full rounded-full">
+                    </div>
+                  </div>
+                  <!-- User Info -->
+                  <div class="overflow-hidden">
+                    <span class="font-semibold">Anonymous</span>
+                    <div class="inline ml-20 text-xs text-gray-500">Jan 7</div>
+                  </div>
+                </div>
+                <!-- Comment Content Section -->
+                <div class="pt-px pr-4 pb-1 pl-10">
+                  <div :if={@quote != []} class="flex">
+                    <!-- Comment Indicator -->
+                    <div class="pb-px mr-2 w-1 bg-yellow-500 rounded"></div>
+                    <div class="overflow-hidden">
+                      <span class="text-left no-underline">
+                       <%= render_slot(@quote) %>
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Comment Text Section -->
+                  <div class="mt-4 pl-0 max-w-full" spellcheck="true" contenteditable="false">
+                    private posts
+                  </div>
+                </div>
+              </div>
+              <!-- Action Buttons Section -->
+              <div class="flex-shrink-0 ml-2">
+                <!-- Add your buttons here -->
+              </div>
+            </div>
+          </div>
+          <!-- Comment Input Section -->
+          <div class="relative pt-1 pr-3 pl-2">
+            <div class="flex flex-col w-full cursor-pointer">
+              <div class="flex items-center flex-grow">
+                <!-- Comment Input Box -->
+                <div class="flex flex-col self-center w-full text-sm leading-5 rounded cursor-text">
+                 <div class="max-w-full whitespace-pre-wrap" spellcheck="true" contenteditable="true" placeholder="Reply..."></div>
+                  <div class="inline-block items-center absolute bottom-0 right-0 opacity-1">
+                   <!-- Comment Action Buttons Section -->
+                   <div class="flex items-left ">
+                     <button class="inline-block items-center p-0 mr-5 w-5 h-5 rounded pointer-events-auto select-none">
+                     <svg role="graphics-symbol" viewBox="0 0 20 20" class="block flex-shrink-0 w-6 h-6 align-middle">
+                      <path d="M9.79883 18.5894C14.6216 18.5894 18.5894 14.6216 18.5894 9.79883C18.5894 4.96777 14.6216 1 9.79053 1C4.95947 1 1 4.96777 1 9.79883C1 14.6216 4.96777 18.5894 9.79883 18.5894ZM9.79883 14.3062C9.20947 14.3062 8.76953 13.9077 8.76953 13.3433V9.69922L8.86914 8.00586L8.25488 8.84424L7.3916 9.81543C7.23389 10.0063 6.98486 10.1143 6.72754 10.1143C6.21289 10.1143 5.84766 9.75732 5.84766 9.25928C5.84766 8.99365 5.92236 8.79443 6.12158 8.58691L8.96045 5.61523C9.19287 5.35791 9.4585 5.2417 9.79883 5.2417C10.1309 5.2417 10.4048 5.36621 10.6372 5.61523L13.4761 8.58691C13.667 8.79443 13.75 8.99365 13.75 9.25928C13.75 9.75732 13.3848 10.1143 12.8618 10.1143C12.6128 10.1143 12.3638 10.0063 12.2061 9.81543L11.3428 8.86914L10.7202 7.99756L10.8281 9.69922V13.3433C10.8281 13.9077 10.3799 14.3062 9.79883 14.3062Z"></path>
+                     </svg>
+                     </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
     </header>
     """
   end
+  # def sidenote() do
+  #   ~H"""
+  #   <div
+  #     class="p-px w-64 leading-6 text-black bg-white rounded-md shadow-xs">
+  #     <div data-block-id="1019dbe4-4518-4df9-a3f9-ba94cf44b493" class="text-black">
+  #       <div
+  #         class="pt-0 pb-3 rounded">
+  #         <div
+  #           class="flex flex-col pt-2 mr-0 mb-0">
+  #           <div class="">
+  #             <div
+  #               style="display: flex; align-items: flex-start; position: relative; font-size: 14px;"
+  #               class="flex relative items-start text-sm leading-5">
+  #               <div style="flex-grow: 1; min-width: 0px;" class="flex-grow">
+  #                 <div
+  #                   class="flex relative flex-row items-center pt-1 pr-4 pb-0 pl-3 select-none">
+  #                   <div
+  #                     class="mt-px mr-2 select-none">
+  #                     <div
+  #                       class="shadow-xs">
+  #                       <div
+  #                         class="flex justify-center items-center w-5 h-5 opacity-100 select-none">
+  #                         <div
+  #                           class="w-full h-full">
+  #                           <img
+  #                             src="https://yt3.ggpht.com/3L3vTo8jRmmhs1DPOyriFSxav8BZK87btsSd3taeiwo9a2T5bjzCBKscy1NeFZJbKMlTVKhg=s88-c-k-c0x00ffffff-no-rj"
+  #                             referrerpolicy="same-origin"
+  #                             class="block object-cover w-full max-w-full h-full align-middle"
+  #                           />
+  #                         </div>
+  #                       </div>
+  #                     </div>
+  #                   </div>
+  #                   <div class="overflow-hidden">
+  #                     <span
+  #                       class="font-semibold whitespace-normal"> A.Vivekbala</span>
+  #                     <div
+  #                       class="inline flex-grow my-0 mx-1 text-xs leading-4 text-gray-500 whitespace-normal">
+  #                       <div class="inline">Jan 7</div>
+  #                     </div>
+  #                   </div>
+  #                 </div>
+  #                 <div
+  #                   class="pt-px pr-4 pb-1 pl-10">
+  #                   <div class="relative">
+  #                     <div>
+  #                       <div class="flex w-full">
+  #                         <div class="flex-shrink-0 pb-px mr-2 ml-px w-1 bg-yellow-500 rounded" ></div>
+  #                         <div class="overflow-hidden">
+  #                             <span class="text-left no-underline"> bhagavan uvacha</span>
+  #                       </div>
+  #                       </div>
+  #                         <div
+  #                           spellcheck="true"
+  #                           data-content-editable-leaf="true"
+  #                           contenteditable="false"
+  #                           class="pl-0 w-full max-w-full whitespace-pre-wrap cursor-text">
+  #                           private posts
+  #                         </div>
+  #                       </div>
+  #                     </div>
+
+  #                 </div>
+  #               </div>
+  #               <div
+  #                 style="display: flex; box-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 2px 4px; position: absolute; flex-shrink: 0; padding: 2px; background-color: white; margin-right: 0px; margin-top: 0px; right: 12px; top: 6px; opacity: 0; gap: 1px; border-radius: 4px; transition: opacity 100ms ease-out 0s; z-index: 1;"
+  #                 class="flex absolute flex-shrink-0 gap-px p-px mt-0 mr-0 rounded opacity-0 shadow-xs">
+  #                 <div
+  #                   role="button"
+  #                   tabindex="0"
+  #                   style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 4px; height: 22px; width: 22px; padding: 0px;"
+  #                   class="inline-flex flex-none justify-center items-center p-0 w-5 h-5 rounded cursor-pointer select-none">
+  #                   <svg
+  #                     role="graphics-symbol"
+  #                     viewBox="0 0 16 16"
+  #                     style="width: 15px; height: 100%; display: block; fill: rgba(55, 53, 47, 0.45); flex-shrink: 0;"
+  #                     class="block flex-shrink-0 w-4 h-full align-middle">
+  #                     <g class="">
+  #                       <path
+  #                         d="M8.7207 12.0259C8.7207 12.4243 9.04492 12.7446 9.43945 12.7446H11.4199V14.7251C11.4199 15.1235 11.7441 15.4438 12.1426 15.4438C12.5371 15.4438 12.8613 15.1235 12.8613 14.7251V12.7446H14.8418C15.2363 12.7446 15.5605 12.4243 15.5605 12.0259C15.5605 11.6274 15.2363 11.3032 14.8418 11.3032H12.8613V9.32666C12.8613 8.92822 12.5371 8.604 12.1426 8.604C11.7441 8.604 11.4199 8.92822 11.4199 9.32666V11.3032H9.43945C9.04492 11.3032 8.7207 11.6274 8.7207 12.0259Z"
+  #                         class="">                        </path>
+  #                       <path
+  #                         fill-rule="evenodd"
+  #                         clip-rule="evenodd"
+  #                         d="M9.02947 13.6952C8.43019 13.8731 7.79681 13.9688 7.14258 13.9688C3.46729 13.9688 0.439453 10.9409 0.439453 7.25928C0.439453 3.58398 3.46094 0.556152 7.14258 0.556152C10.8179 0.556152 13.8457 3.58398 13.8457 7.25928C13.8457 7.72257 13.7979 8.1755 13.7069 8.61336C13.439 8.02567 12.8508 7.61289 12.1648 7.60415C12.1724 7.49021 12.1763 7.37521 12.1763 7.25928C12.1763 4.47266 9.9292 2.22559 7.14258 2.22559C4.34961 2.22559 2.11523 4.47266 2.11523 7.25928C2.11523 10.0522 4.35596 12.2993 7.14258 12.2993C7.34385 12.2993 7.54226 12.2876 7.73717 12.2649C7.83478 12.9674 8.35636 13.53 9.02947 13.6952ZM6.02539 5.83105C6.02539 6.31982 5.67627 6.67529 5.28271 6.67529C4.88916 6.67529 4.55908 6.31982 4.55908 5.83105C4.55908 5.33594 4.88916 4.98047 5.28271 4.98047C5.67627 4.98047 6.02539 5.33594 6.02539 5.83105ZM9.73242 5.83105C9.73242 6.31982 9.3833 6.67529 8.99609 6.67529C8.60254 6.67529 8.26611 6.31982 8.26611 5.83105C8.26611 5.33594 8.59619 4.98047 8.99609 4.98047C9.38965 4.98047 9.73242 5.33594 9.73242 5.83105ZM9.37695 8.9668C9.37695 9.39844 8.48193 10.2808 7.14258 10.2808C5.79688 10.2808 4.90186 9.39844 4.90186 8.9668C4.90186 8.80811 5.06055 8.72559 5.21289 8.80176L5.22971 8.81029C5.68936 9.04333 6.22701 9.31592 7.14258 9.31592C8.01512 9.31592 8.53968 9.05921 8.99207 8.83782C9.01689 8.82568 9.04149 8.81364 9.06592 8.80176C9.21826 8.73193 9.37695 8.80811 9.37695 8.9668Z"
+  #                         class="">                        </path>
+  #                     </g>
+  #                   </svg>
+  #                 </div>
+  #                 <div
+  #                   role="button"
+  #                   tabindex="0"
+  #                   style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 4px; height: 22px; width: 22px; padding: 0px;"
+  #                   class="inline-flex flex-none justify-center items-center p-0 w-5 h-5 rounded cursor-pointer select-none">
+  #                   <svg
+  #                     role="graphics-symbol"
+  #                     viewBox="0 0 16 16"
+  #                     style="width: 14px; height: 14px; display: block; fill: rgba(55, 53, 47, 0.45); flex-shrink: 0;"
+  #                     class="block flex-shrink-0 w-3 h-3 align-middle">
+  #                     <path
+  #                       d="M6.6123 14.2646C7.07715 14.2646 7.43945 14.0869 7.68555 13.7109L14.0566 3.96973C14.2344 3.69629 14.3096 3.44336 14.3096 3.2041C14.3096 2.56152 13.8311 2.09668 13.1748 2.09668C12.7236 2.09668 12.4434 2.26074 12.1699 2.69141L6.57812 11.5098L3.74121 7.98926C3.48828 7.68848 3.21484 7.55176 2.83203 7.55176C2.16895 7.55176 1.69043 8.02344 1.69043 8.66602C1.69043 8.95312 1.7793 9.20605 2.02539 9.48633L5.55273 13.7588C5.84668 14.1074 6.1748 14.2646 6.6123 14.2646Z"
+  #                       class="">                      </path>
+  #                   </svg>
+  #                 </div>
+  #                 <div
+  #                   role="button"
+  #                   tabindex="0"
+  #                   style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 4px; height: 22px; width: 22px; padding: 0px;"
+  #                   class="inline-flex flex-none justify-center items-center p-0 w-5 h-5 rounded cursor-pointer select-none">
+  #                   <svg
+  #                     role="graphics-symbol"
+  #                     viewBox="0 0 13 3"
+  #                     style="width: 14px; height: 14px; display: block; fill: rgba(55, 53, 47, 0.45); flex-shrink: 0;"
+  #                     class="block flex-shrink-0 w-3 h-3 align-middle">
+  #                     <g class="">
+  #                       <path
+  #                         d="M3,1.5A1.5,1.5,0,1,1,1.5,0,1.5,1.5,0,0,1,3,1.5Z"
+  #                         class="">                        </path>
+  #                       <path
+  #                         d="M8,1.5A1.5,1.5,0,1,1,6.5,0,1.5,1.5,0,0,1,8,1.5Z"
+  #                         class="">                        </path>
+  #                       <path
+  #                         d="M13,1.5A1.5,1.5,0,1,1,11.5,0,1.5,1.5,0,0,1,13,1.5Z"
+  #                         class="">                        </path>
+  #                     </g>
+  #                   </svg>
+  #                 </div>
+  #               </div>
+  #             </div>
+  #           </div>
+  #         </div>
+  #         <div
+  #           style="padding: 4px 12px 0px 9px; position: relative;"
+  #           class="relative pt-1 pr-3 pb-0 pl-2">
+  #           <div
+  #             class="flex flex-col pr-px pl-1 w-full cursor-pointer"
+  #             style="display: flex; flex-direction: column; width: 100%; cursor: pointer; padding-left: 5px; padding-right: 2px;">
+  #             <div
+  #               style="display: flex; align-items: center; flex-grow: 1;"
+  #               class="flex flex-grow items-center">
+  #               <div
+  #                 class="flex relative flex-col self-center pt-px pb-8 w-full text-sm leading-5 rounded cursor-text shadow-xs"
+  #                 style="display: flex; flex-direction: column; width: 100%; font-size: 14px; padding-top: 1px; padding-bottom: 34px; border-radius: 4px; box-shadow: rgba(55, 53, 47, 0.16) 0px 0px 0px 1px; transition-delay: 0s; background: white; cursor: text; align-self: center; position: relative;"
+  #                 tabindex="-1">
+  #                 <div style="flex-grow: 1; display: flex;" class="flex flex-grow">
+  #                   <div
+  #                     class="pr-2 pl-1 mt-1 mb-px w-full max-w-full whitespace-pre-wrap select-auto"
+  #                     style="max-width: 100%; width: 100%; white-space: pre-wrap; word-break: break-word; caret-color: rgb(55, 53, 47); font-size: 14px; margin-top: 3px; margin-bottom: 2px; padding-left: 6px; padding-right: 10px; max-height: 70vh; overflow: hidden auto; user-select: auto;"
+  #                     spellcheck="true"
+  #                     placeholder="Reply..."
+  #                     data-content-editable-leaf="true"
+  #                     contenteditable="true">
+  #                     wow
+  #                   </div>
+  #                 </div>
+  #                 <div
+  #                   style="display: flex; flex-direction: row; position: absolute; bottom: 7px; right: 12px; align-items: center; opacity: 1;"
+  #                   class="flex absolute flex-row items-center opacity-100">
+  #                   <div
+  #                     style="display: flex; flex-direction: row; align-items: center;"
+  #                     class="flex flex-row items-center">
+  #                     <div
+  #                       role="button"
+  #                       tabindex="0"
+  #                       style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 4px; height: 24px; width: 24px; padding: 0px; margin-left: 10px;"
+  #                       aria-label="Attach file"
+  #                       class="inline-flex flex-shrink-0 justify-center items-center p-0 ml-2 w-6 h-6 rounded select-none">
+  #                       <svg
+  #                         role="graphics-symbol"
+  #                         viewBox="0 0 20 20"
+  #                         style="width: 16px; height: 16px; display: block; fill: rgba(55, 53, 47, 0.45); flex-shrink: 0;"
+  #                         class="block flex-shrink-0 w-4 h-4 align-middle">
+  #                         <path
+  #                           d="M15.7608 10.5231L9.60997 16.674C8.07432 18.218 6.01573 18.0769 4.69591 16.7404C3.35948 15.4206 3.22667 13.3703 4.77061 11.8264L13.1959 3.39278C14.0758 2.51289 15.4039 2.33028 16.2755 3.20186C17.1554 4.08174 16.9645 5.40157 16.0846 6.28145L7.7838 14.5988C7.45177 14.9309 7.05333 14.8396 6.82091 14.6154C6.60509 14.383 6.51378 13.9929 6.84581 13.6525L12.6315 7.8669C12.9552 7.54317 12.9718 7.06172 12.6564 6.74629C12.3409 6.43916 11.8595 6.44746 11.5357 6.77119L5.7252 12.59C4.79551 13.5197 4.83702 14.9475 5.6588 15.7775C6.55528 16.674 7.91661 16.6491 8.8463 15.7194L17.1969 7.36885C18.8487 5.71699 18.7906 3.54219 17.338 2.08125C15.9103 0.661819 13.7023 0.57051 12.0504 2.22237L3.5587 10.7224C1.4171 12.864 1.55821 15.9602 3.51719 17.9191C5.47618 19.8781 8.57237 20.0192 10.7223 17.8776L16.9147 11.6853C17.2301 11.3781 17.2301 10.8054 16.9064 10.5065C16.5992 10.1745 16.0846 10.2077 15.7608 10.5231Z"
+  #                           class="">                          </path>
+  #                       </svg>
+  #                     </div>
+  #                     <div
+  #                       role="button"
+  #                       tabindex="0"
+  #                       style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 4px; height: 24px; width: 24px; padding: 0px; margin-left: 10px;"
+  #                       aria-label="Mention a person, page, or date"
+  #                       class="inline-flex flex-shrink-0 justify-center items-center p-0 ml-2 w-6 h-6 rounded select-none">
+  #                       <svg
+  #                         role="graphics-symbol"
+  #                         viewBox="0 0 20 20"
+  #                         style="width: 16px; height: 16px; display: block; fill: rgba(55, 53, 47, 0.45); flex-shrink: 0;"
+  #                         class="block flex-shrink-0 w-4 h-4 align-middle">
+  #                         <path
+  #                           d="M1 9.86523C1 15.2939 4.72705 18.6807 9.98975 18.6807C11.3511 18.6807 12.4634 18.5312 13.1606 18.2905C13.6919 18.1079 13.8828 17.8174 13.8828 17.4521C13.8828 17.0537 13.6089 16.7715 13.1523 16.7715C13.0195 16.7715 12.8784 16.7881 12.6958 16.8213C11.9238 16.9873 11.2266 17.1118 10.2637 17.1118C5.74805 17.1118 2.74316 14.4058 2.74316 9.91504C2.74316 5.56543 5.61523 2.56055 9.88184 2.56055C13.7417 2.56055 16.7383 4.97607 16.7383 9.11816C16.7383 11.3511 15.9995 12.8452 14.8125 12.8452C14.0239 12.8452 13.5757 12.3472 13.5757 11.4839V6.44531C13.5757 5.84766 13.252 5.49072 12.6709 5.49072C12.0981 5.49072 11.7578 5.84766 11.7578 6.44531V7.10107H11.6333C11.21 6.09668 10.2305 5.49072 9.01855 5.49072C6.90186 5.49072 5.43262 7.28369 5.43262 9.89844C5.43262 12.5547 6.91846 14.3892 9.11816 14.3892C10.3799 14.3892 11.3013 13.7417 11.7578 12.6045H11.8823C12.1147 13.7168 13.0942 14.3809 14.4307 14.3809C16.8877 14.3809 18.3984 12.1895 18.3984 8.96045C18.3984 4.1626 14.8706 1 9.89014 1C4.66064 1 1 4.56104 1 9.86523ZM9.5415 12.7207C8.26318 12.7207 7.46631 11.6499 7.46631 9.92334C7.46631 8.21338 8.27148 7.14258 9.5498 7.14258C10.8364 7.14258 11.6582 8.20508 11.6582 9.89844C11.6582 11.625 10.8281 12.7207 9.5415 12.7207Z"
+  #                           class="">                          </path>
+  #                       </svg>
+  #                     </div>
+  #                     <div
+  #                       role="button"
+  #                       tabindex="0"
+  #                       style="user-select: none; transition: background 20ms ease-in 0s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 4px; height: 20px; width: 20px; padding: 0px; margin-left: 12px; pointer-events: auto;"
+  #                       class="inline-flex flex-shrink-0 justify-center items-center p-0 ml-3 w-5 h-5 rounded pointer-events-auto select-none">
+  #                       <svg
+  #                         role="graphics-symbol"
+  #                         viewBox="0 0 20 20"
+  #                         style="width: 24px; height: 24px; display: block; fill: rgb(35, 131, 226); flex-shrink: 0;"
+  #                         class="block flex-shrink-0 w-6 h-6 align-middle">
+  #                         <path
+  #                           d="M9.79883 18.5894C14.6216 18.5894 18.5894 14.6216 18.5894 9.79883C18.5894 4.96777 14.6216 1 9.79053 1C4.95947 1 1 4.96777 1 9.79883C1 14.6216 4.96777 18.5894 9.79883 18.5894ZM9.79883 14.3062C9.20947 14.3062 8.76953 13.9077 8.76953 13.3433V9.69922L8.86914 8.00586L8.25488 8.84424L7.3916 9.81543C7.23389 10.0063 6.98486 10.1143 6.72754 10.1143C6.21289 10.1143 5.84766 9.75732 5.84766 9.25928C5.84766 8.99365 5.92236 8.79443 6.12158 8.58691L8.96045 5.61523C9.19287 5.35791 9.4585 5.2417 9.79883 5.2417C10.1309 5.2417 10.4048 5.36621 10.6372 5.61523L13.4761 8.58691C13.667 8.79443 13.75 8.99365 13.75 9.25928C13.75 9.75732 13.3848 10.1143 12.8618 10.1143C12.6128 10.1143 12.3638 10.0063 12.2061 9.81543L11.3428 8.86914L10.7202 7.99756L10.8281 9.69922V13.3433C10.8281 13.9077 10.3799 14.3062 9.79883 14.3062Z"
+  #                           class="">                          </path>
+  #                       </svg>
+  #                     </div>
+  #                   </div>
+  #                 </div>
+  #               </div>
+  #             </div>
+  #           </div>
+  #         </div>
+  #       </div>
+  #     </div>
+  #   </div>
+  #   """
+  # end
 
   @doc ~S"""
   Renders a table with generic styling.
