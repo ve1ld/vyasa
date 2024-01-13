@@ -27,9 +27,9 @@ export const RenderYouTubePlayer = {
     function onYouTubeIframeAPIReady() {
       console.log(">>> iframe api ready, time to create iframe...");
       window.youtubePlayer = new YT.Player("player", {
-        height: "390",
-        width: "640",
-        videoId: "M7lc1UVf-VE",
+        height: "225",
+        width: "400",
+        videoId: "Q4tY92MuCiU",
         playerVars: {
           "playsinline": 1,
         },

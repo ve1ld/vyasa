@@ -5,7 +5,13 @@ defmodule VyasaWeb.YouTubePlayer do
     def render(assigns) do
       ~H"""
       <div>
-        <div> ------- YOUTUBE PLAYER: ----- </div>
+        <div
+          crossorigin="anonymous"
+          id="player"
+          phx-hook="RenderYouTubePlayer"
+        />
+        <br/>
+        <br/>
         <.button id="seek100" phx-hook="TriggerYouTubeFunction" data-event-name="click" data-function-name={"seekTo"} data-target-time-stamp={100}> Button 1: 100s </.button>
         <.button id="seek1000" phx-hook="TriggerYouTubeFunction" data-event-name="click" data-function-name={"seekTo"}  data-target-time-stamp={1000}> Button 2: 1000s </.button>
         <.button
@@ -21,11 +27,7 @@ defmodule VyasaWeb.YouTubePlayer do
         <br/>
         <.button id="statsHover" phx-hook={"TriggerYouTubeFunction"} data-event-name={"mouseover"} data-function-name={"getAllStats"}> Hover to get stats </.button>
         <br/>
-        <div
-          crossorigin="anonymous"
-          id="player"
-          phx-hook="RenderYouTubePlayer"
-        />
+
       </div>
       """
     end

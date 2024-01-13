@@ -12,35 +12,55 @@
   border-radius: 4px;
   font-size: 90%;
  }
+ .container-YouTubePlayer {
+   display: none;
+   position: absolute;
+   top: 0;
+   left: 0;
+ }
 </style>
 
-<.header>
-    <:subtitle><%= @verse.chapter_number %>:<%= @verse.verse_number %></:subtitle>
-    <p class="font-dn text-2xl"><%= @verse.text |> String.split("।।") |> List.first() %></p>
-</.header>
-<br />
-<p><%= @verse.transliteration %></p>
-<br />
-<p><%= @verse.word_meanings %></p>
-<br />
-<.button
-phx-hook="ShareQuoteButton"
-id="ShareQuoteButton"
-aria-describedby="tooltip"
-data-verse={Jason.encode!(@verse)}
-data-share-title={"Gita Chapter #{@verse.chapter_number} #{@verse.title}"}
+<div
+  id="verseContainer"
 >
-    Share
-</.button>
-<div class="tooltip" id={"tooltip-ShareQuoteButton"}>
-    It's me, tooltip content...
-</div>
+  <.header>
+      <:subtitle><%= @verse.chapter_number %>:<%= @verse.verse_number %></:subtitle>
+      <p class="font-dn text-2xl"><%= @verse.text |> String.split("।।") |> List.first() %></p>
+  </.header>
+  <br />
+  <p><%= @verse.transliteration %></p>
+  <br />
+  <p><%= @verse.word_meanings %></p>
+  <br />
+  <.button
+  phx-hook="ShareQuoteButton"
+  id="ShareQuoteButton"
+  aria-describedby="tooltip"
+  data-verse={Jason.encode!(@verse)}
+  data-share-title={"Gita Chapter #{@verse.chapter_number} #{@verse.title}"}
+  >
+      Share
+  </.button>
+  <.button
+  id="button-YouTubePlayer"
+  >
+     Toggle Player
+  </.button>
+  <div class="tooltip" id={"tooltip-ShareQuoteButton"}>
+      It's me, tooltip content...
+  </div>
 
-<.back navigate={~p"/gita/#{@verse.chapter_number}"}>
-    Back to Gita Chapter <%= @verse.chapter_number %>
-</.back>
-<.back navigate={~p"/gita"}>Back to Gita</.back>
-<.live_component
-  module={VyasaWeb.YouTubePlayer}
-  id={"temp-id"}
-/>
+  <.back navigate={~p"/gita/#{@verse.chapter_number}"}>
+      Back to Gita Chapter <%= @verse.chapter_number %>
+  </.back>
+  <.back navigate={~p"/gita"}>Back to Gita</.back>
+  <div
+    class="container-YouTubePlayer"
+    phx-hook={"MiniPlayer"}
+    id={"container-YouTubePlayer"}>
+    <.live_component
+      module={VyasaWeb.YouTubePlayer}
+      id={"YouTubePlayer"}
+    />
+  </div>
+</div>
