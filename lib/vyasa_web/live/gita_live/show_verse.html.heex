@@ -12,8 +12,10 @@
   border-radius: 4px;
   font-size: 90%;
  }
- .container-YouTubePlayer {
+ .container-YouTubePlayerHidden {
    display: none;
+ }
+ .container-YouTubePlayer {
    position: absolute;
    top: 0;
    left: 0;
@@ -55,7 +57,7 @@
   </.back>
   <.back navigate={~p"/gita"}>Back to Gita</.back>
   <div
-    class="container-YouTubePlayer"
+    class="container-YouTubePlayer container-YouTubePlayerHidden"
     phx-hook={"MiniPlayer"}
     id={"container-YouTubePlayer"}>
     <.live_component

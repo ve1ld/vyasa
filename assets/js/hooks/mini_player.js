@@ -8,22 +8,31 @@ MiniPlayer = {
   }
 }
 
+/**
+ * Initialises a miniplayer by binding the relevant listener to
+ * the events that trigger (and aligns) this miniplayer on the relevant dom element.
+ * */
 const initMiniPlayer = () => {
   const {
     button,
   } = getRelevantElements();
 
-  // registers some event listeners to these elements:
-  [
-    ["touchstart", toggleMiniPlayer],
-    ["click", toggleMiniPlayer],
-  ].forEach(([event, listener]) => {
-    button.addEventListener(event, listener)
-  })
+  const events = ["touchstart", "click"]
+  const listeners = [toggleMiniPlayer]
+  bindListenersToEventsOnEl(button, listeners, events)
 
-  // first alignment!
   alignMiniPlayer()
 }
+
+/**
+ * Given a dom element and a list of events and listeners,
+ * binds all the listeners to each event for that element.
+ * */
+const bindListenersToEventsOnEl = (el, listeners, events) => {
+  events.forEach(event => {
+    listeners.forEach(listener => el.addEventListener(event, listener))
+  });
+};
 
 const autoUpdatePosition = () => {
   const {
@@ -46,10 +55,9 @@ const toggleMiniPlayer = () => {
   const {
     youtubePlayerContainer,
   } = getRelevantElements();
-  const shouldShow = !youtubePlayerContainer.style.display
 
-  youtubePlayerContainer.style.display = shouldShow ? "block" : "";
-  // youtubePlayerContainer.style.background = isHidden ? "green" : "red";
+  const shouldShow = !youtubePlayerContainer.style.display
+  youtubePlayerContainer.classList.toggle("container-YouTubePlayerHidden")
   shouldShow && autoUpdatePosition();
   !shouldShow && alignMiniPlayer();
 }

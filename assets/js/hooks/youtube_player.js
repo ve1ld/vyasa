@@ -5,68 +5,27 @@
  */
 export const RenderYouTubePlayer = {
   mounted() {
-    console.log(">>> mounted YouTubePlayer JS-Hook!!", this);
-    // 2. This code loads the IFrame Player API code asynchronously.
-    let tag = document.createElement("script");
-    const foo = document.getElementById("player");
-    console.log("FOO before: ", foo);
-    // tag.crossOrigin = 'anonymous'; /// seems like this will prevent the CORS allow origin from youtube to work correctly since it does the opposite (by allowing origin-only) REF: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin
-    tag.src = "https://www.youtube.com/iframe_api";
-    console.log(">>> script tags:", document.getElementsByTagName("script"));
-    /// ensures that the API script is loaded before any subsequent scripts that depend on it, hence we insert before the first script tag:
-    let firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-    console.log(
-      ">> after insertion, script tags:",
-      document.getElementsByTagName("script"),
-    );
-    let iframeInitialiserScript = document.createElement("script");
-    document.body.appendChild(iframeInitialiserScript);
-    const stringifiedScript = `
-    function onYouTubeIframeAPIReady() {
-      console.log(">>> iframe api ready, time to create iframe...");
-      window.youtubePlayer = new YT.Player("player", {
-        height: "225",
-        width: "400",
-        videoId: "Q4tY92MuCiU",
-        playerVars: {
-          "playsinline": 1,
-        },
-        events: {
-          "onReady": onPlayerReady,
-          "onStateChange": onPlayerStateChange,
-        },
-      });
-    }
-
-    console.log(">>> window-attached youtube player: ", window.youtubePlayer);
-
-    // 4. The API will call this function when the video player is ready.
-    function onPlayerReady(event) {
-      console.log(">>> player ready");
-      event.target.playVideo();
-    }
-
-    // 5. The API calls this function when the player's state changes.
-    //    The function indicates that when playing a video (state=1),
-    //    the player should play for six seconds and then stop.
-    let done = false;
-    function onPlayerStateChange(event) {
-      if (event.data == YT.PlayerState.PLAYING && !done) {
-        setTimeout(myTimedCallback, 1000);
-        done = true;
-      }
-    }
-    function myTimedCallback() {
-      console.log("triggerred myTimedCallback()")
-      console.log(">> check player reference:", window.youtubePlayer)
-    }
-    `
-    const functionCode = document.createTextNode(stringifiedScript);
-    iframeInitialiserScript.appendChild(functionCode)
+    injectIframeDownloadScript()
+    injectYoutubeInitialiserScript()
   },
 };
+
+/**
+ * Injects the script for the download for the iframe as the first script
+ * so that it gets fired before any other script.
+ * */
+const injectIframeDownloadScript = () => {
+    // 2. This code loads the IFrame Player API code asynchronously.
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName("script")?.[0];
+    firstScriptTag && firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+
+/**
+ * Injects a script that contains initialisation logic for the Youtube Player object.
+ * */
+const injectYoutubeInitialiserScript = () => {const iframeInitialiserScript = document.createElement("script"); document.body.appendChild(iframeInitialiserScript); window.callbackYouTubeIframeAPIReady = () => {console.log(">>> iframe api ready, time to create iframe..."); window.youtubePlayer = new YT.Player("player", {height: "225", width: "400", videoId: "Q4tY92MuCiU", playerVars: {"playsinline": 1,}, events: {"onReady": onPlayerReady,},});} window.callbackOnPlayerReady = (event) => {event.target.playVideo();} const stringifiedScript = ` function onYouTubeIframeAPIReady() {window.callbackYouTubeIframeAPIReady();} function onPlayerReady(event) {window.callbackOnPlayerReady(event)} ` const functionCode = document.createTextNode(stringifiedScript); iframeInitialiserScript.appendChild(functionCode)}
 
 export const TriggerYouTubeFunction = {
   mounted() {
@@ -75,14 +34,14 @@ export const TriggerYouTubeFunction = {
       return
     }
     const {functionName, eventName} = this.el.dataset
-    const callback = callbacks[functionName]
+    const callback = youtubePlayerCallbacks[functionName]
     const getOptions = () => ({hook: this,...this.el.dataset, player: window.youtubePlayer})
     this.el.addEventListener(eventName, () => callback(getOptions()))
   }
 }
 
 /// NOTE: the player interface can be found @ https://developers.google.com/youtube/iframe_api_reference#Functions
-const callbacks = {
+const youtubePlayerCallbacks = {
   seekTo: function(options) {
     const {targetTimeStamp, player} = options;
     const target = Number(targetTimeStamp)
@@ -128,7 +87,7 @@ const isYouTubeFnCallable = (dataset) => {
     console.warn(`${eventName} is not a supported event. Supported events include ${supportedEvents}.`);
     return false
   }
-  const supportedFunctionNames = Object.keys(callbacks)
+  const supportedFunctionNames = Object.keys(youtubePlayerCallbacks)
   if (!supportedFunctionNames.includes(functionName)) {
     console.warn(`${functionName} is not a supported youtube function. Supported functions include ${supportedFunctionNames}.`);
     return false;
