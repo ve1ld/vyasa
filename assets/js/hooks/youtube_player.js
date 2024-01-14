@@ -11,11 +11,10 @@ export const RenderYouTubePlayer = {
 };
 
 /**
- * Injects the script for the download for the iframe as the first script
+ * Injects the script for the async download for the iframe as the first script
  * so that it gets fired before any other script.
  * */
 const injectIframeDownloadScript = () => {
-    // 2. This code loads the IFrame Player API code asynchronously.
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName("script")?.[0];
@@ -25,7 +24,38 @@ const injectIframeDownloadScript = () => {
 /**
  * Injects a script that contains initialisation logic for the Youtube Player object.
  * */
-const injectYoutubeInitialiserScript = () => {const iframeInitialiserScript = document.createElement("script"); document.body.appendChild(iframeInitialiserScript); window.callbackYouTubeIframeAPIReady = () => {console.log(">>> iframe api ready, time to create iframe..."); window.youtubePlayer = new YT.Player("player", {height: "225", width: "400", videoId: "Q4tY92MuCiU", playerVars: {"playsinline": 1,}, events: {"onReady": onPlayerReady,},});} window.callbackOnPlayerReady = (event) => {event.target.playVideo();} const stringifiedScript = ` function onYouTubeIframeAPIReady() {window.callbackYouTubeIframeAPIReady();} function onPlayerReady(event) {window.callbackOnPlayerReady(event)} ` const functionCode = document.createTextNode(stringifiedScript); iframeInitialiserScript.appendChild(functionCode)}
+const injectYoutubeInitialiserScript = () => {
+  const iframeInitialiserScript = document.createElement("script");
+  document.body.appendChild(iframeInitialiserScript);
+  window.callbackYouTubeIframeAPIReady = () => {
+    window.youtubePlayer = new YT.Player("player",
+      {
+        height: "225",
+        width: "400",
+        videoId: "Q4tY92MuCiU",
+        playerVars: {
+          "playsinline": 1,
+        },
+        events: {
+          "onReady": onPlayerReady,
+        }
+      ,});
+  }
+  window.callbackOnPlayerReady = (event) => {
+    event.target.playVideo();
+  }
+
+  const stringifiedScript = `
+    function onYouTubeIframeAPIReady() {
+      window.callbackYouTubeIframeAPIReady();
+    }
+    function onPlayerReady(event) {
+      window.callbackOnPlayerReady(event)
+    }`
+
+  const functionCode = document.createTextNode(stringifiedScript);
+  iframeInitialiserScript.appendChild(functionCode)
+}
 
 export const TriggerYouTubeFunction = {
   mounted() {
@@ -67,7 +97,6 @@ const youtubePlayerCallbacks = {
       videoUrl: player.getVideoUrl(),
       currentTime: player.getCurrentTime(),
     }
-    console.log(">>> Retrieved stats:", stats)
     hook.pushEventTo("#statsHover", "reportVideoStatus", stats)
   }
 }

@@ -74,10 +74,6 @@ const getRelevantElements = () => {
 const alignMiniPlayer = () => {
   const {verseContainer, youtubePlayerContainer} = getRelevantElements();
 
-  console.log("!! align mini player to verse container", {
-    verseContainer,
-    youtubePlayerContainer
-  })
   const {
     computePosition,
     autoPlacement,
@@ -103,10 +99,6 @@ const alignMiniPlayer = () => {
       offset(6),
     ],
   }).then(({x, y}) => {
-    console.log(">>> computed new position for the player!", {
-      x,
-      y
-    })
     Object.assign(youtubePlayerContainer.style, {
       left: `${x}px`,
       top: `${y}px`,
