@@ -3,6 +3,7 @@ defmodule VyasaWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {VyasaWeb.Layouts, :root}

@@ -85,6 +85,7 @@ const alignTooltip = () => {
     shift,
     offset,
   } = window.FloatingUIDOM;
+
   computePosition(button, tooltip, {
     placement: 'right',
     // NOTE: order of middleware matters.
