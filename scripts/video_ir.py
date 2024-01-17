@@ -6,6 +6,9 @@ Ref: https://github.com/ve1ld/vyasa/issues/21
 """
 import json
 import sys
+from libindic.soundex import Soundex
+
+instance = Soundex()
 
 def read_file(filename):
     print(f">> Reading {filename} as a json file")
@@ -89,10 +92,73 @@ class Event:
 
       return result
 
+class Verse:
+
+    def __init__(self, verse_data) -> None:
+        self.count = verse_data.get("count")
+        self.transliteration = verse_data.get("verse_trans")
+        self.sanskrit = verse_data.get("verse_sanskrit")
+        self.meaning = verse_data.get("verse_meaning")
+
+        return
+
+    def get_similarity_score_for_text(self, other_text):
+        if not other_text:
+            return
+
+        return instance.compare(self.sanskrit, other_text)
+
+
+    def __repr__(self) -> str:
+        msg = f"{[self.count]}\n{self.sanskrit}\n"
+        return msg
+
+class ScrapedText:
+    def __init__(self, file_data) -> None:
+        self.title = file_data.get("title")
+        self.description = file_data.get("description")
+        self.verses = [Verse(verse_data) for verse_data in file_data.get("verses")]
+
+        return
+
 def main():
-    data = read_file(sys.argv[1] or "chalisa.json")
-    captions = VideoCaptions(data)
-    captions.create_srt_file(sys.argv[2] or "chalisa.srt")
+    caption_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa.json")
+    captions = VideoCaptions(caption_data)
+    # captions.create_srt_file(sys.argv[2] if len(sys.argv) - 1 > 1 else "chalisa.srt")
+
+    scraped_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa_scraped.json")
+    scraped_text = ScrapedText(scraped_data)
+
+    test_input_verse = scraped_text.verses[4]
+    test_input_captions = captions.caption_events[45].event_text
+    all_captions = [event.event_text for event in captions.caption_events]
+    # print(">>> test input verse:\n", test_input_verse)
+    # print("test_input_captions\n", test_input_captions)
+    # print("sim:", test_input_verse.get_similarity_score_for_text(test_input_captions))
+
+    for verse_idx, verse in enumerate(scraped_text.verses):
+        scores = []
+        for caption_idx, caption in enumerate(all_captions):
+            score = verse.get_similarity_score_for_text(caption)
+
+            if (score == 1):
+                print(f">> DIRECT MATCH: \n verse_idx {verse_idx} matching caption idx: {caption_idx}")
+                # print(f">> MATCH: \ntest input: {test_input_verse}\n matching: {caption}")
+            scores.append(score or -1)
+
+        highest_score = max(scores)
+        most_likely_caption_idx = highest_score_idx = scores.index(highest_score)
+        print(f"Verse idx {verse_idx} --> likely to be --> {most_likely_caption_idx} with score of {highest_score}")
+
+
+
+    # all_scores = []
+    # print("all scores:", all_scores)
+
+
+
+
+    # [print(str(verse))for verse in scraped_text.verses]
 
     return
 
