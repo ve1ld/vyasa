@@ -54,6 +54,13 @@ class Event:
        self.event_data = event_data
 
 
+   def get_text_similarity_score(self, other_text):
+       (is_one_arg_empty_and_not_same) = not(other_text == self.event_text) and (not other_text or not self.event_text)
+       if(is_one_arg_empty_and_not_same):
+           return -1
+
+       return instance.compare(self.event_text, other_text)
+
 
    def extract_all_text_in_event(self, event):
       segs = event.get("segs", [])
@@ -104,9 +111,10 @@ class Verse:
 
     def get_similarity_score_for_text(self, other_text):
         if not other_text:
-            return
+            return -1
 
-        return instance.compare(self.sanskrit, other_text)
+        return instance.compare(other_text, self.sanskrit)
+        # return instance.compare(self.sanskrit, other_text)
 
 
     def __repr__(self) -> str:
@@ -120,6 +128,25 @@ class ScrapedText:
         self.verses = [Verse(verse_data) for verse_data in file_data.get("verses")]
 
         return
+
+def map_caption_events_to_scraped_verses(caption_events, scraped_verses):
+    for caption_event in caption_events:
+        if (not caption_event.event_text.strip()):
+            continue
+        # print(caption_event)
+        for scraped_verse in scraped_verses:
+            verse_string = scraped_verse.sanskrit.strip()
+
+            if (not verse_string):
+                continue
+
+            sim_score = caption_event.get_text_similarity_score(verse_string)
+            if sim_score != -1:
+                print(f"C {caption_event.event_num} V {scraped_verse.count}\n\tscore: {sim_score}")
+                print("caption:\t", caption_event.event_text)
+                print("verse:\t", verse_string)
+
+    return
 
 def main():
     caption_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa.json")
@@ -136,19 +163,41 @@ def main():
     # print("test_input_captions\n", test_input_captions)
     # print("sim:", test_input_verse.get_similarity_score_for_text(test_input_captions))
 
-    for verse_idx, verse in enumerate(scraped_text.verses):
-        scores = []
-        for caption_idx, caption in enumerate(all_captions):
-            score = verse.get_similarity_score_for_text(caption)
+    caption_events = captions.caption_events
+    scraped_verses = scraped_text.verses
 
-            if (score == 1):
-                print(f">> DIRECT MATCH: \n verse_idx {verse_idx} matching caption idx: {caption_idx}")
-                # print(f">> MATCH: \ntest input: {test_input_verse}\n matching: {caption}")
-            scores.append(score or -1)
+    mapping = map_caption_events_to_scraped_verses(caption_events, scraped_verses)
 
-        highest_score = max(scores)
-        most_likely_caption_idx = highest_score_idx = scores.index(highest_score)
-        print(f"Verse idx {verse_idx} --> likely to be --> {most_likely_caption_idx} with score of {highest_score}")
+
+
+
+
+
+
+
+
+
+
+    # for verse_idx, verse in enumerate(scraped_text.verses):
+    #     if(verse_idx == 8):
+    #         print(f"verse idx 8: {verse}")
+    #     scores = []
+    #     for caption_idx, caption in enumerate(all_captions):
+    #         caption = caption.strip()
+    #         if(not caption):
+    #             scores.append(-1)
+    #             continue
+    #         # print("\t\t caption: \n\t\t", caption)
+    #         score = verse.get_similarity_score_for_text(caption)
+
+    #         if (score == 1):
+    #             print(f">> DIRECT MATCH: \n verse_idx {verse_idx} matching caption idx: {caption_idx}")
+    #             # print(f">> MATCH: \ntest input: {test_input_verse}\n matching: {caption}")
+    #         scores.append(score or -1)
+
+    #     highest_score = max(scores)
+    #     most_likely_caption_idx = highest_score_idx = scores.index(highest_score)
+    #     print(f"Verse idx {verse_idx} --> likely to be --> {most_likely_caption_idx} with score of {highest_score}")
 
 
 
