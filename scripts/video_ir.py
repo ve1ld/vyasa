@@ -7,8 +7,26 @@ Ref: https://github.com/ve1ld/vyasa/issues/21
 import json
 import sys
 from libindic.soundex import Soundex
+from inltk.inltk import setup, get_sentence_similarity
 
 instance = Soundex()
+
+def init_inltk(lang_code="hi"):
+    """
+    Seems like inltk requires some setup.
+    """
+    setup(lang_code)
+    return
+
+def get_sentence_similarity_inltk(sent_a, sent_b, lang_code="hi"):
+    """
+    Uses the inltk function for sentence similarity.
+    """
+    sim_score = get_sentence_similarity(sent_a, sent_b, lang_code)
+    
+    return sim_score
+    
+
 
 def read_file(filename):
     print(f">> Reading {filename} as a json file")
@@ -59,7 +77,9 @@ class Event:
        if(is_one_arg_empty_and_not_same):
            return -1
 
-       return instance.compare(self.event_text, other_text)
+       return get_sentence_similarity_inltk(self.event_text, other_text) 
+
+   #return instance.compare(self.event_text, other_text)
 
 
    def extract_all_text_in_event(self, event):
@@ -130,6 +150,8 @@ class ScrapedText:
         return
 
 def map_caption_events_to_scraped_verses(caption_events, scraped_verses):
+    exact_matches = 0
+    better_than_neg_1 = 0
     for caption_event in caption_events:
         if (not caption_event.event_text.strip()):
             continue
@@ -142,6 +164,9 @@ def map_caption_events_to_scraped_verses(caption_events, scraped_verses):
 
             sim_score = caption_event.get_text_similarity_score(verse_string)
             if sim_score != -1:
+                better_than_neg_1 += 1
+                if sim_score == 1:
+                    exact_matches += 1
                 print(f"C {caption_event.event_num} V {scraped_verse.count}\n\tscore: {sim_score}")
                 print("caption:\t", caption_event.event_text)
                 print("verse:\t", verse_string)
@@ -149,6 +174,7 @@ def map_caption_events_to_scraped_verses(caption_events, scraped_verses):
     return
 
 def main():
+    init_inltk()
     caption_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa.json")
     captions = VideoCaptions(caption_data)
     # captions.create_srt_file(sys.argv[2] if len(sys.argv) - 1 > 1 else "chalisa.srt")
