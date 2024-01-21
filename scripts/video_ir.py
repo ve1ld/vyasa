@@ -42,7 +42,10 @@ def read_file(filename):
 
 def write_to_file(filename, content):
    with open(filename, 'w') as file:
+      print(f"Writing to {filename}...")
       file.write(content)
+      print(f"... Wrote to {filename}")
+
 
 
 class VideoCaptions:
@@ -61,12 +64,8 @@ class VideoCaptions:
      self.caption_events = [Event(event, event_idx + 1) for event_idx, event in enumerate(events)]
 
    def create_srt_file(self, filename="captionsOutput.srt"):
-      print(f">> writing to file {filename}...")
       content = "".join([str(event) for event in self.caption_events])
       write_to_file(filename, content)
-
-      print(f">> wrote to file {filename}")
-
 
 class Event:
    def __init__(self, event_data, event_num):
@@ -271,9 +270,14 @@ class Mapping:
             return payload
 
 
-def main():
-    caption_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa.json")
-    scraped_data = read_file(sys.argv[1] if len(sys.argv) - 1 > 0 else "chalisa_scraped.json")
+def main(cfg={}):
+    num_cli_args = len(sys.argv) - 1
+    caption_file_source = sys.argv[1] if num_cli_args > 0 else "chalisa.json"
+    verse_file_source = sys.argv[2] if num_cli_args > 1 else "chalisa_scraped.json"
+
+    caption_data = read_file(cfg.get("caption_file_source", caption_file_source))
+    scraped_data = read_file(cfg.get("verse_file_source", verse_file_source))
+
     mapping = Mapping(ScrapedText(scraped_data), VideoCaptions(caption_data))
     mapping.dump_mapping_json("chalisa_mapping_v1.json")
 
