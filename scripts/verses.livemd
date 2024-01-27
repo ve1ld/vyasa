@@ -1,9 +1,7 @@
 # verses
 
 ```elixir
-Mix.install([
-  {:jason, "~> 1.4"}
-])
+Ja
 ```
 
 ## Section
