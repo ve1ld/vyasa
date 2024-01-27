@@ -4,14 +4,15 @@ defmodule Vyasa.Written.Chapter do
 
   alias Vyasa.Written.{Source, Verse}
 
-  @primary_key {:id, Ecto.UUID, autogenerate: true}
-  schema "verses" do
-    field :no, :integer
+  @primary_key false
+  schema "chapters" do
+    field :no, :integer, primary_key: :true
     field :body, :string
     field :title, :string
 
-    belongs_to :source, Source
-    has_many :verses, Verse
+    belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id, primary_key: :true
+
+    has_many :verses, Verse,  foreign_key: :chapter_no
   end
 
   @doc false

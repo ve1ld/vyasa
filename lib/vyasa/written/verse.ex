@@ -8,6 +8,7 @@ defmodule Vyasa.Written.Verse do
   schema "verses" do
     field :num, :integer
     field :body, :string
+    # QQ: compiler was looking for this but not sure what made it look for this field since the migration file doesn't use this name
 
     belongs_to :source, Source
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
@@ -25,6 +26,6 @@ defmodule Vyasa.Written.Verse do
     |> cast_assoc(:transliterations)
     |> cast_assoc(:transcripts)
     |> cast_assoc(:media)
-    |> validate_required([:verse_num, :verse_text])
+    |> validate_required([:num, :body])
   end
 end
