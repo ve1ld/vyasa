@@ -1,22 +1,33 @@
 defmodule Vyasa.Corpus.Engine.Shlokam do
   @url "https://shlokam.org/"
+  alias Vyasa.Corpus.Engine.Fallback
 
   def run(path, opts \\ []) do
     #storage opts
-    path
-    |> fetch_tree()
+    @url
+    |> fetch_tree(path)
     |> scrape()
-    |> store(Keyword.get(opts, :storage, :file))
+    |> store(path, Keyword.get(opts, :storage, :file))
   end
 
-  def fetch_tree(path) do
-    resp = Finch.build(:get, @url <> path) |> Finch.request(Vyasa.Finch)
-    resp.body
-    |> Floki.parse_document!()
-    |> Floki.find(".uncode_text_column")
+  def fetch_tree(url, path \\ "") do
+    case Req.get!(url <> path) do
+      %{body: body} ->
+        {:ok, body
+        |> Floki.parse_document!()
+        |> Floki.find(".uncode_text_column")}
+      %{status: 301, headers: header} ->
+        header
+        |> Keyword.get(:location)
+        |> fetch_tree()
+
+      error ->
+        IO.inspect(error, label: :primary_site_err)
+        Fallback.run(url <> path)
+    end
   end
 
-  defp scrape(tree) do
+  defp scrape({:ok, tree}) do
     tree
     |> Enum.reduce(%{title: nil, description: nil, verses: []}, fn
       {"div", _, [{"h3", [], ["Description"]} | para]}, acc ->
@@ -73,14 +84,16 @@ defmodule Vyasa.Corpus.Engine.Shlokam do
     end)
   end
 
-  def store(tree, :file) do
+  defp scrape(err), do: err
+
+  def store(tree, text, :file) do
     # TODO parsing logic into text indexer structs and db insert ops
     json = Jason.encode!(tree)
-    File.write!("path/to/file.json", json)
-    :code.priv_dir(:vyasa) |> Path.join("/static/corpus/shlokam.org/verses.json")
+    File.write!(:code.priv_dir(:vyasa) |> Path.join("/static/corpus/shlokam.org/#{text}.json"), json)
+
   end
 
-  def store(_tree, :db) do
+  def store(_text, _tree, :db) do
     # TODO parsing logic into text indexer structs and db insert ops
   end
 
