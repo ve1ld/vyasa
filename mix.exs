@@ -58,7 +58,6 @@ defmodule Vyasa.MixProject do
       {:vix, "~> 0.5"},
       {:kino, "~> 0.12.0"},
       {:cors_plug, "~> 3.0"},
-      {:httpoison, "~> 2.0"}
     ]
   end
 

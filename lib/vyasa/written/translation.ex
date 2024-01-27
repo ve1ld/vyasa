@@ -6,7 +6,7 @@ defmodule Vyasa.Written.Translation do
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "translations" do
-    field :language, :string # to consider changing to language enum
+    field :lang, :string # to consider changing to language enum
     field :body, :string
     field :meaning, :string
 
@@ -16,7 +16,7 @@ defmodule Vyasa.Written.Translation do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:language, :body])
-    |> validate_required([:language, :body])
+    |> cast(attrs, [:lang, :body])
+    |> validate_required([:lang, :body])
   end
 end

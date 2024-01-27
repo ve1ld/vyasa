@@ -6,7 +6,7 @@ defmodule Vyasa.Written.Transliteration do
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "transliterations" do
-    field :language, :string
+    field :lang, :string
     field :body, :string
     field :meaning, :string
 
@@ -16,7 +16,7 @@ defmodule Vyasa.Written.Transliteration do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:language, :body])
-    |> validate_required([:language, :body])
+    |> cast(attrs, [:lang, :body])
+    |> validate_required([:lang, :body])
   end
 end

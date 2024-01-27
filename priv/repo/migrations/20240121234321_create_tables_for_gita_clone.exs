@@ -10,29 +10,30 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
     end
 
     create table(:chapters, primary_key: false) do
-      add :num, :integer, primary_key: true
-      add :body, :string
+      add :no, :integer, primary_key: true
+      add :title, :string
+      add :body, :text
 
       add :source_id,  references(:sources, column: :id, type: :uuid),  primary_key: true
     end
 
-    create unique_index(:chapters, [:source_id, :num]) # (src) uniquely identifies a chapter, left chap out because it's optional
+    create unique_index(:chapters, [:source_id, :no]) # (src) uniquely identifies a chapter, left chap out because it's optional
 
     create table(:verses, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :num, :integer
-      add :body, :string
-
-      add :source_id, references(:sources, column: :id, type: :uuid)
+      add :no, :integer
+      add :chapter_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
+      add :body, :text
+      add :source_id, references(:sources, column: :id, type: :uuid), null: false
     end
 
-    create unique_index(:verses, [:source_id, :num]) # (src) uniquely identifies a verse, left chap out because it's optional
+    create unique_index(:verses, [:source_id, :chapter_no, :no]) # (src) uniquely identifies a verse, left chap out because it's optional
 
 
 
     create table(:translations, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :language, :string # might make sense to represent this in an enum table?
+      add :lang, :string # might make sense to represent this in an enum table?
       add :body, :string
       add :meaning, :string # because translation's meaning and transliteration's meaning may differ
 
@@ -44,7 +45,7 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
 
     create table(:transliterations, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :language, :string
+      add :lang, :string
       add :body, :string, null: false
       add :meaning, :string # meanings are specific to transliterations
 

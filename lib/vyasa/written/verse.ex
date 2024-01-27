@@ -10,7 +10,7 @@ defmodule Vyasa.Written.Verse do
     field :body, :string
 
     belongs_to :source, Source
-    belongs_to :chapter, Chapter
+    belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_many :translations, Translation
     has_many :transliterations, Transliteration
     has_many :transcripts, Transcript
