@@ -13,7 +13,17 @@ defmodule Vyasa.Application do
       {DNSCluster, query: Application.get_env(:vyasa, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Vyasa.PubSub},
       # Start the Finch HTTP client for sending emails
-      {Finch, name: Vyasa.Finch},
+      {Finch,
+       name: Vyasa.Finch,
+       pools: %{
+         default: [
+           conn_opts: [
+             transport_opts: [
+               cacertfile: "priv/cacerts.pem"
+             ]
+           ]
+         ]
+       }},
       # Start a worker by calling: Vyasa.Worker.start_link(arg)
       # {Vyasa.Worker, arg},
       # Start to serve requests, typically the last entry
