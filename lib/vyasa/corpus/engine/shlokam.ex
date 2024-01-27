@@ -89,8 +89,10 @@ defmodule Vyasa.Corpus.Engine.Shlokam do
   def store(tree, text, :file) do
     # TODO parsing logic into text indexer structs and db insert ops
     json = Jason.encode!(tree)
-    File.write!(:code.priv_dir(:vyasa) |> Path.join("/static/corpus/shlokam.org/#{text}.json"), json)
-
+    :code.priv_dir(:vyasa)
+    |> Path.join("/static/corpus/shlokam.org/#{text}.json")
+    |> tap(&File.touch(&1))
+    |> tap(&File.write!(&1, json))
   end
 
   def store(_text, _tree, :db) do
