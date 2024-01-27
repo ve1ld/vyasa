@@ -7,6 +7,8 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
     create table(:sources, primary_key: false) do
       add :id, :uuid, primary_key: true
       add :title, :string
+
+      timestamps([:utc_datetime])
     end
 
     create table(:chapters, primary_key: false) do

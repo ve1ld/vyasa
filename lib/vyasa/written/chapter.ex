@@ -12,12 +12,13 @@ defmodule Vyasa.Written.Chapter do
 
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id, primary_key: :true
 
-    has_many :verses, Verse,  foreign_key: :chapter_no
+    has_many :verses, Verse, references: :no, foreign_key: :chapter_no
   end
 
   @doc false
   def changeset(text, attrs) do
     text
     |> cast(attrs, [:body, :no, :title])
+    |> cast_assoc(:verses)
   end
 end
