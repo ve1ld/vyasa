@@ -13,32 +13,57 @@ defmodule R do
     Mix.Task.run("compile.all")
   end
 end
+
+R.recompile()
 ```
 
 ### Supports Recompilation from within Livebook
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### Clear All Repo Contents
+
+```elixir
+alias Vyasa.Repo
+alias Vyasa.Written.{Source, Chapter, Verse, Translation, Transliteration, Transcript, Medium}
+
+[Transliteration, Translation, Verse, Chapter, Source]
+|> Enum.map(fn mod -> Repo.delete_all(mod) end)
+```
 
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## 2) Cloning Gita by Creating a Schema for it
 
+### Just plain exploration stuff:
+
 ```elixir
 alias Vyasa.Written.{Source, Chapter, Verse, Translation, Transliteration, Transcript, Medium}
 
 verse = %Verse{
-  num: 77,
-  body: "तच्च संस्मृत्य संस्मृत्य रूपमत्यद्भुतं हरेः।\n\nविस्मयो मे महान् राजन् हृष्यामि च पुनः पुनः।।18.77।।\n "
+  id: Ecto.UUID.generate(),
+  no: 77,
+  body: "तच्च संस्मृत्य संस्मृत्य रूपमत्यद्भुतं हरेः।\n\nविस्मयो मे महान् राजन् हृष्यामि च पुनः पुनः।।18.77।।\n ",
+  chapter_no: 1
 }
 
 verse_2 = %Verse{
-  num: 78,
+  id: Ecto.UUID.generate(),
+  chapter_no: 1,
+  no: 78,
   body: "तच्च संस्मृत्य संस्मृत्य रूपमत्यद्भुतं हरेः।\n\nविस्मयो मे महान् राजन् हृष्यामि च पुनः पुनः।।19.78।।\n "
 }
 
-chapter = %Chapter{num: 1, body: "Chapter 1 Body", verses: [verse, verse_2]}
+chapter = %Chapter{
+  no: 1,
+  body: "This body is all for test",
+  title: "Chapter 1 Body",
+  verses: [verse, verse_2]
+}
 
 source = %Source{
-  title: "testTitle",
   id: Ecto.UUID.generate(),
+  title: "testTitle",
   verses: [verse, verse_2],
   chapters: [chapter]
 }
@@ -47,17 +72,22 @@ source = %Source{
 # medium = %Medium{id: Ecto.UUID.generate()}
 # transcript = %Transcript{id: Ecto.UUID.generate()}
 
-verse_2 = %Verse{
-  verse_2
-  | translations: [
-      %Translation{language: "Urdu", body: "Urdu translationnnnn", meaning: "meaning in urdu"}
-    ]
-}
+# verse_2 = %Verse{
+#   verse_2
+#   | translations: [
+#       %Translation{language: "Urdu", body: "Urdu translationnnnn", meaning: "meaning in urdu"}
+#     ]
+# }
 ```
+
+### Some Creation functions to create maps that can be used by changesets:
 
 Convert json --> struct --> using changeset --> insert into repo
 
 ```elixir
+alias Vyasa.Written.{Chapter, Source}
+alias Vyasa.Repo
+
 defmodule Gita do
   @root "/Users/ritesh/Projects/vyasa"
   @gita_sub_dir "#{@root}/priv/static/corpus/gita"
@@ -67,41 +97,18 @@ defmodule Gita do
 
   alias Vyasa.Written.{Chapter}
 
-
-  def get_source(chapters, verses) do
-
-    %{title: "Gita", chapters: chapters, verses: verses}
-    # Source.changeset(%Source{}, %{title: "Gita"})
-  end
-
-
-  @doc """
-  example input:  17 => [
-    %{
-      "chapter_number" => 17,
-      "chapter_summary" => "The seventeenth chapter of the Bhagavad Gita is \"Sraddhatraya Vibhaga Yoga\". In this chapter, Krishna describes the three types of faith corresponding to the three modes of the material nature. Lord Krishna further reveals that it is the nature of faith that determines the quality of life and the character of living entities. Those who have faith in passion and ignorance perform actions that yield temporary, material results while those who have faith in goodness perform actions in accordance with scriptural instructions and hence their hearts get further purified.",
-      "chapter_summary_hindi" => "भगवद गीता का सत्रहवा अध्याय श्रद्धात्रयविभागयोग है। इस अध्याय में, कृष्ण भौतिक प्रकृति के तीन गुणों से संबंधित तीन प्रकार के विश्वासों का वर्णन करते हैं। भगवान कृष्ण आगे बताते हैं कि यह विश्वास की प्रकृति है जो जीवन की गुणवत्ता और जीवित संस्थाओं के चरित्र को निर्धारित करती है। जो लोग लालसा और अज्ञानता में विश्वास रखते हैं, वे ऐसे कार्य करते हैं जो कि अस्थायी और भौतिक फल देते हैं परन्तु जो लोग अच्छाई में विश्वास रखते हैं वे शास्त्रपूर्ण निर्देशों के अनुसार कार्य करते हैं और इसलिए उन्हें स्थायी और अधिक प्रवीण फल प्राप्त होते हैं जो मन को और भी शुद्ध करते हैं।        ",
-      "id" => 17,
-      "image_name" => "shraddha-traya-vibhaga-yoga",
-      "name" => "श्रद्धात्रयविभागयोग",
-      "name_meaning" => "Yoga through Discerning the Three Divisions of Faith",
-      "name_translation" => "Sraddhatraya Vibhaga Yoga",
-      "name_transliterated" => "Śhraddhā Traya Vibhāg Yog",
-      "verses_count" => 28
-    }
-  """
-  def create_changeset(chapter) do 
+  def create_changeset(chapter) do
     # IO.inspect(chapter["chapter_number"])
     IO.inspect(chapter)
+
     %{
-      "chapter_number" =>  num,
-      "chapter_summary" => body, 
+      "chapter_number" => num,
+      "chapter_summary" => body
     } = chapter
 
     changeset = Chapter.changeset(%Chapter{}, %{num: num, body: body})
 
     changeset
-
 
     # %{chapter_number: num} = chapter
     # num
@@ -110,68 +117,98 @@ defmodule Gita do
     # num
   end
 
-
-
-
-  def get_chapters() do
-    _changesets = @chapters
-    |> File.read!()
-    |> Jason.decode!()
-
-    # |> Enum.group_by(& &1["chapter_number"])
-    # |> Enum.take(1)
-    # |> Enum.map(fn chapter -> Gita.create_changeset(chapter) end)
-    # # |> Enum.map(fn {_k, v} -> Gita.create_changeset(v) end)
-    # |> Enum.take(1)
-  end
-
-
-
-  @doc """
-  {
-    "chapter_id": 18,
-    "chapter_number": 18,
-    "externalId": 696,
-    "id": 696,
-    "text": "अर्जुन उवाचनष्टो मोहः स्मृतिर्लब्धा त्वत्प्रसादान्मयाच्युत।स्थितोऽस्मि गतसन्देहः करिष्ये वचनं तव।।18.73।।",
-    "title": "Verse 696",
-    "verse_number": 73,
-    "verse_order": 696,
-    "transliteration": "arjuna uvācha\nnaṣhṭo mohaḥ smṛitir labdhā tvat-prasādān mayāchyuta\nsthito ‘smi gata-sandehaḥ kariṣhye vachanaṁ tava\n",
-    "word_meanings": "arjunaḥ uvācha—Arjun said; naṣhṭaḥ—dispelled; mohaḥ—illusion; smṛitiḥ—memory; labdhā—regained; tvat-prasādāt—by your grace; mayā—by me; achyuta—Shree Krishna, the infallible one; sthitaḥ—situated; asmi—I am; gata-sandehaḥ—free from doubts; kariṣhye—I shall act; vachanam—instructions; tava—your\n"
-  },
-
-  """
-
-  def create_verse(verse) do
+  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, _source_id) do
     %{
-      "verse_number" => num, 
-      "text" => body,
-      "transliteration" => transliteration,
-      "word_meanings" => meaning,
-  } = verse
-
-  
+      # source_id: source_id,
+      no: chapter["chapter_number"],
+      body: chapter["chapter_summary"],
+      title: chapter["name_meaning"],
+      verses: Enum.filter(verses, fn %{chapter_no: num} -> chapter["chapter_number"] == num end)
+    }
   end
 
-
-  def get_verses() do 
-    @verses 
+  def get_chapters([%{} = _head | _rest] = verses, source_id) do
+    @chapters
     |> File.read!()
     |> Jason.decode!()
-    |> Enum.map(fn verse -> create_verse(verse))
+    |> Enum.map(fn chap -> create_chapter(chap, verses, source_id) end)
+  end
+
+  def create_transliteration(%{} = verse) do
+    %{
+      lang: "en",
+      body: verse["transliteration"],
+      meaning: verse["word_meanings"]
+    }
+  end
+
+  def create_translation(%{} = _verse) do
+    %{
+      lang: "en",
+      body: "body"
+    }
+  end
+
+  def create_verse(verse, _source_id) do
+    %{
+      chapter_no: verse["verse_number"],
+      body: verse["text"],
+      no: verse["verse_number"],
+      transliterations: [create_transliteration(verse)]
+    }
+  end
+
+  def get_verses(source_id) do
+    @verses
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn verse -> create_verse(verse, source_id) end)
+  end
+
+  def get_source([%{} = _h | _r] = chapters, [%{} = _head | _rest] = verses, source_id) do
+    %{
+      id: source_id,
+      title: "Gita",
+      chapters: chapters,
+      verses: verses
+    }
   end
 end
+```
 
+### Actually creating entries:
 
-# get all as structs, then compose them properly before creating changesets? 
-verses = Gita.get_verses()
-# chapters = Gita.get_chapters()
-# source = Gita.get_source(chapters, verses)
-# source_changeset = Gita.get_source()
-# chapter_changesets = Gita.get_chapters()
+```elixir
+src =
+  Source.gen_changeset(
+    %Source{
+      title: "Gita"
+    },
+    %{}
+  )
+  |> Repo.insert!()
 
+verses = Gita.get_verses(src.id)
+chapters = Gita.get_chapters(verses, src.id)
+# source = Gita.get_source(chapters, verses, src.id)
 
+src
+|> Repo.preload([:chapters])
+|> Source.mutate_changeset(%{
+  chapters: [
+    %{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}
+  ]
+  # id: src.id
+})
+|> Repo.update!()
+```
+
+```elixir
+R.recompile()
+
+alias Vyasa.Written
+
+Written.list_sources()
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
