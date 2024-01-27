@@ -51,6 +51,8 @@ config :vyasa, VyasaWeb.Endpoint,
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
 # different ports.
+#
+#config :ssl, cacertfile: 'priv/cacerts.pem'
 
 # Watch static and templates for browser reloading.
 config :vyasa, VyasaWeb.Endpoint,

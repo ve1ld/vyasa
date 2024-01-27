@@ -7,11 +7,11 @@ defmodule Vyasa.Corpus.Engine.Shlokam do
     @url
     |> fetch_tree(path)
     |> scrape()
-    |> store(path, Keyword.get(opts, :storage, :file))
+    |> store(path, Keyword.get(opts, :o, nil))
   end
 
   def fetch_tree(url, path \\ "") do
-    case Req.get!(url <> path) do
+    case Req.get!(url <> path, connect_options: [transport_opts: [cacerts: :public_key.cacerts_get()]]) do
       %{body: body} ->
         {:ok, body
         |> Floki.parse_document!()
@@ -86,17 +86,28 @@ defmodule Vyasa.Corpus.Engine.Shlokam do
 
   defp scrape(err), do: err
 
-  def store(tree, text, :file) do
+  def store(_text, _tree, "db") do
+    # TODO parsing logic into text indexer structs and db insert ops
+  end
+
+  def store(tree, text, nil) do
     # TODO parsing logic into text indexer structs and db insert ops
     json = Jason.encode!(tree)
-    :code.priv_dir(:vyasa)
+    Application.app_dir(:vyasa, "priv")
     |> Path.join("/static/corpus/shlokam.org/#{text}.json")
     |> tap(&File.touch(&1))
     |> tap(&File.write!(&1, json))
   end
 
-  def store(_text, _tree, :db) do
+  def store(tree, text, file_path) do
     # TODO parsing logic into text indexer structs and db insert ops
+    json = Jason.encode!(tree)
+    file_path
+    |> Path.join("/shlokam.org")
+    |> tap(&File.mkdir(&1))
+    |> Path.join("/#{text}.json")
+    |> tap(&File.touch(&1))
+    |> tap(&File.write!(&1, json))
   end
 
 

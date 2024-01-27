@@ -18,7 +18,7 @@ defmodule VyasaCLI do
   defp parse_args([command | [arg | _] = args]) do
     {opts, _, _} =
       args
-      |> OptionParser.parse(switches: [storage: :string, path: :string])
+      |> OptionParser.parse(switches: [o: :string, path: :string])
 
     {command, arg, opts}
   end
