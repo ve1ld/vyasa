@@ -2,6 +2,8 @@
 
 ## Root Section -- Common Utils
 
+### Supports Recompilation from within Livebook
+
 ```elixir
 defmodule R do
   def recompile() do
@@ -17,58 +19,6 @@ end
 R.recompile()
 ```
 
-### Supports Recompilation from within Livebook
-
-<!-- livebook:{"break_markdown":true} -->
-
-#### Clear All Repo Contents
-
-```elixir
-alias Vyasa.Repo
-alias Vyasa.Written.{Source, Chapter, Verse, Translation, Transliteration, Transcript, Medium}
-
-[Transliteration, Translation, Verse, Chapter, Source]
-|> Enum.map(fn mod -> Repo.delete_all(mod) end)
-```
-
-<!-- livebook:{"branch_parent_index":0} -->
-
-## 2) Cloning Gita by Creating a Schema for it
-
-### Just plain exploration stuff:
-
-```elixir
-alias Vyasa.Written.{Source, Chapter, Verse, Translation, Transliteration, Transcript, Medium}
-
-verse = %Verse{
-  id: Ecto.UUID.generate(),
-  no: 77,
-  body: "तच्च संस्मृत्य संस्मृत्य रूपमत्यद्भुतं हरेः।\n\nविस्मयो मे महान् राजन् हृष्यामि च पुनः पुनः।।18.77।।\n ",
-  chapter_no: 1
-}
-
-verse_2 = %Verse{
-  id: Ecto.UUID.generate(),
-  chapter_no: 1,
-  no: 78,
-  body: "तच्च संस्मृत्य संस्मृत्य रूपमत्यद्भुतं हरेः।\n\nविस्मयो मे महान् राजन् हृष्यामि च पुनः पुनः।।19.78।।\n "
-}
-
-chapter = %Chapter{
-  no: 1,
-  body: "This body is all for test",
-  title: "Chapter 1 Body",
-  verses: [verse, verse_2]
-}
-
-source = %Source{
-  id: Ecto.UUID.generate(),
-  title: "testTitle",
-  verses: [verse, verse_2],
-  chapters: [chapter]
-}
-```
-
 ### Some Creation functions to create maps that can be used by changesets:
 
 Convert json --> struct --> using changeset --> insert into repo
@@ -77,7 +27,7 @@ Convert json --> struct --> using changeset --> insert into repo
 alias Vyasa.Written.{Chapter, Source}
 alias Vyasa.Repo
 
-defmodule Gita do
+defmodule G do
   @root "/Users/ritesh/Projects/vyasa"
   @gita_sub_dir "#{@root}/priv/static/corpus/gita"
 
@@ -86,41 +36,38 @@ defmodule Gita do
 
   alias Vyasa.Written.{Chapter}
 
-  def create_changeset(chapter) do
-    # IO.inspect(chapter["chapter_number"])
-    IO.inspect(chapter)
-
-    %{
-      "chapter_number" => num,
-      "chapter_summary" => body
-    } = chapter
-
-    changeset = Chapter.changeset(%Chapter{}, %{num: num, body: body})
-
-    changeset
-
-    # %{chapter_number: num} = chapter
-    # num
-    # chapter[:chapter_number]
-    # IO.inspect(chapter_val["#{chapter}"])
-    # num
+  def get_verses(source_id) do
+    @verses
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn verse -> create_verse(verse, source_id) end)
   end
 
-  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, source_id) do
+  def get_verses() do
+    @verses
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn verse -> G.create_verse(verse) end)
+  end
+
+  def create_verse(verse, source_id) do
     %{
       source_id: source_id,
-      no: chapter["chapter_number"],
-      body: chapter["chapter_summary"],
-      title: chapter["name_meaning"],
-      verses: Enum.filter(verses, fn %{chapter_no: num} -> chapter["chapter_number"] == num end)
+      chapter_no: verse["chapter_number"],
+      body: verse["text"],
+      no: verse["verse_number"]
+      # transliterations: [create_transliteration(verse)],
     }
   end
 
-  def get_chapters([%{} = _head | _rest] = verses, source_id) do
-    @chapters
-    |> File.read!()
-    |> Jason.decode!()
-    |> Enum.map(fn chap -> create_chapter(chap, verses, source_id) end)
+  def create_verse(verse) do
+    %{
+      source_id: nil,
+      chapter_no: verse["chapter_number"],
+      body: verse["text"],
+      no: verse["verse_number"]
+      # transliterations: [create_transliteration(verse)],
+    }
   end
 
   def create_transliteration(%{} = verse) do
@@ -138,30 +85,29 @@ defmodule Gita do
     }
   end
 
-  def create_verse(verse, source_id) do
+  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, source_id) do
+    IO.puts("CHECK THIS CHAPTER OUT")
+    IO.inspect(chapter)
+
     %{
       source_id: source_id,
-      chapter_no: verse["chapter_number"],
-      body: verse["text"],
-      no: verse["verse_number"]
-      # transliterations: [create_transliteration(verse)],
+      no: chapter["chapter_number"],
+      body: chapter["chapter_summary"],
+      title: chapter["name_meaning"],
+      indic_name: chapter["name"],
+      indic_name_meaning: chapter["name_meaning"],
+      indic_summary: chapter["chapter_summary_hindi"],
+      indic_name_translation: chapter["name_translation"],
+      indic_name_transliteration: chapter["name_transliterated"],
+      verses: Enum.filter(verses, fn %{chapter_no: num} -> chapter["chapter_number"] == num end)
     }
   end
 
-  def get_verses(source_id) do
-    @verses
+  def get_chapters([%{} = _head | _rest] = verses, source_id) do
+    @chapters
     |> File.read!()
     |> Jason.decode!()
-    |> Enum.map(fn verse -> create_verse(verse, source_id) end)
-  end
-
-  def get_source([%{} = _h | _r] = chapters, [%{} = _head | _rest] = verses, source_id) do
-    %{
-      id: source_id,
-      title: "Gita",
-      chapters: chapters,
-      verses: verses
-    }
+    |> Enum.map(fn chap -> create_chapter(chap, verses, source_id) end)
   end
 
   def add_relevant_verses(chapter, verses) do
@@ -177,57 +123,121 @@ defmodule Gita do
     chapters
     |> Enum.map(fn chap -> add_relevant_verses(chap, verses) end)
   end
+
+  def get_source([%{} = _h | _r] = chapters, [%{} = _head | _rest] = verses, source_id) do
+    %{
+      id: source_id,
+      title: "Gita",
+      chapters: chapters,
+      verses: verses
+    }
+  end
+
+  def create_changeset(chapter) do
+    # IO.inspect(chapter["chapter_number"])
+    IO.inspect(chapter)
+
+    %{
+      "chapter_number" => num,
+      "chapter_summary" => body
+    } = chapter
+
+    changeset = Chapter.changeset(%Chapter{}, %{num: num, body: body})
+
+    changeset
+  end
 end
 ```
 
-### Actually creating entries:
-
 ```elixir
-src =
-  Source.gen_changeset(
-    %Source{
-      title: "Gita"
-    },
-    %{}
-  )
-  |> Repo.insert!()
+# improving on the get-* functions 
 
-verses = Gita.get_verses(src.id)
+sid = Ecto.UUID.generate()
 
-chapters =
-  Gita.get_chapters(verses, src.id)
-  |> Gita.insert_verses_into_chapters(verses)
-
-hd(chapters)
-
-# source = Gita.get_source(chapters, verses, src.id)
-
-src
-|> Repo.preload([:chapters, verses: :chapter])
-|> Source.mutate_changeset(%{
-  chapters: chapters
-})
-|> Repo.update!()
-
-# src 
-# |> Repo.preload([:chapters, verses: :chapter]) 
-# |> Source.mutate_changeset(%{
-
-#   chapters: chapters, 
-#   verses: verses,
-#   # chapters: [%{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}],
-#   # id: src.id
-# }) |> Repo.update!()
-
-# src 
-# |> Repo.preload([:chapters]) 
-# |> Source.mutate_changeset(%{
-#   chapters: [%{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}],
-#   # id: src.id
-# }) |> Repo.update!()
+verses = G.get_verses(sid)
+chapters = G.get_chapters(verses, sid)
 ```
 
-### Check Queries
+#### DB Convenience Actions
+
+* purging of db
+* seeding of db
+
+```elixir
+defmodule DBHelper do
+  alias Vyasa.Repo
+  alias G
+  alias Vyasa.Written.{Source, Chapter, Verse, Transliteration}
+
+  def purge_db() do
+    [Verse, Chapter, Source, Transliteration]
+    |> Enum.map(fn mod -> Repo.delete_all(mod) end)
+  end
+
+  def seed_db() do
+    src =
+      Source.gen_changeset(
+        %Source{
+          title: "Gita"
+        },
+        %{}
+      )
+      |> Repo.insert!()
+
+    verses = G.get_verses(src.id)
+
+    chapters =
+      G.get_chapters(verses, src.id)
+      |> G.insert_verses_into_chapters(verses)
+
+    src
+    |> Repo.preload([:chapters, verses: :chapter])
+    |> Source.mutate_changeset(%{
+      chapters: chapters
+    })
+    |> Repo.update!()
+  end
+end
+```
+
+```elixir
+id = Ecto.UUID.generate()
+verses = G.get_verses(id)
+chaps = G.get_chapters(verses, id) |> G.insert_verses_into_chapters(verses)
+```
+
+```elixir
+R.recompile()
+DBHelper.purge_db()
+DBHelper.seed_db()
+```
+
+```elixir
+hd(Vyasa.Repo.all(Vyasa.Written.Chapter))
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Exploration
+
+```elixir
+DBHelper.purge_db()
+DBHelper.seed_db()
+
+alias Vyasa.Written
+sources = Written.list_sources() |> Repo.preload([:chapters, :verses])
+s = hd(sources)
+v = hd(s.verses)
+c = hd(s.chapters)
+Map.keys(c)
+c
+
+# Written.get_source!(hd(sources).id)
+```
+
+```elixir
+DBHelper.seed_db()
+```
 
 ```elixir
 R.recompile()
@@ -239,21 +249,21 @@ Written.list_sources()
 [%Source{id: id} = _hd | tail] = Written.list_sources()
 Written.get_source!(id)
 Written.get_chapter!(2, id)
-# |> Repo.preload(:chapters)
-# Written.get_source!("9123257b-5df9-4092-aa43-2a054439e3c8")
-
-# Enum.count(Repo.all(Vyasa.Written.Chapter))
 ```
 
-```elixir
-# Repo.get_by(Chapter, no: 1, source_id: "a220dffc-d8cc-4ca5-933c-44ea6dc95669")
+<!-- livebook:{"branch_parent_index":0} -->
 
-# Repo.get(Source, "a220dffc-d8cc-4ca5-933c-44ea6dc95669")
+## 2) Cloning Gita by Creating a Schema for it
 
-# Written.get_source!("a220dffc-d8cc-4ca5-933c-44ea6dc95669")
-Written.list_sources()
-Written.get_source!("a619b2fa-3ec8-4dcc-b878-b2a80d48b38a")
-```
+### Actually creating entries:
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### Improving the ingestion to include missed attributes
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Check Queries
 
 ```elixir
 R.recompile()
@@ -281,34 +291,4 @@ chapter.verses
 
 ```
 
-<!-- livebook:{"branch_parent_index":0} -->
-
-## 1) Understanding the Schema
-
 #### Session Creation
-
-```elixir
-## ref to schema @ lib/vyasa/sangh/session.ex to see the schema. The changeset is the one that shows how the creation works.
-
-{:ok, session} =
-  %{id: Ecto.UUID.generate()}
-  |> Vyasa.Sangh.create_session()
-```
-
-#### Creating Text
-
-```elixir
-{:ok, text} = %{title: "gita"} |> Vyasa.Written.create_text()
-```
-
-#### Creating Comments
-
-```elixir
-%{
-  id: Ecto.UUID.generate(),
-  type: "null",
-  body: "My Comment Body",
-  session_id: session.id
-}
-|> Vyasa.Sangh.create_comment()
-```

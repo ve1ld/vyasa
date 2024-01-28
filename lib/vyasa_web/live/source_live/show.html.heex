@@ -4,12 +4,23 @@
 </.header>
 
 
-<.chapter_list :for={{_dom_id, chapter} <- @streams.chapters}>
-    <%= inspect chapter %>
-    <:item title={"#{chapter.no}.#{chapter.title}"}
-            navigate={~p"/explore/#{@id}/#{chapter.no}"} >
-        <p class="font-dn text-md"><%= chapter.body %></p>
-    </:item>
-</.chapter_list>
 
-<.back navigate={~p"/explore/"}>Back to Sources</.back>
+<.table
+id="chapters"
+rows={@streams.chapters}
+row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@id}/#{chap.no}") end}
+>
+    <:col :let={{_id, chap}} label="Chapter">
+        <div class="font-dn text-lg">
+            <%= chap.no %>. <%= chap.indic_name_translation %>
+        </div>
+    </:col>
+    <:col :let={{_id, chap}} label="Description">
+    <div class="font-dn text-md" >
+        <%= chap.title %>
+    </div>
+    <div class="font-dn text-md" >
+        <%= chap.indic_name %>
+    </div>
+    </:col>
+</.table>

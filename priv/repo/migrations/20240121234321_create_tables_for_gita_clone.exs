@@ -15,6 +15,11 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
       add :no, :integer, primary_key: true
       add :title, :string
       add :body, :text
+      add :indic_name, :text
+      add :indic_name_meaning, :text
+      add :indic_summary, :text
+      add :indic_name_translation, :text
+      add :indic_name_transliteration, :text
 
       add :source_id,  references(:sources, column: :id, type: :uuid),  primary_key: true
     end
