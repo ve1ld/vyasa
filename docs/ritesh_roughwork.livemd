@@ -67,17 +67,6 @@ source = %Source{
   verses: [verse, verse_2],
   chapters: [chapter]
 }
-
-# verse = Ecto.build_assoc(source, :verses, verse)
-# medium = %Medium{id: Ecto.UUID.generate()}
-# transcript = %Transcript{id: Ecto.UUID.generate()}
-
-# verse_2 = %Verse{
-#   verse_2
-#   | translations: [
-#       %Translation{language: "Urdu", body: "Urdu translationnnnn", meaning: "meaning in urdu"}
-#     ]
-# }
 ```
 
 ### Some Creation functions to create maps that can be used by changesets:
@@ -117,9 +106,9 @@ defmodule Gita do
     # num
   end
 
-  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, _source_id) do
+  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, source_id) do
     %{
-      # source_id: source_id,
+      source_id: source_id,
       no: chapter["chapter_number"],
       body: chapter["chapter_summary"],
       title: chapter["name_meaning"],
@@ -149,12 +138,13 @@ defmodule Gita do
     }
   end
 
-  def create_verse(verse, _source_id) do
+  def create_verse(verse, source_id) do
     %{
-      chapter_no: verse["verse_number"],
+      source_id: source_id,
+      chapter_no: verse["chapter_number"],
       body: verse["text"],
-      no: verse["verse_number"],
-      transliterations: [create_transliteration(verse)]
+      no: verse["verse_number"]
+      # transliterations: [create_transliteration(verse)],
     }
   end
 
@@ -173,6 +163,20 @@ defmodule Gita do
       verses: verses
     }
   end
+
+  def add_relevant_verses(chapter, verses) do
+    relevant_verses =
+      verses
+      |> Enum.filter(fn verse -> verse.chapter_no == chapter.no end)
+      |> Enum.map(fn verse -> Map.put(verse, :id, Ecto.UUID.generate()) end)
+
+    %{chapter | verses: relevant_verses}
+  end
+
+  def insert_verses_into_chapters(chapters, verses) do
+    chapters
+    |> Enum.map(fn chap -> add_relevant_verses(chap, verses) end)
+  end
 end
 ```
 
@@ -189,19 +193,41 @@ src =
   |> Repo.insert!()
 
 verses = Gita.get_verses(src.id)
-chapters = Gita.get_chapters(verses, src.id)
+
+chapters =
+  Gita.get_chapters(verses, src.id)
+  |> Gita.insert_verses_into_chapters(verses)
+
+hd(chapters)
+
 # source = Gita.get_source(chapters, verses, src.id)
 
 src
-|> Repo.preload([:chapters])
+|> Repo.preload([:chapters, verses: :chapter])
 |> Source.mutate_changeset(%{
-  chapters: [
-    %{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}
-  ]
-  # id: src.id
+  chapters: chapters
 })
 |> Repo.update!()
+
+# src 
+# |> Repo.preload([:chapters, verses: :chapter]) 
+# |> Source.mutate_changeset(%{
+
+#   chapters: chapters, 
+#   verses: verses,
+#   # chapters: [%{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}],
+#   # id: src.id
+# }) |> Repo.update!()
+
+# src 
+# |> Repo.preload([:chapters]) 
+# |> Source.mutate_changeset(%{
+#   chapters: [%{no: 1, title: "firstTitle", verses: [%{no: 3, body: "verseBody1", source_id: src.id}]}],
+#   # id: src.id
+# }) |> Repo.update!()
 ```
+
+### Check Queries
 
 ```elixir
 R.recompile()
@@ -209,6 +235,14 @@ R.recompile()
 alias Vyasa.Written
 
 Written.list_sources()
+
+[%Source{id: id} = _hd | tail] = Written.list_sources()
+Written.get_source!(id)
+Written.get_chapter!(2, id)
+# |> Repo.preload(:chapters)
+# Written.get_source!("9123257b-5df9-4092-aa43-2a054439e3c8")
+
+# Enum.count(Repo.all(Vyasa.Written.Chapter))
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
