@@ -1,4 +1,4 @@
-# Ritesh's Rough Work on Vyasa
+# 2024 - An Ecto Odessy [Initial DB Helpers]
 
 ## Root Section -- Common Utils
 
@@ -149,15 +149,6 @@ defmodule G do
 end
 ```
 
-```elixir
-# improving on the get-* functions 
-
-sid = Ecto.UUID.generate()
-
-verses = G.get_verses(sid)
-chapters = G.get_chapters(verses, sid)
-```
-
 #### DB Convenience Actions
 
 * purging of db
@@ -212,20 +203,13 @@ DBHelper.purge_db()
 DBHelper.seed_db()
 ```
 
-```elixir
-R.recompile()sr
-alias Vyasa.Written
-
-Written.get_source_by_title("Gita")
-```
-
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## Exploration
 
 ```elixir
-DBHelper.purge_db()
-DBHelper.seed_db()
+# DBHelper.purge_db()
+# DBHelper.seed_db()
 
 alias Vyasa.Written
 sources = Written.list_sources() |> Repo.preload([:chapters, :verses])
@@ -233,13 +217,8 @@ s = hd(sources)
 v = hd(s.verses)
 c = hd(s.chapters)
 Map.keys(c)
-c
 
 # Written.get_source!(hd(sources).id)
-```
-
-```elixir
-DBHelper.seed_db()
 ```
 
 ```elixir
@@ -258,15 +237,11 @@ Written.get_chapter!(2, id)
 
 ## 2) Cloning Gita by Creating a Schema for it
 
-### Actually creating entries:
+### Check Queries found in the Written context module
 
 <!-- livebook:{"break_markdown":true} -->
 
-#### Improving the ingestion to include missed attributes
-
-<!-- livebook:{"break_markdown":true} -->
-
-### Check Queries
+###
 
 ```elixir
 R.recompile()
@@ -288,10 +263,6 @@ verse_no = 2
 chapter.verses
 |> Enum.find(fn verse -> verse.no == verse_no end)
 |> Repo.preload([:source, :chapter])
-```
-
-```elixir
-
 ```
 
 #### Session Creation

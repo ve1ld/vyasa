@@ -15,8 +15,8 @@ defmodule VyasaWeb.SourceLive.Index do
 
   defp apply_action(socket, :index, _params) do
     socket
-    |> assign(:page_title, "Sources to explore")
-    |> assign(:text, nil)
+    |> assign(:page_title, "Sources")
+    |> assign(:text, "hello world")
     |> assign_meta()
 
   end
@@ -24,7 +24,7 @@ defmodule VyasaWeb.SourceLive.Index do
   defp assign_meta(socket) do
     assign(socket, :meta, %{
       title: "Sources",
-      description: "The wealth of knowledge",
+      description: "The wealth of knowledge, distilled into words",
       type: "website",
       url: url(socket, ~p"/explore/"),
     })

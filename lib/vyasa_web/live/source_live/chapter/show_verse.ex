@@ -1,9 +1,6 @@
 defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
   use VyasaWeb, :live_view
   alias Vyasa.Written
-  # alias Vyasa.Corpus.Gita
-  # alias VyasaWeb.GitaLive.ImageGenerator
-  # alias Vyasa.Adapters.OgAdapter
 
   @impl true
   def mount(_params, _session, socket) do

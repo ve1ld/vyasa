@@ -1,5 +1,8 @@
     <.header>
-    <%= @page_title %>
+
+        <div class="text-3xl">
+            <%= @page_title %>
+        </div>
     </.header>
 
     <.table
@@ -7,6 +10,10 @@
     rows={@streams.sources}
     row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.title}/") end}
     >
-    <:col :let={{_id, source}} label=""><%= source.title %></:col>
+    <:col :let={{_id, source}} label="">
+        <div class="font-dn text-2xl">
+            <%= source.title %>
+        </div>
+    </:col>
     </.table>
 

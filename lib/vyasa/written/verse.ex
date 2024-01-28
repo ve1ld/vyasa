@@ -8,7 +8,6 @@ defmodule Vyasa.Written.Verse do
   schema "verses" do
     field :no, :integer
     field :body, :string
-    # QQ: compiler was looking for this but not sure what made it look for this field since the migration file doesn't use this name
 
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no

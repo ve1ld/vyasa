@@ -30,12 +30,10 @@ defmodule Vyasa.Written do
       [%Source{}, ...]
 
   """
-
   def list_sources do
     Repo.all(Source)
     |> Repo.preload([:chapters, :verses])
   end
-
 
 
   @doc """
@@ -79,22 +77,11 @@ defmodule Vyasa.Written do
 
   end
 
-  # def get_chapter(no, source_id) do
-  #   Repo.get_by!(Chapter, no: no, source_id: source_id)
-  #   |> Repo.preload([:verses])
-  #   end
-
-  # def get_chapter!(no, source_id) do
-  #   Repo.get_by!(Chapter, no: no, source_id: source_id)
-  #   |> Repo.preload([:verses])
-  #   end
-
   def get_chapter(no, source_title) do
     src = list_sources()
     |>Enum.find(fn src -> src.title == source_title end)
     Repo.get_by(Chapter, no: no, source_id: src.id)
     |> Repo.preload([:verses])
-
    end
 
   def get_verses_in_chapter(no, source_id) do
@@ -102,46 +89,15 @@ defmodule Vyasa.Written do
     |> Repo.preload([:verses])
 
     chapter.verses
-
     end
 
   def get_verse_via_url_params(verse_no, chap_no, source_title) do
-    # chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
-    # |> Repo.preload([:verses])
-
-    # chapter.verses
-    # |> Enum.find(fn verse -> verse.no === verse_no end)
-
-    # IO.puts("get_verse_via_url_params")
-    # IO.inspect(verse_no)
-
-    # # get_chapter(chap_no, source_id)
-    # get_verses_in_chapter(chap_no, source_id)
-    # |> Enum.find(fn verse -> verse.no == verse_no end)
-
-    # chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
-    # |> Repo.preload([:verses, :source])
-
     chapter = get_chapter(chap_no, source_title)
     |> Repo.preload([:verses, :source])
 
     chapter.verses
     |> Enum.find(fn verse -> verse.no == verse_no end)
     |> Repo.preload([:chapter, :source])
-
-
-
-
-
-
-
-
-
-
-    # get_verses_in_chapter(chap_no, source_id)
-    # |> Enum.find(fn verse -> verse.no === verse_no
-    # end)
-
    end
 
   @doc """
@@ -200,10 +156,8 @@ defmodule Vyasa.Written do
   Returns an `%Ecto.Changeset{}` for tracking text changes.
 
   ## Examples
-
       iex> change_text(text)
       %Ecto.Changeset{data: %Text{}}
-
   """
   def change_text(%Text{} = text, attrs \\ %{}) do
     Text.changeset(text, attrs)
