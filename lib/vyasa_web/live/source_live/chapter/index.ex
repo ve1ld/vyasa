@@ -23,6 +23,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       verses: verses,
       title: title,
       body: body,
+      indic_name: indic_name,
+      indic_name_meaning: indic_name_meaning,
     } = Written.get_chapter(chap_no, source_id)
 
 
@@ -32,7 +34,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:chap_no, chap_no)
     |> assign(:chap_body, body)
     |> assign(:chap_title, title)
-    |> assign(:page_title, "Sources to explore")
+    |> assign(:chap_indic_name, indic_name)
+    |> assign(:chap_indic_name_meaning, indic_name_meaning)
+    |> assign(:page_title, "Chapter #{chap_no} - #{title}")
     |> assign(:text, nil)
     |> assign_meta()
   end
@@ -71,7 +75,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
               navigate={item[:navigate]}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
-              <%= item.title %>
+              <div class="font-dn text-2xl mb-4">
+                <%= item.title %>
+              </div>
             </.link>
           </dt>
           <dd class="text-zinc-700"><%= render_slot(item) %></dd>
