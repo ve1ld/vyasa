@@ -213,7 +213,10 @@ DBHelper.seed_db()
 ```
 
 ```elixir
-hd(Vyasa.Repo.all(Vyasa.Written.Chapter))
+R.recompile()sr
+alias Vyasa.Written
+
+Written.get_source_by_title("Gita")
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->

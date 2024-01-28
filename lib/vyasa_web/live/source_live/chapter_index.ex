@@ -15,23 +15,27 @@ defmodule VyasaWeb.SourceLive.ChapterIndex do
   end
 
   defp apply_action(socket, :index, %{
-      "source_id" => source_id,
+      "source_title" => source_title,
       "chap_no" => chap_no,
     } = _params) do
+
+    source = Written.get_source_by_title(source_title)
+    chapter = source.chapters
+    |> Enum.find(fn chap -> chap.no == chap_no end)
+
+    inspect(chapter)
 
     %Chapter{
       verses: verses,
       title: title,
       body: body,
-      # "verses" => verses,
-      # "title" => title,
-      # "body" => body
-    } = Written.get_chapter(chap_no, source_id)
+    } = chapter
 
 
     socket
     |> stream(:verses, verses)
-    |> assign(:source_id, source_id)
+    |> assign(:source_id, source.id)
+    |> assign(:source_tile, source.title)
     |> assign(:chap_no, chap_no)
     |> assign(:chap_body, body)
     |> assign(:chap_title, title)

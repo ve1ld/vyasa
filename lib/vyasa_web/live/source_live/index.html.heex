@@ -5,7 +5,7 @@
     <.table
     id="sources"
     rows={@streams.sources}
-    row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.id}/") end}
+    row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.title}/") end}
     >
     <:col :let={{_id, source}} label=""><%= source.title %></:col>
     </.table>

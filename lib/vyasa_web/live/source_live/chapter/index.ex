@@ -15,9 +15,10 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
 
   defp apply_action(socket, :index, %{
-      "source_id" => source_id,
+      "source_title" => source_title,
       "chap_no" => chap_no,
     } = _params) do
+
 
     %Chapter{
       verses: verses,
@@ -25,28 +26,28 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       body: body,
       indic_name: indic_name,
       indic_name_meaning: indic_name_meaning,
-    } = Written.get_chapter(chap_no, source_id)
+    } = Written.get_chapter(chap_no, source_title)
 
 
     socket
     |> stream(:verses, verses)
-    |> assign(:source_id, source_id)
+    |> assign(:source_title, source_title)
     |> assign(:chap_no, chap_no)
     |> assign(:chap_body, body)
     |> assign(:chap_title, title)
     |> assign(:chap_indic_name, indic_name)
     |> assign(:chap_indic_name_meaning, indic_name_meaning)
-    |> assign(:page_title, "Chapter #{chap_no} - #{title}")
+    |> assign(:page_title, "#{source_title} Chapter #{chap_no} | #{title}")
     |> assign(:text, nil)
     |> assign_meta()
   end
 
   defp assign_meta(socket) do
     assign(socket, :meta, %{
-      title: "Sources",
-      description: "The wealth of knowledge",
+      title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap_no} | #{socket.assigns.chap_title}",
+      description: socket.assigns.chap_body,
       type: "website",
-      url: url(socket, ~p"/explore/#{socket.assigns.source_id}/#{socket.assigns.chap_no}"),
+      url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap_no}"),
     })
   end
   @doc """

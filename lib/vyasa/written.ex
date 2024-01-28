@@ -75,17 +75,27 @@ defmodule Vyasa.Written do
   def get_source_by_title(title) do
     list_sources()
     |>Enum.find(fn src -> src.title == title end)
+    |> Repo.preload([:chapters, :verses])
+
   end
 
-  def get_chapter!(no, source_id) do
-    Repo.get_by!(Chapter, no: no, source_id: source_id)
-    |> Repo.preload([:verses])
-    end
+  # def get_chapter(no, source_id) do
+  #   Repo.get_by!(Chapter, no: no, source_id: source_id)
+  #   |> Repo.preload([:verses])
+  #   end
 
-  def get_chapter(no, source_id) do
-    Repo.get_by(Chapter, no: no, source_id: source_id)
+  # def get_chapter!(no, source_id) do
+  #   Repo.get_by!(Chapter, no: no, source_id: source_id)
+  #   |> Repo.preload([:verses])
+  #   end
+
+  def get_chapter(no, source_title) do
+    src = list_sources()
+    |>Enum.find(fn src -> src.title == source_title end)
+    Repo.get_by(Chapter, no: no, source_id: src.id)
     |> Repo.preload([:verses])
-    end
+
+   end
 
   def get_verses_in_chapter(no, source_id) do
     chapter = Repo.get_by(Chapter, no: no, source_id: source_id)
@@ -95,21 +105,24 @@ defmodule Vyasa.Written do
 
     end
 
-  def get_verse_via_url_params(verse_no, chap_no, source_id) do
+  def get_verse_via_url_params(verse_no, chap_no, source_title) do
     # chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
     # |> Repo.preload([:verses])
 
     # chapter.verses
     # |> Enum.find(fn verse -> verse.no === verse_no end)
 
-    IO.puts("get_verse_via_url_params")
-    IO.inspect(verse_no)
+    # IO.puts("get_verse_via_url_params")
+    # IO.inspect(verse_no)
 
     # # get_chapter(chap_no, source_id)
     # get_verses_in_chapter(chap_no, source_id)
     # |> Enum.find(fn verse -> verse.no == verse_no end)
 
-    chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
+    # chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
+    # |> Repo.preload([:verses, :source])
+
+    chapter = get_chapter(chap_no, source_title)
     |> Repo.preload([:verses, :source])
 
     chapter.verses

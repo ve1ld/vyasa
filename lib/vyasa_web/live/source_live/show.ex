@@ -10,19 +10,20 @@ defmodule VyasaWeb.SourceLive.Show do
   end
 
   @impl true
-  def handle_params(%{"source_id" => id}, _, socket) do
-    # source = Written.get_source!(id)
+  def handle_params(%{"source_title" => source_title}, _, socket) do
     %Source{
+      id: id,
       verses: verses,
       chapters: chapters,
       title: title
-    } = Written.get_source!(id)
+    } = Written.get_source_by_title(source_title)
 
     {
       :noreply,
       socket
       |> assign(:id, id)
       |> assign(:title, title)
+      |> assign(:page_title, title)
       |> stream(:verses, verses)
       |> stream(:chapters, chapters)
       |> assign_meta()
@@ -33,9 +34,9 @@ defmodule VyasaWeb.SourceLive.Show do
   defp assign_meta(socket) do
     assign(socket, :meta, %{
       title: socket.assigns.title,
-      description: "Source of a wealth of information",
+      description: "Explore the #{socket.assigns.title}",
       type: "website",
-      url: url(socket, ~p"/explore/#{socket.assigns.id}")
+      url: url(socket, ~p"/explore/#{socket.assigns.title}")
     })
   end
 

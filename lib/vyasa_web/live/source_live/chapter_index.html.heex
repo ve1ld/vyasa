@@ -5,7 +5,7 @@
 
     <.verse_list :for={{_dom_id, verse} <- @streams.verses}>
         <:item title={"#{verse.chapter_no}. #{verse.no}"}
-               navigate={~p"/explore/#{@source_id}/#{@chap_no}/"} >
+               navigate={~p"/explore/#{@source_title}/#{@chap_no}/"} >
            <p class="font-dn text-xl"><%= verse.body |> String.split("।।") |> List.first()  %></p>
         </:item>
     </.verse_list>
