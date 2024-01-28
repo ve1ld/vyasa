@@ -1,0 +1,12 @@
+    <.header>
+    <%= @page_title %>
+    </.header>
+
+    <.table
+    id="sources"
+    rows={@streams.sources}
+    row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.id}/") end}
+    >
+    <:col :let={{_id, source}} label=""><%= source.title %></:col>
+    </.table>
+

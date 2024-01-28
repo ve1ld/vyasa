@@ -245,6 +245,29 @@ Written.get_chapter!(2, id)
 # Enum.count(Repo.all(Vyasa.Written.Chapter))
 ```
 
+```elixir
+# Repo.get_by(Chapter, no: 1, source_id: "a220dffc-d8cc-4ca5-933c-44ea6dc95669")
+
+# Repo.get(Source, "a220dffc-d8cc-4ca5-933c-44ea6dc95669")
+
+# Written.get_source!("a220dffc-d8cc-4ca5-933c-44ea6dc95669")
+Written.list_sources()
+Written.get_source!("6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+```
+
+```elixir
+R.recompile()
+alias Vyasa.Written
+
+Written.get_chapter(1, "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+
+Written.get_verse_via_url_params(1, "1", "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+```
+
+```elixir
+
+```
+
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## 1) Understanding the Schema

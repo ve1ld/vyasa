@@ -6,7 +6,7 @@ defmodule Vyasa.Written do
   import Ecto.Query, warn: false
   alias Vyasa.Repo
 
-  alias Vyasa.Written.Text
+  alias Vyasa.Written.{Text, Source, Chapter}
 
   @doc """
   Returns the list of texts.
@@ -20,6 +20,23 @@ defmodule Vyasa.Written do
   def list_texts do
     Repo.all(Text)
   end
+
+  @doc """
+  Returns the list of sources.
+
+  ## Examples
+
+      iex> list_sources()
+      [%Source{}, ...]
+
+  """
+
+  def list_sources do
+    Repo.all(Source)
+    |> Repo.preload([:chapters, :verses])
+  end
+
+
 
   @doc """
   Gets a single text.
@@ -36,6 +53,68 @@ defmodule Vyasa.Written do
 
   """
   def get_text!(id), do: Repo.get!(Text, id)
+
+  @doc """
+  Gets a single source by id.
+
+  Raises `Ecto.NoResultsError` if the Text does not exist.
+
+  ## Examples
+
+      iex> get_source!(<uuid>)
+      %Source{}
+
+      iex> get_text!(<uuid>)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_source!(id), do: Repo.get!(Source, id)
+  |> Repo.preload(:chapters)
+  |> Repo.preload(:verses)
+
+  def get_chapter!(no, source_id) do
+    Repo.get_by!(Chapter, no: no, source_id: source_id)
+    |> Repo.preload([:verses])
+    end
+
+  def get_chapter(no, source_id) do
+    Repo.get_by(Chapter, no: no, source_id: source_id)
+    |> Repo.preload([:verses])
+    end
+
+  def get_verses_in_chapter(no, source_id) do
+    chapter = Repo.get_by(Chapter, no: no, source_id: source_id)
+    |> Repo.preload([:verses])
+
+    chapter.verses
+
+    end
+
+  def get_verse_via_url_params(verse_no, chap_no, source_id) do
+    # chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
+    # |> Repo.preload([:verses])
+
+    # chapter.verses
+    # |> Enum.find(fn verse -> verse.no === verse_no end)
+
+    IO.puts("get_verse_via_url_params")
+    IO.inspect(verse_no)
+
+    # get_chapter(chap_no, source_id)
+    get_verses_in_chapter(chap_no, source_id)
+    |> Enum.find(fn verse -> verse.no == verse_no end)
+    |> dbg()
+
+
+
+
+
+
+    # get_verses_in_chapter(chap_no, source_id)
+    # |> Enum.find(fn verse -> verse.no === verse_no
+    # end)
+
+  end
 
   @doc """
   Creates a text.
@@ -101,4 +180,4 @@ defmodule Vyasa.Written do
   def change_text(%Text{} = text, attrs \\ %{}) do
     Text.changeset(text, attrs)
   end
-end
+  end

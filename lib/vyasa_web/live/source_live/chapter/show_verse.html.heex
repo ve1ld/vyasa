@@ -1,0 +1,74 @@
+<style>
+ .tooltip {
+  display: none;
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: cyan;
+  color: black;
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 90%;
+ }
+ .container-YouTubePlayerHidden {
+   display: none;
+ }
+ .container-YouTubePlayer {
+   position: absolute;
+   top: 0;
+   left: 0;
+ }
+</style>
+
+<%= inspect @verse_no %>
+<%= inspect @chap_no %>
+<%= inspect @source_id %>
+
+<%= inspect @verse %>
+
+
+<div
+  id="verseContainer"
+>
+  <.header>
+      <:subtitle><%= @verse[:chapter_no] %>:<%= @verse[:no] %></:subtitle>
+      <p class="font-dn text-2xl">
+                                                          <%= @verse[:body] %></p>
+  </.header>
+  <br />
+  <br />
+  <br />
+  <.button
+  phx-hook="ShareQuoteButton"
+  id="ShareQuoteButton"
+  aria-describedby="tooltip"
+  data-verse={Jason.encode!(@verse)}
+  data-share-title={"[Chapter #{@chap_no} Verse #{@verse_no}]"}
+  >
+      Share
+  </.button>
+  <.button
+  id="button-YouTubePlayer"
+  >
+     Toggle Player
+  </.button>
+  <div class="tooltip" id={"tooltip-ShareQuoteButton"}>
+      It's me, tooltip content...
+  </div>
+
+  <.back navigate={~p"/explore/#{@source_id}/#{@chap_no}"}>
+      Back to Chapter <%= @verse[:chapter_no] %>
+  </.back>
+  <.back navigate={~p"/explore/#{@source_id}"}>Back to Source</.back>
+  <div
+    class="container-YouTubePlayer container-YouTubePlayerHidden"
+    phx-hook={"MiniPlayer"}
+    id={"container-YouTubePlayer"}>
+    <.live_component
+      module={VyasaWeb.YouTubePlayer}
+      id={"YouTubePlayer"}
+    />
+  </div>
+</div>

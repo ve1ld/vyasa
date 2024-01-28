@@ -14,11 +14,19 @@ defmodule Vyasa.Written.Source do
   end
 
   @doc false
-  def changeset(source, attrs) do
+  def gen_changeset(source, attrs) do
     source
-    |> cast(attrs, [:title])
+    |> cast(attrs, [:id, :title])
     |> cast_assoc(:chapters)
     |> cast_assoc(:verses)
     |> validate_required([:title])
+  end
+
+  def mutate_changeset(source, attrs) do
+    source
+    |> cast(attrs, [:id, :title])
+    |> cast_assoc(:chapters)
+    |> cast_assoc(:verses)
+    |> validate_required([:id, :title])
   end
 end
