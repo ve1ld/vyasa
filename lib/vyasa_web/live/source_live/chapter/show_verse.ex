@@ -20,7 +20,9 @@ defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
     # IO.inspect(chap_no)
     # IO.inspect(verse_no)
 
-    verse = Written.get_verse_via_url_params(verse_no, chap_no, source_id)
+    verse = Written.get_verse_via_url_params(String.to_integer(verse_no), chap_no, source_id) |> dbg()
+    IO.inspect("SOS")
+    IO.inspect(verse)
 
 
     {:noreply,
@@ -28,8 +30,9 @@ defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
      |> assign(:source_id, source_id)
      |> assign(:chap_no, chap_no)
      |> assign(:verse_no, String.to_integer(verse_no))
-     |> assign(:verse, verse)}
+     |> assign(:verse, verse)
      |> dbg()
+    }
      # |> assign(:chapter, Written.get_chapter(chap_no, source_id))
      # |> stream(:verses, Gita.verses(chap_no))
      # |> assign(:verse, Gita.verse(chap_no, verse_no))

@@ -42,7 +42,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       title: "Sources",
       description: "The wealth of knowledge",
       type: "website",
-      url: url(socket, ~p"/explore/"),
+      url: url(socket, ~p"/explore/#{socket.assigns.source_id}/#{socket.assigns.chap_no}"),
     })
   end
   @doc """

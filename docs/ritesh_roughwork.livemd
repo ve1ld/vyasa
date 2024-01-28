@@ -252,16 +252,29 @@ Written.get_chapter!(2, id)
 
 # Written.get_source!("a220dffc-d8cc-4ca5-933c-44ea6dc95669")
 Written.list_sources()
-Written.get_source!("6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+Written.get_source!("a619b2fa-3ec8-4dcc-b878-b2a80d48b38a")
 ```
 
 ```elixir
 R.recompile()
 alias Vyasa.Written
 
-Written.get_chapter(1, "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+# Written.get_chapter(1, "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
 
-Written.get_verse_via_url_params(1, "1", "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+# Written.get_verse_via_url_params(8,"1","a619b2fa-3ec8-4dcc-b878-b2a80d48b38a") |> dbg()
+
+# Written.get_source_by_title("Gita")
+# |> Enum.find(fn src -> src.title == "gita" end)
+
+chapter =
+  Repo.get_by(Chapter, no: 2, source_id: "a619b2fa-3ec8-4dcc-b878-b2a80d48b38a")
+  |> Repo.preload([:verses, :source])
+
+verse_no = 2
+
+chapter.verses
+|> Enum.find(fn verse -> verse.no == verse_no end)
+|> Repo.preload([:source, :chapter])
 ```
 
 ```elixir

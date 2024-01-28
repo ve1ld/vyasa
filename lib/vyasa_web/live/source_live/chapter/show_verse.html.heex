@@ -22,33 +22,18 @@
  }
 </style>
 
-<%= inspect @verse_no %>
-<%= inspect @chap_no %>
-<%= inspect @source_id %>
-
-<%= inspect @verse %>
-
 
 <div
   id="verseContainer"
 >
   <.header>
-      <:subtitle><%= @verse[:chapter_no] %>:<%= @verse[:no] %></:subtitle>
+      <:subtitle><%= @verse.chapter_no %>:<%= @verse.no %></:subtitle>
       <p class="font-dn text-2xl">
-                                                          <%= @verse[:body] %></p>
+                                                          <%= @verse.body %></p>
   </.header>
   <br />
   <br />
   <br />
-  <.button
-  phx-hook="ShareQuoteButton"
-  id="ShareQuoteButton"
-  aria-describedby="tooltip"
-  data-verse={Jason.encode!(@verse)}
-  data-share-title={"[Chapter #{@chap_no} Verse #{@verse_no}]"}
-  >
-      Share
-  </.button>
   <.button
   id="button-YouTubePlayer"
   >
@@ -59,7 +44,7 @@
   </div>
 
   <.back navigate={~p"/explore/#{@source_id}/#{@chap_no}"}>
-      Back to Chapter <%= @verse[:chapter_no] %>
+      Back to Chapter <%= @verse.chapter_no %>
   </.back>
   <.back navigate={~p"/explore/#{@source_id}"}>Back to Source</.back>
   <div
@@ -72,3 +57,9 @@
     />
   </div>
 </div>
+
+<%= inspect @verse_no %>
+<%= inspect @chap_no %>
+<%= inspect @source_id %>
+
+<%= inspect @verse %>

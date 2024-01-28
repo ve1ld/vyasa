@@ -72,6 +72,11 @@ defmodule Vyasa.Written do
   |> Repo.preload(:chapters)
   |> Repo.preload(:verses)
 
+  def get_source_by_title(title) do
+    list_sources()
+    |>Enum.find(fn src -> src.title == title end)
+  end
+
   def get_chapter!(no, source_id) do
     Repo.get_by!(Chapter, no: no, source_id: source_id)
     |> Repo.preload([:verses])
@@ -100,10 +105,20 @@ defmodule Vyasa.Written do
     IO.puts("get_verse_via_url_params")
     IO.inspect(verse_no)
 
-    # get_chapter(chap_no, source_id)
-    get_verses_in_chapter(chap_no, source_id)
+    # # get_chapter(chap_no, source_id)
+    # get_verses_in_chapter(chap_no, source_id)
+    # |> Enum.find(fn verse -> verse.no == verse_no end)
+
+    chapter = Repo.get_by(Chapter, no: chap_no, source_id: source_id)
+    |> Repo.preload([:verses, :source])
+
+    chapter.verses
     |> Enum.find(fn verse -> verse.no == verse_no end)
-    |> dbg()
+    |> Repo.preload([:chapter, :source])
+
+
+
+
 
 
 
@@ -114,7 +129,7 @@ defmodule Vyasa.Written do
     # |> Enum.find(fn verse -> verse.no === verse_no
     # end)
 
-  end
+   end
 
   @doc """
   Creates a text.
