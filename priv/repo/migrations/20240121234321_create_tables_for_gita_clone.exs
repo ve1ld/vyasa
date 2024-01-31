@@ -35,14 +35,12 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
 
     create table(:translations, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :lang, :string # might make sense to represent this in an enum table?
+      add :lang, :string
       add :type, :string
 
       add :target, :jsonb
-      ## QQ: unsure of a good choice of on-delete, putting nothing as default for now
       add :chapter_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
       add :verse_id, references(:verses, column: :id, type: :uuid, on_delete: :nothing)
-
       add :source_id, references(:sources, column: :id, type: :uuid), null: false
     end
 

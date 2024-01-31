@@ -24,7 +24,7 @@ R.recompile()
 Convert json --> struct --> using changeset --> insert into repo
 
 ```elixir
-alias Vyasa.Written.{Chapter, Source}
+alias Vyasa.Written.{Chapter, Source, Translation}
 alias Vyasa.Repo
 
 defmodule G do
@@ -36,70 +36,63 @@ defmodule G do
 
   alias Vyasa.Written.{Chapter}
 
-  def get_verses(source_id) do
+  def read_verses() do
     @verses
     |> File.read!()
     |> Jason.decode!()
-    |> Enum.map(fn verse -> create_verse(verse, source_id) end)
   end
 
-  def get_verses() do
-    @verses
+  def read_chapters() do
+    @chapters
     |> File.read!()
     |> Jason.decode!()
-    |> Enum.map(fn verse -> G.create_verse(verse) end)
   end
 
   def create_verse(verse, source_id) do
+    updated =
+      verse
+      |> Map.put("source_id", source_id)
+      |> Map.put("chapter_no", verse["chapter_number"])
+      |> Map.put("body", verse["text"])
+      |> Map.put("no", verse["verse_number"])
+
+    dbg(updated)
+  end
+
+  def get_verses_for_chapter(chap_no, src_id) do
+    read_verses()
+    |> Enum.filter(fn verse -> verse["chapter_number"] == chap_no end)
+    |> Enum.map(fn verse -> G.create_verse(verse, src_id) end)
+  end
+
+  def create_translation_for_chapter(chapter) do
     %{
-      source_id: source_id,
-      chapter_no: verse["chapter_number"],
-      body: verse["text"],
-      no: verse["verse_number"]
-      # transliterations: [create_transliteration(verse)],
+      type: "chapters",
+      lang: "sa",
+      target: %{
+        title: chapter["name"],
+        translit_title: chapter["name_transliterated"],
+        body: chapter["chapter_summary_hindi"],
+        body_translit: chapter["chapter_summary"]
+      }
     }
   end
 
-  def create_verse(verse) do
+  def create_chapter(%{} = chapter, source_id) do
     %{
-      source_id: nil,
-      chapter_no: verse["chapter_number"],
-      body: verse["text"],
-      no: verse["verse_number"]
-      # transliterations: [create_transliteration(verse)],
+      no: chapter["chapter_number"],
+      body: chapter["chapter_summary"],
+      source_id: source_id
     }
   end
 
-  def create_transliteration(%{} = verse) do
-    %{
-      lang: "en",
-      body: verse["transliteration"],
-      meaning: verse["word_meanings"]
-    }
-  end
-
-  def create_translation(%{} = _verse) do
-    %{
-      lang: "en",
-      body: "body"
-    }
-  end
-
-  def create_chapter(%{} = chapter, [%{} = _head | _rest] = verses, source_id) do
+  def create_chapter(%{} = chapter, [%{} = _head | _rest] = _verses, source_id) do
     IO.puts("CHECK THIS CHAPTER OUT")
     IO.inspect(chapter)
 
     %{
       source_id: source_id,
-      no: chapter["chapter_number"],
-      body: chapter["chapter_summary"],
-      title: chapter["name_meaning"],
-      indic_name: chapter["name"],
-      indic_name_meaning: chapter["name_meaning"],
-      indic_summary: chapter["chapter_summary_hindi"],
-      indic_name_translation: chapter["name_translation"],
-      indic_name_transliteration: chapter["name_transliterated"],
-      verses: Enum.filter(verses, fn %{chapter_no: num} -> chapter["chapter_number"] == num end)
+      no: chapter["chapter_number"]
     }
   end
 
@@ -108,6 +101,13 @@ defmodule G do
     |> File.read!()
     |> Jason.decode!()
     |> Enum.map(fn chap -> create_chapter(chap, verses, source_id) end)
+  end
+
+  def get_chapters(source_id) do
+    @chapters
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn chap -> create_chapter(chap, source_id) end)
   end
 
   def add_relevant_verses(chapter, verses) do
@@ -133,18 +133,57 @@ defmodule G do
     }
   end
 
-  def create_changeset(chapter) do
-    # IO.inspect(chapter["chapter_number"])
-    IO.inspect(chapter)
+  def create_chapter_changeset(chap, verses, src_id) do
+    Chapter.changeset(
+      %Chapter{
+        no: chap["chapter_number"],
+        source_id: src_id
+      },
+      %{
+        verses: verses
+      }
+    )
+  end
 
-    %{
-      "chapter_number" => num,
-      "chapter_summary" => body
-    } = chapter
+  def create_chap_translation_changeset(%Chapter{} = inserted_chap, %{} = chap) do
+    Translation.gen_changeset(
+      %Translation{},
+      %{
+        lang: "en",
+        body: chap["chapter_summary"],
+        target: %{
+          title: chap["name"],
+          translit_title: chap["name_transliterated"]
+        }
+      },
+      inserted_chap
+    )
+  end
 
-    changeset = Chapter.changeset(%Chapter{}, %{num: num, body: body})
+  def create_translation_changeset_for_verse(inserted_verse, relevant_verse) do
+    dbg(relevant_verse)
 
-    changeset
+    Translation.gen_changeset(
+      %Translation{},
+      %{
+        lang: "en",
+        # body: verse["transliteration"],
+        target: %{
+          body: relevant_verse["text"],
+          body_translit_meant: relevant_verse["word_meanings"],
+          body_translit: relevant_verse["transliteration"]
+        }
+      },
+      inserted_verse
+    )
+    |> dbg()
+  end
+
+  def create_translation_changesets_for_verses(inserted_verses, relevant_verses) do
+    Enum.zip(inserted_verses, relevant_verses)
+    |> Enum.map(fn {inserted_verse, relevant_verse} ->
+      create_translation_changeset_for_verse(inserted_verse, relevant_verse)
+    end)
   end
 end
 ```
@@ -158,43 +197,115 @@ end
 defmodule DBHelper do
   alias Vyasa.Repo
   alias G
-  alias Vyasa.Written.{Source, Chapter, Verse, Transliteration}
+  alias Vyasa.Written.{Source, Chapter, Verse, Transliteration, Translation}
 
   def purge_db() do
-    [Verse, Chapter, Source, Transliteration]
+    [Translation, Verse, Chapter, Source, Transliteration]
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 
+  def insert_source(uuid, source_title \\ "Gita") do
+    source_changeset =
+      Source.gen_changeset(%Source{}, %{
+        id: uuid,
+        title: source_title
+      })
+
+    Repo.insert!(source_changeset)
+  end
+
+  def insert_chapter(chap, source_id) do
+    relevant_verses = G.get_verses_for_chapter(chap["chapter_number"], source_id)
+    dbg(relevant_verses)
+
+    chap_changeset = G.create_chapter_changeset(chap, relevant_verses, source_id)
+    {:ok, %Chapter{} = inserted_chapter} = Repo.insert(chap_changeset)
+    %{verses: inserted_verses} = inserted_chapter
+
+    changeset_chap_translation = G.create_chap_translation_changeset(inserted_chapter, chap)
+    {:ok, %Translation{} = _inserted_chap_translation} = Repo.insert(changeset_chap_translation)
+
+    verses_translation_changesets =
+      G.create_translation_changesets_for_verses(inserted_verses, relevant_verses)
+
+    _inserted_verse_translations =
+      verses_translation_changesets
+      |> Enum.map(fn c_set -> Repo.insert(c_set) end)
+      |> Enum.map(fn {:ok, inserted_verse_translation} -> inserted_verse_translation end)
+  end
+
+  def insert_chapters(source_id) do
+    G.read_chapters()
+    |> Enum.map(fn chap -> insert_chapter(chap, source_id) end)
+  end
+
   def seed_db() do
-    src =
-      Source.gen_changeset(
-        %Source{
-          title: "Gita"
-        },
-        %{}
-      )
-      |> Repo.insert!()
-
-    verses = G.get_verses(src.id)
-
-    chapters =
-      G.get_chapters(verses, src.id)
-      |> G.insert_verses_into_chapters(verses)
-
-    src
-    |> Repo.preload([:chapters, verses: :chapter])
-    |> Source.mutate_changeset(%{
-      chapters: chapters
-    })
-    |> Repo.update!()
+    uuid = Ecto.UUID.generate()
+    source = DBHelper.insert_source(uuid, "Gita")
+    dbg(source)
+    DBHelper.insert_chapters(uuid) |> dbg()
   end
 end
+
+alias Vyasa.Written.{Source}
+```
+
+#### Testing the purging and seeding of the db:
+
+```elixir
+R.recompile()
+DBHelper.purge_db()
+DBHelper.seed_db()
+```
+
+##### Bala's working example of using the polymorphic translations
+
+<!-- livebook:{"break_markdown":true} -->
+
+Typically, we can select which changeset to use via the :with option. This won't work in our case because our APIs for changeset has 3 args (opp to 2 arg convention). There's no repercussion in doing it as a 2-step process now.
+
+Translations is expected to be added after chapter and verse has been added. The existing chain of changesets won't work automatically like that. Nested assocs won't work here.
+
+Therefore, the seed_db() needs to be updated so that the translations will be added later.
+
+It becomes 3 steps as shown in the block below:
+
+```elixir
+source =
+  Vyasa.Written.Source.gen_changeset(%Vyasa.Written.Source{}, %{
+    id: Ecto.UUID.generate(),
+    title: "gita_v2"
+  })
+  |> Vyasa.Repo.insert!()
+
+{:ok, %{verses: [verse | _]} = chapter} =
+  Chapter.changeset(
+    %Chapter{no: 5, source_id: source.id},
+    %{
+      verses: [
+        %{no: 1, body: "Kurukshetra", source_id: source.id}
+      ]
+    }
+  )
+  |> Vyasa.Repo.insert()
+
+Vyasa.Written.Translation.gen_changeset(
+  %Vyasa.Written.Translation{},
+  %{
+    lang: "en",
+    body: "अर्जुनविषादयोग",
+    target: %{title: "Arjuna Vishada-yoga"}
+  },
+  chapter
+)
+|> Vyasa.Repo.insert()
 ```
 
 ```elixir
 id = Ecto.UUID.generate()
 verses = G.get_verses(id)
 chaps = G.get_chapters(verses, id) |> G.insert_verses_into_chapters(verses)
+hd(chaps)
 ```
 
 ```elixir
@@ -216,7 +327,9 @@ sources = Written.list_sources() |> Repo.preload([:chapters, :verses])
 s = hd(sources)
 v = hd(s.verses)
 c = hd(s.chapters)
-Map.keys(c)
+# Map.keys(c)
+
+sources
 
 # Written.get_source!(hd(sources).id)
 ```

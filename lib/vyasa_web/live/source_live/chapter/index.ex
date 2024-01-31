@@ -24,8 +24,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       verses: verses,
       title: title,
       body: body,
-      indic_name: indic_name,
-      indic_name_meaning: indic_name_meaning,
+      # indic_name: indic_name,
+      # indic_name_meaning: indic_name_meaning,
     } = Written.get_chapter(chap_no, source_title)
 
 
@@ -35,8 +35,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:chap_no, chap_no)
     |> assign(:chap_body, body)
     |> assign(:chap_title, title)
-    |> assign(:chap_indic_name, indic_name)
-    |> assign(:chap_indic_name_meaning, indic_name_meaning)
+    # |> assign(:chap_indic_name, indic_name)
+    # |> assign(:chap_indic_name_meaning, indic_name_meaning)
     |> assign(:page_title, "#{source_title} Chapter #{chap_no} | #{title}")
     |> assign(:text, nil)
     |> assign_meta()

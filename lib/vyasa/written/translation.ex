@@ -5,7 +5,7 @@ defmodule Vyasa.Written.Translation do
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "translations" do
-    field :lang, :string # to consider changing to language enum
+    field :lang, :string
     # target table
     field :type, :string
     #polymorphic shape of target
@@ -27,6 +27,16 @@ defmodule Vyasa.Written.Translation do
     belongs_to :chapter, Chapter, references: :no, foreign_key: :chapter_no, type: :integer
     belongs_to :source, Source, references: :id, type: Ecto.UUID
   end
+
+  # def changeset(translation, %{type: my_type} = attrs) when is_map_key(attrs, :type) do
+  #   type = Map.get(attrs, :type)
+  #   case type do
+  #     "chapters" ->
+  #       chapter_changeset(translation, attrs)
+  #     "verses" ->
+  #       verse_changeset(translation, attrs)
+  #   end
+  #  end
 
   @doc false
   def gen_changeset(translation, attrs, %Verse{id: verse_id, __meta__: %{source: type}, source_id: s_id}) do

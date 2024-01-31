@@ -9,11 +9,11 @@ defmodule Vyasa.Written.Chapter do
     field :no, :integer, primary_key: :true
     field :body, :string
     field :title, :string
-    field :indic_name, :string
-    field :indic_name_meaning, :string
-    field :indic_summary, :string
-    field :indic_name_translation, :string
-    field :indic_name_transliteration, :string
+    # field :indic_name, :string
+    # field :indic_name_meaning, :string
+    # field :indic_summary, :string
+    # field :indic_name_translation, :string
+    # field :indic_name_transliteration, :string
 
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id, primary_key: :true
 
@@ -23,7 +23,7 @@ defmodule Vyasa.Written.Chapter do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:body, :no, :title, :indic_name, :indic_name_meaning, :indic_summary, :indic_name_translation, :indic_name_transliteration])
+    |> cast(attrs, [:body, :no, :title])
     |> cast_assoc(:verses)
   end
 end
