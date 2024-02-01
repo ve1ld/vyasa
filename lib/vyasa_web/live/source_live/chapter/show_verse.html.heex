@@ -27,10 +27,25 @@
   id="verseContainer"
 >
   <.header>
-      <:subtitle><%= @verse.chapter_no %>:<%= @verse.no %></:subtitle>
-      <p class="font-dn text-2xl">
-    <%= @verse.body %></p>
+      <:subtitle>
+        <%= @verse.chapter_no %>:<%= @verse.no %>
+      </:subtitle>
+  <p class="font-dn text-2xl">
+    <%= @verse.body %>
+  </p>
   </.header>
+
+  <p class="font-dn text-2xl m-4">
+    <%= @en_translation.target.body_translit %>
+  </p>
+
+  <p class="font-dn text-2xl m-4">
+    <%= @en_translation.target.body_translit_meant %>
+  </p>
+
+
+
+
   <br />
   <br />
   <br />

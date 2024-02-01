@@ -11,12 +11,15 @@ defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
   def handle_params(%{"source_title" => source_title, "chap_no" => chap_no, "verse_no" => verse_no}, _, socket) do
     verse = Written.get_verse_via_url_params(String.to_integer(verse_no), chap_no, source_title) |> dbg()
 
+    en_translation = verse.translations |> Enum.find(fn t -> t.lang == "en" end)
+
     {:noreply,
      socket
      |> assign(:source_title, source_title)
      |> assign(:chap_no, chap_no)
      |> assign(:verse_no, String.to_integer(verse_no))
      |> assign(:verse, verse)
+     |> assign(:en_translation, en_translation)
      # |> assign_meta()
     }
      # |> assign(:chapter, Written.get_chapter(chap_no, source_id))

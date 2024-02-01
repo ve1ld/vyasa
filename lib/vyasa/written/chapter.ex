@@ -2,7 +2,7 @@ defmodule Vyasa.Written.Chapter do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Vyasa.Written.{Source, Verse}
+  alias Vyasa.Written.{Source, Verse, Translation}
 
   @primary_key false
   schema "chapters" do
@@ -16,8 +16,8 @@ defmodule Vyasa.Written.Chapter do
     # field :indic_name_transliteration, :string
 
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id, primary_key: :true
-
     has_many :verses, Verse, references: :no, foreign_key: :chapter_no
+    has_many :translations, Translation, references: :no, foreign_key: :chapter_no
   end
 
   @doc false

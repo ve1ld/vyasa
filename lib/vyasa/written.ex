@@ -73,7 +73,7 @@ defmodule Vyasa.Written do
   def get_source_by_title(title) do
     list_sources()
     |>Enum.find(fn src -> src.title == title end)
-    |> Repo.preload([:chapters, :verses])
+    |> Repo.preload([verses: [:translations], chapters: [:translations]])
 
   end
 
@@ -81,23 +81,23 @@ defmodule Vyasa.Written do
     src = list_sources()
     |>Enum.find(fn src -> src.title == source_title end)
     Repo.get_by(Chapter, no: no, source_id: src.id)
-    |> Repo.preload([:verses])
+    |> Repo.preload([:translations, verses: [:translations]])
    end
 
   def get_verses_in_chapter(no, source_id) do
     chapter = Repo.get_by(Chapter, no: no, source_id: source_id)
-    |> Repo.preload([:verses])
+    |> Repo.preload([:verses, :translations])
 
     chapter.verses
     end
 
   def get_verse_via_url_params(verse_no, chap_no, source_title) do
     chapter = get_chapter(chap_no, source_title)
-    |> Repo.preload([:verses, :source])
+    |> Repo.preload([:source, :translations], verses: [:translations])
 
     chapter.verses
     |> Enum.find(fn verse -> verse.no == verse_no end)
-    |> Repo.preload([:chapter, :source])
+    |> Repo.preload([:chapter, :source, :translations])
    end
 
   @doc """

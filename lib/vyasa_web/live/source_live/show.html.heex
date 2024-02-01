@@ -14,7 +14,7 @@ row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@title}/#{chap.no}") end}
 >
     <:col :let={{_id, chap}} label="Chapter">
         <div class="font-dn text-lg">
-            <%= chap.no %>. <%= chap.indic_name_translation %>
+            <%= chap.no %>. <%= hd(chap.translations).target.translit_title %>
         </div>
     </:col>
     <:col :let={{_id, chap}} label="Description">
@@ -22,9 +22,10 @@ row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@title}/#{chap.no}") end}
         <%= chap.title %>
     </div>
     <div class="font-dn text-md" >
-        <%= chap.indic_name %>
+        <%= hd(chap.translations).target.title %>
     </div>
     </:col>
+
 </.table>
 
 <.back navigate={~p"/explore/"}>Back to All Sources</.back>

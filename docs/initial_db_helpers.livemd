@@ -84,6 +84,7 @@ defmodule G do
       body: chapter["chapter_summary"],
       source_id: source_id
     }
+    |> dbg()
   end
 
   def create_chapter(%{} = chapter, [%{} = _head | _rest] = _verses, source_id) do
@@ -137,7 +138,9 @@ defmodule G do
     Chapter.changeset(
       %Chapter{
         no: chap["chapter_number"],
-        source_id: src_id
+        source_id: src_id,
+        title: chap["name"],
+        body: chap["chapter_summary"]
       },
       %{
         verses: verses
@@ -152,8 +155,10 @@ defmodule G do
         lang: "en",
         body: chap["chapter_summary"],
         target: %{
-          title: chap["name"],
-          translit_title: chap["name_transliterated"]
+          title: chap["name_meaning"],
+          translit_title: chap["name_transliterated"],
+          body: chap["chapter_summary"],
+          body_meant: chap["chapter_summary_hindi"]
         }
       },
       inserted_chap
@@ -246,8 +251,6 @@ defmodule DBHelper do
     DBHelper.insert_chapters(uuid) |> dbg()
   end
 end
-
-alias Vyasa.Written.{Source}
 ```
 
 #### Testing the purging and seeding of the db:
@@ -256,6 +259,53 @@ alias Vyasa.Written.{Source}
 R.recompile()
 DBHelper.purge_db()
 DBHelper.seed_db()
+```
+
+```elixir
+### checking the query functions
+
+alias Vyasa.Written
+alias Vyasa.Repo
+
+R.recompile()
+
+src =
+  Written.list_sources()
+  |> Enum.find(fn src -> src.title == "Gita" end)
+
+# src.id
+
+# Repo.get_by(Chapter, no: 1, source_id: src.id)
+
+# src = Written.get_source_by_title("Gita")
+# foo = src.id
+# # h_v = hd(src.verses)
+# # h_v.translations
+# # foo = src.id
+# chap = Written.get_chapter(12, foo)
+# hd(chap.translations)
+
+# source_title = "Gita"
+
+# src = Written.list_sources()
+#     |>Enum.find(fn src -> src.title == source_title end)
+# no = 2 
+
+# chap = Repo.get_by(Chapter, no: no, source_id: src.id)
+#     |> Repo.preload([:verses])
+
+# first_verse = hd(chap.verses)
+
+# R.recompile()
+# chap3 = Written.get_chapter(3, "Gita")
+# verses = Written.get_verses_in_chapter(3, src.id)
+# first_v = hd(verses)
+# first_v.translations
+# Written.get_verse_via_url_params(3, 1, "Gita")
+
+# hd(Repo.all(Translation))
+
+# chap3.translations
 ```
 
 ##### Bala's working example of using the polymorphic translations
