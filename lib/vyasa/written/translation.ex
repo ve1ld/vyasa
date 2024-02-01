@@ -85,11 +85,4 @@ defmodule Vyasa.Written.Translation do
     structure
     |> cast(attrs, [:body, :body_meant ,:body_translit, :body_translit_meant])
   end
-
-  # def vid_changeset(structure, attrs) do
-  #   structure
-  #   |> cast(attrs, [:ext, :count])
-  #   |> validate_inclusion(:ext, ["mp4", "mov"])
-  #   |> validate_required([:ext])
-  # end
 end

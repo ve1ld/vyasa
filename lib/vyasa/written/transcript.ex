@@ -9,11 +9,4 @@ defmodule Vyasa.Written.Transcript do
     # TODO: create schema for transcripts...
     belongs_to :verse, Verse
   end
-
-  # @doc false
-  # def changeset(text, _attrs) do
-  #   text
-  #   # |> cast(attrs, [:title])
-  #   # |> validate_required([:title])
-  # end
 end

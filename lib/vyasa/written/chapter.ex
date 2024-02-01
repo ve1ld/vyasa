@@ -9,11 +9,6 @@ defmodule Vyasa.Written.Chapter do
     field :no, :integer, primary_key: :true
     field :body, :string
     field :title, :string
-    # field :indic_name, :string
-    # field :indic_name_meaning, :string
-    # field :indic_summary, :string
-    # field :indic_name_translation, :string
-    # field :indic_name_transliteration, :string
 
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id, primary_key: :true
     has_many :verses, Verse, references: :no, foreign_key: :chapter_no

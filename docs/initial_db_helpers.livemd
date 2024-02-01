@@ -209,6 +209,12 @@ defmodule DBHelper do
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 
+  def seed_db() do
+    uuid = Ecto.UUID.generate()
+    _source = DBHelper.insert_source(uuid, "Gita")
+    DBHelper.insert_chapters(uuid)
+  end
+
   def insert_source(uuid, source_title \\ "Gita") do
     source_changeset =
       Source.gen_changeset(%Source{}, %{
@@ -221,8 +227,6 @@ defmodule DBHelper do
 
   def insert_chapter(chap, source_id) do
     relevant_verses = G.get_verses_for_chapter(chap["chapter_number"], source_id)
-    dbg(relevant_verses)
-
     chap_changeset = G.create_chapter_changeset(chap, relevant_verses, source_id)
     {:ok, %Chapter{} = inserted_chapter} = Repo.insert(chap_changeset)
     %{verses: inserted_verses} = inserted_chapter
@@ -242,13 +246,6 @@ defmodule DBHelper do
   def insert_chapters(source_id) do
     G.read_chapters()
     |> Enum.map(fn chap -> insert_chapter(chap, source_id) end)
-  end
-
-  def seed_db() do
-    uuid = Ecto.UUID.generate()
-    source = DBHelper.insert_source(uuid, "Gita")
-    dbg(source)
-    DBHelper.insert_chapters(uuid) |> dbg()
   end
 end
 ```
@@ -272,40 +269,6 @@ R.recompile()
 src =
   Written.list_sources()
   |> Enum.find(fn src -> src.title == "Gita" end)
-
-# src.id
-
-# Repo.get_by(Chapter, no: 1, source_id: src.id)
-
-# src = Written.get_source_by_title("Gita")
-# foo = src.id
-# # h_v = hd(src.verses)
-# # h_v.translations
-# # foo = src.id
-# chap = Written.get_chapter(12, foo)
-# hd(chap.translations)
-
-# source_title = "Gita"
-
-# src = Written.list_sources()
-#     |>Enum.find(fn src -> src.title == source_title end)
-# no = 2 
-
-# chap = Repo.get_by(Chapter, no: no, source_id: src.id)
-#     |> Repo.preload([:verses])
-
-# first_verse = hd(chap.verses)
-
-# R.recompile()
-# chap3 = Written.get_chapter(3, "Gita")
-# verses = Written.get_verses_in_chapter(3, src.id)
-# first_v = hd(verses)
-# first_v.translations
-# Written.get_verse_via_url_params(3, 1, "Gita")
-
-# hd(Repo.all(Translation))
-
-# chap3.translations
 ```
 
 ##### Bala's working example of using the polymorphic translations
