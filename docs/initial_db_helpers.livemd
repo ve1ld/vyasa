@@ -55,6 +55,7 @@ defmodule G do
       |> Map.put("chapter_no", verse["chapter_number"])
       |> Map.put("body", verse["text"])
       |> Map.put("no", verse["verse_number"])
+      |> Map.put("global_order", verse["verse_order"])
 
     dbg(updated)
   end
@@ -314,11 +315,23 @@ Vyasa.Written.Translation.gen_changeset(
 |> Vyasa.Repo.insert()
 ```
 
+check if any of the verses have a nil value for the global_order attribute
+
 ```elixir
-id = Ecto.UUID.generate()
-verses = G.get_verses(id)
-chaps = G.get_chapters(verses, id) |> G.insert_verses_into_chapters(verses)
-hd(chaps)
+import Ecto.Query
+
+Vyasa.Repo.all(Vyasa.Written.Verse)
+|> Repo.preload([:translations, :source, :chapter])
+|> Enum.filter(fn v -> is_nil(v.global_order) end)
+
+query =
+  from(v in Vyasa.Written.Verse,
+    where: v.no == 1,
+    where: v.chapter_no == 5,
+    select: v
+  )
+
+res = Repo.all(query)
 ```
 
 ```elixir

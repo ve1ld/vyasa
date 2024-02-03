@@ -24,6 +24,7 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
     create table(:verses, primary_key: false) do
       add :id, :uuid, primary_key: true
       add :no, :integer
+      add :global_order, :integer
       add :chapter_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
       add :body, :text
       add :source_id, references(:sources, column: :id, type: :uuid), null: false

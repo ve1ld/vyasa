@@ -11,7 +11,18 @@
         </:subtitle>
     </.header>
 
-    <.verse_list :for={{_dom_id, verse} <- @streams.verses}>
+    <.link navigate={~p"/sync/#{@source_title}/#{@chap_no}"} >
+        <div class="flex items-center" >
+            <div class="w-1/10">
+                <Heroicons.arrow_path class="m-4 lg:w-6 lg:h-6 h-5 w-5 fill-white"/>
+            </div>
+            <div class="font-dn w-9/10">
+            Sync media in <%= @source_title %> Chapter <%= @chap_no %>
+            </div>
+        </div>
+    </.link>
+
+    <.verse_display :for={{_dom_id, verse} <- @streams.verses}>
         <:item title={"#{verse.chapter_no}.#{verse.no}"}
                navigate={~p"/explore/#{@source_title}/#{@chap_no}/#{verse.no}"} >
 
@@ -29,6 +40,6 @@
                 <%= hd(verse.translations).target.body_translit_meant  %>
             </p>
         </:item>
-    </.verse_list>
+    </.verse_display>
 
     <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= @source_title %> Chapters</.back>
