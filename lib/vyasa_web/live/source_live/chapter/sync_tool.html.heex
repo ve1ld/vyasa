@@ -1,0 +1,54 @@
+<.header>
+    <div class="font-dn text-4xl mb-4">
+        Sync Media
+    </div>
+    <div class="font-dn text-2xl mb-4">
+    Chapter <%= @chap_no%> - <%= @selected_transl.target.title %>
+    </div>
+</.header>
+
+<div class="flex w-full h-full justify-between gap-0.5">
+    <div id="leaves-timeline" class="flex flex-col w-1/2 h-900 border-2 border-green-900 rounded-md">
+        <p>Timeline</p>
+        <.leaf :for={{_dom_id, verse} <- @streams.verses}>
+            <!-- text display -->
+            <:item title={"#{verse.chapter_no}.#{verse.no}"}
+               navigate={~p"/explore/#{@source_title}/#{@chap_no}/#{verse.no}"} >
+                <p class="font-dn text-sm">
+                <%= verse.body |> String.split("।।") |> List.first()  %>
+                </p>
+            </:item>
+            <:item title={"Transliteration"}>
+            <p class="font-dn text-sm">
+                <%= hd(verse.translations).target.body_translit  %>
+            </p>
+            </:item>
+            <:time_map
+             caption_info={verse.caption_info}
+            />
+        </.leaf>
+    </div>
+    <div class="flex flex-col w-1/2 h-900 border-2 border-green-300 rounded-md">
+        <p>Action View</p>
+        <.focused_leaf>
+            <!-- text display -->
+            <:item title={"#{@focused_verse.chapter_no}.#{@focused_verse.no}"}
+               navigate={~p"/explore/#{@source_title}/#{@chap_no}/#{@focused_verse.no}"} >
+                <p class="font-dn text-sm">
+                <%= @focused_verse.body |> String.split("।।") |> List.first()  %>
+                </p>
+            </:item>
+            <:item title={"Transliteration"}>
+            <p class="font-dn text-sm">
+                <%= hd(@focused_verse.translations).target.body_translit  %>
+            </p>
+            </:item>
+            <:time_map
+             caption_info={@focused_verse.caption_info}
+            />
+        </.focused_leaf>
+
+    </div>
+</div>
+
+

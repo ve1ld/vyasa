@@ -63,8 +63,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     attr :title, :string
     attr :navigate, :any, required: false
   end
-
-  def verse_list(assigns) do
+  def verse_display(assigns) do
     ~H"""
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">

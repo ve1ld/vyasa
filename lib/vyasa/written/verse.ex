@@ -7,6 +7,7 @@ defmodule Vyasa.Written.Verse do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "verses" do
     field :no, :integer
+    field :global_order, :integer
     field :body, :string
 
     belongs_to :source, Source, type: Ecto.UUID
@@ -19,7 +20,7 @@ defmodule Vyasa.Written.Verse do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:body, :no, :source_id])
+    |> cast(attrs, [:body, :no, :global_order, :source_id])
     |> cast_assoc(:translations)
     |> cast_assoc(:transcripts)
     |> cast_assoc(:media)
