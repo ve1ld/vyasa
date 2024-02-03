@@ -8,8 +8,6 @@ defmodule Vyasa.Written do
 
   alias Vyasa.Written.{Text, Source, Chapter}
 
-  alias __MODULE__.{Source}
-
   @doc """
   Returns the list of texts.
 
@@ -73,25 +71,15 @@ defmodule Vyasa.Written do
   |> Repo.preload(:verses)
 
   def get_source_by_title(title) do
+    query = from src in Source,
+            where: src.title ==  ^title,
+            preload: [verses: [:translations], chapters: [:translations]]
 
-    # query = from src in "sources", # point 1
-    # query = from src in {"public", "sources"}, #point 2
-    # query = from src in Source, # point 3
-    #         where: src.title ==  ^title,
-    #         select: src
-
-    # Repo.one(query)
-    # |> preload([:chapters, :verses])
-
-
-    list_sources()
-    |>Enum.find(fn src -> src.title == title end)
-    |> Repo.preload([verses: [:translations], chapters: [:translations]])
+    Repo.one(query)
   end
 
   def get_chapter(no, source_title) do
-    src = list_sources()
-    |>Enum.find(fn src -> src.title == source_title end)
+    src = get_source_by_title(source_title)
     Repo.get_by(Chapter, no: no, source_id: src.id)
     |> Repo.preload([:translations, verses: [:translations]])
    end
@@ -102,15 +90,6 @@ defmodule Vyasa.Written do
 
     chapter.verses
     end
-
-  def get_verse_via_url_params(verse_no, chap_no, source_title) do
-    chapter = get_chapter(chap_no, source_title)
-    |> Repo.preload([:source, :translations], verses: [:translations])
-
-    chapter.verses
-    |> Enum.find(fn verse -> verse.no == verse_no end)
-    |> Repo.preload([:chapter, :source, :translations])
-   end
 
   @doc """
   Creates a text.

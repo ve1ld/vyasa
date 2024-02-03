@@ -9,7 +9,7 @@ defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
 
   @impl true
   def handle_params(%{"source_title" => source_title, "chap_no" => chap_no, "verse_no" => verse_no}, _, socket) do
-    verse = Written.get_verse_via_url_params(String.to_integer(verse_no), chap_no, source_title) |> dbg()
+    verse = get_verse_via_url_params(String.to_integer(verse_no), chap_no, source_title)
 
     en_translation = verse.translations |> Enum.find(fn t -> t.lang == "en" end)
 
@@ -26,6 +26,13 @@ defmodule VyasaWeb.SourceLive.Chapter.ShowVerse do
      # |> stream(:verses, Gita.verses(chap_no))
      # |> assign(:verse, Gita.verse(chap_no, verse_no))
      # |> assign_meta()}
+  end
+
+  defp get_verse_via_url_params(verse_no, chap_no, src_title) do
+    chapter = Written.get_chapter(chap_no, src_title)
+    chapter.verses
+    |> Enum.find(fn verse -> verse.no == verse_no end)
+    |> Vyasa.Repo.preload([:chapter, :source, :translations])
   end
 
   # defp assign_meta(socket) do

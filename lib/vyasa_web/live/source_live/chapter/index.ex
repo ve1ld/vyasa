@@ -3,6 +3,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   alias Vyasa.Written
   alias Vyasa.Written.{Chapter}
 
+  @default_lang "en"
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -27,7 +29,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       translations: translations,
     } = Written.get_chapter(chap_no, source_title)
 
-    en_translation = translations |> Enum.find(fn t -> t.lang == "en" end)
+    selected_transl = translations |> Enum.find(fn t -> t.lang == @default_lang end)
 
     socket
     |> stream(:verses, verses)
@@ -35,9 +37,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:chap_no, chap_no)
     |> assign(:chap_body, body)
     |> assign(:chap_title, title)
-    |> assign(:en_translation, en_translation)
-    # |> assign(:chap_indic_name, indic_name)
-    # |> assign(:chap_indic_name_meaning, indic_name_meaning)
+    |> assign(:selected_transl, selected_transl)
     |> assign(:page_title, "#{source_title} Chapter #{chap_no} | #{title}")
     |> assign(:text, nil)
     |> assign_meta()
