@@ -43,16 +43,5 @@ defmodule Vyasa.Repo.Migrations.CreateTablesForGitaClone do
       add :verse_id, references(:verses, column: :id, type: :uuid, on_delete: :nothing)
       add :source_id, references(:sources, column: :id, type: :uuid), null: false
     end
-
-
-
-    create table(:transliterations, primary_key: false) do
-      add :id, :uuid, primary_key: true
-      add :lang, :string
-      add :body, :string, null: false
-      add :meaning, :string # meanings are specific to transliterations
-
-      add :verse_id, references(:verses, column: :id, type: :uuid, on_delete: :nothing)
-    end
   end
 end

@@ -202,10 +202,10 @@ end
 defmodule DBHelper do
   alias Vyasa.Repo
   alias G
-  alias Vyasa.Written.{Source, Chapter, Verse, Transliteration, Translation}
+  alias Vyasa.Written.{Source, Chapter, Verse, Translation}
 
   def purge_db() do
-    [Translation, Verse, Chapter, Source, Transliteration]
+    [Translation, Verse, Chapter, Source]
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 

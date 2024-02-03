@@ -8,6 +8,8 @@ defmodule Vyasa.Written do
 
   alias Vyasa.Written.{Text, Source, Chapter}
 
+  alias __MODULE__.{Source}
+
   @doc """
   Returns the list of texts.
 
@@ -67,14 +69,24 @@ defmodule Vyasa.Written do
 
   """
   def get_source!(id), do: Repo.get!(Source, id)
-  |> Repo.preload(:chapters)
+  |> Repo.preload([:chapters, :verses])
   |> Repo.preload(:verses)
 
   def get_source_by_title(title) do
+
+    # query = from src in "sources", # point 1
+    # query = from src in {"public", "sources"}, #point 2
+    # query = from src in Source, # point 3
+    #         where: src.title ==  ^title,
+    #         select: src
+
+    # Repo.one(query)
+    # |> preload([:chapters, :verses])
+
+
     list_sources()
     |>Enum.find(fn src -> src.title == title end)
     |> Repo.preload([verses: [:translations], chapters: [:translations]])
-
   end
 
   def get_chapter(no, source_title) do
