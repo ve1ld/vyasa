@@ -26,7 +26,7 @@ defmodule VyasaWeb.SourceLive.Show do
       |> assign(:title, title)
       |> assign(:page_title, title)
       |> stream(:verses, verses)
-      |> stream(:chapters, chapters)
+      |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }
 

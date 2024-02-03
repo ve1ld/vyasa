@@ -28,15 +28,12 @@ defmodule Vyasa.Written.Translation do
     belongs_to :source, Source, references: :id, type: Ecto.UUID
   end
 
-  # def changeset(translation, %{type: my_type} = attrs) when is_map_key(attrs, :type) do
-  #   type = Map.get(attrs, :type)
-  #   case type do
-  #     "chapters" ->
-  #       chapter_changeset(translation, attrs)
-  #     "verses" ->
-  #       verse_changeset(translation, attrs)
-  #   end
-  #  end
+  # TODO: [low-priority].
+  # Once the schema aspects are more or less standardised, there's value in creating a default
+  # changeset / changeset that gets fired by the parent entity such that we can pass in a single
+  # map and that will do the db seeding, as opposed to the 3-step seeding approach that is being
+  # done now.
+
 
   @doc false
   def gen_changeset(translation, attrs, %Verse{id: verse_id, __meta__: %{source: type}, source_id: s_id}) do
