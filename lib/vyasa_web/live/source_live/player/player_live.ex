@@ -1,17 +1,17 @@
 defmodule Vyasa.Player.PlayerLive do
-  # use VyasaWeb, {:live_view, container: {:div, []}}
-  use VyasaWeb, :live_view
+  use VyasaWeb, {:live_view, container: {:div, []}}
+  # use VyasaWeb, :live_view
 
   # alias LiveBeats.{Accounts, MediaLibrary}
-  # alias LiveBeats.MediaLibrary.Song
+  alias Vyasa.MediaLibrary.Song
   # alias LiveBeatsWeb.Presence
 
   # on_mount {LiveBeatsWeb.UserAuth, :current_user}
   def render(assigns) do
     ~H"""
     <!-- player -->
-    <div id="audio-player" phx-hooky="AudioPlayer" class="w-full" role="region" aria-label="Player">
-      <div id="audio-ignore" phx-updatey="ignore">
+    <div id="audio-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
+      <div id="audio-ignore" phx-update="ignore">
         <audio></audio>
       </div>
       <div class="bg-white dark:bg-gray-800 p-4">
@@ -164,34 +164,53 @@ defmodule Vyasa.Player.PlayerLive do
     """
   end
 
-  @stub_song %{
-    id: 1,
+  @stub_song %Song{
+    # __meta__: #Ecto.Schema.Metadata<:loaded, "songs">,
+    id: 2,
     album_artist: nil,
-    artist: "jon",
-    played_at: ~U[2024-02-04 07:08:49Z],
-    paused_at: ~U[2024-02-04 07:09:02Z],
+    artist: "bala",
+    played_at: ~U[2024-02-04 12:52:42Z],
+    paused_at: ~U[2024-02-04 12:52:43Z],
     date_recorded: nil,
     date_released: nil,
     duration: 30,
     status: :paused,
     title: "data_verse_recitation_1_1",
-    attribution: "boi",
-    mp3_url: "http://localhost:4000/files/ff6f5f00-11c7-458b-9764-5a2d37cbc805.mp3",
-    mp3_filepath: "/Users/ritesh/Projects/live_beats/priv/uploads/songs/ff6f5f00-11c7-458b-9764-5a2d37cbc805.mp3",
-    mp3_filename: "ff6f5f00-11c7-458b-9764-5a2d37cbc805.mp3",
+    attribution: "bala___",
+    mp3_url: "http://localhost:4000/files/27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
+    mp3_filepath: "/Users/ritesh/Projects/live_beats/priv/uploads/songs/27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
+    mp3_filename: "27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
     mp3_filesize: 120268,
-    server_ip: %Postgrex.INET{address: {127, 0, 0, 1}, netmask: 32},
+    # server_ip: %Postgrex.INET{address: {127, 0, 0, 1}, netmask: 32},
     position: 0,
-    user_id: 1,
-    genre_id: nil,
-    inserted_at: ~N[2024-02-04 04:00:05],
-    updated_at: ~N[2024-02-04 07:09:01]
+    # user_id: 1,
+    # user: %LiveBeats.Accounts.User{
+    #   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    #   id: 1,
+    #   email: "ritesh@emerald.pink",
+    #   name: "Ritesh Kumar",
+    #   username: "rtshkmr",
+    #   confirmed_at: nil,
+    #   role: "subscriber",
+    #   profile_tagline: "rtshkmr's beats",
+    #   active_profile_user_id: 1,
+    #   avatar_url: "https://avatars.githubusercontent.com/u/38996397?v=4",
+    #   external_homepage_url: "https://github.com/rtshkmr",
+    #   songs_count: 1,
+    #   identities: #Ecto.Association.NotLoaded<association :identities is not loaded>,
+    #   inserted_at: ~N[2024-02-04 03:42:53],
+    #   updated_at: ~N[2024-02-04 03:42:53]
+    # },
+    # genre_id: nil,
+    # genre: #Ecto.Association.NotLoaded<association :genre is not loaded>,
+    inserted_at: ~N[2024-02-04 12:52:31],
+    updated_at: ~N[2024-02-04 12:52:42]
   }
-
 
   def mount(_,_, socket) do
     # socket
     # |> assign(:song, @stub_song) |> dbg()
+    IO.puts(">> registered audio player hook")
     socket = socket
     |> assign(:song, @stub_song)
     |> assign(:profile, nil)
@@ -444,23 +463,32 @@ defmodule Vyasa.Player.PlayerLive do
   #   )
   # end
 
-  # def handle_event("play_pause", _, socket) do
-  #   %{song: song, playing: playing, current_user: current_user} = socket.assigns
-  #   song = MediaLibrary.get_song!(song.id)
+  def handle_event("play_pause", _, socket) do
+    # %{song: song, playing: playing, current_user: current_user} = socket.assigns
+    # song = MediaLibrary.get_song!(song.id)
 
-  #   cond do
-  #     song && playing and MediaLibrary.can_control_playback?(current_user, song) ->
-  #       MediaLibrary.pause_song(song)
-  #       {:noreply, assign(socket, playing: false)}
+    song = @stub_song
+    # dbg(song)
+    push_event(socket, "pause", %{})
+    IO.inspect("checkpoint")
+    play_song(socket, song, 0)
 
-  #     song && MediaLibrary.can_control_playback?(current_user, song) ->
-  #       MediaLibrary.play_song(song)
-  #       {:noreply, assign(socket, playing: true)}
+    {:noreply, socket}
 
-  #     true ->
-  #       {:noreply, socket}
-  #   end
-  # end
+
+    # cond do
+    #   song && playing and MediaLibrary.can_control_playback?(current_user, song) ->
+    #     MediaLibrary.pause_song(song)
+    #     {:noreply, assign(socket, playing: false)}
+
+    #   song && MediaLibrary.can_control_playback?(current_user, song) ->
+    #     MediaLibrary.play_song(song)
+    #     {:noreply, assign(socket, playing: true)}
+
+    #   true ->
+    #     {:noreply, socket}
+    # end
+  end
 
   # def handle_event("switch_profile", %{"user_id" => user_id}, socket) do
   #   {:noreply, switch_profile(socket, user_id)}
@@ -530,11 +558,15 @@ defmodule Vyasa.Player.PlayerLive do
 
   # def handle_info({MediaLibrary, _}, socket), do: {:noreply, socket}
 
-  # defp play_song(socket, %Song{} = song, elapsed) do
-  #   socket
-  #   |> push_play(song, elapsed)
-  #   |> assign(song: song, playing: true, page_title: song_title(song))
-  # end
+  # @song %Song{
+
+  # }
+
+  defp play_song(socket, %Song{} = song, elapsed) do
+    socket
+    |> push_play(song, elapsed)
+    |> assign(song: song, playing: true, page_title: song_title(song)) |> dbg()
+  end
 
   # defp stop_song(socket) do
   #   socket
@@ -542,44 +574,49 @@ defmodule Vyasa.Player.PlayerLive do
   #   |> assign(song: nil, playing: false, page_title: "Listing Songs")
   # end
 
-  # defp song_title(%{artist: artist, title: title}) do
-  #   "#{title} - #{artist} (Now Playing)"
-  # end
+  defp song_title(%{artist: artist, title: title}) do
+    "#{title} - #{artist} (Now Playing)"
+  end
 
   # defp play_current_song(socket) do
-  #   song = MediaLibrary.get_current_active_song(socket.assigns.profile)
+  #   # song = MediaLibrary.get_current_active_song(socket.assigns.profile)
+  #   song = @stub_song
 
-  #   cond do
-  #     song && MediaLibrary.playing?(song) ->
-  #       play_song(socket, song, MediaLibrary.elapsed_playback(song))
+  #   play_song(socket, song, 0)
 
-  #     song && MediaLibrary.paused?(song) ->
-  #       assign(socket, song: song, playing: false)
+  #   # cond do
+  #   #   song && MediaLibrary.playing?(song) ->
+  #   #     play_song(socket, song, MediaLibrary.elapsed_playback(song))
 
-  #     true ->
-  #       socket
-  #   end
+  #   #   song && MediaLibrary.paused?(song) ->
+  #   #     assign(socket, song: song, playing: false)
+
+  #   #   true ->
+  #   #     socket
+  #   # end
   # end
 
-  # defp push_play(socket, %Song{} = song, elapsed) do
-  #   token =
-  #     Phoenix.Token.encrypt(socket.endpoint, "file", %{
-  #       vsn: 1,
-  #       ip: to_string(song.server_ip),
-  #       size: song.mp3_filesize,
-  #       uuid: song.mp3_filename
-  #     })
+  defp push_play(socket, # %Song{} =
+    _song, elapsed) do
+    song = @stub_song
+    token = Phoenix.Token.encrypt(socket.endpoint, "file", %{
+        vsn: 1,
+        # ip: to_string(song.server_ip),
+        size: song.mp3_filesize,
+        uuid: song.mp3_filename
+      })
 
-  #   push_event(socket, "play", %{
-  #     artist: song.artist,
-  #     title: song.title,
-  #     paused: Song.paused?(song),
-  #     elapsed: elapsed,
-  #     duration: song.duration,
-  #     token: token,
-  #     url: song.mp3_url
-  #   })
-  # end
+    IO.puts(">> push_play()")
+    push_event(socket, "pause", %{
+      artist: song.artist,
+      title: song.title,
+      paused: Song.paused?(song),
+      elapsed: elapsed,
+      # duration: song.duration,
+      token: token,
+      url: song.mp3_url
+    })
+  end
 
   # defp push_pause(socket) do
   #   socket
@@ -587,14 +624,21 @@ defmodule Vyasa.Player.PlayerLive do
   #   |> assign(playing: false)
   # end
 
-  defp js_play_pause(own_profile? \\ true) do
-    if own_profile? do
-      JS.push("play_pause")
+  defp js_play_pause(_own_profile? \\ true) do
+    JS.push("play_pause")
       |> JS.dispatch("js:play_pause", to: "#audio-player")
-    else
-      show_modal("not-authorized")
-    end
+    # if own_profile? do
+    #   JS.push("play_pause")
+    #   |> JS.dispatch("js:play_pause", to: "#audio-player")
+    # else
+    #   show_modal("not-authorized")
+    # end
   end
+
+  # defp js_play_pause() do
+  #   JS.push("play_pause")
+  #   |> JS.dispatch("js:play_pause", to: "#audio-player")
+  # end
 
   defp js_prev(own_profile? \\ true) do
     if own_profile? do

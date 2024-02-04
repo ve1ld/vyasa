@@ -22,11 +22,11 @@ R.recompile()
 
 alias LiveBeats.Repo
 
-# Repo.all(LiveBeats.MediaLibrary.Song)
-# |> Repo.preload([:user])
-
-Repo.all(LiveBeats.Accounts.User)
-|> Repo.preload([:identities])
-
 Repo.all(LiveBeats.MediaLibrary.Song)
+|> Repo.preload([:user])
+
+# Repo.all(LiveBeats.Accounts.User)
+# |> Repo.preload([:identities])
+
+# Repo.all(LiveBeats.MediaLibrary.Song)
 ```
