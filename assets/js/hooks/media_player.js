@@ -2,6 +2,11 @@
  * Client side logic for our generic media player, which shall
  * be audio-first.
  * */
+
+
+let nowSeconds = () => Math.round(Date.now() / 1000)
+let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
+
 AudioPlayer = {
   mounted(){
     console.log("Mounted Audio player")

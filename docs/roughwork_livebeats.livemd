@@ -29,4 +29,6 @@ Repo.all(LiveBeats.MediaLibrary.Song)
 # |> Repo.preload([:identities])
 
 # Repo.all(LiveBeats.MediaLibrary.Song)
+
+inet_struct = %Postgrex.INET{address: "127.0.0.1", netmask: 32}
 ```

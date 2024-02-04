@@ -166,26 +166,27 @@ defmodule Vyasa.Player.PlayerLive do
 
   @stub_song %Song{
     # __meta__: #Ecto.Schema.Metadata<:loaded, "songs">,
-    id: 2,
+    id: 3,
     album_artist: nil,
-    artist: "bala",
-    played_at: ~U[2024-02-04 12:52:42Z],
-    paused_at: ~U[2024-02-04 12:52:43Z],
+    artist: "myartist",
+    played_at: ~U[2024-02-04 21:31:07Z],
+    paused_at: ~U[2024-02-04 21:31:08Z],
     date_recorded: nil,
     date_released: nil,
     duration: 30,
     status: :paused,
     title: "data_verse_recitation_1_1",
-    attribution: "bala___",
-    mp3_url: "http://localhost:4000/files/27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
-    mp3_filepath: "/Users/ritesh/Projects/live_beats/priv/uploads/songs/27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
-    mp3_filename: "27ef9bed-1bc1-4f8e-ae64-7e7aacf1ca83.mp3",
+    attribution: "mylicense",
+    mp3_url: "http://localhost:4000/files/f7771075-e892-49e0-b087-fc3d5bfc7067.mp3",
+    # mp3_url: "/Users/ritesh/Projects/live_beats/priv/uploads/songs/f7771075-e892-49e0-b087-fc3d5bfc7067.mp3",
+    mp3_filepath: "/Users/ritesh/Projects/live_beats/priv/uploads/songs/f7771075-e892-49e0-b087-fc3d5bfc7067.mp3",
+    mp3_filename: "f7771075-e892-49e0-b087-fc3d5bfc7067.mp3",
     mp3_filesize: 120268,
-    # server_ip: %Postgrex.INET{address: {127, 0, 0, 1}, netmask: 32},
+    server_ip: %Postgrex.INET{address: {127, 0, 0, 1}, netmask: 32},
     position: 0,
     # user_id: 1,
     # user: %LiveBeats.Accounts.User{
-    #   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    #   # __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
     #   id: 1,
     #   email: "ritesh@emerald.pink",
     #   name: "Ritesh Kumar",
@@ -197,20 +198,20 @@ defmodule Vyasa.Player.PlayerLive do
     #   avatar_url: "https://avatars.githubusercontent.com/u/38996397?v=4",
     #   external_homepage_url: "https://github.com/rtshkmr",
     #   songs_count: 1,
-    #   identities: #Ecto.Association.NotLoaded<association :identities is not loaded>,
+    #   # identities: #Ecto.Association.NotLoaded<association :identities is not loaded>,
     #   inserted_at: ~N[2024-02-04 03:42:53],
     #   updated_at: ~N[2024-02-04 03:42:53]
     # },
     # genre_id: nil,
     # genre: #Ecto.Association.NotLoaded<association :genre is not loaded>,
-    inserted_at: ~N[2024-02-04 12:52:31],
-    updated_at: ~N[2024-02-04 12:52:42]
+    inserted_at: ~N[2024-02-04 21:16:59],
+    updated_at: ~N[2024-02-04 21:31:07]
   }
 
   def mount(_,_, socket) do
     # socket
     # |> assign(:song, @stub_song)
-    IO.puts(">> registered audio player hook")
+    IO.puts(">> mounted player live")
     socket = socket
     |> assign(:song, @stub_song)
     |> assign(:profile, nil)
@@ -464,14 +465,29 @@ defmodule Vyasa.Player.PlayerLive do
   def handle_event("play_pause", _, socket) do
     # %{song: song, playing: playing, current_user: current_user} = socket.assigns
     # song = MediaLibrary.get_song!(song.id)
-    #
+    %{playing: playing} = socket.assigns
+
     song = @stub_song
-    # IO.inspect("checkpoint")
-    # play_song(socket, song, 0)
+    dbg(playing)
 
-    {:noreply, socket
-     |> play_song(song, 0)}
+    cond do
+      playing ->
+        IO.puts("was playing, shall make it paused now")
+        {:noreply, socket
+        |> pause_song(song)
+        |> assign(playing: true)}
 
+      !(playing) ->
+        IO.puts("was not playing, shall make it play now")
+        {:noreply,
+         socket
+         |> play_song(song, 0)
+         |> assign(playing: false)
+        }
+
+      true ->
+        {:noreply, socket}
+    end
 
     # cond do
     #   song && playing and MediaLibrary.can_control_playback?(current_user, song) ->
@@ -485,17 +501,12 @@ defmodule Vyasa.Player.PlayerLive do
     #   true ->
     #     {:noreply, socket}
     # end
-  end
+    end
 
   def handle_event("play", _, socket) do
     # %{song: song, playing: playing, current_user: current_user} = socket.assigns
     # song = MediaLibrary.get_song!(song.id)
-
-
-
-    {:noreply, socket
-
-     |> push_event("pause", %{})}
+    {:noreply, socket |> push_event("play", %{})}
   end
 
   # def handle_event("switch_profile", %{"user_id" => user_id}, socket) do
@@ -576,6 +587,12 @@ defmodule Vyasa.Player.PlayerLive do
     |> assign(song: song, playing: true, page_title: song_title(song))
   end
 
+  defp pause_song(socket, %Song{} = _song) do
+     IO.puts(">> TODO: implement pause_song")
+     socket
+  end
+
+
   # defp stop_song(socket) do
   #   socket
   #   |> push_event("stop", %{})
@@ -604,18 +621,18 @@ defmodule Vyasa.Player.PlayerLive do
   #   # end
   # end
 
-  defp push_play(socket, # %Song{} =
-    _song, elapsed) do
-    song = @stub_song
+  defp push_play(socket,  %Song{} =
+    song, elapsed) do
     token = Phoenix.Token.encrypt(socket.endpoint, "file", %{
         vsn: 1,
-        # ip: to_string(song.server_ip),
+        ip: to_string(song.server_ip),
         size: song.mp3_filesize,
         uuid: song.mp3_filename
-      })
+      }) |> dbg()
 
-    IO.puts(">> push_play()")
-    push_event(socket, "pause", %{
+    event_name = "play"
+    IO.puts(">> push_play() #{event_name}")
+    push_event(socket, event_name, %{
       artist: song.artist,
       title: song.title,
       paused: Song.paused?(song),
@@ -678,4 +695,4 @@ defmodule Vyasa.Player.PlayerLive do
 
   # defp profile_changed?(%MediaLibrary.Profile{} = prev, %MediaLibrary.Profile{} = new),
   #   do: prev.user_id != new.user_id
- end
+  end
