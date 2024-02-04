@@ -1,10 +1,10 @@
-defmodule VyasaWeb.GitaLive.ImageGenerator do
+defmodule VyasaWeb.SourceLive.ImageGenerator do
   @moduledoc """
   Contains logic for creating images, initially for opengraph purposes mainly.
   """
   @fallback_text "Gita -- The Song Celestial"
   @col_width 20
-  alias VyasaWeb.GitaLive.ImageGenerator
+  alias VyasaWeb.SourceLive.ImageGenerator
   alias Vix.Vips.Operation
 
   @doc """
@@ -12,21 +12,25 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
     Currently stores images locally in a temp directory.
     """
   def generate_opengraph_image!(filename, content \\ @fallback_text) do
+      url =
       content
       |> generate_svg()
       |> write_opengraph_image(filename)
+
+    url
   end
 
-  # NOTE: The fs-write is a side-effect here
   defp write_opengraph_image(svg, filename) do
-    {img, _} = Operation.svgload_buffer!(svg)
+    target_url = System.tmp_dir() |> Path.join(filename)
+    IO.puts(">> [write_opengraph_image] target url: #{target_url}")
+    {image, _} = Operation.svgload_buffer!(svg)
 
-    System.tmp_dir()
-    |> Path.join(filename)
-    |> tap(fn target_url -> Image.write(img, target_url) end)
+    Image.write!(image, target_url)
+    target_url
   end
 
   defp generate_svg(content) do
+    svg_text_nodes =
       content
       |> ImageGenerator.wrap_text(@col_width)
       |> Enum.with_index()
@@ -34,11 +38,7 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
         {line, idx} -> get_svg_for_text(line, idx)
       end)
       |> Enum.join("")
-      |> gen_text_svg()
-  end
 
-  # Rudimentary function that generates svg, given the svg text nodes that should be interspersed.
-  defp gen_text_svg(text_nodes) do
     svg_precursor = """
     <svg viewbox="0 0 1200 600" width="1200px" height="600px" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -50,11 +50,13 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
       <g>
         <rect stroke="#000" height="800px" width="1800px" y="0" x="0" stroke-width="0" fill="url(#gradient)"/>
     """
+
     svg_end = """
        </g>
     </svg>
     """
-    svg_precursor <> text_nodes <> svg_end
+    svg = svg_precursor <> svg_text_nodes <> svg_end
+    svg
   end
 
   defp get_svg_for_text(text, offset) do
@@ -67,20 +69,16 @@ defmodule VyasaWeb.GitaLive.ImageGenerator do
     """
   end
 
-
-
-
   @doc """
     Manually wraps a text to width of size @col_width.
   """
   def wrap_text(text, col_length \\ @col_width) do
+
+
     words = String.split(text, " ")
 
-    # TODO: the accumulator pattern here can be cleaner, using pattern matching. Ref: https://github.com/ve1ld/vyasa/pull/27/files#r1477036476
-    Enum.reduce(
-      words,
-      [],
-      fn word, acc_lines ->
+    Enum.reduce(words, [], fn word, acc_lines ->
+      IO.puts("[word:] #{word}")
       curr_line = List.last(acc_lines, "")
       new_combined_line = curr_line <> " " <> word
       has_space_in_curr_line = String.length(new_combined_line) <= col_length
