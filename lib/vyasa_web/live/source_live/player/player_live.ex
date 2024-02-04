@@ -1,6 +1,6 @@
 defmodule Vyasa.Player.PlayerLive do
-  use VyasaWeb, {:live_view, container: {:div, []}}
-  # use VyasaWeb, :live_view
+  #use VyasaWeb, {:live_view, container: {:div, []}}
+  use VyasaWeb, :live_view
 
   # alias LiveBeats.{Accounts, MediaLibrary}
   alias Vyasa.MediaLibrary.Song
@@ -209,14 +209,12 @@ defmodule Vyasa.Player.PlayerLive do
 
   def mount(_,_, socket) do
     # socket
-    # |> assign(:song, @stub_song) |> dbg()
+    # |> assign(:song, @stub_song)
     IO.puts(">> registered audio player hook")
     socket = socket
     |> assign(:song, @stub_song)
     |> assign(:profile, nil)
     |> assign(:playing, false)
-
-
 
     {:ok, socket, layout: false, temporary_assigns: []}
 
@@ -466,14 +464,13 @@ defmodule Vyasa.Player.PlayerLive do
   def handle_event("play_pause", _, socket) do
     # %{song: song, playing: playing, current_user: current_user} = socket.assigns
     # song = MediaLibrary.get_song!(song.id)
-
+    #
     song = @stub_song
-    # dbg(song)
-    push_event(socket, "pause", %{})
-    IO.inspect("checkpoint")
-    play_song(socket, song, 0)
+    # IO.inspect("checkpoint")
+    # play_song(socket, song, 0)
 
-    {:noreply, socket}
+    {:noreply, socket
+     |> play_song(song, 0)}
 
 
     # cond do
@@ -488,6 +485,17 @@ defmodule Vyasa.Player.PlayerLive do
     #   true ->
     #     {:noreply, socket}
     # end
+  end
+
+  def handle_event("play", _, socket) do
+    # %{song: song, playing: playing, current_user: current_user} = socket.assigns
+    # song = MediaLibrary.get_song!(song.id)
+
+
+
+    {:noreply, socket
+
+     |> push_event("pause", %{})}
   end
 
   # def handle_event("switch_profile", %{"user_id" => user_id}, socket) do
@@ -565,7 +573,7 @@ defmodule Vyasa.Player.PlayerLive do
   defp play_song(socket, %Song{} = song, elapsed) do
     socket
     |> push_play(song, elapsed)
-    |> assign(song: song, playing: true, page_title: song_title(song)) |> dbg()
+    |> assign(song: song, playing: true, page_title: song_title(song))
   end
 
   # defp stop_song(socket) do

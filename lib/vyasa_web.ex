@@ -49,26 +49,13 @@ defmodule VyasaWeb do
     end
   end
 
-  def live_view(opts \\ []) do
+  def live_view() do
     quote do
-      @opts Keyword.merge(
-              [
-                layout: {VyasaWeb.Layouts, :app},
-                container: {:div, class: "relative h-screen flex overflow-hidden bg-white"}
-              ],
-              unquote(opts)
-            )
-      use Phoenix.LiveView, @opts
+      use Phoenix.LiveView,
+        layout: {VyasaWeb.Layouts, :app}
 
       unquote(html_helpers())
     end
-
-    # quote do
-    #   use Phoenix.LiveView,
-    #     layout: {VyasaWeb.Layouts, :app}
-
-    #   unquote(html_helpers())
-    # end
   end
 
   def live_component do

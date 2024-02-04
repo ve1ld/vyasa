@@ -47,6 +47,7 @@ AudioPlayer = {
         navigator.mediaSession.metadata = new MediaMetadata({artist, title})
       }
     })
+
     this.handleEvent("pause", (params) => {
       console.log("pause event handled")
       this.pause()
