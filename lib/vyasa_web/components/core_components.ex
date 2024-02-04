@@ -39,7 +39,11 @@ defmodule VyasaWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :on_confirm, JS, default: %JS{}
+
   slot :inner_block, required: true
+  slot :confirm
+  slot :title
 
   def modal(assigns) do
     ~H"""
@@ -670,5 +674,33 @@ defmodule VyasaWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+
+
+  attr :id, :string, required: true
+  attr :min, :integer, default: 0
+  attr :max, :integer, default: 100
+  attr :value, :integer
+
+  def progress_bar(assigns) do
+    assigns = assign_new(assigns, :value, fn -> assigns[:min] || 0 end)
+
+    ~H"""
+    <div
+      id={"#{@id}-container"}
+      class="bg-gray-200 flex-auto dark:bg-black rounded-full overflow-hidden"
+      phx-update="ignore"
+    >
+      <div
+        id={@id}
+        class="bg-lime-500 dark:bg-lime-400 h-1.5 w-0"
+        data-min={@min}
+        data-max={@max}
+        data-val={@value}
+      >
+      </div>
+    </div>
+    """
   end
 end
