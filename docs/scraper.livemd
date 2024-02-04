@@ -1,0 +1,112 @@
+# Scraper Lite
+
+```elixir
+Mix.install([
+  {:poison, "~> 5.0"},
+  {:floki, "~> 0.35.2"},
+  {:req, "~> 0.4.8"}
+])
+```
+
+## Shlokam
+
+```elixir
+url = "https://shlokam.org/"
+path = "hanumanchalisa"
+
+col =
+  Req.get!(url <> path).body
+  |> Floki.parse_document!()
+  |> Floki.find(".uncode_text_column")
+```
+
+```elixir
+# class_key = %{
+#   "verse_meaning" => "en_translation",
+# "verse_sanskrit" => "text",
+# "verse_trans" => "transliteration",
+# }
+output =
+  col
+  |> Enum.reduce(%{title: nil, description: nil, verses: []}, fn
+    {"div", _, [{"h3", [], ["Description"]} | para]}, acc ->
+      # IO.inspect(rem, label: "div")
+      desc =
+        para
+        |> Floki.text()
+
+      %{acc | description: desc}
+
+    {"div", _, [{"h3", _, _} = h3_tree]}, acc ->
+      title =
+        h3_tree
+        |> Floki.text()
+
+      %{acc | title: title}
+
+    {"div", _, [{"div", [{"class", "verse_sanskrit"}], _verse} | _] = verse_tree}, acc ->
+      [curr | [%{"count" => count} | _] = verses] =
+        Enum.reduce(verse_tree, [], fn
+          # n case verse break
+          {"hr", [{"class", "verse_separator"}], []}, [curr | [%{"count" => c} | _] = acc] ->
+            [Map.put(curr, "count", c + 1) | acc]
+
+          # init verse break
+          {"hr", [{"class", "verse_separator"}], []}, [curr | acc] ->
+            [Map.put(curr, "count", 1) | acc]
+
+          # n case after verse break
+          {"div", [{"class", class}], _} = c_tree, [%{"count" => _} | _] = acc ->
+            [%{class => c_tree |> Floki.text()} | acc]
+
+          # n case before verse break
+          {"div", [{"class", class}], _} = c_tree, [curr | acc] when is_map(curr) ->
+            [Map.put(curr, class, c_tree |> Floki.text()) | acc]
+
+          # init
+          {"div", [{"class", class}], _} = c_tree, [] ->
+            [%{class => c_tree |> Floki.text()}]
+
+          others, acc ->
+            IO.inspect(others)
+            acc
+        end)
+
+      # formatting & tying loose ends
+      clean_verses =
+        [Map.put(curr, "count", count + 1) | verses]
+        |> Enum.reverse()
+
+      %{acc | verses: clean_verses}
+
+    _, acc ->
+      acc
+  end)
+```
+
+```elixir
+contents = Poison.encode!(output)
+# File.write!("chalisa_scraped.json", contents)
+filename = "chalisa_scraped.json"
+url = "./Projects/vyasa/scripts/#{filename}"
+File.write!(url, contents)
+IO.puts(url)
+```
+
+```elixir
+Floki.traverse_and_update(html, fn
+  {"div", _, _} = node -> {"div", [], ["Modified Div"]}
+  node -> node
+end)
+
+text = find_element(:class, "verse_sanskrit") |> inner_text()
+transliteration = find_element(:class, "verse_trans") |> inner_text()
+en_translation = find_element(:class, "verse_meaning") |> inner_text()
+
+map = %{
+  verse_number: count,
+  text: text,
+  transliteration: transliteration,
+  en_translation: en_translation
+}
+```
