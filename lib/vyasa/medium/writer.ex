@@ -8,7 +8,7 @@ defmodule Vyasa.Medium.Writer do
     {local_path, ext_path} = Store.path(struct)
     with {:ok, file} <- File.open(local_path, [:binary, :write]),
            %{bucket: bucket} = config <- Store.s3_config(),
-           s3_op <- ExAws.S3.initiate_multipart_upload(bucket, file_name) do
+           s3_op <- ExAws.S3.initiate_multipart_upload(bucket, ext_path) do
       {:ok, %{file: file, path: local_path, key: ext_path, chunk: 1, s3_op: s3_op, s3_config: ExAws.Config.new(config)}}
     end
   end
