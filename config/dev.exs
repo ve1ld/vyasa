@@ -10,6 +10,22 @@ config :vyasa, Vyasa.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# MINIO Object Store API Domain
+config :ex_aws,
+  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
+  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
+  region: "ap-southeast-1"
+
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  port: 9000
+
+config :ex_aws, :retries,
+  max_attempts: 2,
+  base_backoff_in_ms: 10,
+  max_backoff_in_ms: 10_000
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
