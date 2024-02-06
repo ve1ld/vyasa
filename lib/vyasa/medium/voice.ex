@@ -3,7 +3,7 @@ defmodule Vyasa.Medium.Voice do
   import Ecto.Changeset
 
   alias Vyasa.Written.{Source, Chapter}
-  alias Vyasa.Medium.{Video}
+  alias Vyasa.Medium.{Video, Track}
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "voices" do
@@ -13,7 +13,7 @@ defmodule Vyasa.Medium.Voice do
     end
 
     field :file_path, :string, virtual: true
-
+    belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_one :video, Video, references: :id, foreign_key: :voice_id
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id

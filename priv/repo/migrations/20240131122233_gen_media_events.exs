@@ -26,13 +26,14 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
     end
 
     create table(:events, primary_key: false) do
+      add :id, :uuid, primary_key: true
       add :origin, :integer
       add :duration, :integer
 
       add :verse_id, references(:verses, column: :id, type: :uuid, on_delete: :nothing)
       add :voice_id, references(:voices, column: :id, type: :uuid, on_delete: :nothing)
       add :fragments, {:array, :map}, null: false, default: []
-      add :source_id,  references(:sources, column: :id, type: :uuid),  primary_key: true
+      add :source_id,  references(:sources, column: :id, type: :uuid)
     end
 
     alter table(:chapters) do
