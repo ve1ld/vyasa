@@ -54,13 +54,13 @@ defmodule Vyasa.Parser.Env do
     database_url: System.fetch_env!("DB_URL")
   """
 
-  @linefeed_re ~R/\r?\n/
-  @line_re ~R/^(?:\s*export)?\s*[a-z_][a-z_0-9]*\s*=/i
-  @dquoted_val_re ~R/^"([^"\\]*(?:\\.[^"\\]*)*)"\s*(?:#.*)?$/
-  @squoted_val_re ~R/^\s*'(.*)'\s*(?:#.*)?$/
-  @dquoted_multiline_end ~R/^([^"\\]*(?:\\.[^"\\]*)*)"\s*(?:#.*)?$/
-  @squoted_multiline_end ~R/^(.*)'\s*(?:#.*)?$/
-  @hex_re ~R/^[0-9a-f]+$/i
+  @linefeed_re ~r/\r?\n/
+  @line_re ~r/^(?:\s*export)?\s*[a-z_][a-z_0-9]*\s*=/i
+  @dquoted_val_re ~r/^"([^"\\]*(?:\\.[^"\\]*)*)"\s*(?:#.*)?$/
+  @squoted_val_re ~r/^\s*'(.*)'\s*(?:#.*)?$/
+  @dquoted_multiline_end ~r/^([^"\\]*(?:\\.[^"\\]*)*)"\s*(?:#.*)?$/
+  @squoted_multiline_end ~r/^(.*)'\s*(?:#.*)?$/
+  @hex_re ~r/^[0-9a-f]+$/i
 
   @quote_chars ~w(" ')
 
