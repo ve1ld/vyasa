@@ -40,6 +40,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:selected_transl, selected_transl)
     |> assign(:page_title, "#{source_title} Chapter #{chap_no} | #{title}")
     |> assign(:text, nil)
+    |> assign(:song, nil)
     |> assign_meta()
   end
 

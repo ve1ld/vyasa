@@ -1,4 +1,11 @@
+
     <.header>
+        <.live_component
+        module={VyasaWeb.MediaLive.Player}
+        id={"Media Player"}
+        song={nil}
+        playing={false}
+        />
         <div class="font-dn text-4xl mb-4">
            <%= @selected_transl.target.translit_title %> | <%= @chap_title %>
         </div>
