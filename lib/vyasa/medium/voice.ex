@@ -27,7 +27,6 @@ defmodule Vyasa.Medium.Voice do
     text
     |> cast(attrs, [:lang])
     |> cast_embed(:prop, with: &prop_changeset/2)
-    |> cast_assoc(:videos)
   end
 
   def changeset(text, attrs) do

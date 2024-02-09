@@ -9,7 +9,19 @@ defmodule Vyasa.Medium.Writer do
     with {:ok, file} <- File.open(local_path, [:binary, :write]),
            %{bucket: bucket} = config <- Store.s3_config(),
            s3_op <- ExAws.S3.initiate_multipart_upload(bucket, ext_path) do
-      {:ok, %{file: file, path: local_path, key: ext_path, chunk: 1, s3_op: s3_op, s3_config: ExAws.Config.new(config)}}
+      {:ok, %{file: file, path: local_path, key: ext_path, chunk: 1, s3_op: s3_op, s3_config: ExAws.Config.new(:s3, config)}}
+    end
+  end
+
+  def run(struct) do
+    {local_path, ext_path} = Store.path(struct)
+    with fs <- ExAws.S3.Upload.stream_file(local_path),
+         %{bucket: bucket} = cfg <- Store.s3_config(),
+           req <- ExAws.S3.upload(fs, bucket, ext_path),
+         {:ok, %{status_code: 200, body: body}}  <- ExAws.request(req, config: cfg) do
+      {:ok, body}
+    else
+      {:err, err} -> {:err, err}
     end
   end
 
