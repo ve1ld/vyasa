@@ -21,8 +21,12 @@ defmodule Vyasa.Medium.Store do
     signer(:get, path)
   end
 
-  def get!(struct) do
-    signer!(:get, path_constructor(struct))
+  def get!(st) when is_struct(st) do
+    signer!(:get, path_constructor(st))
+  end
+
+  def get!(path) do
+    signer!(:get, path)
   end
 
   def put(struct) do
