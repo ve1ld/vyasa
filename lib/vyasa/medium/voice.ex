@@ -8,11 +8,12 @@ defmodule Vyasa.Medium.Voice do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "voices" do
     field :lang, :string
+    field :file_path, :string, virtual: true
+
     embeds_one :prop, VoiceProperties do
       field(:artist, {:array, :string})
     end
 
-    field :file_path, :string, virtual: true
     belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_one :video, Video, references: :id, foreign_key: :voice_id
@@ -23,22 +24,22 @@ defmodule Vyasa.Medium.Voice do
 
   @doc false
 
-  def gen_changeset(text, attrs) do
-    text
+  def gen_changeset(voice, attrs) do
+    voice
     |> cast(attrs, [:lang])
     |> cast_embed(:prop, with: &prop_changeset/2)
     |> cast_assoc(:videos)
   end
 
-  def changeset(text, attrs) do
-    text
-    |> cast(attrs, [:lang])
+  def changeset(voice, attrs) do
+    voice
+    |> cast(attrs, [:lang, :file_path])
     |> cast_embed(:prop, with: &prop_changeset/2)
-    |> cast_assoc(:videos)
+    # |> cast_assoc(:videos)
   end
 
-  def prop_changeset(text, attrs) do
-    text
+  def prop_changeset(voice, attrs) do
+    voice
     |> cast(attrs, [:artist])
   end
 end

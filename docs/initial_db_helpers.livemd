@@ -56,7 +56,9 @@ defmodule G do
       |> Map.put("body", verse["text"])
       |> Map.put("no", verse["verse_number"])
 
-    dbg(updated)
+    updated
+
+    # dbg(updated)
   end
 
   def get_verses_for_chapter(chap_no, src_id) do
@@ -84,7 +86,8 @@ defmodule G do
       body: chapter["chapter_summary"],
       source_id: source_id
     }
-    |> dbg()
+
+    # |> dbg()
   end
 
   def create_chapter(%{} = chapter, [%{} = _head | _rest] = _verses, source_id) do
@@ -190,6 +193,16 @@ defmodule G do
       create_translation_changeset_for_verse(inserted_verse, relevant_verse)
     end)
   end
+
+  def create_stub_voice(_chapter) do
+    %{
+      lang: "sa",
+      prop: %{
+        artist: ["MyArtist1", "MyArtist2"]
+      },
+      file_path: "/Users/ritesh/Desktop/example.mp3"
+    }
+  end
 end
 ```
 
@@ -199,20 +212,46 @@ end
 * seeding of db
 
 ```elixir
+alias Vyasa.Medium.Voice
+
+v = %Voice{
+  lang: "sa",
+  prop: %{
+    artist: ["myArtist1", "myArtist2"]
+  }
+}
+```
+
+```elixir
 defmodule DBHelper do
   alias Vyasa.Repo
   alias G
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
+  alias Vyasa.Medium.{Voice}
+
+  # alias Vyasa.Medium.{Voice, Event, Store, Track, Video, Writer}
 
   def purge_db() do
-    [Translation, Verse, Chapter, Source]
+    [Voice, Translation, Verse, Chapter, Source]
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 
   def seed_db() do
     uuid = Ecto.UUID.generate()
     _source = DBHelper.insert_source(uuid, "Gita")
-    DBHelper.insert_chapters(uuid)
+    chap = DBHelper.insert_chapters(uuid)
+    stub_voice = DBHelper.insert_stub_voice(chap)
+    stub_voice
+  end
+
+  def insert_stub_voice(chap) do
+    voice = G.create_stub_voice(chap)
+
+    {:ok, %Voice{} = inserted_stub_voice} =
+      Voice.changeset(%Voice{}, voice)
+      |> Repo.insert()
+
+    inserted_stub_voice
   end
 
   def insert_source(uuid, source_title \\ "Gita") do
@@ -241,6 +280,8 @@ defmodule DBHelper do
       verses_translation_changesets
       |> Enum.map(fn c_set -> Repo.insert(c_set) end)
       |> Enum.map(fn {:ok, inserted_verse_translation} -> inserted_verse_translation end)
+
+    chap
   end
 
   def insert_chapters(source_id) do
@@ -259,16 +300,40 @@ DBHelper.seed_db()
 ```
 
 ```elixir
-### checking the query functions
-
-alias Vyasa.Written
+alias Vyasa.Medium.{Voice}
 alias Vyasa.Repo
 
+example_url = "/Users/ritesh/Desktop/"
+example_v = %Voice{lang: "en", file_path: "/Users/ritesh/Desktop/sample-15s.mp3"}
+
+{:ok, inserted} = Repo.insert(example_v)
+{:ok, stored_url} = Vyasa.Medium.Store.put(inserted) |> dbg()
+output = System.cmd("curl", [stored_url])
+```
+
+```elixir
 R.recompile()
 
-src =
-  Written.list_sources()
-  |> Enum.find(fn src -> src.title == "Gita" end)
+alias Vyasa.Medium
+alias Vyasa.Repo
+alias Vyasa.Medium.{Voice, Store}
+example_url = "/Users/ritesh/Desktop/example.mp3"
+
+{:ok, inserted_v} =
+  %Voice{
+    lang: "sa",
+    file_path: example_url
+  }
+  |> Repo.insert()
+
+{:ok, stored_url} = Store.put(inserted_v)
+
+inserted_v
+|> Medium.update_voice(%{file_path: stored_url})
+```
+
+```elixir
+Vyasa.Repo.all(Vyasa.Medium.Voice)
 ```
 
 ##### Bala's working example of using the polymorphic translations
@@ -314,19 +379,6 @@ Vyasa.Written.Translation.gen_changeset(
 |> Vyasa.Repo.insert()
 ```
 
-```elixir
-id = Ecto.UUID.generate()
-verses = G.get_verses(id)
-chaps = G.get_chapters(verses, id) |> G.insert_verses_into_chapters(verses)
-hd(chaps)
-```
-
-```elixir
-R.recompile()
-DBHelper.purge_db()
-DBHelper.seed_db()
-```
-
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## Exploration
@@ -348,16 +400,24 @@ sources
 ```
 
 ```elixir
-R.recompile()
+# R.recompile()
 
-alias Vyasa.Written
+# alias Vyasa.Written
 
-Written.list_sources()
+# Written.list_sources()
 
-[%Source{id: id} = _hd | tail] = Written.list_sources()
-Written.get_source!(id)
-Written.get_chapter!(2, id)
+# [%Source{id: id} = _hd | tail] = Written.list_sources()
+# Written.get_source!(id)
+# Written.get_chapter!(2, id)
 ```
+
+### Exploration of the medium schemas
+
+```elixir
+stored_url
+```
+
+
 
 <!-- livebook:{"branch_parent_index":0} -->
 

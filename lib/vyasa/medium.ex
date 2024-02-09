@@ -1,5 +1,5 @@
 defmodule Vyasa.Medium do
-  alias Vyasa.Medium.Voice
+  alias Vyasa.Medium.{Voice, Store}
   alias Vyasa.Repo
 
   @doc """
@@ -18,6 +18,25 @@ defmodule Vyasa.Medium do
     %Voice{}
     |> Voice.gen_changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Gets a voice just for testing purposes
+  """
+  def get_voice_stub() do
+    example_url = "/Users/ritesh/Desktop/example.mp3"
+
+    {:ok, inserted_v} = %Voice{
+      lang: "sa",
+      file_path: example_url,
+    }
+    |> Repo.insert()
+
+    {:ok, stored_url} = Store.put(inserted_v)
+
+    inserted_v
+    |> update_voice(%{file_path: stored_url})
+
   end
 
   @doc """
