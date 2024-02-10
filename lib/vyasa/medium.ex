@@ -1,5 +1,7 @@
 defmodule Vyasa.Medium do
-  alias Vyasa.Medium.{Voice, Store}
+  alias Vyasa.Medium.{Voice, Store, Writer}
+  alias Vyasa.Medium
+  alias Vyasa.Written
   alias Vyasa.Repo
 
   @doc """
@@ -20,24 +22,40 @@ defmodule Vyasa.Medium do
     |> Repo.insert()
   end
 
+  @voice_stub_url "/Users/ritesh/Desktop/example.mp3"
   @doc """
   Gets a voice just for testing purposes
   """
   def get_voice_stub() do
-    example_url = "/Users/ritesh/Desktop/example.mp3"
+    src = Written.get_source_by_title("Gita")
+    {:ok, voice} = Medium.create_voice(%{lang: "sa", source_id: src.id})
 
-    {:ok, inserted_v} = %Voice{
-      lang: "sa",
-      file_path: example_url,
-    }
-    |> Repo.insert()
+    stored_url = %{voice | file_path: @voice_stub_url}
+    |> Writer.run()
+    |> then(&(elem(&1,1).key))
+    |> Store.get!()
 
-    {:ok, stored_url} = Store.put(inserted_v)
 
-    inserted_v
-    |> update_voice(%{file_path: stored_url})
+    # since it's a virtual field for now, let the stub have a non nil value:
+    %Voice{voice | file_path: stored_url}
 
   end
+
+  def get_voice_stub(params) do
+    src = Written.get_source_by_title("Gita")
+    {:ok, voice} = Medium.create_voice(%{params | lang: "sa", source_id: src.id})
+
+    stored_url = %{voice | file_path: @voice_stub_url}
+    |> Writer.run()
+    |> then(&(elem(&1,1).key))
+    |> Store.get!()
+
+
+    # since it's a virtual field for now, let the stub have a non nil value:
+    %Voice{voice | file_path: stored_url}
+
+  end
+
 
   @doc """
   Updates a voice.

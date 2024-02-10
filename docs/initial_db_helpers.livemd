@@ -25,6 +25,7 @@ Convert json --> struct --> using changeset --> insert into repo
 
 ```elixir
 alias Vyasa.Written.{Chapter, Source, Translation}
+alias Vyasa.Medium
 alias Vyasa.Repo
 
 defmodule G do
@@ -194,6 +195,18 @@ defmodule G do
     end)
   end
 
+  def insert_stub_voice(src_id) do
+    params = %{
+      source_id: src_id,
+      lang: "sa",
+      prop: %{
+        artist: ["MyArtist1", "MyArtist2"]
+      }
+    }
+
+    Medium.get_voice_stub(params)
+  end
+
   def create_stub_voice(_chapter) do
     %{
       lang: "sa",
@@ -239,19 +252,9 @@ defmodule DBHelper do
   def seed_db() do
     uuid = Ecto.UUID.generate()
     _source = DBHelper.insert_source(uuid, "Gita")
-    chap = DBHelper.insert_chapters(uuid)
-    stub_voice = DBHelper.insert_stub_voice(chap)
+    _chap = DBHelper.insert_chapters(uuid)
+    stub_voice = G.insert_stub_voice(uuid)
     stub_voice
-  end
-
-  def insert_stub_voice(chap) do
-    voice = G.create_stub_voice(chap)
-
-    {:ok, %Voice{} = inserted_stub_voice} =
-      Voice.changeset(%Voice{}, voice)
-      |> Repo.insert()
-
-    inserted_stub_voice
   end
 
   def insert_source(uuid, source_title \\ "Gita") do
@@ -299,16 +302,49 @@ DBHelper.purge_db()
 DBHelper.seed_db()
 ```
 
+### Demo of how to write an example voice using the writer, and test it using curl...
+
 ```elixir
+R.recompile()
 alias Vyasa.Medium.{Voice}
 alias Vyasa.Repo
 
-example_url = "/Users/ritesh/Desktop/"
-example_v = %Voice{lang: "en", file_path: "/Users/ritesh/Desktop/sample-15s.mp3"}
+example_url = "/Users/ritesh/Desktop/sample-15s.mp3"
+# example_v = %Voice{lang: "en", file_path: "/Users/ritesh/Desktop/sample-15s.mp3"}
 
-{:ok, inserted} = Repo.insert(example_v)
-{:ok, stored_url} = Vyasa.Medium.Store.put(inserted) |> dbg()
+# {:ok, inserted} = Repo.insert(example_v)
+# {:ok, stored_url} = Vyasa.Medium.Store.put(inserted) |> dbg()
+# output = System.cmd("curl", [stored_url])
+src = Vyasa.Written.get_source_by_title("Gita")
+
+{:ok, voice} = Vyasa.Medium.create_voice(%{lang: "sa", source_id: src.id})
+
+stored_url =
+  %{voice | file_path: example_url}
+  |> Vyasa.Medium.Writer.run()
+  |> then(&elem(&1, 1).key)
+  |> Vyasa.Medium.Store.get!()
+
 output = System.cmd("curl", [stored_url])
+```
+
+```elixir
+R.recompile()
+alias Vyasa.Medium
+
+Medium.get_voice_stub()
+```
+
+```elixir
+existing_v = hd(Repo.all(Voice))
+
+{:ok, v} =
+  Vyasa.Medium.update_voice(existing_v, %{file_path: "/Users/ritesh/Desktop/sample-15s.mp3"})
+
+{:ok, url} = Vyasa.Medium.Store.put(v)
+
+{:ok, again_v} = Vyasa.Medium.update_voice(v, %{file_path: url})
+again_v.file_path
 ```
 
 ```elixir
@@ -327,6 +363,12 @@ example_url = "/Users/ritesh/Desktop/example.mp3"
   |> Repo.insert()
 
 {:ok, stored_url} = Store.put(inserted_v)
+
+# {:ok, _output} = System.cmd("curl", ["-k", "-X", "PUT", "-T", stored_url, example_url])
+
+System.cmd("curl", ["-k", "-X", "PUT", "-T", stored_url, example_url]) |> dbg()
+
+# curl -k -X PUT -T ./mpv-shot0002.mp3 "url"
 
 inserted_v
 |> Medium.update_voice(%{file_path: stored_url})
@@ -409,6 +451,8 @@ sources
 # [%Source{id: id} = _hd | tail] = Written.list_sources()
 # Written.get_source!(id)
 # Written.get_chapter!(2, id)
+
+# Vyasa.Repo.all(Vyasa.Medium.Voice)
 ```
 
 ### Exploration of the medium schemas
