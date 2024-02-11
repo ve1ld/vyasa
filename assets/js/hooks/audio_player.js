@@ -1,6 +1,17 @@
 /**
  * Hooks for audio player.
  * */
+
+let nowSeconds = () => Math.round(Date.now() / 1000)
+let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
+let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
+
+let execJS = (selector, attr) => {
+  document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
+}
+
+
+
 AudioPlayer = {
   mounted() {
     this.playbackBeganAt = null
@@ -23,6 +34,7 @@ AudioPlayer = {
     document.addEventListener("click", enableAudio)
     this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
     this.el.addEventListener("js:play_pause", () => {
+      console.log("{play_pause event triggerred} player:", this.player)
       // toggle play-pause
       if(this.player.paused){
         this.play()
@@ -32,16 +44,15 @@ AudioPlayer = {
 
     /// events handled by audio player::
     this.handleEvent("play", (params) => {
-      const {url, token, elapsed, artist, title} = params;
+      const {filePath, url, elapsed, artist, title} = params;
       console.log("play event, check params", params)
       this.playbackBeganAt = nowSeconds() - elapsed
       let currentSrc = this.player.src.split("?")[0]
-      const isLoadedAndPaused = currentSrc === url && this.player.paused;
+      const isLoadedAndPaused = currentSrc === filePath && this.player.paused;
       if(isLoadedAndPaused){
         this.play({sync: true})
-      } else if(currentSrc !== url) {
-        // TODO: our case shall be simpler, our getter shall already display the token within the url
-        currentSrc = `${url}?token=${token}`
+      } else if(currentSrc !== filePath) {
+        currentSrc = filePath
         this.player.src = currentSrc
         this.play({sync: true})
       }
@@ -51,7 +62,10 @@ AudioPlayer = {
         navigator.mediaSession.metadata = new MediaMetadata({artist, title})
       }
     })
-    this.handleEvent("pause", () => this.pause())
+    this.handleEvent("pause", () => {
+      console.log(">> triggerred pause")
+      this.pause()
+    })
     this.handleEvent("stop", () => this.stop())
   },
 

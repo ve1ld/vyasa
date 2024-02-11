@@ -37,7 +37,7 @@ defmodule Vyasa.Medium do
 
 
     # since it's a virtual field for now, let the stub have a non nil value:
-    %Voice{voice | file_path: stored_url}
+    %Voice{voice | file_path: stored_url, title: "My Title"}
 
   end
 

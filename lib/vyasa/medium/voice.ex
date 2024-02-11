@@ -8,6 +8,8 @@ defmodule Vyasa.Medium.Voice do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "voices" do
     field :lang, :string
+    field :title, :string
+    field :duration, :integer
     field :file_path, :string, virtual: true
 
     embeds_one :prop, VoiceProperties do
@@ -26,13 +28,13 @@ defmodule Vyasa.Medium.Voice do
 
   def gen_changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:lang])
+    |> cast(attrs, [:title, :duration, :lang])
     |> cast_embed(:prop, with: &prop_changeset/2)
   end
 
   def changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:lang, :file_path])
+    |> cast(attrs, [:title, :duration, :lang, :file_path])
     |> cast_embed(:prop, with: &prop_changeset/2)
     # |> cast_assoc(:videos)
   end

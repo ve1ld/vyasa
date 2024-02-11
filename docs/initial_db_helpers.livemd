@@ -199,6 +199,8 @@ defmodule G do
     params = %{
       source_id: src_id,
       lang: "sa",
+      title: "My Title",
+      duration: 30000,
       prop: %{
         artist: ["MyArtist1", "MyArtist2"]
       }
