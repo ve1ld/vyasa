@@ -45,8 +45,9 @@ AudioPlayer = {
     /// events handled by audio player::
     this.handleEvent("play", (params) => {
       const {filePath, url, elapsed, artist, title} = params;
-      console.log("play event, check params", params)
-      this.playbackBeganAt = nowSeconds() - elapsed
+      const beginTime = nowSeconds() - elapsed
+      this.playbackBeganAt = beginTime
+      console.log("play event, check params", {params, beginTime})
       let currentSrc = this.player.src.split("?")[0]
       const isLoadedAndPaused = currentSrc === filePath && this.player.paused;
       if(isLoadedAndPaused){
@@ -88,7 +89,7 @@ AudioPlayer = {
       if(sync) {
         this.player.currentTime = nowSeconds() - this.playbackBeganAt
       }
-      const progressUpdateInterval = 100
+      const progressUpdateInterval = 50
       this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
     }, error => {
       if(error.name === "NotAllowedError"){
@@ -130,11 +131,18 @@ AudioPlayer = {
       return
     }
     this.progress.style.width = `${(this.player.currentTime / (this.player.duration) * 100)}%`
-    this.duration.innerText = this.formatTime(this.player.duration)
-    this.currentTime.innerText = this.formatTime(this.player.currentTime)
+    const durationVal = this.formatTime(this.player.duration);
+    const currentTimeVal = this.formatTime(this.player.currentTime);
+    console.log("update progress:", {
+      player: this.player,
+      durationVal,
+      currentTimeVal,
+    })
+    this.duration.innerText = durationVal;
+    this.currentTime.innerText = currentTimeVal;
   },
 
-  formatTime(seconds){ return new Date(1000 * seconds).toISOString().substring(14, 5) }
+  formatTime(seconds){ return new Date(1000 * seconds).toISOString().substring(11, 19) }
 }
 
 

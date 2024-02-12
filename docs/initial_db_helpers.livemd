@@ -338,6 +338,23 @@ Medium.get_voice_stub()
 ```
 
 ```elixir
+R.recompile()
+
+alias Vyasa.MediaLibrary
+alias Vyasa.Medium.{Voice}
+
+curr_playing =
+  MediaLibrary.Playback.new(%{
+    medium: %Voice{},
+    playing: false
+  })
+
+# play: 
+
+curr_playing = %{curr_playing | playing: true, played_at: DateTime.utc_now()}
+```
+
+```elixir
 existing_v = hd(Repo.all(Voice))
 
 {:ok, v} =
@@ -421,6 +438,14 @@ Vyasa.Written.Translation.gen_changeset(
   chapter
 )
 |> Vyasa.Repo.insert()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Playback
+
+```elixir
+DateTime.diff(DateTime.utc_now(), DateT, :second)
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
