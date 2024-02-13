@@ -142,7 +142,9 @@ AudioPlayer = {
     this.currentTime.innerText = currentTimeVal;
   },
 
-  formatTime(seconds){ return new Date(1000 * seconds).toISOString().substring(11, 19) }
+  formatTime(seconds) {
+    return new Date(1000 * seconds).toISOString().substring(11, 19)
+  }
 }
 
 
