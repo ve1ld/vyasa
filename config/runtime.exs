@@ -61,9 +61,9 @@ if config_env() == :prod do
       # See the documentation on https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
-      check_origin: ["https://vyasa.tv", "https://www.vyasa.tv", "https://vyasa.fly.dev"],
       port: port
     ],
+    check_origin: ["https://vyasa.tv", "https://www.vyasa.tv", "https://vyasa.fly.dev"],
     secret_key_base: secret_key_base
 
   # ## SSL Support
