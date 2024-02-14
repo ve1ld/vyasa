@@ -53,4 +53,6 @@ defmodule Vyasa.Medium.Voice do
 
     %{ec | changes: %{changes | file_path: ext_path}}
   end
+
+  def file_upload(ec), do: ec
 end

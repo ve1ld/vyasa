@@ -1,5 +1,5 @@
 defmodule Vyasa.Medium do
-  alias Vyasa.Medium.{Voice, Store, Writer, Event}
+  alias Vyasa.Medium.{Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Written
   alias Vyasa.Repo
@@ -45,31 +45,21 @@ defmodule Vyasa.Medium do
   """
   def get_voice_stub() do
     src = Written.get_source_by_title("Gita")
-    {:ok, voice} = Medium.create_voice(%{lang: "sa", source_id: src.id})
-
-    stored_url = %{voice | file_path: @voice_stub_url}
-    |> Writer.run()
-    |> then(&(elem(&1,1).key))
-    |> Store.get!()
-
+    {:ok, voice} = Medium.create_voice(%{lang: "sa", source_id: src.id, file_path: @voice_stub_url})
 
     # since it's a virtual field for now, let the stub have a non nil value:
-    %Voice{voice | file_path: stored_url, title: "My Title"}
+    %Voice{voice | title: "Gita"}
 
   end
 
+  #should be using \\ %{} and be ! as its not accounting for :error tuple
   def get_voice_stub(params) do
     src = Written.get_source_by_title("Gita")
-    {:ok, voice} = Medium.create_voice(%{params | lang: "sa", source_id: src.id})
-
-    stored_url = %{voice | file_path: @voice_stub_url}
-    |> Writer.run()
-    |> then(&(elem(&1,1).key))
-    |> Store.get!()
-
+    {:ok, voice} = Medium.create_voice(%{params | lang: "sa", source_id: src.id}
+      |> Map.put(:file_path, @voice_stub_url))
 
     # since it's a virtual field for now, let the stub have a non nil value:
-    %Voice{voice | file_path: stored_url}
+    voice
 
   end
 

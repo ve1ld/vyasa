@@ -308,12 +308,12 @@ c1_path = Path.expand("./1.mp3", "media/gita")
 
 {:ok,
  %Vyasa.Parser.MP3{
-   duration: d,
+   duration: tot_d,
    path: p
  }} = Vyasa.Parser.MP3.parse(c1_path)
 
 {:ok, voice} =
-  Vyasa.Medium.create_voice(%{lang: "sa", duration: d, file_path: c1_path, source_id: gita.id})
+  Vyasa.Medium.create_voice(%{lang: "sa", duration: tot_d, file_path: c1_path, source_id: gita.id})
 
 # Vyasa.Medium.get_voice!("4c73fb6d-4163-4b64-90d0-5d49680c1ee4")
 # |> Vyasa.Medium.delete_voice()
@@ -396,7 +396,7 @@ end)
       d = (min * 60 + sec) * 1000
 
       [
-        %Vyasa.Medium.Event{origin: d, phase: "end", voice_id: voice.id}
+        %Vyasa.Medium.Event{origin: d, duration: tot_d - d, phase: "end", voice_id: voice.id}
         | [%{prev | duration: d - o} | acc]
       ]
 
