@@ -6,7 +6,24 @@ defmodule Vyasa.Written do
   import Ecto.Query, warn: false
   alias Vyasa.Repo
 
-  alias Vyasa.Written.{Text, Source, Chapter}
+  alias Vyasa.Written.{Text, Source, Verse, Chapter}
+
+  @doc """
+  Guards for any uuidV4
+
+  ## Examples
+
+  iex> is_uuid?("hanuman")
+  false
+
+  """
+  defguard is_uuid?(value)
+  when is_bitstring(value) and
+  byte_size(value) == 36 and
+  binary_part(value, 8, 1) == "-" and
+  binary_part(value, 13, 1) == "-" and
+  binary_part(value, 18, 1) == "-" and
+  binary_part(value, 23, 1) == "-"
 
   @doc """
   Returns the list of texts.
@@ -34,6 +51,35 @@ defmodule Vyasa.Written do
     Repo.all(Source)
     |> Repo.preload([:chapters, :verses])
   end
+
+  @doc """
+  Returns the list of verses.
+
+  ## Examples
+
+      iex> list_verses()
+      [%Verse{}, ...]
+
+  """
+  def list_verses do
+    Repo.all(Verse)
+    |> Repo.preload([:chapter])
+  end
+
+  @doc """
+  Returns the list of chapters.
+
+  ## Examples
+
+      iex> list_chapters()
+      [%Chapter{}, ...]
+
+  """
+  def list_chapters do
+    Repo.all(Chapter)
+    |> Repo.preload([:verses])
+  end
+
 
 
   @doc """

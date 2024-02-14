@@ -5,7 +5,7 @@ defmodule Vyasa.Medium.Voice do
   alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Medium.{Video, Track}
 
-  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "voices" do
     field :lang, :string
     field :title, :string
@@ -27,9 +27,10 @@ defmodule Vyasa.Medium.Voice do
   @doc false
 
   def gen_changeset(voice, attrs) do
-    voice
-    |> cast(attrs, [:title, :duration, :lang])
+    %{voice | id: Ecto.UUID.generate()}
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path])
     |> cast_embed(:prop, with: &prop_changeset/2)
+    |> file_upload()
   end
 
   def changeset(voice, attrs) do
@@ -42,5 +43,14 @@ defmodule Vyasa.Medium.Voice do
   def prop_changeset(voice, attrs) do
     voice
     |> cast(attrs, [:artist])
+  end
+
+  def file_upload(%Ecto.Changeset{changes: %{file_path: _} = changes} = ec) do
+    ext_path = apply_changes(ec)
+    |> Vyasa.Medium.Writer.run()
+    |> then(&elem(&1, 1).key)
+    |> Vyasa.Medium.Store.get!()
+
+    %{ec | changes: %{changes | file_path: ext_path}}
   end
 end

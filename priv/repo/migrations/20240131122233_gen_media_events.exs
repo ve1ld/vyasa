@@ -31,6 +31,7 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
       add :id, :uuid, primary_key: true
       add :origin, :integer
       add :duration, :integer
+      add :phase, :string
 
       add :verse_id, references(:verses, column: :id, type: :uuid, on_delete: :nothing)
       add :voice_id, references(:voices, column: :id, type: :uuid, on_delete: :nothing)
@@ -42,5 +43,7 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
       add :key, :string
       add :parent_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
     end
+
+    create unique_index(:sources, [:title])
   end
 end

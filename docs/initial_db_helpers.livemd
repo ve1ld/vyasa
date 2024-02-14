@@ -29,8 +29,7 @@ alias Vyasa.Medium
 alias Vyasa.Repo
 
 defmodule G do
-  @root "/Users/ritesh/Projects/vyasa"
-  @gita_sub_dir "#{@root}/priv/static/corpus/gita"
+  @gita_sub_dir Path.expand("./priv/static/corpus/gita")
 
   @verses "#{@gita_sub_dir}/verse.json"
   @chapters "#{@gita_sub_dir}/chapters.json"
@@ -487,8 +486,6 @@ sources
 ```elixir
 stored_url
 ```
-
-
 
 <!-- livebook:{"branch_parent_index":0} -->
 
