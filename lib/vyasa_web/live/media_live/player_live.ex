@@ -2,7 +2,8 @@ defmodule VyasaWeb.MediaLive.Player do
   use VyasaWeb, :live_view
   # use VyasaWeb, {:live_view, container: {:div, []}}
 
-  alias Vyasa.Medium
+  @pubsub Vyasa.PubSub
+  # alias Vyasa.Medium
   alias Vyasa.MediaLibrary.Playback
   alias Vyasa.Medium.{Voice}
 
@@ -15,15 +16,25 @@ defmodule VyasaWeb.MediaLive.Player do
 
   @impl true
   def mount(_params, _session, socket) do
-    initial_voice = Medium.get_voice_stub()
+    if connected?(socket) do
+      subscribe_now_playing()
+    end
+
+    # initial_voice = Medium.get_voice_stub()
     socket = socket
-    |> assign(voice: initial_voice)
-    |> assign(playback: Playback.new(%{
-              medium: initial_voice,
-              playing?: false
-                                     }))
+    # |> assign(voice: initial_voice)
+    |> assign(voice: nil)
+    |> assign(playback: nil)
+    # |> assign(playback: Playback.new(%{
+    #           medium: nil,
+    #           playing?: false
+    #                                  }))
 
     {:ok, socket, layout: false}
+  end
+
+  defp subscribe_now_playing do
+    Phoenix.PubSub.subscribe(@pubsub, "nowplaying")
   end
 
   # defp switch_profile(socket, nil) do
@@ -180,6 +191,24 @@ defmodule VyasaWeb.MediaLive.Player do
 
   #   {:noreply, socket}
   # end
+
+  @impl true
+  def handle_info({:set_voice, voice} = msg, socket) do
+    IO.puts(">> [handle_info] set voice! by player_live.ex")
+    dbg(msg, limit: :infinity)
+
+    # voice = %Voice{voice | file_path: "http://localhost:9000/vyasa/voices/d040c39a-a25d-45b2-b73d-a7d3db70cbee.mp3?ContentType=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=secrettunnel%2F20240217%2Fap-southeast-1%2Fs3%2Faws4_request&X-Amz-Date=20240217T033529Z&X-Amz-Expires=88888&X-Amz-SignedHeaders=host&X-Amz-Signature=d5aed6e6c22a7f29409663901033d1e15c83572f48358c6d84f78609e089ac8e"}
+    socket = socket
+    |> assign(voice: voice)
+    |> assign(playback: Playback.new(%{
+              medium: voice,
+              playing?: false,
+                                     }))
+
+    {:noreply, socket
+    }
+
+  end
 
   # def handle_info(:play_current, socket) do
   #   {:noreply, play_current_song(socket)}

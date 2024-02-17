@@ -445,12 +445,6 @@ events =
   |> Enum.map(&Vyasa.Medium.create_event(&1))
 ```
 
-```elixir
-Enum.sort_by(events, fn {_, e} -> e.origin end)
-
-Vyasa.Medium.get_voice!("3c66044d-b3ea-4e00-8fc8-a339b0b9a581").events
-```
-
 ### Testing Assocs.
 
 ```elixir
@@ -469,7 +463,7 @@ voice =
 # <== this remains empty because the assoc is not done
 events = voice.events
 
-IO.inspect(events, limit: :infinity)
+# IO.inspect(events, limit: :infinity)
 # hd(events)
 
 # 736fbb85-1751-4419-a572-c4283a321252
@@ -486,9 +480,10 @@ alias Vyasa.Written.{Chapter}
 
 Repo.all(Event)
 
-Repo.get(Voice, "d1303578-b08a-4811-b219-d63bff7ece6e")
+# Repo.get(Voice, "d1303578-b08a-4811-b219-d63bff7ece6e")
+Repo.get(Voice, "d040c39a-a25d-45b2-b73d-a7d3db70cbee")
 
-Written.get_chapter(1, "Gita")
+# Written.get_chapter(1, "Gita")
 ```
 
 ### Demo of how to write an example voice using the writer, and test it using curl...

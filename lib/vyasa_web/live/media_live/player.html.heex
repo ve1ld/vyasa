@@ -1,3 +1,4 @@
+<%= inspect assigns[:voice] %>
 <div id="audio-player-container">
     <!-- player -->
     <div id="audio-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
@@ -9,10 +10,10 @@
           <div class="pr-5">
             <div class="min-w-0 max-w-xs flex-col space-y-0.5">
               <h2 class="text-black dark:text-white text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
-                <%= if @voice, do: @voice.title, else: raw("&nbsp;") %>
+                <%= if assigns[:voice], do: @voice.title, else: raw("&nbsp;") %>
               </h2>
               <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
-                <%= if @voice, do: "Stub artist", else: raw("&nbsp;") %>
+                <%= if assigns[:voice], do: "Stub artist", else: raw("&nbsp;") %>
               </p>
             </div>
           </div>
@@ -51,14 +52,14 @@
             phx-click={js_play_pause()}
             phx-target="#audio-player"
             aria-label={
-              if @playback.playing? do
+              if assigns[:playback] && assigns[:playback].playing? do
                 "Pause"
               else
                 "Play"
               end
             }
           >
-            <%= if @playback.playing? do %>
+            <%= if assigns[:playback] && assigns[:playback].playing? do %>
             <!-- play/pause -->
               <svg id="player-pause" width="50" height="50" fill="none">
                 <circle
@@ -119,15 +120,15 @@
           <!-- next -->
           <button type="button" class="mx-auto scale-75"></button>
           <!-- stop button -->
-          <button
-            type="button"
-            class="mx-auto scale-75"
-            phx-click={
-              JS.push("switch_profile", value: %{user_id: nil}, target: "#player", loading: "#player")
-            }
-          >
-            <.icon name={"hero-stop-solid"} class="h-12 w-12" />
-          </button>
+          <!-- <button
+               type="button"
+               class="mx-auto scale-75"
+               phx-click={
+               JS.push("switch_profile", value: %{user_id: nil}, target: "#player", loading: "#player")
+               }
+               >
+               <.icon name={"hero-stop-solid"} class="h-12 w-12" />
+               </button> -->
           <!-- stop button -->
       </div>
 
