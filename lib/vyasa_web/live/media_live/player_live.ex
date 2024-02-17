@@ -90,6 +90,17 @@ defmodule VyasaWeb.MediaLive.Player do
 
 
   @impl true
+  def handle_event("update_playback_progress",
+    %{"currentTimeVal" => current_time_val}, socket) do
+
+    IO.puts("[handle_event] update_playback_progress")
+    socket
+    |> assign(:playback, %Playback{socket.assigns.playback | elapsed: current_time_val})
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("play_pause", _, socket) do
     %{voice: voice, playback: playback} = socket.assigns
 
@@ -119,6 +130,7 @@ defmodule VyasaWeb.MediaLive.Player do
     playback
 
   end
+
 
 
   defp play_playback(%Playback{
@@ -192,6 +204,7 @@ defmodule VyasaWeb.MediaLive.Player do
   #   {:noreply, socket}
   # end
 
+
   @impl true
   def handle_info({:set_voice, voice} = msg, socket) do
     IO.puts(">> [handle_info] set voice! by player_live.ex")
@@ -251,7 +264,7 @@ defp play_voice(socket, voice, %Playback{
       elapsed: elapsed,
                 } = playback) do
     IO.puts("play_voice triggerred with elapsed = #{elapsed}")
-    IO.inspect(voice)
+    # IO.inspect(voice)
 
     socket
     |> push_play(voice, playback)
@@ -261,7 +274,7 @@ defp pause_voice(socket, voice, %Playback{
       elapsed: elapsed
                  } = playback) do
   IO.puts("pause_voice triggerred with elapsed = #{elapsed}")
-  IO.inspect(voice)
+  # IO.inspect(voice)
 
   # paused_at = DateTime.truncate(DateTime.utc_now(), :second)
   paused_at = DateTime.utc_now()
@@ -437,6 +450,6 @@ defp push_play(socket, %Voice{} = voice, %Playback{
       </div>
     </div>
     """
-       end
+        end
 
  end

@@ -41,6 +41,11 @@ AudioPlayer = {
       }
     })
 
+    this.handleEvent("registerEventsTimeline", params => {
+      console.log("Register Events Timeline", params);
+      this.player.eventsTimeline = params.voice_events;
+    })
+
 
     /// events handled by audio player::
     this.handleEvent("play", (params) => {
@@ -89,7 +94,7 @@ AudioPlayer = {
       if(sync) {
         this.player.currentTime = nowSeconds() - this.playbackBeganAt
       }
-      const progressUpdateInterval = 50
+      const progressUpdateInterval = 200
       this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
     }, error => {
       if(error.name === "NotAllowedError"){
@@ -116,9 +121,26 @@ AudioPlayer = {
    * Updates playback progress information.
    * */
   updateProgress() {
+    console.log("[updateProgress]", {
+      eventsTimeline: this.player.eventsTimeline
+    })
+
+
+    this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
+
+
     if(isNaN(this.player.duration)) {
       return false
     }
+
+    const shouldStopUpdating = this.player.currentTime > 0 && this.player.paused
+    if (shouldStopUpdating) {
+      console.log("Should stop updating")
+      clearInterval(this.progressTimer)
+
+      return
+    }
+
     const shouldAutoPlayNextSong = !this.nextTimer && this.player.currentTime >= this.player.duration;
     if(shouldAutoPlayNextSong) {
       clearInterval(this.progressTimer) // stops progress updates
@@ -140,10 +162,35 @@ AudioPlayer = {
     })
     this.duration.innerText = durationVal;
     this.currentTime.innerText = currentTimeVal;
+    // this.pushEvent("update_playback_progress", {
+    //   currentTimeVal,
+    // })
+    // this.pushEventTo("#chapter-index-container", "update_playback_progress", {
+    //   currentTimeVal,
+    // })
   },
 
   formatTime(seconds) {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
+  },
+  emphasizeActiveEvent(currentTime, events) {
+    const currentTimeMs = currentTime * 1000
+    const activeEvent = events.find(event => currentTimeMs >= event.origin && currentTimeMs < (event.origin + event.duration))
+    console.log("activeEvent:", {currentTimeMs, activeEvent})
+
+    const {
+      verse_id: verseId
+    } = activeEvent;
+
+    if (!verseId) {
+      return
+    }
+
+    const targetDomId = `verse-${verseId}`
+
+    const node = document.getElementById(targetDomId)
+    node.classList.add("bg-orange-500")
+    node.style.borderLeft = "8px solid black"
   }
 }
 

@@ -126,7 +126,7 @@ defmodule Vyasa.Written do
   def get_chapter(no, source_title) do
     src = get_source_by_title(source_title)
     Repo.get_by(Chapter, no: no, source_id: src.id)
-    |> Repo.preload([:translations, voices: [:events], verses: [:translations]])
+    |> Repo.preload([:translations, voices: [events: [:source, :verse]], verses: [:translations]])
    end
 
   def get_verses_in_chapter(no, source_id) do

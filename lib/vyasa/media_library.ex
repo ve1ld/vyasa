@@ -9,7 +9,7 @@ defmodule Vyasa.MediaLibrary do
     """
 
 
-    defstruct [:medium, playing?: false, played_at: nil, paused_at: nil, elapsed: 0]
+    defstruct [:medium, playing?: false, played_at: nil, paused_at: nil, elapsed: 0, current_time: 0]
 
     def new(%{} = attrs) do
       %Playback{
