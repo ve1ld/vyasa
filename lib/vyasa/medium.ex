@@ -2,6 +2,7 @@ defmodule Vyasa.Medium do
   alias Vyasa.Medium.{Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Written
+  # alias Vyasa.Written.{Chapter}
   alias Vyasa.Repo
 
 
@@ -19,7 +20,11 @@ defmodule Vyasa.Medium do
       ** (Ecto.NoResultsError)
 
   """
-  def get_voice!(id), do: Repo.get!(Voice, id)
+  def get_voice!(id) do
+    Repo.get!(Voice, id)
+    |> Repo.preload([:events])
+
+  end
 
   @doc """
   Creates a voice.
@@ -45,10 +50,11 @@ defmodule Vyasa.Medium do
   """
   def get_voice_stub() do
     src = Written.get_source_by_title("Gita")
-    {:ok, voice} = Medium.create_voice(%{lang: "sa", source_id: src.id, file_path: @voice_stub_url})
-
+    {:ok, %Voice{ id: voice_id } = voice} = Medium.create_voice(%{lang: "sa", source_id: src.id, file_path: @voice_stub_url})
     # since it's a virtual field for now, let the stub have a non nil value:
     %Voice{voice | title: "Gita"}
+
+    get_voice!(voice_id) |> dbg()
 
   end
 
@@ -125,6 +131,7 @@ defmodule Vyasa.Medium do
   """
   def get_event!(id), do: Repo.get!(Event, id)
 
+
     @doc """
   Creates a event.
 
@@ -194,4 +201,6 @@ defmodule Vyasa.Medium do
     Event.changeset(event, attrs)
   end
 
-end
+
+
+ end

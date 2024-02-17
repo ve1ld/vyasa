@@ -241,12 +241,13 @@ defmodule DBHelper do
   alias Vyasa.Repo
   alias G
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
+  alias Vyasa.Medium.{Event}
   alias Vyasa.Medium.{Voice}
 
   # alias Vyasa.Medium.{Voice, Event, Store, Track, Video, Writer}
 
   def purge_db() do
-    [Voice, Translation, Verse, Chapter, Source]
+    [Event, Voice, Translation, Verse, Chapter, Source]
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 
@@ -306,8 +307,11 @@ DBHelper.seed_db()
 #### Events are allivvee
 
 ```elixir
+R.recompile()
 gita = Vyasa.Written.get_source_by_title("Gita")
 verses = Vyasa.Written.get_verses_in_chapter(1, gita.id)
+
+# creats a map using verse information
 verse_lookup = Enum.into(for(%{id: id, no: verse_no} <- verses, do: {verse_no, id}), %{})
 
 c1_path = Path.expand("./1.mp3", "media/gita")
@@ -319,107 +323,172 @@ c1_path = Path.expand("./1.mp3", "media/gita")
  }} = Vyasa.Parser.MP3.parse(c1_path)
 
 {:ok, voice} =
-  Vyasa.Medium.create_voice(%{lang: "sa", duration: tot_d, file_path: c1_path, source_id: gita.id})
+  Vyasa.Medium.create_voice(%{
+    lang: "sa",
+    duration: tot_d,
+    file_path: c1_path,
+    source_id: gita.id,
+    chapter_no: 1
+  })
 
 # Vyasa.Medium.get_voice!("4c73fb6d-4163-4b64-90d0-5d49680c1ee4")
 # |> Vyasa.Medium.delete_voice()
 ```
 
 ```elixir
-"""
-start :- 00:00
-Shloka 1:-    00:33
-Shloka 2 :-   00:49
-Shloka 3:-    01:06
-Shloka 4:-   01:19
-Shloka 5:-   01:32 
-Shloka 6:-   01:46
-Shloka 7:-   02:00
-Shloka 8:-   02:15
-Shloka 9:-   02:28
-Shloka 10:-  02:42
-Shloka 11:-  02:56
-Shloka 12:- 03:09
-Shloka 13:- 03:22
-Shloka 14:- 03:36
-Shloka 15:- 03:49
-Shloka 16:- 04:02
-Shloka 17:- 04:14
-Shloka 18:- 04:27
-Shloka 19:- 04:40
-Shloka 20:- 04:54
-Shloka 21:-  05:07
-Shloka 22:-  05:23
-Shloka 23:-  05:36
-Shloka 24:-  05:50
-Shloka 25:- 06:05
-Shloka 26:- 06:18
-Shloka 27:- 06:32
-Shloka 28:- 06:46
-Shloka 29:-  07:01
-Shloka 30:-  07:13
-Shloka 31:-  07:26
-Shloka 32 :-  07:38
-Shloka 33:-   07:52
-Shloka 34 :-  08:05
-Shloka 35 :-  08:18
-Shloka 36 :- 08:31
-Shloka 37:-  08:44
-Shloka 38 :- 08:57
-Shloka 39:-  09:09
-Shloka 40:-  09:22
-Shloka 41:- 09:35
-Shloka 42:- 09:48
-Shloka 43:-  10:02
-Shloka 44:-  10:16
-Shloka 45:-  10:29
-Shloka 46:-  10:40
-Shloka 47:- 10:53
-end:-  11:08
-"""
-|> String.split("\n")
-|> Enum.map(fn x ->
-  x
-  |> String.split(":-")
-  |> Enum.map(&String.trim/1)
-  |> Enum.reduce([], fn
-    <<"Shloka"::utf8, sep::utf8, verse_no::binary>>, acc ->
-      [verse_lookup[String.to_integer(verse_no)] | acc]
+R.recompile()
 
-    bin, acc ->
-      [bin | acc]
+events =
+  """
+  start :- 00:00
+  Shloka 1:-    00:33
+  Shloka 2 :-   00:49
+  Shloka 3:-    01:06
+  Shloka 4:-   01:19
+  Shloka 5:-   01:32 
+  Shloka 6:-   01:46
+  Shloka 7:-   02:00
+  Shloka 8:-   02:15
+  Shloka 9:-   02:28
+  Shloka 10:-  02:42
+  Shloka 11:-  02:56
+  Shloka 12:- 03:09
+  Shloka 13:- 03:22
+  Shloka 14:- 03:36
+  Shloka 15:- 03:49
+  Shloka 16:- 04:02
+  Shloka 17:- 04:14
+  Shloka 18:- 04:27
+  Shloka 19:- 04:40
+  Shloka 20:- 04:54
+  Shloka 21:-  05:07
+  Shloka 22:-  05:23
+  Shloka 23:-  05:36
+  Shloka 24:-  05:50
+  Shloka 25:- 06:05
+  Shloka 26:- 06:18
+  Shloka 27:- 06:32
+  Shloka 28:- 06:46
+  Shloka 29:-  07:01
+  Shloka 30:-  07:13
+  Shloka 31:-  07:26
+  Shloka 32 :-  07:38
+  Shloka 33:-   07:52
+  Shloka 34 :-  08:05
+  Shloka 35 :-  08:18
+  Shloka 36 :- 08:31
+  Shloka 37:-  08:44
+  Shloka 38 :- 08:57
+  Shloka 39:-  09:09
+  Shloka 40:-  09:22
+  Shloka 41:- 09:35
+  Shloka 42:- 09:48
+  Shloka 43:-  10:02
+  Shloka 44:-  10:16
+  Shloka 45:-  10:29
+  Shloka 46:-  10:40
+  Shloka 47:- 10:53
+  end:-  11:08
+  """
+  # each line 
+  |> String.split("\n")
+  |> Enum.map(fn x ->
+    x
+    |> String.split(":-")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reduce([], fn
+      <<"Shloka"::utf8, sep::utf8, verse_no::binary>>, acc ->
+        [verse_lookup[String.to_integer(verse_no)] | acc]
+
+      bin, acc ->
+        [bin | acc]
+    end)
   end)
-end)
-|> IO.inspect(limit: :infinity)
-|> Enum.reduce(
-  [],
-  fn
-    [time, "start"], acc ->
-      [%Vyasa.Medium.Event{origin: 0, phase: "start", voice_id: voice.id} | acc]
+  |> IO.inspect(limit: :infinity)
+  |> Enum.reduce(
+    [],
+    fn
+      [time, "start"], acc ->
+        [
+          %Vyasa.Medium.Event{origin: 0, phase: "start", voice_id: voice.id, source_id: gita.id}
+          | acc
+        ]
 
-    [time, "end"], [%{origin: o} = prev | acc] ->
-      [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
-      d = (min * 60 + sec) * 1000
+      [time, "end"], [%{origin: o} = prev | acc] ->
+        [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+        d = (min * 60 + sec) * 1000
 
-      [
-        %Vyasa.Medium.Event{origin: d, duration: tot_d - d, phase: "end", voice_id: voice.id}
-        | [%{prev | duration: d - o} | acc]
-      ]
+        [
+          %Vyasa.Medium.Event{
+            origin: d,
+            duration: tot_d - d,
+            phase: "end",
+            voice_id: voice.id,
+            source_id: gita.id
+          }
+          | [%{prev | duration: d - o} | acc]
+        ]
 
-    [time, id], [%{origin: o} = prev | acc] ->
-      [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
-      d = (min * 60 + sec) * 1000
+      [time, id], [%{origin: o} = prev | acc] ->
+        [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+        d = (min * 60 + sec) * 1000
 
-      [
-        %Vyasa.Medium.Event{origin: d, verse_id: id, voice_id: voice.id}
-        | [%{prev | duration: d - o} | acc]
-      ]
+        [
+          %Vyasa.Medium.Event{origin: d, verse_id: id, voice_id: voice.id, source_id: gita.id}
+          | [%{prev | duration: d - o} | acc]
+        ]
 
-    _, acc ->
-      acc
-  end
-)
-|> Enum.map(&Vyasa.Medium.create_event(&1))
+      _, acc ->
+        acc
+    end
+  )
+  |> Enum.map(&Vyasa.Medium.create_event(&1))
+```
+
+```elixir
+Enum.sort_by(events, fn {_, e} -> e.origin end)
+
+Vyasa.Medium.get_voice!("3c66044d-b3ea-4e00-8fc8-a339b0b9a581").events
+```
+
+### Testing Assocs.
+
+```elixir
+R.recompile()
+
+alias Vyasa.Written
+
+# getting a voice from a chapter: 
+chap_1 = Written.get_chapter(1, "Gita")
+
+voice =
+  chap_1.voices
+  # sanskrit voice for chapter 1
+  |> Enum.find(fn v -> v.lang == "sa" end)
+
+# <== this remains empty because the assoc is not done
+events = voice.events
+
+IO.inspect(events, limit: :infinity)
+# hd(events)
+
+# 736fbb85-1751-4419-a572-c4283a321252
+# Vyasa.Repo.all(Vyasa.Medium.Voice)
+# Vyasa.Repo.get(Vyasa.Medium.Voice, "736fbb85-1751-4419-a572-c4283a321252")
+# |> Vyasa.Repo.preload([:chapter, :source, :track])
+```
+
+```elixir
+R.recompile()
+alias Vyasa.Repo
+alias Vyasa.Medium.{Voice, Event}
+alias Vyasa.Written.{Chapter}
+
+Repo.all(Event)
+
+Repo.get(Voice, "d1303578-b08a-4811-b219-d63bff7ece6e")
+
+Written.get_chapter(1, "Gita")
 ```
 
 ### Demo of how to write an example voice using the writer, and test it using curl...

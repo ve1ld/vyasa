@@ -3,7 +3,7 @@ defmodule Vyasa.Medium.Voice do
   import Ecto.Changeset
 
   alias Vyasa.Written.{Source, Chapter}
-  alias Vyasa.Medium.{Video, Track}
+  alias Vyasa.Medium.{Event, Video, Track}
 
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "voices" do
@@ -16,6 +16,7 @@ defmodule Vyasa.Medium.Voice do
       field(:artist, {:array, :string})
     end
 
+    has_many :events, Event, references: :id, foreign_key: :voice_id, preload_order: [asc: :origin]
     belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_one :video, Video, references: :id, foreign_key: :voice_id
@@ -28,16 +29,15 @@ defmodule Vyasa.Medium.Voice do
 
   def gen_changeset(voice, attrs) do
     %{voice | id: Ecto.UUID.generate()}
-    |> cast(attrs, [:id, :title, :duration, :lang, :file_path])
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
     |> cast_embed(:prop, with: &prop_changeset/2)
     |> file_upload()
   end
 
   def changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:title, :duration, :lang, :file_path])
+    |> cast(attrs, [:title, :duration, :lang, :file_path, :chapter_no, :source_id])
     |> cast_embed(:prop, with: &prop_changeset/2)
-    # |> cast_assoc(:videos)
   end
 
   def prop_changeset(voice, attrs) do

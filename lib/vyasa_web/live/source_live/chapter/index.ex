@@ -21,37 +21,28 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       "chap_no" => chap_no,
     } = _params) do
 
-
-    %Chapter{
-      verses: verses,
-      title: title,
-      body: body,
-      translations: translations,
-    } = Written.get_chapter(chap_no, source_title)
-
-    selected_transl = translations |> Enum.find(fn t -> t.lang == @default_lang end)
+    %Chapter{} = chap = Written.get_chapter(chap_no, source_title)
+    selected_transl = chap.translations |> Enum.find(fn t -> t.lang == @default_lang end)
 
     socket
-    |> stream(:verses, verses)
+    |> stream(:verses, chap.verses)
     |> assign(:source_title, source_title)
-    |> assign(:chap_no, chap_no)
-    |> assign(:chap_body, body)
-    |> assign(:chap_title, title)
+    |> assign(:chap, chap)
     |> assign(:selected_transl, selected_transl)
-    |> assign(:page_title, "#{source_title} Chapter #{chap_no} | #{title}")
-    |> assign(:text, nil)
-    |> assign(:song, nil)
     |> assign_meta()
   end
 
   defp assign_meta(socket) do
-    assign(socket, :meta, %{
-      title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap_no} | #{socket.assigns.chap_title}",
-      description: socket.assigns.chap_body,
-      type: "website",
-      url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap_no}"),
-    })
+    socket
+    |> assign(:page_title, "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
+    |> assign(:meta, %{
+          title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
+          description: socket.assigns.chap.body,
+          type: "website",
+          url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
+              })
   end
+
   @doc """
   Renders a clickable verse list.
 

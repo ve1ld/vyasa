@@ -21,7 +21,7 @@ defmodule Vyasa.Medium.Event do
 
     belongs_to :verse, Verse, foreign_key: :verse_id, type: :binary_id
     belongs_to :voice, Voice, foreign_key: :voice_id, type: :binary_id
-    belongs_to :source, Source, foreign_key: :source_id
+    belongs_to :source, Source, foreign_key: :source_id, type: :binary_id
   end
 
   @doc false

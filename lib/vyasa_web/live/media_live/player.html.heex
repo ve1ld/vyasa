@@ -51,14 +51,14 @@
             phx-click={js_play_pause()}
             phx-target="#audio-player"
             aria-label={
-              if @playback.playing do
+              if @playback.playing? do
                 "Pause"
               else
                 "Play"
               end
             }
           >
-            <%= if @playback.playing do %>
+            <%= if @playback.playing? do %>
             <!-- play/pause -->
               <svg id="player-pause" width="50" height="50" fill="none">
                 <circle

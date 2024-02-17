@@ -18,7 +18,10 @@ defmodule VyasaWeb.MediaLive.Player do
     initial_voice = Medium.get_voice_stub()
     socket = socket
     |> assign(voice: initial_voice)
-    |> assign(playback: Playback.new(%{medium: initial_voice, playing: false}))
+    |> assign(playback: Playback.new(%{
+              medium: initial_voice,
+              playing?: false
+                                     }))
 
     {:ok, socket, layout: false}
   end
@@ -83,11 +86,10 @@ defmodule VyasaWeb.MediaLive.Player do
     dbg(socket)
 
     cond do
-     playback.playing ->
-        # TODO keep elapsed time in state
+     playback.playing? ->
         playback = pause_playback(playback)
         {:noreply, pause_voice(socket, voice, playback)}
-     !playback.playing ->
+     !playback.playing? ->
         playback = play_playback(playback)
         {:noreply, play_voice(socket, voice, playback)}
      true ->
@@ -96,11 +98,10 @@ defmodule VyasaWeb.MediaLive.Player do
   end
 
   defp pause_playback(%Playback{} = playback) do
-    # now = DateTime.truncate(DateTime.utc_now(), :second)
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, playback.played_at, :second)
 
-    playback = %{playback | playing: false, paused_at: now, elapsed: elapsed}
+    playback = %{playback | playing?: false, paused_at: now, elapsed: elapsed}
     IO.puts("pause_playback")
     dbg(playback)
 
@@ -123,7 +124,7 @@ defmodule VyasaWeb.MediaLive.Player do
         now
     end
 
-    playback = %{playback | playing: true, played_at: played_at}
+    playback = %{playback | playing?: true, played_at: played_at}
     IO.puts("play_playback")
     dbg(playback)
 
@@ -276,7 +277,7 @@ end
 
 defp push_play(socket, %Voice{} = voice, %Playback{
     elapsed: elapsed,
-    playing: playing,
+    playing?: playing?,
     } = playback) do
 
     socket
@@ -284,7 +285,7 @@ defp push_play(socket, %Voice{} = voice, %Playback{
             artist: "testArtist",
             # artist: hd(voice.prop.artists),
             title: voice.title,
-            paused: playing,
+            paused: playing?,
             elapsed: elapsed,
             filePath: voice.file_path,
             duration: voice.duration,
@@ -407,6 +408,6 @@ defp push_play(socket, %Voice{} = voice, %Playback{
       </div>
     </div>
     """
-      end
+       end
 
  end
