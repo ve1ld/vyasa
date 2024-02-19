@@ -41,6 +41,10 @@ AudioPlayer = {
       }
     })
 
+    this.handleEvent("initSession", (sess) => {
+      localStorage.setItem("session", JSON.stringify(sess))
+    })
+
     this.handleEvent("registerEventsTimeline", params => {
       console.log("Register Events Timeline", params);
       this.player.eventsTimeline = params.voice_events;

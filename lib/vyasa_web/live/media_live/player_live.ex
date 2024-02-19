@@ -80,7 +80,7 @@ defmodule VyasaWeb.MediaLive.Player do
 
   @impl true
   def handle_info({_, :voice_ack, voice}, socket) do
-    voice = voice
+    %{events: events} = voice = voice
     |> Medium.get_voices!()
     |> List.first() # Incoming Media Bridge Component to select
     |> Medium.Store.hydrate()
@@ -90,7 +90,8 @@ defmodule VyasaWeb.MediaLive.Player do
     |> assign(playback: Playback.new(%{
               medium: voice,
               playing?: false}))
-
+    # Register Events Timeline on Client-Side
+    |> push_event("registerEventsTimeline", %{voice_events: events |> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))})
     {:noreply, socket}
   end
 
