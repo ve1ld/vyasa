@@ -1,8 +1,8 @@
 defmodule VyasaWeb.MediaLive.Player do
   use VyasaWeb, :live_view
-  alias Vyasa.MediaLibrary.Playback
-  alias Vyasa.Medium
-  alias Vyasa.Medium.{Voice}
+  alias Vyasa.MediaLibrary.{Playback}
+  alias Vyasa.MediaLibrary
+  alias Vyasa.Medium.{Voice, Event}
 
   @impl true
   def mount(_params, _sess, socket) do
@@ -15,10 +15,8 @@ defmodule VyasaWeb.MediaLive.Player do
   end
 
   defp sync_session(%{assigns: %{session: %{"id" => id} = sess}} = socket) when is_binary(id) do
-    if connected?(socket) do
-      Vyasa.PubSub.subscribe("media:session:" <> id)
-      Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
-    end
+    Vyasa.PubSub.subscribe("media:session:" <> id)
+    Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
 
     socket
     |> push_event("initSession", sess |> Map.take(["id"]))
@@ -26,16 +24,6 @@ defmodule VyasaWeb.MediaLive.Player do
 
   defp sync_session(socket) do
     socket
-  end
-
-  @impl true
-  def handle_event("update_playback_progress",
-    %{"currentTimeVal" => current_time_val}, socket) do
-
-    socket
-    |> assign(:playback, %Playback{socket.assigns.playback | elapsed: current_time_val})
-
-    {:noreply, socket}
   end
 
   @impl true
@@ -77,23 +65,22 @@ defmodule VyasaWeb.MediaLive.Player do
     %{playback | playing?: true, played_at: played_at}
   end
 
-
   @impl true
+  @doc"""
+  On receiving a voice_ack, the written and player contexts are now synced.
+  A playback struct is created that represents this synced-state and the client-side hook is triggerred
+  to register the associated events timeline.
+  """
   def handle_info({_, :voice_ack, voice}, socket) do
-    %{events: events} = voice = voice
-    |> Medium.get_voices!()
-    |> List.first() # Incoming Media Bridge Component to select
-    |> Medium.Store.hydrate()
+    %Playback{
+      medium: %Voice{events: events},
+    } = playback = voice |> MediaLibrary.gen_voice_playback()
 
     socket = socket
-    |> assign(voice: voice)
-    |> assign(playback: Playback.new(%{
-              medium: voice,
-              playing?: false}))
-    # Register Events Timeline on Client-Side
-    |> push_event("registerEventsTimeline",
-    %{voice_events: events
-    |> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))})
+    |> assign(playback: playback)
+    # Registers Events Timeline on Client-Side:
+    |> push_event("registerEventsTimeline", %{voice_events: events |> create_events_payload()})
+
     {:noreply, socket}
   end
 
@@ -106,6 +93,13 @@ defmodule VyasaWeb.MediaLive.Player do
     IO.inspect(msg, label: "unexpected message in @player_live")
     {:noreply, socket}
   end
+
+
+defp create_events_payload([%Event{} | _] = events) do
+  events|> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))
+end
+
+
 
 defp play_voice(socket, voice, %Playback{
       elapsed: elapsed,

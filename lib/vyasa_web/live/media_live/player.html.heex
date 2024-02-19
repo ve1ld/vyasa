@@ -1,4 +1,4 @@
-<%= inspect assigns[:voice] %>
+<%= inspect assigns[:playback] %>
 <div id="audio-player-container">
     <!-- player -->
     <div id="audio-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
@@ -10,10 +10,10 @@
           <div class="pr-5">
             <div class="min-w-0 max-w-xs flex-col space-y-0.5">
               <h2 class="text-black dark:text-white text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
-                <%= if assigns[:voice], do: @voice.title, else: raw("&nbsp;") %>
+                <%= if @playback && @playback.medium, do: @playback.medium.title, else: raw("&nbsp;") %>
               </h2>
               <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
-                <%= if assigns[:voice], do: "Stub artist", else: raw("&nbsp;") %>
+                <%= if @playback && @playback.medium, do: "Stub artist", else: raw("&nbsp;") %>
               </p>
             </div>
           </div>

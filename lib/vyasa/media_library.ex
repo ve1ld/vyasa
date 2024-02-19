@@ -1,11 +1,15 @@
 defmodule Vyasa.MediaLibrary do
   @moduledoc """
-  The MediaLibrary context. For now, it shall mainly contain playback events.
+  Media Library is responsible for everything that relates to the content of what medium is played.
+
+  Therefore, it's in charge of updating the Playback struct and loading the necessary media-related contexts.
   """
+  alias Vyasa.Medium.{Voice}
+  alias Vyasa.Medium
 
   defmodule Playback do
     @moduledoc """
-    Manages the playback state
+    The Playback struct is the bridge between written and media player contexts.
     """
 
 
@@ -21,4 +25,19 @@ defmodule Vyasa.MediaLibrary do
       }
     end
   end
-end
+
+  def gen_voice_playback(%Voice{} = voice) do
+    Playback.new(%{
+          medium: voice |>load_voice_events(),
+          playing?: false,
+    })
+  end
+
+  def load_voice_events(%Voice{} = voice) do
+    voice
+    |> Medium.get_voices!()
+    |> List.first()
+    |> Medium.Store.hydrate()
+  end
+
+ end
