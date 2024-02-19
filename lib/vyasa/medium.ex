@@ -1,4 +1,6 @@
 defmodule Vyasa.Medium do
+
+  import Ecto.Query, warn: false
   alias Vyasa.Medium.{Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Written
@@ -23,8 +25,16 @@ defmodule Vyasa.Medium do
   def get_voice!(id) do
     Repo.get!(Voice, id)
     |> Repo.preload([:events])
-
   end
+
+
+  def get_voices!(%Voice{source_id: src_id, chapter_no: c_no, lang: l}) do
+    from(v in Voice,
+      where: v.source_id == ^src_id and v.chapter_no == ^c_no and v.lang == ^l,
+      preload: [:events])
+    |> Repo.all()
+  end
+
 
   @doc """
   Creates a voice.

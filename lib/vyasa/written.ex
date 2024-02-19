@@ -6,7 +6,7 @@ defmodule Vyasa.Written do
   import Ecto.Query, warn: false
   alias Vyasa.Repo
 
-  alias Vyasa.Written.{Text, Source, Verse, Chapter}
+  alias Vyasa.Written.{Text, Source, Verse, Chapter, Translation}
 
   @doc """
   Guards for any uuidV4
@@ -124,9 +124,19 @@ defmodule Vyasa.Written do
   end
 
   def get_chapter(no, source_title) do
-    src = get_source_by_title(source_title)
-    Repo.get_by(Chapter, no: no, source_id: src.id)
-    |> Repo.preload([:translations, voices: [events: [:source, :verse]], verses: [:translations]])
+    (from c in Chapter, where: c.no ==  ^no,
+      inner_join: src in assoc(c, :source),
+      where: src.title == ^source_title)
+    |> Repo.one()
+  end
+
+  def get_chapter(no, source_title, lang) do
+    target_lang = (from ts in Translation, where: ts.lang == ^lang)
+    (from c in Chapter, where: c.no ==  ^no,
+      inner_join: src in assoc(c, :source),
+      where: src.title == ^source_title,
+      preload: [verses: ^(from v in Verse, preload: [translations: ^target_lang]) , translations: ^target_lang])
+      |> Repo.one()
    end
 
   def get_verses_in_chapter(no, source_id) do

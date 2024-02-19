@@ -37,6 +37,13 @@ defmodule Vyasa.Medium.Store do
     signer!(:put, path_constructor(struct))
   end
 
+  def hydrate(%Medium.Voice{} = voice) do
+    %{voice | file_path: get!(voice)}
+  end
+
+  def hydrate(rt), do: rt
+
+
   def s3_config do
     %{
       region: System.fetch_env!("AWS_DEFAULT_REGION"),
