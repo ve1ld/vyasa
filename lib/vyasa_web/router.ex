@@ -23,11 +23,16 @@ defmodule VyasaWeb.Router do
 
     get "/og/:filename", OgImageController, :show
 
+
     get "/", PageController, :home
-    live "/explore/", SourceLive.Index, :index
-    live "/explore/:source_title/", SourceLive.Show, :show
-    live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-    live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+
+    live_session :gen_anon_session,
+      on_mount: [{VyasaWeb.Session, :anon}] do
+      live "/explore/", SourceLive.Index, :index
+      live "/explore/:source_title/", SourceLive.Show, :show
+      live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+    end
     live "/gita/", GitaLive.Index, :index
     live "/gita/:chapter_id", GitaLive.Show, :show
     live "/gita/:chapter_id/:verse_id", GitaLive.ShowVerse, :show_verse
@@ -38,7 +43,7 @@ defmodule VyasaWeb.Router do
     live "/texts/:id", TextLive.Show, :show
     live "/texts/:id/show/edit", TextLive.Show, :edit
 
-  end
+   end
 
   # Other scopes may use custom stacks.
   # scope "/api", VyasaWeb do
