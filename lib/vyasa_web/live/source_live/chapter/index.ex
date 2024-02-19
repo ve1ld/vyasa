@@ -17,7 +17,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     IO.puts("chapter/index handle params")
 
     {:noreply, socket
-    |> bind_session()
+    |> sync_session()
     |> apply_action(socket.assigns.live_action, params)
 
     #|> register_client_state()
@@ -33,13 +33,14 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   #   %{voice_events:  events})
   # end
 
-  defp bind_session(%{assigns: %{session: %{"id" => sess_id}}} = socket) do
+  defp sync_session(%{assigns: %{session: %{"id" => sess_id}}} = socket) do
     # written channel for reading and media channel for writing to media bridge and to player
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
+    Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
     socket
   end
 
-  defp bind_session(socket), do: socket
+  defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
     chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)

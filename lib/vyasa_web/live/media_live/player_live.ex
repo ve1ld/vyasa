@@ -91,7 +91,14 @@ defmodule VyasaWeb.MediaLive.Player do
               medium: voice,
               playing?: false}))
     # Register Events Timeline on Client-Side
-    |> push_event("registerEventsTimeline", %{voice_events: events |> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))})
+    |> push_event("registerEventsTimeline",
+    %{voice_events: events
+    |> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))})
+    {:noreply, socket}
+  end
+
+  def handle_info({_, :written_handshake, :init}, %{assigns: %{session: %{"id" => id}}} = socket) do
+    Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
     {:noreply, socket}
   end
 
