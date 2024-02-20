@@ -1,7 +1,7 @@
 defmodule Vyasa.Medium do
 
   import Ecto.Query, warn: false
-  alias Vyasa.Medium.{Voice, Event}
+  alias Vyasa.Medium.{Voice, Event, Playback}
   alias Vyasa.Medium
   alias Vyasa.Written
   # alias Vyasa.Written.{Chapter}
@@ -212,5 +212,19 @@ defmodule Vyasa.Medium do
   end
 
 
+  def create_playback(%Voice{} = voice) do
+    Playback.new(%{
+          medium: voice |> load_events(),
+          playing?: false,
+    })
+  end
 
- end
+
+  defp load_events(%Voice{} = voice) do
+    voice
+    |> Medium.get_voices!()
+    |> List.first()
+    |> Medium.Store.hydrate()
+  end
+
+end

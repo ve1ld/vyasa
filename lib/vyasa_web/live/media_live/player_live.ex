@@ -1,13 +1,11 @@
 defmodule VyasaWeb.MediaLive.Player do
   use VyasaWeb, :live_view
-  alias Vyasa.MediaLibrary.{Playback}
-  alias Vyasa.MediaLibrary
-  alias Vyasa.Medium.{Voice, Event}
+  alias Vyasa.Medium
+  alias Vyasa.Medium.{Voice, Event, Playback}
 
   @impl true
   def mount(_params, _sess, socket) do
     socket = socket
-    |> assign(voice: nil)
     |> assign(playback: nil)
     |> sync_session()
 
@@ -28,42 +26,42 @@ defmodule VyasaWeb.MediaLive.Player do
 
   @impl true
   def handle_event("play_pause", _, socket) do
-    %{voice: voice, playback: playback} = socket.assigns
+    %{
+      playback: %Playback{
+      medium: %Voice{} = _voice = _medium,
+      playing?: playing?,
+     } = playback} = socket.assigns
 
-    cond do
-     playback.playing? ->
-        playback = pause_playback(playback)
-        {:noreply, pause_voice(socket, voice, playback)}
-     !playback.playing? ->
-        playback = play_playback(playback)
-        {:noreply, play_voice(socket, voice, playback)}
-     true ->
-        {:noreply, socket}
-    end
-  end
+    {:noreply,
+     cond do
+       playing? -> socket |> pause_voice(playback)
+       !playing? -> socket |> play_voice(playback)
+      end
+    }
+   end
 
-  defp pause_playback(%Playback{} = playback) do
-    now = DateTime.utc_now()
-    elapsed = DateTime.diff(now, playback.played_at, :second)
+  @impl true
+  def handle_event("seekToMs", %{"position_ms" => position_ms} = _payload, socket) do
+    IO.puts("[handleEvent] seekToMs #{position_ms} is_integer? #{is_integer(position_ms)} is string? #{is_binary(position_ms)}")
 
-    %{playback | playing?: false, paused_at: now, elapsed: elapsed}
-  end
-
+    %{playback: %Playback{
+         medium: %Voice{} = _voice,
+         playing?: playing?,
+         played_at: played_at,
+      } = playback} = socket.assigns
 
 
-  defp play_playback(%Playback{elapsed: elapsed} = playback) do
-    now = DateTime.utc_now()
+    position_s = round(position_ms / 1000)
     played_at = cond do
-      elapsed > 0 -> # resume case
-        DateTime.add(now, -elapsed, :second)
-      elapsed == 0 -> # fresh start case
-        now
-      true ->
-        now
+      !playing? -> played_at
+      playing? -> DateTime.add(DateTime.utc_now, -position_s, :second)
     end
 
-    %{playback | playing?: true, played_at: played_at}
-  end
+    {:noreply, socket
+     |> push_event("seekTo", %{positionS: position_s})
+     |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
+    }
+    end
 
   @impl true
   @doc"""
@@ -74,7 +72,8 @@ defmodule VyasaWeb.MediaLive.Player do
   def handle_info({_, :voice_ack, voice}, socket) do
     %Playback{
       medium: %Voice{events: events},
-    } = playback = voice |> MediaLibrary.gen_voice_playback()
+    } = playback = voice |> Medium.create_playback()
+    # } = playback = voice |> MediaLibrary.gen_voice_playback()
 
     socket = socket
     |> assign(playback: playback)
@@ -101,63 +100,56 @@ end
 
 
 
-defp play_voice(socket, voice, %Playback{
+defp play_voice(socket, %Playback{
       elapsed: elapsed,
+      medium: %Voice{} = voice
                 } = playback) do
     IO.puts("play_voice triggerred with elapsed = #{elapsed}")
+    now = DateTime.utc_now()
+    played_at = cond do
+      elapsed > 0 -> # resume case
+        DateTime.add(now, -elapsed, :second)
+      elapsed == 0 -> # fresh start case
+        now
+      true ->
+        now
+    end
 
-    socket
-    |> push_play(voice, playback)
-end
-
-defp pause_voice(socket, voice, %Playback{
-      elapsed: elapsed
-                 } = playback) do
-  IO.puts("pause_voice triggerred with elapsed = #{elapsed}")
-  # IO.inspect(voice)
-
-  # paused_at = DateTime.truncate(DateTime.utc_now(), :second)
-  paused_at = DateTime.utc_now()
-
-  playback = %{playback | paused_at: paused_at}
-
-  socket
-  |> push_pause(voice, playback)
-
-end
-
-defp push_play(socket, %Voice{} = voice, %Playback{
-    elapsed: elapsed,
-    playing?: playing?,
-    } = playback) do
+    playback = %{playback | playing?: true, played_at: played_at}
 
     socket
     |>push_event("play", %{
-            artist: "testArtist",
-            # artist: hd(voice.prop.artists),
-            title: voice.title,
-            paused: playing?,
-            elapsed: elapsed,
-            filePath: voice.file_path,
-            duration: voice.duration,
+        artist: "testArtist",
+        # artist: hd(voice.prop.artists),
+        title: voice.title,
+        isPlaying: playback.playing?,
+        elapsed: playback.elapsed,
+        filePath: voice.file_path,
+        duration: voice.duration,
       })
-    |> assign(voice: voice, playback: playback)
-  end
+    |> assign(playback: playback)
+end
 
-  defp push_pause(socket, %Voice{} = voice, %Playback{
-    elapsed: elapsed,
-  } = playback) do
+defp pause_voice(socket, %Playback{
+      medium: %Voice{} = _voice,
+      } = playback) do
+
+    now = DateTime.utc_now()
+    elapsed = DateTime.diff(now, playback.played_at, :second)
+    playback = %{playback | playing?: false, paused_at: now, elapsed: elapsed}
+
+    IO.puts("pause_voice triggerred with elapsed = #{elapsed}")
+
     socket
     |> push_event("pause", %{
           elapsed: elapsed,
-                  })
-
-    |> assign(voice: voice, playback: playback)
-  end
+      })
+    |> assign(playback: playback)
+end
 
   defp js_play_pause() do
     JS.push("play_pause") # server event
-    |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event
+    |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM
   end
 
 
@@ -180,6 +172,9 @@ defp push_play(socket, %Voice{} = voice, %Playback{
     <div
       id={"#{@id}-container"}
       class="bg-gray-200 flex-auto dark:bg-black rounded-full overflow-hidden"
+      phx-hook="ProgressBar"
+      data-value={@value}
+      data-max={@max}
       phx-update="ignore"
     >
       <div

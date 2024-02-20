@@ -1,5 +1,4 @@
-<%= inspect assigns[:playback] %>
-<div id="audio-player-container">
+<div id="audio-player-container" class="sticky top-0" >
     <!-- player -->
     <div id="audio-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
       <div id="audio-ignore" phx-update="ignore">
@@ -17,9 +16,11 @@
               </p>
             </div>
           </div>
-
-          <.progress_bar id="player-progress" />
-
+          <.progress_bar
+            id="player-progress"
+            max={@playback && @playback.medium && @playback.medium.duration || 100}
+            value={@playback && @playback.elapsed || 0}
+          />
           <div
             id="player-info"
             class="text-gray-500 dark:text-gray-400 flex-row justify-between text-sm font-medium tabular-nums"
@@ -152,3 +153,5 @@
 
 
 </div>
+
+<%= inspect assigns[:playback] %>
