@@ -70,7 +70,7 @@ defmodule Vyasa.Medium.Store do
   defp signer(action, path) do
     ExAws.Config.new(:s3, s3_config()) |>
       ExAws.S3.presigned_url(action, @bucket, path,
-        [expires_in: 88888, virtual_host: false, query_params: [{"response-content-disposition", "inline"}]])
+        [expires_in: 88888, virtual_host: false, query_params: [{"ContentType", "application/octet-stream"}]])
   end
 
   defp local_path(%Medium.Voice{file_path: local_path}) do

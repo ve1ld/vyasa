@@ -3,20 +3,21 @@ defmodule VyasaWeb.Admin.Written.Verse do
 end
 
 defmodule VyasaWeb.Admin.Medium.Event do
-  use LiveAdmin.Resource, schema: Vyasa.Medium.Event, immutable_fields: [:source_id], actions: [:call], render_with: :render_field
+  use LiveAdmin.Resource, schema: Vyasa.Medium.Event,
+    immutable_fields: [:source_id],
+    actions: [:silence],
+    render_with: :render_field
 
-  def render_field(%{voice: v} = e, :phase, _session) do
-    VyasaWeb.Admin.Renderer.render_link(%{e | voice: Vyasa.Medium.Store.hydrate(v)})
-  end
+
 
   def render_field(record, field, session) do
     VyasaWeb.Admin.Renderer.render_field(record, field, session)
   end
 
 
-  def call(%{voice: v}, _sess) do
-    IO.inspect(v)
-    {:ok, v}
+  def silence(%{voice: _v} = e, _sess) do
+    e = %{e | voice: nil}
+    {:ok, e}
   end
 end
 
@@ -24,17 +25,27 @@ end
 defmodule VyasaWeb.Admin.Renderer do
   use Phoenix.Component
 
-  def render_link(%{origin: o, voice: %{file_path: _fp}} = assigns) do
-    assigns = %{assigns | origin: floor(o/1000)}
+  def render_field(%{origin: o, voice: %Vyasa.Medium.Voice{} = v} = assigns, :phase, _session) do
+    assigns = %{assigns | origin: floor(o/1000), voice: Vyasa.Medium.Store.hydrate(v)}
   ~H"""
   <%= @phase %>
-  <audio controls>
-    <source src={@voice.file_path <> "#t=#{@origin}"} type="audio/mp3">
+  <audio controls preload="metadata">
+    <source src={@voice.file_path <> "#t=#{@origin}"} type="audio/mpeg">
   </audio>
   """
   end
 
+  def render_field(%{verse: v} = assigns, :verse_id, _session) do
+    assigns = %{assigns | verse: v |> Vyasa.Repo.preload(:translations)}
+    ~H"""
+  <%= List.first(@verse.translations).target.body_translit %>
+  <br>
+  <%= @verse.body %>
+  """
+  end
+
   def render_field(record, field, _session) do
+    IO.inspect(field)
     record
     |> Map.fetch!(field)
     |> case do
