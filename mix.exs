@@ -10,6 +10,7 @@ defmodule Vyasa.MixProject do
       elixirc_options: [
         warnings_as_errors: true
       ],
+      escript: escript(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -24,6 +25,11 @@ defmodule Vyasa.MixProject do
       mod: {Vyasa.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
+  end
+
+  # Defining Scripting Env
+  defp escript do
+    [main_module: VyasaCLI]
   end
 
   # Specifies which paths to compile per environment.

@@ -6,6 +6,14 @@ Wherever there be anything you dost not comprehend, cease to continue writing
 -- Vyasa, Adi Parva - Mahabharatam
 #+END_QUOTE
 
+### CLI Helpsheet
+
+```elixir
+# build script
+mix escript.build
+# fetch from domain/path --storage :mode
+./vyasa fetch shlokam.org/hanumanchalisa --storage file
+```
 * Forms of Prior Art
 ** [[http://worrydream.com/refs/Nelson-ComputerLibDreamMachines1975.pdf#page=57][Xanadu Pattern]]
 
