@@ -1,9 +1,11 @@
+<br/>
+<div id="chapter-index-container">
     <.header>
         <div class="font-dn text-4xl mb-4">
-           <%= @selected_transl.target.translit_title %> | <%= @chap_title %>
+           <%= @selected_transl.target.translit_title %> | <%= @chap.title%>
         </div>
        <div class="font-dn text-2xl mb-4">
-        Chapter <%= @chap_no%> - <%= @selected_transl.target.title %>
+        Chapter <%= @chap.no%> - <%= @selected_transl.target.title %>
         </div>
 
         <:subtitle>
@@ -11,24 +13,25 @@
         </:subtitle>
     </.header>
 
-    <.verse_list :for={{_dom_id, verse} <- @streams.verses}>
+    <.verse_list id={dom_id} :for={{dom_id, verse} <- @streams.verses}>
         <:item title={"#{verse.chapter_no}.#{verse.no}"}
-               navigate={~p"/explore/#{@source_title}/#{@chap_no}/#{verse.no}"} >
+            navigate={~p"/explore/#{@source_title}/#{@chap.no}/#{verse.no}"} >
 
-           <p class="font-dn text-xl">
+        <p class="font-dn text-xl">
         <%= verse.body |> String.split("।।") |> List.first()  %>
             </p>
         </:item>
         <:item title={"Transliteration"}>
-           <p class="font-dn text-lg">
+        <p class="font-dn text-lg">
                 <%= hd(verse.translations).target.body_translit  %>
             </p>
         </:item>
         <:item title={"Transliteration Meaning"}>
-           <p class="font-dn text-lg">
+        <p class="font-dn text-lg">
                 <%= hd(verse.translations).target.body_translit_meant  %>
             </p>
         </:item>
     </.verse_list>
 
     <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= @source_title %> Chapters</.back>
+</div>

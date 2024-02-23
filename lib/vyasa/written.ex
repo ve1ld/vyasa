@@ -6,7 +6,24 @@ defmodule Vyasa.Written do
   import Ecto.Query, warn: false
   alias Vyasa.Repo
 
-  alias Vyasa.Written.{Text, Source, Chapter}
+  alias Vyasa.Written.{Text, Source, Verse, Chapter, Translation}
+
+  @doc """
+  Guards for any uuidV4
+
+  ## Examples
+
+  iex> is_uuid?("hanuman")
+  false
+
+  """
+  defguard is_uuid?(value)
+  when is_bitstring(value) and
+  byte_size(value) == 36 and
+  binary_part(value, 8, 1) == "-" and
+  binary_part(value, 13, 1) == "-" and
+  binary_part(value, 18, 1) == "-" and
+  binary_part(value, 23, 1) == "-"
 
   @doc """
   Returns the list of texts.
@@ -34,6 +51,35 @@ defmodule Vyasa.Written do
     Repo.all(Source)
     |> Repo.preload([:chapters, :verses])
   end
+
+  @doc """
+  Returns the list of verses.
+
+  ## Examples
+
+      iex> list_verses()
+      [%Verse{}, ...]
+
+  """
+  def list_verses do
+    Repo.all(Verse)
+    |> Repo.preload([:chapter])
+  end
+
+  @doc """
+  Returns the list of chapters.
+
+  ## Examples
+
+      iex> list_chapters()
+      [%Chapter{}, ...]
+
+  """
+  def list_chapters do
+    Repo.all(Chapter)
+    |> Repo.preload([:verses])
+  end
+
 
 
   @doc """
@@ -68,7 +114,6 @@ defmodule Vyasa.Written do
   """
   def get_source!(id), do: Repo.get!(Source, id)
   |> Repo.preload([:chapters, :verses])
-  |> Repo.preload(:verses)
 
   def get_source_by_title(title) do
     query = from src in Source,
@@ -79,9 +124,19 @@ defmodule Vyasa.Written do
   end
 
   def get_chapter(no, source_title) do
-    src = get_source_by_title(source_title)
-    Repo.get_by(Chapter, no: no, source_id: src.id)
-    |> Repo.preload([:translations, verses: [:translations]])
+    (from c in Chapter, where: c.no ==  ^no,
+      inner_join: src in assoc(c, :source),
+      where: src.title == ^source_title)
+    |> Repo.one()
+  end
+
+  def get_chapter(no, source_title, lang) do
+    target_lang = (from ts in Translation, where: ts.lang == ^lang)
+    (from c in Chapter, where: c.no ==  ^no,
+      inner_join: src in assoc(c, :source),
+      where: src.title == ^source_title,
+      preload: [verses: ^(from v in Verse, preload: [translations: ^target_lang]) , translations: ^target_lang])
+      |> Repo.one()
    end
 
   def get_verses_in_chapter(no, source_id) do
@@ -153,4 +208,67 @@ defmodule Vyasa.Written do
   def change_text(%Text{} = text, attrs \\ %{}) do
     Text.changeset(text, attrs)
   end
+
+  @doc """
+  Creates a source.
+
+  ## Examples
+
+      iex> create_source(%{field: value})
+      {:ok, %Source{}}
+
+      iex> create_source(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_source(attrs \\ %{}) do
+    %Source{}
+    |> Source.gen_changeset(attrs)
+    |> Repo.insert()
   end
+
+  @doc """
+  Updates a source.
+
+  ## Examples
+
+      iex> update_source(source, %{field: new_value})
+      {:ok, %Source{}}
+
+      iex> update_source(source, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_source(%Source{} = source, attrs) do
+    source
+    |> Source.mutate_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a source.
+
+  ## Examples
+
+      iex> delete_source(source)
+      {:ok, %Source{}}
+
+      iex> delete_source(source)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_source(%Source{} = source) do
+    Repo.delete(source)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking source changes.
+
+  ## Examples
+      iex> change_source(source)
+      %Ecto.Changeset{data: %Source{}}
+  """
+  def change_source(%Source{} = source, attrs \\ %{}) do
+    Source.mutate_changeset(source, attrs)
+  end
+end
