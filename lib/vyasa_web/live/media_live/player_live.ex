@@ -163,7 +163,6 @@ end
   attr :min, :integer, default: 0
   attr :max, :integer, default: 100
   attr :value, :integer
-
   def progress_bar(assigns) do
     assigns = assign_new(assigns, :value, fn -> assigns[:min] || 0 end)
 
@@ -186,6 +185,100 @@ end
       </div>
     </div>
     """
-         end
+  end
+
+  attr :playback, Playback, required: false
+  def play_pause_button(assigns) do
+   ~H"""
+    <button
+      type="button"
+      class="mx-auto scale-75"
+      phx-click={js_play_pause()}
+      phx-target="#audio-player"
+      aria-label={
+        if @playback && @playback.playing? do
+          "Pause"
+        else
+          "Play"
+        end
+      }
+    >
+      <%= if @playback && @playback.playing? do %>
+      <!-- play/pause -->
+        <svg id="player-pause" width="50" height="50" fill="none">
+          <circle
+            class="text-gray-300 dark:text-gray-500"
+            cx="25"
+            cy="25"
+            r="24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path d="M18 16h4v18h-4V16zM28 16h4v18h-4z" fill="currentColor" />
+        </svg>
+      <% else %>
+        <svg
+          id="player-play"
+          width="50"
+          height="50"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <circle
+            id="svg_1"
+            stroke-width="0.8"
+            stroke="currentColor"
+            r="11.4"
+            cy="12"
+            cx="12"
+            class="text-gray-300 dark:text-gray-500"
+          />
+          <path
+            stroke="null"
+            fill="currentColor"
+            transform="rotate(90 12.8947 12.3097)"
+            id="svg_6"
+            d="m9.40275,15.10014l3.49194,-5.58088l3.49197,5.58088l-6.98391,0z"
+            stroke-width="1.5"
+            fill="none"
+          />
+        </svg>
+      <% end %>
+    </button>
+   """
+  end
+
+   def next_button(assigns) do
+   ~H"""
+    <button
+        type="button"
+        class="mx-auto scale-75"
+        phx-click={js_next()}
+        aria-label="Next"
+      >
+        <svg width="17" height="18" viewBox="0 0 17 18" fill="none">
+          <path d="M17 0H15V18H17V0Z" fill="currentColor" />
+          <path d="M13 9L0 0V18L13 9Z" fill="currentColor" />
+        </svg>
+      </button>
+    """
+   end
+
+  def prev_button(assigns) do
+    ~H"""
+      <button
+        type="button"
+        class="sm:block xl:block mx-auto scale-75"
+        phx-click={js_prev()}
+        aria-label="Previous"
+      >
+        <svg width="17" height="18">
+          <path d="M0 0h2v18H0V0zM4 9l13-9v18L4 9z" fill="currentColor" />
+        </svg>
+      </button>
+    """
+  end
 
  end

@@ -105,7 +105,9 @@ AudioPlayer = {
     //
     this.player.play().then(() => {
       if(sync) {
-        this.player.currentTime = nowSeconds() - this.playbackBeganAt
+        const currentTime = nowSeconds() - this.playbackBeganAt
+        this.player.currentTime = currentTime;
+        this.currentTime.innerText = this.formatTime(currentTime);
       }
       const progressUpdateInterval = 100 // 10fps, comfortable for human eye
 
@@ -141,7 +143,7 @@ AudioPlayer = {
 
     const beginTime = nowSeconds() - positionS
     this.playbackBeganAt = beginTime;
-    this.currentTime = positionS;
+    this.currentTime.innerText = this.formatTime(positionS);
     this.player.currentTime = positionS;
     this.updateProgress()
   },
@@ -153,9 +155,7 @@ AudioPlayer = {
     //   eventsTimeline: this.player.eventsTimeline
     // })
 
-
     this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
-
 
     if(isNaN(this.player.duration)) {
       console.log("player duration is nan")
@@ -164,7 +164,6 @@ AudioPlayer = {
 
     const shouldStopUpdating = this.player.currentTime > 0 && this.player.paused
     if (shouldStopUpdating) {
-      // console.log("Should stop updating")
       this.clearProgressTimer()
     }
 
@@ -189,12 +188,6 @@ AudioPlayer = {
     })
     this.duration.innerText = durationVal;
     this.currentTime.innerText = currentTimeVal;
-    // this.pushEvent("update_playback_progress", {
-    //   currentTimeVal,
-    // })
-    // this.pushEventTo("#chapter-index-container", "update_playback_progress", {
-    //   currentTimeVal,
-    // })
   },
 
   formatTime(seconds) {
@@ -203,13 +196,18 @@ AudioPlayer = {
   emphasizeActiveEvent(currentTime, events) {
 
     if (!events) {
-      console.log("No active events found")
+      console.log("No events found")
       return;
     }
 
     const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin && currentTimeMs < (event.origin + event.duration))
     console.log("activeEvent:", {currentTimeMs, activeEvent})
+
+    if (!activeEvent) {
+      console.log("No active event found @ time = ", currentTime)
+      return;
+    }
 
     const {
       verse_id: verseId
