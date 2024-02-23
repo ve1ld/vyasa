@@ -52,10 +52,10 @@
       It's me, tooltip content...
   </div>
 
-  <.back navigate={~p"/gita/#{@verse.chapter_number}"}>
+  <.back navigate={~p"/explore/#{@source_title}/@{chap_no}"}>
       Back to Gita Chapter <%= @verse.chapter_number %>
   </.back>
-  <.back navigate={~p"/gita"}>Back to Gita</.back>
+  <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= @source_title %></.back>
   <div
     class="container-YouTubePlayer container-YouTubePlayerHidden"
     phx-hook={"MiniPlayer"}

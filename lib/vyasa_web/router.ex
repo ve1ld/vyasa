@@ -33,16 +33,6 @@ defmodule VyasaWeb.Router do
       live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
       live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
     end
-    live "/gita/", GitaLive.Index, :index
-    live "/gita/:chapter_id", GitaLive.Show, :show
-    live "/gita/:chapter_id/:verse_id", GitaLive.ShowVerse, :show_verse
-    live "/texts", TextLive.Index, :index
-    live "/texts/new", TextLive.Index, :new
-    live "/texts/:id/edit", TextLive.Index, :edit
-
-    live "/texts/:id", TextLive.Show, :show
-    live "/texts/:id/show/edit", TextLive.Show, :edit
-
    end
 
   # Other scopes may use custom stacks.
