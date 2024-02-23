@@ -3,6 +3,9 @@
     The Playback struct is the bridge between written and media player contexts.
     """
 
+    alias Vyasa.Medium
+    alias Vyasa.Medium.{Voice, Playback}
+
     defstruct [:medium, playing?: false, played_at: nil, paused_at: nil, elapsed: 0, current_time: 0]
 
     def new(%{} = attrs) do
@@ -14,4 +17,11 @@
         elapsed: 0, # seconds TODO: convert to ms to standardise w HTML players?
       }
     end
-  end
+
+    def create_playback(%Voice{} = voice) do
+      Playback.new(%{
+            medium: voice |> Medium.load_events(),
+            playing?: false,
+      })
+    end
+end

@@ -1,6 +1,5 @@
 defmodule VyasaWeb.MediaLive.Player do
   use VyasaWeb, :live_view
-  alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback}
 
   @impl true
@@ -72,7 +71,7 @@ defmodule VyasaWeb.MediaLive.Player do
   def handle_info({_, :voice_ack, voice}, socket) do
     %Playback{
       medium: %Voice{events: events},
-    } = playback = voice |> Medium.create_playback()
+    } = playback = voice |> Playback.create_playback()
     # } = playback = voice |> MediaLibrary.gen_voice_playback()
 
     socket = socket

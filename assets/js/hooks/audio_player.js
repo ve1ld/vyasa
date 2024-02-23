@@ -143,12 +143,7 @@ AudioPlayer = {
     this.playbackBeganAt = beginTime;
     this.currentTime = positionS;
     this.player.currentTime = positionS;
-    console.log("checkpoint A", {
-      playerDuration: this.player.duration,
-      durationNode: this.duration,
-    })
     this.updateProgress()
-    console.log("checkpoint B")
   },
   /**
    * Updates playback progress information.
@@ -206,6 +201,12 @@ AudioPlayer = {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
   },
   emphasizeActiveEvent(currentTime, events) {
+
+    if (!events) {
+      console.log("No active events found")
+      return;
+    }
+
     const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin && currentTimeMs < (event.origin + event.duration))
     console.log("activeEvent:", {currentTimeMs, activeEvent})
@@ -223,7 +224,6 @@ AudioPlayer = {
 
     // TODO: this is a pedestrian approach that can be improved significantly:
     for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
-      console.log("otherDomNode: ", otherDomNode)
       classVals.forEach(classVal => otherDomNode.classList.remove(classVal))
       otherDomNode.classList.remove("bg-orange-500")
     }
