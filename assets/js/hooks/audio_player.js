@@ -173,6 +173,7 @@ AudioPlayer = {
       const autoPlayMaxDelay = 1500
       this.nextTimer = setTimeout(
         // pushes next autoplay song to server:
+        // FIXME: this shall be added in in the following PRs
         () => this.pushEvent("next_song_auto"),
         rand(0, autoPlayMaxDelay)
       )

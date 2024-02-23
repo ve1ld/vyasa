@@ -12,7 +12,7 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
       add :lang, :string
       add :title, :string
       add :duration, :integer
-      add :prop, :jsonb
+      add :meta, :jsonb
       add :track_id,  references(:tracks, column: :id, type: :uuid)
       add :chapter_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
       add :source_id,  references(:sources, column: :id, type: :uuid)

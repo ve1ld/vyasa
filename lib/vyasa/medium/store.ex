@@ -81,7 +81,7 @@ defmodule Vyasa.Medium.Store do
     "#{type}/#{id}.mp3" #default to mp3 ext for now
   end
 
-  defp path_constructor(%Medium.Voice{__meta__: %{source: type}, source: %{title: st}, prop: %{artists: [ artist | _]}}) do
+  defp path_constructor(%Medium.Voice{__meta__: %{source: type}, source: %{title: st}, meta: %{artists: [ artist | _]}}) do
     "#{type}#{unless is_nil(st),
           do: "/#{st}"}#{unless is_nil(artist),
           do: "/#{artist}"}"

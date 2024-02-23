@@ -119,7 +119,7 @@ defp play_voice(socket, %Playback{
     socket
     |>push_event("play", %{
         artist: "testArtist",
-        # artist: hd(voice.prop.artists),
+        # artist: hd(voice.meta.artists),
         title: voice.title,
         isPlaying: playback.playing?,
         elapsed: playback.elapsed,

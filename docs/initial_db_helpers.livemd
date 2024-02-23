@@ -206,7 +206,7 @@ alias Vyasa.Medium.Voice
 
 v = %Voice{
   lang: "sa",
-  prop: %{
+  meta: %{
     artist: ["myArtist1", "myArtist2"]
   }
 }
