@@ -27,8 +27,13 @@
             </p>
         </:item>
         <:item title={"Transliteration Meaning"}>
-        <p class="font-dn text-lg">
+        <p class="font-dn text-m">
                 <%= hd(verse.translations).target.body_translit_meant  %>
+            </p>
+        </:item>
+        <:item title={"Translation"}>
+        <p class="font-dn text-lg">
+                <%= hd(verse.translations).target.body %>
             </p>
         </:item>
     </.verse_list>
