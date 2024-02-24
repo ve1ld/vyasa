@@ -113,6 +113,15 @@ defmodule Vyasa.Medium do
   """
   def get_event!(id), do: Repo.get!(Event, id)
 
+  def get_event_by_order!(%Event{id: id}, order) do
+    (from e in Event,
+      preload: [:voice],
+      where: e.id != ^id,
+      order_by: e.origin,
+      offset: ^order,
+      limit: 1)
+    |> Repo.one!()
+  end
 
     @doc """
   Creates a event.

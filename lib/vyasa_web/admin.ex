@@ -5,7 +5,7 @@ end
 defmodule VyasaWeb.Admin.Medium.Event do
   use LiveAdmin.Resource, schema: Vyasa.Medium.Event,
     immutable_fields: [:source_id],
-    actions: [:silence],
+    actions: [:silence, :next, :prev],
     render_with: :render_field
 
 
@@ -19,6 +19,14 @@ defmodule VyasaWeb.Admin.Medium.Event do
     e = %{e | voice: nil}
     {:ok, e}
   end
+
+  def next(%{voice: _v} = e, _sess) do
+    {:ok, Vyasa.Medium.get_event_by_order!(e, 1)}
+  end
+
+  def prev(%{voice: _v} = e, _sess) do
+    {:ok, Vyasa.Medium.get_event_by_order!(e, -1)}
+  end
 end
 
 
@@ -26,6 +34,7 @@ defmodule VyasaWeb.Admin.Renderer do
   use Phoenix.Component
 
   def render_field(%{origin: o, voice: %Vyasa.Medium.Voice{} = v} = assigns, :phase, _session) do
+    IO.inspect o
     assigns = %{assigns | origin: floor(o/1000), voice: Vyasa.Medium.Store.hydrate(v)}
   ~H"""
   <%= @phase %>
@@ -35,14 +44,18 @@ defmodule VyasaWeb.Admin.Renderer do
   """
   end
 
-  def render_field(%{verse: v} = assigns, :verse_id, _session) do
+  def render_field(%{verse: %Vyasa.Written.Verse{} = v} = assigns, :verse_id, _session) do
     assigns = %{assigns | verse: v |> Vyasa.Repo.preload(:translations)}
     ~H"""
-  <%= List.first(@verse.translations).target.body_translit %>
-  <br>
+  <div class="flex items-center justify-center">
   <%= @verse.body %>
+  </div>
+  <div class="whitespace-pre-line">
+  <%= List.first(@verse.translations).target.body_translit %>
+  </div>
   """
   end
+
 
   def render_field(record, field, _session) do
     IO.inspect(field)

@@ -32,6 +32,7 @@ defmodule G do
   @gita_sub_dir Path.expand("./priv/static/corpus/gita")
 
   @verses "#{@gita_sub_dir}/verse.json"
+  @translations "#{@gita_sub_dir}/translation.json"
   @chapters "#{@gita_sub_dir}/chapters.json"
 
   alias Vyasa.Written.{Chapter}
@@ -42,10 +43,23 @@ defmodule G do
     |> Jason.decode!()
   end
 
+  def read_translations() do
+    @translations
+    |> File.read!()
+    |> Jason.decode!()
+  end
+
   def read_chapters() do
     @chapters
     |> File.read!()
     |> Jason.decode!()
+  end
+
+  def get_translation_by_verse(id) do
+    read_translations()
+    |> Enum.find(fn %{"verseNumber" => no, "authorName" => a} ->
+      no == id and a == "Dr. S. Sankaranarayan"
+    end)
   end
 
   def create_verse(verse, source_id) do
@@ -70,12 +84,10 @@ defmodule G do
   def create_translation_for_chapter(chapter) do
     %{
       type: "chapters",
-      lang: "sa",
+      lang: "hi",
       target: %{
         title: chapter["name"],
-        translit_title: chapter["name_transliterated"],
-        body: chapter["chapter_summary_hindi"],
-        body_translit: chapter["chapter_summary"]
+        body: chapter["chapter_summary_hindi"]
       }
     }
   end
@@ -83,6 +95,7 @@ defmodule G do
   def create_chapter(%{} = chapter, source_id) do
     %{
       no: chapter["chapter_number"],
+      title: chapter["name"],
       body: chapter["chapter_summary"],
       source_id: source_id
     }
@@ -160,15 +173,17 @@ defmodule G do
         target: %{
           title: chap["name_meaning"],
           translit_title: chap["name_transliterated"],
-          body: chap["chapter_summary"],
-          body_meant: chap["chapter_summary_hindi"]
+          body: chap["chapter_summary"]
         }
       },
       inserted_chap
     )
   end
 
-  def create_translation_changeset_for_verse(inserted_verse, relevant_verse) do
+  def create_translation_changeset_for_verse(
+        inserted_verse,
+        %{"verse_order" => verse_id} = relevant_verse
+      ) do
     dbg(relevant_verse)
 
     Translation.gen_changeset(
@@ -177,7 +192,7 @@ defmodule G do
         lang: "en",
         # body: verse["transliteration"],
         target: %{
-          body: relevant_verse["text"],
+          body: get_translation_by_verse(verse_id)["description"],
           body_translit_meant: relevant_verse["word_meanings"],
           body_translit: relevant_verse["transliteration"]
         }
@@ -347,7 +362,7 @@ events =
   Shloka 30:-  07:13
   Shloka 31:-  07:26
   Shloka 32 :-  07:38
-  Shloka 33:-   07:52
+  Shloka 33:-   07:51
   Shloka 34 :-  08:05
   Shloka 35 :-  08:18
   Shloka 36 :- 08:31
