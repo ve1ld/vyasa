@@ -193,30 +193,6 @@ defmodule G do
       create_translation_changeset_for_verse(inserted_verse, relevant_verse)
     end)
   end
-
-  def insert_stub_voice(src_id) do
-    params = %{
-      source_id: src_id,
-      lang: "sa",
-      title: "My Title",
-      duration: 30000,
-      prop: %{
-        artist: ["MyArtist1", "MyArtist2"]
-      }
-    }
-
-    Medium.get_voice_stub(params)
-  end
-
-  def create_stub_voice(_chapter) do
-    %{
-      lang: "sa",
-      prop: %{
-        artist: ["MyArtist1", "MyArtist2"]
-      },
-      file_path: "/Users/ritesh/Desktop/example.mp3"
-    }
-  end
 end
 ```
 
@@ -230,7 +206,7 @@ alias Vyasa.Medium.Voice
 
 v = %Voice{
   lang: "sa",
-  prop: %{
+  meta: %{
     artist: ["myArtist1", "myArtist2"]
   }
 }
@@ -255,8 +231,6 @@ defmodule DBHelper do
     uuid = Ecto.UUID.generate()
     _source = DBHelper.insert_source(uuid, "Gita")
     _chap = DBHelper.insert_chapters(uuid)
-    stub_voice = G.insert_stub_voice(uuid)
-    stub_voice
   end
 
   def insert_source(uuid, source_title \\ "Gita") do
@@ -510,13 +484,6 @@ stored_url =
   |> Vyasa.Medium.Store.get!()
 
 output = System.cmd("curl", [stored_url])
-```
-
-```elixir
-R.recompile()
-alias Vyasa.Medium
-
-Medium.get_voice_stub()
 ```
 
 ```elixir

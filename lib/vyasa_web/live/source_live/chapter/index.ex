@@ -50,17 +50,26 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:source_title, source_title)
     |> assign(:chap, chap)
     |> assign(:selected_transl, ts)
-    |> assign(:playback, nil)
     |> assign_meta()
   end
 
+  @doc """
+  Upon rcv of :media_handshake, which indicates an intention to sync by the player,
+  returns a message containing %Voice{} info that can be used to generate a playback.
+  """
   @impl true
-  def handle_info({_, :media_handshake, :init}, %{assigns: %{session: %{"id" => sess_id}, chap: %Written.Chapter{no: c_no, source_id: src_id}}} = socket) do
+  def handle_info({_, :media_handshake, :init},
+    %{assigns: %{
+         session: %{"id" => sess_id},
+         chap: %Written.Chapter{no: c_no, source_id: src_id}
+      }} = socket) do
     Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
           source_id: src_id,
           chapter_no: c_no,
-          lang: @default_voice_lang},
-      :voice_ack, sess_id)
+          lang: @default_voice_lang
+      },
+      :voice_ack,
+      sess_id)
     {:noreply, socket}
   end
 

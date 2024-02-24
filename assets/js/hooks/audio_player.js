@@ -32,6 +32,14 @@ AudioPlayer = {
     }
 
     document.addEventListener("click", enableAudio)
+
+    this.player.addEventListener("loadedmetadata", e => {
+      console.log("Loaded metadata!", {
+        duration: this.player.duration,
+        event: e,
+      })
+    })
+
     this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
     this.el.addEventListener("js:play_pause", () => {
       console.log("{play_pause event triggerred} player:", this.player)
@@ -53,12 +61,11 @@ AudioPlayer = {
 
     /// events handled by audio player::
     this.handleEvent("play", (params) => {
-      const {filePath, url, elapsed, artist, title} = params;
+      const {filePath, isPlaying, elapsed, artist, title} = params;
       const beginTime = nowSeconds() - elapsed
       this.playbackBeganAt = beginTime
-      console.log("play event, check params", {params, beginTime})
       let currentSrc = this.player.src.split("?")[0]
-      const isLoadedAndPaused = currentSrc === filePath && this.player.paused;
+      const isLoadedAndPaused = currentSrc === filePath && !isPlaying && this.player.paused;
       if(isLoadedAndPaused){
         this.play({sync: true})
       } else if(currentSrc !== filePath) {
@@ -72,18 +79,20 @@ AudioPlayer = {
         navigator.mediaSession.metadata = new MediaMetadata({artist, title})
       }
     })
-    this.handleEvent("pause", () => {
-      console.log(">> triggerred pause")
-      this.pause()
-    })
+    this.handleEvent("pause", () => this.pause())
     this.handleEvent("stop", () => this.stop())
+    this.handleEvent("seekTo", params => this.seekTo(params))
   },
-
   clearNextTimer(){
     clearTimeout(this.nextTimer)
     this.nextTimer = null
   },
-
+  clearProgressTimer() {
+    console.log("[clearProgressTimer]", {
+      timer: this.progressTimer,
+    })
+    clearInterval(this.progressTimer)
+  },
   play(opts = {}){
     console.log("Triggered playback, check params", {
       player: this.player,
@@ -96,10 +105,17 @@ AudioPlayer = {
     //
     this.player.play().then(() => {
       if(sync) {
-        this.player.currentTime = nowSeconds() - this.playbackBeganAt
+        const currentTime = nowSeconds() - this.playbackBeganAt
+        this.player.currentTime = currentTime;
+        this.currentTime.innerText = this.formatTime(currentTime);
       }
-      const progressUpdateInterval = 200
-      this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
+      const progressUpdateInterval = 100 // 10fps, comfortable for human eye
+
+      if (!this.progressTimer) { // single instance of progress timer
+        this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
+      }
+      console.log("[play: ProgressTimer]: ", this.progressTimer)
+
     }, error => {
       if(error.name === "NotAllowedError"){
         execJS("#enable-audio", "data-js-show")
@@ -108,49 +124,56 @@ AudioPlayer = {
   },
 
   pause(){
-    clearInterval(this.progressTimer)
+    this.clearProgressTimer()
     this.player.pause()
   },
 
   stop(){
-    clearInterval(this.progressTimer)
+    this.clearProgressTimer()
     this.player.pause()
     this.player.currentTime = 0
     this.updateProgress()
     this.duration.innerText = ""
     this.currentTime.innerText = ""
   },
+  seekTo(params) {
+    const {
+      positionS
+    } = params;
 
+    const beginTime = nowSeconds() - positionS
+    this.playbackBeganAt = beginTime;
+    this.currentTime.innerText = this.formatTime(positionS);
+    this.player.currentTime = positionS;
+    this.updateProgress()
+  },
   /**
    * Updates playback progress information.
    * */
   updateProgress() {
-    console.log("[updateProgress]", {
-      eventsTimeline: this.player.eventsTimeline
-    })
-
+    // console.log("[updateProgress]", {
+    //   eventsTimeline: this.player.eventsTimeline
+    // })
 
     this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
 
-
     if(isNaN(this.player.duration)) {
+      console.log("player duration is nan")
       return false
     }
 
     const shouldStopUpdating = this.player.currentTime > 0 && this.player.paused
     if (shouldStopUpdating) {
-      console.log("Should stop updating")
-      clearInterval(this.progressTimer)
-
-      return
+      this.clearProgressTimer()
     }
 
     const shouldAutoPlayNextSong = !this.nextTimer && this.player.currentTime >= this.player.duration;
     if(shouldAutoPlayNextSong) {
-      clearInterval(this.progressTimer) // stops progress updates
+      this.clearProgressTimer() // stops progress update
       const autoPlayMaxDelay = 1500
       this.nextTimer = setTimeout(
         // pushes next autoplay song to server:
+        // FIXME: this shall be added in in the following PRs
         () => this.pushEvent("next_song_auto"),
         rand(0, autoPlayMaxDelay)
       )
@@ -166,21 +189,26 @@ AudioPlayer = {
     })
     this.duration.innerText = durationVal;
     this.currentTime.innerText = currentTimeVal;
-    // this.pushEvent("update_playback_progress", {
-    //   currentTimeVal,
-    // })
-    // this.pushEventTo("#chapter-index-container", "update_playback_progress", {
-    //   currentTimeVal,
-    // })
   },
 
   formatTime(seconds) {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
   },
   emphasizeActiveEvent(currentTime, events) {
+
+    if (!events) {
+      console.log("No events found")
+      return;
+    }
+
     const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin && currentTimeMs < (event.origin + event.duration))
     console.log("activeEvent:", {currentTimeMs, activeEvent})
+
+    if (!activeEvent) {
+      console.log("No active event found @ time = ", currentTime)
+      return;
+    }
 
     const {
       verse_id: verseId
@@ -190,11 +218,18 @@ AudioPlayer = {
       return
     }
 
-    const targetDomId = `verse-${verseId}`
 
+    const classVals = ["bg-orange-500", "border-l-8", "border-black"]
+
+    // TODO: this is a pedestrian approach that can be improved significantly:
+    for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
+      classVals.forEach(classVal => otherDomNode.classList.remove(classVal))
+      otherDomNode.classList.remove("bg-orange-500")
+    }
+
+    const targetDomId = `verse-${verseId}`
     const node = document.getElementById(targetDomId)
-    node.classList.add("bg-orange-500")
-    node.style.borderLeft = "8px solid black"
+    classVals.forEach(classVal => node.classList.add(classVal))
   }
 }
 

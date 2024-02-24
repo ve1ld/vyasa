@@ -3,8 +3,6 @@ defmodule Vyasa.Medium do
   import Ecto.Query, warn: false
   alias Vyasa.Medium.{Voice, Event}
   alias Vyasa.Medium
-  alias Vyasa.Written
-  # alias Vyasa.Written.{Chapter}
   alias Vyasa.Repo
 
 
@@ -53,32 +51,6 @@ defmodule Vyasa.Medium do
     |> Voice.gen_changeset(attrs)
     |> Repo.insert()
   end
-
-  @voice_stub_url Path.expand("./media/gita/1.mp3")
-  @doc """
-  Gets a voice just for testing purposes
-  """
-  def get_voice_stub() do
-    src = Written.get_source_by_title("Gita")
-    {:ok, %Voice{ id: voice_id } = voice} = Medium.create_voice(%{lang: "sa", source_id: src.id, file_path: @voice_stub_url})
-    # since it's a virtual field for now, let the stub have a non nil value:
-    %Voice{voice | title: "Gita"}
-
-    get_voice!(voice_id) |> dbg()
-
-  end
-
-  #should be using \\ %{} and be ! as its not accounting for :error tuple
-  def get_voice_stub(params) do
-    src = Written.get_source_by_title("Gita")
-    {:ok, voice} = Medium.create_voice(%{params | lang: "sa", source_id: src.id}
-      |> Map.put(:file_path, @voice_stub_url))
-
-    # since it's a virtual field for now, let the stub have a non nil value:
-    voice
-
-  end
-
 
   @doc """
   Updates a voice.
@@ -211,6 +183,11 @@ defmodule Vyasa.Medium do
     Event.changeset(event, attrs)
   end
 
+  def load_events(%Voice{} = voice) do
+    voice
+    |> Medium.get_voices!()
+    |> List.first()
+    |> Medium.Store.hydrate()
+  end
 
-
- end
+end

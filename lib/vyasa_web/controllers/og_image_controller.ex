@@ -1,6 +1,6 @@
 defmodule VyasaWeb.OgImageController do
   use VyasaWeb, :controller
-  alias VyasaWeb.GitaLive.ImageGenerator
+  alias VyasaWeb.SourceLive.ImageGenerator
   alias Vyasa.Adapters.OgAdapter
 
   action_fallback VyasaWeb.FallbackController

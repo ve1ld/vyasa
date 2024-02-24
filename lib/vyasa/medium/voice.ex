@@ -12,7 +12,7 @@ defmodule Vyasa.Medium.Voice do
     field :duration, :integer
     field :file_path, :string, virtual: true
 
-    embeds_one :prop, VoiceProperties do
+    embeds_one :meta, VoiceMetadata do
       field(:artist, {:array, :string})
     end
 
@@ -30,17 +30,17 @@ defmodule Vyasa.Medium.Voice do
   def gen_changeset(voice, attrs) do
     %{voice | id: Ecto.UUID.generate()}
     |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
-    |> cast_embed(:prop, with: &prop_changeset/2)
+    |> cast_embed(:meta, with: &meta_changeset/2)
     |> file_upload()
   end
 
   def changeset(voice, attrs) do
     voice
     |> cast(attrs, [:title, :duration, :lang, :file_path, :chapter_no, :source_id])
-    |> cast_embed(:prop, with: &prop_changeset/2)
+    |> cast_embed(:meta, with: &meta_changeset/2)
   end
 
-  def prop_changeset(voice, attrs) do
+  def meta_changeset(voice, attrs) do
     voice
     |> cast(attrs, [:artist])
   end
