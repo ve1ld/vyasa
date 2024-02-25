@@ -11,12 +11,6 @@ config :vyasa, Vyasa.Repo,
   pool_size: 10
 
 # MINIO Object Store API Domain
-config :ex_aws,
-  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
-  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
-  region: "ap-southeast-1",
-  http_client: Vyasa.Medium.Ext.S3Client
-
 config :ex_aws, :s3,
   scheme: "http://",
   host: "localhost",

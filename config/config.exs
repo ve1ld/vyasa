@@ -31,6 +31,13 @@ config :vyasa, VyasaWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :vyasa, Vyasa.Mailer, adapter: Swoosh.Adapters.Local
 
+#S3 Object Storage Services
+config :ex_aws,
+  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
+  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
+  region: "ap-southeast-1",
+  http_client: Vyasa.Medium.Ext.S3Client
+
 config :live_admin, ecto_repo: Vyasa.Repo
 
 # Configure esbuild (the version is required)
