@@ -73,18 +73,14 @@ const getButtonAndTooltip = () => {
 }
 
 
+import { computePosition, flip, shift, offset} from "floating-ui.dom.umd.min";
+
 const alignTooltip = () => {
   const {button, tooltip} = getButtonAndTooltip()
   console.log(">>> found?", {
     button,
     tooltip,
   })
-  const {
-    computePosition,
-    flip,
-    shift,
-    offset,
-  } = window.FloatingUIDOM;
 
   computePosition(button, tooltip, {
     placement: 'right',
