@@ -363,7 +363,7 @@ defmodule SourceSeeders do
   Shloka 30:-  07:13
   Shloka 31:-  07:26
   Shloka 32 :-  07:38
-  Shloka 33:-   07:52
+  Shloka 33:-   07:51
   Shloka 34 :-  08:05
   Shloka 35 :-  08:18
   Shloka 36 :- 08:31

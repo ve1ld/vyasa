@@ -65,8 +65,9 @@ defmodule Vyasa.MixProject do
       {:kino, "~> 0.12.0"},
       {:cors_plug, "~> 3.0"},
       {:ex_aws, "~> 2.0"},
-      {:req, "~> 0.4.0"},
-      {:ex_aws_s3, "~> 2.5"}
+      {:ex_aws_s3, "~> 2.5"},
+      {:live_admin, "~> 0.11.4"},
+      {:req, "~> 0.4.0"}
     ]
   end
 
