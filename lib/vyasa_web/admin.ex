@@ -34,12 +34,11 @@ defmodule VyasaWeb.Admin.Renderer do
   use Phoenix.Component
 
   def render_field(%{origin: o, voice: %Vyasa.Medium.Voice{} = v} = assigns, :phase, _session) do
-    IO.inspect o
     assigns = %{assigns | origin: floor(o/1000), voice: Vyasa.Medium.Store.hydrate(v)}
   ~H"""
   <%= @phase %>
-  <audio controls preload="metadata">
-    <source src={@voice.file_path <> "#t=#{@origin}"} type="audio/mpeg">
+  <audio id={"#{@origin}-audioplayback"} controls preload="metadata">
+    <source src={@voice.file_path <> "#t=#{@origin}"} type="audio/mp3">
   </audio>
   """
   end
