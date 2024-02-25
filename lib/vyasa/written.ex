@@ -127,7 +127,7 @@ defmodule Vyasa.Written do
     ( from c in Chapter,
       inner_join: src in assoc(c, :source),
       where: src.title == ^src_title,
-      left_join: t in assoc(c, :translations),
+      inner_join: t in assoc(c, :translations),
       on: t.source_id == src.id)
     |> select_merge([c, src, t], %{
                       c | translations: [t], source: src

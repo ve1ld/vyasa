@@ -492,13 +492,17 @@ defmodule SourceSeeders do
             body: v["verse_sanskrit"],
             body_translit_meant: v["verse_meaning"],
             body_translit: v["verse_trans"]
-          }
+          },
+          source_id: inserted_verse.source_id,
+          # chapter_no: inserted_verse.chapter_no, # this assoc isn't supposed to be done @ verse-trans creation
+          verse_id: inserted_verse.id
         },
         inserted_verse
       )
     end)
     |> Enum.map(fn trans_cset -> Repo.insert(trans_cset) end)
     |> Enum.map(fn outcome -> elem(outcome, 1) end)
+    |> dbg()
   end
 
   def seed_hanuman_chalisa() do
@@ -508,7 +512,9 @@ defmodule SourceSeeders do
     uuid
     |> insert_source("hanuman_chalisa")
     |> insert_hanuman_chalisa_chapter(chalisa_verses)
-    # |> insert_hanuman_chalisa_verses(chalisa_verses)
+    # |> dbg()
+    # |> insert_hanuman_chalisa_verses(chalisa_verses) # ignore
+    # next
     |> insert_hanuman_chalisa_verse_translations(chalisa_verses)
   end
 end
@@ -535,7 +541,7 @@ defmodule DBHelper do
   end
 
   def seed_db() do
-    SourceSeeders.seed_gita()
+    # SourceSeeders.seed_gita()
     SourceSeeders.seed_hanuman_chalisa()
   end
 end
@@ -547,15 +553,6 @@ end
 R.recompile()
 DBHelper.purge_db()
 DBHelper.seed_db()
-```
-
-```elixir
-sources = Vyasa.Written.list_sources()
-chalisa = Enum.at(sources, 1)
-
-Vyasa.Repo.get!(Vyasa.Written.Source, chalisa.id)
-|> Vyasa.Repo.preload(chapters: [:translations])
-|> dbg()
 ```
 
 ```elixir
@@ -581,5 +578,41 @@ R.recompile()
 
 # Vyasa.Written.get_verses_by_chapter("1", "hanuman_chalisa", "sa")
 
-Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en").verses
+# Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en").verses
+chaps = Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
+length(chaps)
+
+# cs = 
+```
+
+```elixir
+import Ecto.Query
+alias Vyasa.Repo
+
+src_title = "hanuman_chalisa"
+lang = "en"
+
+target_lang = from(ts in Translation, where: ts.lang == ^lang and ts.chapter_no == 1)
+
+source_found =
+  from(s in Source,
+    preload: [
+      chapters: ^from(c in Chapter, order_by: c.no, preload: [translations: ^target_lang])
+    ]
+  )
+  |> Repo.one()
+
+source_found.chapters
+
+length(hd(source_found.chapters).translations)
+
+#  ( from c in Chapter,
+#     inner_join: src in assoc(c, :source),
+#     where: src.title == ^src_title,
+#     inner_join: t in assoc(c, :translations),
+#     on: t.source_id == src.id)
+#   # |> select_merge([c, src, t], %{
+#   #                   c | translations: [t], source: src
+#   #                 })
+#   |> Repo.all()
 ```
