@@ -43,7 +43,12 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
+
+
+    # ==> replace this:
     chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)
+
+
 
     socket
     |> stream(:verses, verses)

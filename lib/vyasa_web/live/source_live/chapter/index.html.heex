@@ -23,17 +23,17 @@
         </:item>
         <:item title={"Transliteration"}>
         <p class="font-dn text-lg">
-                <%= hd(verse.translations).target.body_translit  %>
+                <%= verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit  %>
             </p>
         </:item>
         <:item title={"Transliteration Meaning"}>
         <p class="font-dn text-m">
-                <%= hd(verse.translations).target.body_translit_meant  %>
+                <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit_meant  %>
             </p>
         </:item>
         <:item title={"Translation"}>
         <p class="font-dn text-lg">
-                <%= hd(verse.translations).target.body %>
+                <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body %>
             </p>
         </:item>
     </.verse_list>

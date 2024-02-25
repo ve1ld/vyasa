@@ -36,8 +36,8 @@ defmodule Vyasa.Written.Translation do
 
 
   @doc false
-  def gen_changeset(translation, attrs, %Verse{id: verse_id, __meta__: %{source: type}, source_id: s_id}) do
-    %{translation | type: type, verse_id: verse_id, source_id: s_id}
+  def gen_changeset(translation, attrs, %Verse{id: verse_id, __meta__: %{source: type}, source_id: s_id, chapter_no: c_no}) do
+    %{translation | type: type, verse_id: verse_id, source_id: s_id, chapter_no: c_no}
     |> cast(attrs, [:lang])
     |> typed_target_switch(type)
     |> validate_required([:lang])
