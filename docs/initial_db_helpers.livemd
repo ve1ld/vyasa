@@ -221,6 +221,54 @@ defmodule H do
   alias Vyasa.Medium
   alias Vyasa.Repo
 
+  @chalisa_events """
+  start :- 00:00
+  Shloka 1:-    00:02
+  Shloka 2 :-   00:24
+  Shloka 3:-    00:56
+  Shloka 4:-   01:07
+  Shloka 5:-   01:23
+  Shloka 6:-   01:33
+  Shloka 7:-   01:44
+  Shloka 8:-   01:55
+  Shloka 9:-   02:10
+  Shloka 10:-  02:21
+  Shloka 11:-  02:32
+  Shloka 12:- 02:43
+  Shloka 13:- 02:58
+  Shloka 14:- 03:09
+  Shloka 15:- 03:19
+  Shloka 16:- 03:30
+  Shloka 17:- 03:45
+  Shloka 18:- 03:54
+  Shloka 19:- 04:07
+  Shloka 20:- 04:18
+  Shloka 21:-  04:33
+  Shloka 22:-  04:44
+  Shloka 23:-  04:55
+  Shloka 24:-  05:05
+  Shloka 25:- 05:21
+  Shloka 26:- 05:32
+  Shloka 27:- 05:42
+  Shloka 28:- 05:53
+  Shloka 29:-  06:09
+  Shloka 30:-  06:19
+  Shloka 31:-  06:30
+  Shloka 32 :-  06:41
+  Shloka 33:-   06:56
+  Shloka 34 :-  07:07
+  Shloka 35 :-  07:17
+  Shloka 36 :- 07:28
+  Shloka 37:-  07:43
+  Shloka 38 :- 07:54
+  Shloka 39:-  08:05
+  Shloka 40:-  08:16
+  Shloka 41:- 08:31
+  Shloka 42:- 08:41
+  Shloka 43:-  09:00
+  end:-  09:42
+  """
+
   @chalisa_json_path Path.expand("./priv/static/corpus/shlokam.org/hanumanchalisa.json")
 
   def read_verses() do
@@ -419,6 +467,142 @@ defmodule SourceSeeders do
     seed_gita_chapter_1()
   end
 
+  @chalisa_events """
+    start :- 00:00
+    Shloka 1:-    00:02
+    Shloka 2 :-   00:24
+    Shloka 3:-    00:56
+    Shloka 4:-   01:07
+    Shloka 5:-   01:23
+    Shloka 6:-   01:33
+    Shloka 7:-   01:44
+    Shloka 8:-   01:55
+    Shloka 9:-   02:10
+    Shloka 10:-  02:21
+    Shloka 11:-  02:32
+    Shloka 12:- 02:43
+    Shloka 13:- 02:58
+    Shloka 14:- 03:09
+    Shloka 15:- 03:19
+    Shloka 16:- 03:30
+    Shloka 17:- 03:45
+    Shloka 18:- 03:54
+    Shloka 19:- 04:07
+    Shloka 20:- 04:18
+    Shloka 21:-  04:33
+    Shloka 22:-  04:44
+    Shloka 23:-  04:55
+    Shloka 24:-  05:05
+    Shloka 25:- 05:21
+    Shloka 26:- 05:32
+    Shloka 27:- 05:42
+    Shloka 28:- 05:53
+    Shloka 29:-  06:09
+    Shloka 30:-  06:19
+    Shloka 31:-  06:30
+    Shloka 32 :-  06:41
+    Shloka 33:-   06:56
+    Shloka 34 :-  07:07
+    Shloka 35 :-  07:17
+    Shloka 36 :- 07:28
+    Shloka 37:-  07:43
+    Shloka 38 :- 07:54
+    Shloka 39:-  08:05
+    Shloka 40:-  08:16
+    Shloka 41:- 08:31
+    Shloka 42:- 08:41
+    Shloka 43:-  09:00
+    end:-  09:42
+  """
+  @chalisa_audio_path Path.expand("./hanuman_chalisa_gulshan_kumar.mp3", "media/chalisa")
+  def insert_hanuman_chalisa_events() do
+    chalisa = Vyasa.Written.get_source_by_title("hanuman_chalisa")
+    verses = Vyasa.Written.get_verses_in_chapter(1, chalisa.id)
+    verse_lookup = Enum.into(for(%{id: id, no: verse_no} <- verses, do: {verse_no, id}), %{})
+
+    # parse mp3 info: 
+    {:ok,
+     %Vyasa.Parser.MP3{
+       duration: tot_d,
+       path: p
+     }} = Vyasa.Parser.MP3.parse(@chalisa_audio_path)
+
+    # handle voices: 
+    {:ok, voice} =
+      Vyasa.Medium.create_voice(%{
+        lang: "sa",
+        duration: tot_d,
+        file_path: @chalisa_audio_path,
+        source_id: chalisa.id,
+        chapter_no: 1
+      })
+
+    # now handle the events: 
+    @chalisa_events
+    |> String.split("\n")
+    |> Enum.map(fn x ->
+      x
+      |> String.split(":-")
+      |> Enum.map(&String.trim/1)
+      |> Enum.reduce([], fn
+        <<"Shloka"::utf8, sep::utf8, verse_no::binary>>, acc ->
+          [verse_lookup[String.to_integer(verse_no)] | acc]
+
+        bin, acc ->
+          [bin | acc]
+      end)
+    end)
+    |> IO.inspect(limit: :infinity)
+    |> Enum.reduce(
+      [],
+      fn
+        [time, "start"], acc ->
+          [
+            %Vyasa.Medium.Event{
+              origin: 0,
+              phase: "start",
+              voice_id: voice.id,
+              source_id: chalisa.id
+            }
+            | acc
+          ]
+
+        [time, "end"], [%{origin: o} = prev | acc] ->
+          [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+          d = (min * 60 + sec) * 1000
+
+          [
+            %Vyasa.Medium.Event{
+              origin: d,
+              duration: tot_d - d,
+              phase: "end",
+              voice_id: voice.id,
+              source_id: chalisa.id
+            }
+            | [%{prev | duration: d - o} | acc]
+          ]
+
+        [time, id], [%{origin: o} = prev | acc] ->
+          [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+          d = (min * 60 + sec) * 1000
+
+          [
+            %Vyasa.Medium.Event{
+              origin: d,
+              verse_id: id,
+              voice_id: voice.id,
+              source_id: chalisa.id
+            }
+            | [%{prev | duration: d - o} | acc]
+          ]
+
+        _, acc ->
+          acc
+      end
+    )
+    |> Enum.map(&Vyasa.Medium.create_event(&1))
+  end
+
   @chalisa_chap_body "The Hanuman Chalisa, composed by Goswami Tulsidas, is a  40-verse hymn dedicated to Lord Hanuman, highlighting his unwavering devotion to Lord Rama. It is a testament to Hanuman's strength, wisdom, and courage, as well as his role in Lord Rama's epic battles against evil. Reciting this hymn is believed to bestow blessings and protection from Hanuman, fostering spiritual growth and devotion to Lord Rama."
   def insert_hanuman_chalisa_chapter(source, chalisa_verses) do
     {:ok, inserted_chap} =
@@ -512,10 +696,9 @@ defmodule SourceSeeders do
     uuid
     |> insert_source("hanuman_chalisa")
     |> insert_hanuman_chalisa_chapter(chalisa_verses)
-    # |> dbg()
-    # |> insert_hanuman_chalisa_verses(chalisa_verses) # ignore
-    # next
     |> insert_hanuman_chalisa_verse_translations(chalisa_verses)
+
+    insert_hanuman_chalisa_events()
   end
 end
 ```
@@ -541,7 +724,7 @@ defmodule DBHelper do
   end
 
   def seed_db() do
-    # SourceSeeders.seed_gita()
+    SourceSeeders.seed_gita()
     SourceSeeders.seed_hanuman_chalisa()
   end
 end
@@ -553,66 +736,4 @@ end
 R.recompile()
 DBHelper.purge_db()
 DBHelper.seed_db()
-```
-
-```elixir
-# Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
-R.recompile()
-# chap = Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
-# chap.translations
-# # |> Repo.preload([:translations])
-
-# src = Vyasa.Written.get_source_by_title("hanuman_chalisa")
-# IO.inspect(src.id)
-# src.verses
-
-# vs = Vyasa.Written.get_verses_in_chapter(1, src.id)
-# hd(vs)
-
-# Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
-# # sources = Vyasa.Written.list_sources() |> Enum.map(fn s -> s.id end)
-# length(
-#   Vyasa.Written.get_chapter(1, "hanuman_chalisa", "sa").verses
-#   |> Enum.map(fn v -> v.translations end)
-# )
-
-# Vyasa.Written.get_verses_by_chapter("1", "hanuman_chalisa", "sa")
-
-# Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en").verses
-chaps = Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
-length(chaps)
-
-# cs = 
-```
-
-```elixir
-import Ecto.Query
-alias Vyasa.Repo
-
-src_title = "hanuman_chalisa"
-lang = "en"
-
-target_lang = from(ts in Translation, where: ts.lang == ^lang and ts.chapter_no == 1)
-
-source_found =
-  from(s in Source,
-    preload: [
-      chapters: ^from(c in Chapter, order_by: c.no, preload: [translations: ^target_lang])
-    ]
-  )
-  |> Repo.one()
-
-source_found.chapters
-
-length(hd(source_found.chapters).translations)
-
-#  ( from c in Chapter,
-#     inner_join: src in assoc(c, :source),
-#     where: src.title == ^src_title,
-#     inner_join: t in assoc(c, :translations),
-#     on: t.source_id == src.id)
-#   # |> select_merge([c, src, t], %{
-#   #                   c | translations: [t], source: src
-#   #                 })
-#   |> Repo.all()
 ```

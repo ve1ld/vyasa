@@ -68,7 +68,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
          session: %{"id" => sess_id},
          chap: %Written.Chapter{no: c_no, source_id: src_id}
       }} = socket) do
-    Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
+
+      Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
           source_id: src_id,
           chapter_no: c_no,
           lang: @default_voice_lang
