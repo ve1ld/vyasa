@@ -238,11 +238,10 @@ defmodule SourceSeeders do
   alias Vyasa.Repo
   alias G
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
-  alias Vyasa.Medium.{Event}
-  alias Vyasa.Medium.{Voice}
+  alias Vyasa.Medium.{Event, Voice}
 
   # generic
-  def insert_source(uuid, source_title \\ "Gita") do
+  def insert_source(uuid, source_title \\ "gita") do
     source_changeset =
       Source.gen_changeset(%Source{}, %{
         id: uuid,
@@ -335,7 +334,7 @@ defmodule SourceSeeders do
   """
 
   def seed_gita_chapter_1() do
-    gita = Vyasa.Written.get_source_by_title("Gita")
+    gita = Vyasa.Written.get_source_by_title("gita")
     verses = Vyasa.Written.get_verses_in_chapter(1, gita.id)
 
     # creats a map using verse information
@@ -415,9 +414,53 @@ defmodule SourceSeeders do
 
   def seed_gita() do
     uuid = Ecto.UUID.generate()
-    _source = insert_source(uuid, "Gita")
+    _source = insert_source(uuid, "gita")
     _chaps = insert_gita_chapters(uuid)
     seed_gita_chapter_1()
+  end
+
+  @chalisa_chap_body "The Hanuman Chalisa, composed by Goswami Tulsidas, is a  40-verse hymn dedicated to Lord Hanuman, highlighting his unwavering devotion to Lord Rama. It is a testament to Hanuman's strength, wisdom, and courage, as well as his role in Lord Rama's epic battles against evil. Reciting this hymn is believed to bestow blessings and protection from Hanuman, fostering spiritual growth and devotion to Lord Rama."
+  def insert_hanuman_chalisa_chapter(source, chalisa_verses) do
+    {:ok, inserted_chap} =
+      Chapter.changeset(
+        %Chapter{
+          no: 1,
+          source_id: source.id,
+          title: "Hanuman Chalisa",
+          body: @chalisa_chap_body
+        },
+        %{
+          verses:
+            chalisa_verses
+            |> Enum.map(fn v ->
+              %{
+                no: v["count"],
+                body: v["verse_sanskrit"],
+                source_id: source.id
+              }
+            end)
+        }
+      )
+      |> Repo.insert()
+      |> dbg()
+
+    Translation.gen_changeset(
+      %Translation{},
+      %{
+        lang: "en",
+        body: @chalisa_chap_body,
+        target: %{
+          title: "Hanuman Chalisa",
+          translit_tile: "Hanuman Chalisa",
+          body: @chalisa_chap_body
+        }
+      },
+      inserted_chap
+    )
+    |> Repo.insert()
+    |> dbg()
+
+    inserted_chap
   end
 
   def insert_hanuman_chalisa_verses(source, chalisa_verses) do
@@ -433,7 +476,10 @@ defmodule SourceSeeders do
     |> Enum.map(fn {:ok, inserted_v} -> inserted_v end)
   end
 
-  def insert_hanuman_chalisa_verse_translations(inserted_verses, chalisa_verses) do
+  def insert_hanuman_chalisa_verse_translations(
+        %Chapter{verses: inserted_verses} = _inserted_chap,
+        chalisa_verses
+      ) do
     inserted_verses
     |> Enum.zip(chalisa_verses)
     |> Enum.map(fn {inserted_verse, v} ->
@@ -452,6 +498,7 @@ defmodule SourceSeeders do
     end)
     |> Enum.map(fn trans_cset -> Repo.insert(trans_cset) end)
     |> Enum.map(fn outcome -> elem(outcome, 1) end)
+    |> dbg()
   end
 
   def seed_hanuman_chalisa() do
@@ -459,8 +506,9 @@ defmodule SourceSeeders do
     %{"verses" => chalisa_verses} = _verse_info = H.read_verses()
 
     uuid
-    |> insert_source("Hanuman Chalisa")
-    |> insert_hanuman_chalisa_verses(chalisa_verses)
+    |> insert_source("hanuman_chalisa")
+    |> insert_hanuman_chalisa_chapter(chalisa_verses)
+    # |> insert_hanuman_chalisa_verses(chalisa_verses)
     |> insert_hanuman_chalisa_verse_translations(chalisa_verses)
   end
 end
@@ -499,4 +547,19 @@ end
 R.recompile()
 DBHelper.purge_db()
 DBHelper.seed_db()
+```
+
+```elixir
+sources = Vyasa.Written.list_sources()
+chalisa = Enum.at(sources, 1)
+
+Vyasa.Repo.get!(Vyasa.Written.Source, chalisa.id)
+|> Vyasa.Repo.preload(chapters: [:translations])
+|> dbg()
+```
+
+```elixir
+# Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
+Vyasa.Written.get_chapter(1, "hanuman_chalisa")
+|> Repo.preload([:translations])
 ```
