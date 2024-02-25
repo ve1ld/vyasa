@@ -169,24 +169,19 @@ defmodule Vyasa.Written do
   # end
 
   def get_chapter(no, source_title, lang) do
-     %Source{id: id} = _src = get_source_by_title(source_title)
+    %Source{id: id} = _src = get_source_by_title(source_title)
 
     target_lang = (from ts in Translation,
-      where: ts.lang == ^lang and ts.source_id == ^id
+      where: ts.lang == ^lang and ts.source_id == ^id)
 
-
-      # inner_join: src in assoc(ts, :source),
-        # where: src.id == ^id
+    (from c in Chapter,
+      where: c.no ==  ^no and c.source_id == ^id,
+      preload: [verses: ^(from v in Verse, where: v.source_id == ^id, order_by: v.no,
+                   preload: [translations: ^target_lang]),
+                translations: ^target_lang]
     )
-
-    (from c in Chapter, where: c.no ==  ^no,
-      inner_join: src in assoc(c, :source),
-      where: src.title == ^source_title,
-      preload: [verses: ^(from v in Verse, where: v.source_id == ^id,
-                   preload: [translations: ^target_lang]) ,
-                   translations: ^target_lang])
-      |> Repo.one()
-   end
+    |> Repo.one()
+  end
 
   def get_verses_in_chapter(no, source_id) do
     query_verse = from v in Verse,

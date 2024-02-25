@@ -221,7 +221,7 @@ defmodule H do
   alias Vyasa.Medium
   alias Vyasa.Repo
 
-  @chalisa_json_path Path.expand("./shlokam.org/hanumanchalisa.json")
+  @chalisa_json_path Path.expand("./priv/static/corpus/shlokam.org/hanumanchalisa.json")
 
   def read_verses() do
     @chalisa_json_path
@@ -487,7 +487,7 @@ defmodule SourceSeeders do
       Translation.gen_changeset(
         %Translation{},
         %{
-          lang: "sa",
+          lang: "en",
           target: %{
             body: v["verse_sanskrit"],
             body_translit_meant: v["verse_meaning"],
@@ -499,28 +499,6 @@ defmodule SourceSeeders do
     end)
     |> Enum.map(fn trans_cset -> Repo.insert(trans_cset) end)
     |> Enum.map(fn outcome -> elem(outcome, 1) end)
-
-    inserted_verses
-    |> Enum.zip(chalisa_verses)
-    |> Enum.map(fn {inserted_verse, v} ->
-      Translation.gen_changeset(
-        %Translation{},
-        %{
-          lang: "hi",
-          target: %{
-            body: v["verse_sanskrit"],
-            body_translit_meant: v["verse_meaning"],
-            body_translit: v["verse_trans"]
-          },
-          chapter_no: inserted_verse.chapter_no,
-          verse_id: inserted_verse.id
-        },
-        inserted_verse
-      )
-    end)
-    |> Enum.map(fn trans_cset -> Repo.insert(trans_cset) end)
-    |> Enum.map(fn outcome -> elem(outcome, 1) end)
-    |> dbg()
   end
 
   def seed_hanuman_chalisa() do
@@ -583,23 +561,23 @@ Vyasa.Repo.get!(Vyasa.Written.Source, chalisa.id)
 ```elixir
 # Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
 R.recompile()
-chap = Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
-chap.translations
-# |> Repo.preload([:translations])
+# chap = Vyasa.Written.get_chapter(1, "hanuman_chalisa", "en")
+# chap.translations
+# # |> Repo.preload([:translations])
 
-src = Vyasa.Written.get_source_by_title("hanuman_chalisa")
-IO.inspect(src.id)
-src.verses
+# src = Vyasa.Written.get_source_by_title("hanuman_chalisa")
+# IO.inspect(src.id)
+# src.verses
 
-vs = Vyasa.Written.get_verses_in_chapter(1, src.id)
-hd(vs)
+# vs = Vyasa.Written.get_verses_in_chapter(1, src.id)
+# hd(vs)
 
-Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
-# sources = Vyasa.Written.list_sources() |> Enum.map(fn s -> s.id end)
-length(
-  Vyasa.Written.get_chapter(1, "hanuman_chalisa", "sa").verses
-  |> Enum.map(fn v -> v.translations end)
-)
+# Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
+# # sources = Vyasa.Written.list_sources() |> Enum.map(fn s -> s.id end)
+# length(
+#   Vyasa.Written.get_chapter(1, "hanuman_chalisa", "sa").verses
+#   |> Enum.map(fn v -> v.translations end)
+# )
 
 # Vyasa.Written.get_verses_by_chapter("1", "hanuman_chalisa", "sa")
 
