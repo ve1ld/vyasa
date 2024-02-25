@@ -1,0 +1,687 @@
+# 2024 - An Ecto Odessy [Initial DB Helpers]
+
+## Root Section -- Common Utils
+
+### Supports Recompilation from within Livebook
+
+```elixir
+defmodule R do
+  def recompile() do
+    Mix.Task.reenable("app.start")
+    Mix.Task.reenable("compile")
+    Mix.Task.reenable("compile.all")
+    compilers = Mix.compilers()
+    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+    Mix.Task.run("compile.all")
+  end
+end
+
+R.recompile()
+```
+
+### Some Creation functions to create maps that can be used by changesets:
+
+Convert json --> struct --> using changeset --> insert into repo
+
+```elixir
+alias Vyasa.Written.{Chapter, Source, Translation}
+alias Vyasa.Medium
+alias Vyasa.Repo
+
+defmodule G do
+  @gita_sub_dir Path.expand("./priv/static/corpus/gita")
+
+  @verses "#{@gita_sub_dir}/verse.json"
+  @translations "#{@gita_sub_dir}/translation.json"
+  @chapters "#{@gita_sub_dir}/chapters.json"
+
+  alias Vyasa.Written.{Chapter}
+
+  def read_verses() do
+    @verses
+    |> File.read!()
+    |> Jason.decode!()
+  end
+
+  def read_translations() do
+    @translations
+    |> File.read!()
+    |> Jason.decode!()
+  end
+
+  def read_chapters() do
+    @chapters
+    |> File.read!()
+    |> Jason.decode!()
+  end
+
+  def get_translation_by_verse(id) do
+    read_translations()
+    |> Enum.find(fn %{"verseNumber" => no, "authorName" => a} ->
+      no == id and a == "Dr. S. Sankaranarayan"
+    end)
+  end
+
+  def create_verse(verse, source_id) do
+    updated =
+      verse
+      |> Map.put("source_id", source_id)
+      |> Map.put("chapter_no", verse["chapter_number"])
+      |> Map.put("body", verse["text"])
+      |> Map.put("no", verse["verse_number"])
+
+    updated
+
+    # dbg(updated)
+  end
+
+  def get_verses_for_chapter(chap_no, src_id) do
+    read_verses()
+    |> Enum.filter(fn verse -> verse["chapter_number"] == chap_no end)
+    |> Enum.map(fn verse -> G.create_verse(verse, src_id) end)
+  end
+
+  def create_translation_for_chapter(chapter) do
+    %{
+      type: "chapters",
+      lang: "hi",
+      target: %{
+        title: chapter["name"],
+        body: chapter["chapter_summary_hindi"]
+      }
+    }
+  end
+
+  def create_chapter(%{} = chapter, source_id) do
+    %{
+      no: chapter["chapter_number"],
+      title: chapter["name"],
+      body: chapter["chapter_summary"],
+      source_id: source_id
+    }
+
+    # |> dbg()
+  end
+
+  def create_chapter(%{} = chapter, [%{} = _head | _rest] = _verses, source_id) do
+    IO.puts("CHECK THIS CHAPTER OUT")
+    IO.inspect(chapter)
+
+    %{
+      source_id: source_id,
+      no: chapter["chapter_number"]
+    }
+  end
+
+  def get_chapters([%{} = _head | _rest] = verses, source_id) do
+    @chapters
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn chap -> create_chapter(chap, verses, source_id) end)
+  end
+
+  def get_chapters(source_id) do
+    @chapters
+    |> File.read!()
+    |> Jason.decode!()
+    |> Enum.map(fn chap -> create_chapter(chap, source_id) end)
+  end
+
+  def add_relevant_verses(chapter, verses) do
+    relevant_verses =
+      verses
+      |> Enum.filter(fn verse -> verse.chapter_no == chapter.no end)
+      |> Enum.map(fn verse -> Map.put(verse, :id, Ecto.UUID.generate()) end)
+
+    %{chapter | verses: relevant_verses}
+  end
+
+  def insert_verses_into_chapters(chapters, verses) do
+    chapters
+    |> Enum.map(fn chap -> add_relevant_verses(chap, verses) end)
+  end
+
+  def get_source([%{} = _h | _r] = chapters, [%{} = _head | _rest] = verses, source_id) do
+    %{
+      id: source_id,
+      title: "Gita",
+      chapters: chapters,
+      verses: verses
+    }
+  end
+
+  def create_chapter_changeset(chap, verses, src_id) do
+    Chapter.changeset(
+      %Chapter{
+        no: chap["chapter_number"],
+        source_id: src_id,
+        title: chap["name"],
+        body: chap["chapter_summary"]
+      },
+      %{
+        verses: verses
+      }
+    )
+  end
+
+  def create_chap_translation_changeset(%Chapter{} = inserted_chap, %{} = chap) do
+    Translation.gen_changeset(
+      %Translation{},
+      %{
+        lang: "en",
+        body: chap["chapter_summary"],
+        target: %{
+          title: chap["name_meaning"],
+          translit_title: chap["name_transliterated"],
+          body: chap["chapter_summary"]
+        }
+      },
+      inserted_chap
+    )
+  end
+
+  def create_translation_changeset_for_verse(
+        inserted_verse,
+        %{"verse_order" => verse_id} = relevant_verse
+      ) do
+    dbg(relevant_verse)
+
+    Translation.gen_changeset(
+      %Translation{},
+      %{
+        lang: "en",
+        # body: verse["transliteration"],
+        target: %{
+          body: get_translation_by_verse(verse_id)["description"],
+          body_translit_meant: relevant_verse["word_meanings"],
+          body_translit: relevant_verse["transliteration"]
+        }
+      },
+      inserted_verse
+    )
+    |> dbg()
+  end
+
+  def create_translation_changesets_for_verses(inserted_verses, relevant_verses) do
+    Enum.zip(inserted_verses, relevant_verses)
+    |> Enum.map(fn {inserted_verse, relevant_verse} ->
+      create_translation_changeset_for_verse(inserted_verse, relevant_verse)
+    end)
+  end
+end
+```
+
+#### DB Convenience Actions
+
+* purging of db
+* seeding of db
+
+```elixir
+alias Vyasa.Medium.Voice
+
+v = %Voice{
+  lang: "sa",
+  meta: %{
+    artist: ["myArtist1", "myArtist2"]
+  }
+}
+```
+
+```elixir
+defmodule DBHelper do
+  alias Vyasa.Repo
+  alias G
+  alias Vyasa.Written.{Source, Chapter, Verse, Translation}
+  alias Vyasa.Medium.{Event}
+  alias Vyasa.Medium.{Voice}
+
+  # alias Vyasa.Medium.{Voice, Event, Store, Track, Video, Writer}
+
+  def purge_db() do
+    [Event, Voice, Translation, Verse, Chapter, Source]
+    |> Enum.map(fn mod -> Repo.delete_all(mod) end)
+  end
+
+  def seed_db() do
+    uuid = Ecto.UUID.generate()
+    _source = DBHelper.insert_source(uuid, "Gita")
+    _chap = DBHelper.insert_chapters(uuid)
+  end
+
+  def insert_source(uuid, source_title \\ "Gita") do
+    source_changeset =
+      Source.gen_changeset(%Source{}, %{
+        id: uuid,
+        title: source_title
+      })
+
+    Repo.insert!(source_changeset)
+  end
+
+  def insert_chapter(chap, source_id) do
+    relevant_verses = G.get_verses_for_chapter(chap["chapter_number"], source_id)
+    chap_changeset = G.create_chapter_changeset(chap, relevant_verses, source_id)
+    {:ok, %Chapter{} = inserted_chapter} = Repo.insert(chap_changeset)
+    %{verses: inserted_verses} = inserted_chapter
+
+    changeset_chap_translation = G.create_chap_translation_changeset(inserted_chapter, chap)
+    {:ok, %Translation{} = _inserted_chap_translation} = Repo.insert(changeset_chap_translation)
+
+    verses_translation_changesets =
+      G.create_translation_changesets_for_verses(inserted_verses, relevant_verses)
+
+    _inserted_verse_translations =
+      verses_translation_changesets
+      |> Enum.map(fn c_set -> Repo.insert(c_set) end)
+      |> Enum.map(fn {:ok, inserted_verse_translation} -> inserted_verse_translation end)
+
+    chap
+  end
+
+  def insert_chapters(source_id) do
+    G.read_chapters()
+    |> Enum.map(fn chap -> insert_chapter(chap, source_id) end)
+  end
+end
+```
+
+#### Testing the purging and seeding of the db:
+
+```elixir
+R.recompile()
+DBHelper.purge_db()
+DBHelper.seed_db()
+```
+
+#### Events are allivvee
+
+```elixir
+R.recompile()
+gita = Vyasa.Written.get_source_by_title("Gita")
+verses = Vyasa.Written.get_verses_in_chapter(1, gita.id)
+
+# creats a map using verse information
+verse_lookup = Enum.into(for(%{id: id, no: verse_no} <- verses, do: {verse_no, id}), %{})
+
+c1_path = Path.expand("./1.mp3", "media/gita")
+
+{:ok,
+ %Vyasa.Parser.MP3{
+   duration: tot_d,
+   path: p
+ }} = Vyasa.Parser.MP3.parse(c1_path)
+
+{:ok, voice} =
+  Vyasa.Medium.create_voice(%{
+    lang: "sa",
+    duration: tot_d,
+    file_path: c1_path,
+    source_id: gita.id,
+    chapter_no: 1
+  })
+
+# Vyasa.Medium.get_voice!("4c73fb6d-4163-4b64-90d0-5d49680c1ee4")
+# |> Vyasa.Medium.delete_voice()
+```
+
+```elixir
+R.recompile()
+
+events =
+  """
+  start :- 00:00
+  Shloka 1:-    00:33
+  Shloka 2 :-   00:49
+  Shloka 3:-    01:06
+  Shloka 4:-   01:19
+  Shloka 5:-   01:32 
+  Shloka 6:-   01:46
+  Shloka 7:-   02:00
+  Shloka 8:-   02:15
+  Shloka 9:-   02:28
+  Shloka 10:-  02:42
+  Shloka 11:-  02:56
+  Shloka 12:- 03:09
+  Shloka 13:- 03:22
+  Shloka 14:- 03:36
+  Shloka 15:- 03:49
+  Shloka 16:- 04:02
+  Shloka 17:- 04:14
+  Shloka 18:- 04:27
+  Shloka 19:- 04:40
+  Shloka 20:- 04:54
+  Shloka 21:-  05:07
+  Shloka 22:-  05:23
+  Shloka 23:-  05:36
+  Shloka 24:-  05:50
+  Shloka 25:- 06:05
+  Shloka 26:- 06:18
+  Shloka 27:- 06:32
+  Shloka 28:- 06:46
+  Shloka 29:-  07:01
+  Shloka 30:-  07:13
+  Shloka 31:-  07:26
+  Shloka 32 :-  07:38
+  Shloka 33:-   07:51
+  Shloka 34 :-  08:05
+  Shloka 35 :-  08:18
+  Shloka 36 :- 08:31
+  Shloka 37:-  08:44
+  Shloka 38 :- 08:57
+  Shloka 39:-  09:09
+  Shloka 40:-  09:22
+  Shloka 41:- 09:35
+  Shloka 42:- 09:48
+  Shloka 43:-  10:02
+  Shloka 44:-  10:16
+  Shloka 45:-  10:29
+  Shloka 46:-  10:40
+  Shloka 47:- 10:53
+  end:-  11:08
+  """
+  # each line 
+  |> String.split("\n")
+  |> Enum.map(fn x ->
+    x
+    |> String.split(":-")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reduce([], fn
+      <<"Shloka"::utf8, sep::utf8, verse_no::binary>>, acc ->
+        [verse_lookup[String.to_integer(verse_no)] | acc]
+
+      bin, acc ->
+        [bin | acc]
+    end)
+  end)
+  |> IO.inspect(limit: :infinity)
+  |> Enum.reduce(
+    [],
+    fn
+      [time, "start"], acc ->
+        [
+          %Vyasa.Medium.Event{origin: 0, phase: "start", voice_id: voice.id, source_id: gita.id}
+          | acc
+        ]
+
+      [time, "end"], [%{origin: o} = prev | acc] ->
+        [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+        d = (min * 60 + sec) * 1000
+
+        [
+          %Vyasa.Medium.Event{
+            origin: d,
+            duration: tot_d - d,
+            phase: "end",
+            voice_id: voice.id,
+            source_id: gita.id
+          }
+          | [%{prev | duration: d - o} | acc]
+        ]
+
+      [time, id], [%{origin: o} = prev | acc] ->
+        [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+        d = (min * 60 + sec) * 1000
+
+        [
+          %Vyasa.Medium.Event{origin: d, verse_id: id, voice_id: voice.id, source_id: gita.id}
+          | [%{prev | duration: d - o} | acc]
+        ]
+
+      _, acc ->
+        acc
+    end
+  )
+  |> Enum.map(&Vyasa.Medium.create_event(&1))
+```
+
+### Testing Assocs.
+
+```elixir
+R.recompile()
+
+alias Vyasa.Written
+
+# getting a voice from a chapter: 
+chap_1 = Written.get_chapter(1, "Gita")
+
+voice =
+  chap_1.voices
+  # sanskrit voice for chapter 1
+  |> Enum.find(fn v -> v.lang == "sa" end)
+
+# <== this remains empty because the assoc is not done
+events = voice.events
+
+# IO.inspect(events, limit: :infinity)
+# hd(events)
+
+# 736fbb85-1751-4419-a572-c4283a321252
+# Vyasa.Repo.all(Vyasa.Medium.Voice)
+# Vyasa.Repo.get(Vyasa.Medium.Voice, "736fbb85-1751-4419-a572-c4283a321252")
+# |> Vyasa.Repo.preload([:chapter, :source, :track])
+```
+
+```elixir
+R.recompile()
+alias Vyasa.Repo
+alias Vyasa.Medium.{Voice, Event}
+alias Vyasa.Written.{Chapter}
+
+Repo.all(Event)
+
+# Repo.get(Voice, "d1303578-b08a-4811-b219-d63bff7ece6e")
+Repo.get(Voice, "d040c39a-a25d-45b2-b73d-a7d3db70cbee")
+
+# Written.get_chapter(1, "Gita")
+```
+
+### Demo of how to write an example voice using the writer, and test it using curl...
+
+```elixir
+R.recompile()
+alias Vyasa.Medium.{Voice}
+alias Vyasa.Repo
+
+example_url = "/Users/ritesh/Desktop/sample-15s.mp3"
+# example_v = %Voice{lang: "en", file_path: "/Users/ritesh/Desktop/sample-15s.mp3"}
+
+# {:ok, inserted} = Repo.insert(example_v)
+# {:ok, stored_url} = Vyasa.Medium.Store.put(inserted) |> dbg()
+# output = System.cmd("curl", [stored_url])
+src = Vyasa.Written.get_source_by_title("Gita")
+
+{:ok, voice} = Vyasa.Medium.create_voice(%{lang: "sa", source_id: src.id})
+
+stored_url =
+  %{voice | file_path: example_url}
+  |> Vyasa.Medium.Writer.run()
+  |> then(&elem(&1, 1).key)
+  |> Vyasa.Medium.Store.get!()
+
+output = System.cmd("curl", [stored_url])
+```
+
+```elixir
+R.recompile()
+
+alias Vyasa.MediaLibrary
+alias Vyasa.Medium.{Voice}
+
+curr_playing =
+  MediaLibrary.Playback.new(%{
+    medium: %Voice{},
+    playing: false
+  })
+
+# play: 
+
+curr_playing = %{curr_playing | playing: true, played_at: DateTime.utc_now()}
+```
+
+```elixir
+existing_v = hd(Repo.all(Voice))
+
+{:ok, v} =
+  Vyasa.Medium.update_voice(existing_v, %{file_path: "/Users/ritesh/Desktop/sample-15s.mp3"})
+
+{:ok, url} = Vyasa.Medium.Store.put(v)
+
+{:ok, again_v} = Vyasa.Medium.update_voice(v, %{file_path: url})
+again_v.file_path
+```
+
+```elixir
+R.recompile()
+
+alias Vyasa.Medium
+alias Vyasa.Repo
+alias Vyasa.Medium.{Voice, Store}
+example_url = "/Users/ritesh/Desktop/example.mp3"
+
+{:ok, inserted_v} =
+  %Voice{
+    lang: "sa",
+    file_path: example_url
+  }
+  |> Repo.insert()
+
+{:ok, stored_url} = Store.put(inserted_v)
+
+# {:ok, _output} = System.cmd("curl", ["-k", "-X", "PUT", "-T", stored_url, example_url])
+
+System.cmd("curl", ["-k", "-X", "PUT", "-T", stored_url, example_url]) |> dbg()
+
+# curl -k -X PUT -T ./mpv-shot0002.mp3 "url"
+
+inserted_v
+|> Medium.update_voice(%{file_path: stored_url})
+```
+
+```elixir
+Vyasa.Repo.all(Vyasa.Medium.Voice)
+```
+
+##### Bala's working example of using the polymorphic translations
+
+<!-- livebook:{"break_markdown":true} -->
+
+Typically, we can select which changeset to use via the :with option. This won't work in our case because our APIs for changeset has 3 args (opp to 2 arg convention). There's no repercussion in doing it as a 2-step process now.
+
+Translations is expected to be added after chapter and verse has been added. The existing chain of changesets won't work automatically like that. Nested assocs won't work here.
+
+Therefore, the seed_db() needs to be updated so that the translations will be added later.
+
+It becomes 3 steps as shown in the block below:
+
+```elixir
+source =
+  Vyasa.Written.Source.gen_changeset(%Vyasa.Written.Source{}, %{
+    id: Ecto.UUID.generate(),
+    title: "gita_v2"
+  })
+  |> Vyasa.Repo.insert!()
+
+{:ok, %{verses: [verse | _]} = chapter} =
+  Chapter.changeset(
+    %Chapter{no: 5, source_id: source.id},
+    %{
+      verses: [
+        %{no: 1, body: "Kurukshetra", source_id: source.id}
+      ]
+    }
+  )
+  |> Vyasa.Repo.insert()
+
+Vyasa.Written.Translation.gen_changeset(
+  %Vyasa.Written.Translation{},
+  %{
+    lang: "en",
+    body: "अर्जुनविषादयोग",
+    target: %{title: "Arjuna Vishada-yoga"}
+  },
+  chapter
+)
+|> Vyasa.Repo.insert()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Playback
+
+```elixir
+DateTime.diff(DateTime.utc_now(), DateT, :second)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Exploration
+
+```elixir
+# DBHelper.purge_db()
+# DBHelper.seed_db()
+
+alias Vyasa.Written
+sources = Written.list_sources() |> Repo.preload([:chapters, :verses])
+s = hd(sources)
+v = hd(s.verses)
+c = hd(s.chapters)
+# Map.keys(c)
+
+sources
+
+# Written.get_source!(hd(sources).id)
+```
+
+```elixir
+# R.recompile()
+
+# alias Vyasa.Written
+
+# Written.list_sources()
+
+# [%Source{id: id} = _hd | tail] = Written.list_sources()
+# Written.get_source!(id)
+# Written.get_chapter!(2, id)
+
+# Vyasa.Repo.all(Vyasa.Medium.Voice)
+```
+
+### Exploration of the medium schemas
+
+```elixir
+stored_url
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## 2) Cloning Gita by Creating a Schema for it
+
+### Check Queries found in the Written context module
+
+<!-- livebook:{"break_markdown":true} -->
+
+###
+
+```elixir
+R.recompile()
+alias Vyasa.Written
+
+# Written.get_chapter(1, "6682956d-0e29-4c3f-a4b3-5e24baf0c9da")
+
+# Written.get_verse_via_url_params(8,"1","a619b2fa-3ec8-4dcc-b878-b2a80d48b38a") |> dbg()
+
+# Written.get_source_by_title("Gita")
+# |> Enum.find(fn src -> src.title == "gita" end)
+
+chapter =
+  Repo.get_by(Chapter, no: 2, source_id: "a619b2fa-3ec8-4dcc-b878-b2a80d48b38a")
+  |> Repo.preload([:verses, :source])
+
+verse_no = 2
+
+chapter.verses
+|> Enum.find(fn verse -> verse.no == verse_no end)
+|> Repo.preload([:source, :chapter])
+```
+
+#### Session Creation

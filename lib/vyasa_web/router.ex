@@ -1,8 +1,10 @@
 defmodule VyasaWeb.Router do
   use VyasaWeb, :router
 
+
   pipeline :browser do
     plug :accepts, ["html"]
+    plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {VyasaWeb.Layouts, :root}
@@ -14,22 +16,31 @@ defmodule VyasaWeb.Router do
     plug :accepts, ["json"]
   end
 
+
+
   scope "/", VyasaWeb do
     pipe_through :browser
 
+
+    get "/og/:filename", OgImageController, :show
+
+
     get "/", PageController, :home
-    live "/gita/", GitaLive.Index, :index
-    live "/gita/:id", GitaLive.Show, :show
-    live "/gita/:id/sangh/new", GitaLive.Show, :new_sangh
-    live "/gita/:id/sangh/:sangh_id", GitaLive.Show, :sangh
-    live "/texts", TextLive.Index, :index
-    live "/texts/new", TextLive.Index, :new
-    live "/texts/:id/edit", TextLive.Index, :edit
 
-    live "/texts/:id", TextLive.Show, :show
-    live "/texts/:id/show/edit", TextLive.Show, :edit
-
-  end
+    live_session :gen_anon_session,
+      on_mount: [{VyasaWeb.Session, :anon}] do
+      live "/explore/", SourceLive.Index, :index
+      live "/explore/:source_title/", SourceLive.Show, :show
+      live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+    end
+    
+    live_admin "/admin" do
+      admin_resource "/verses", VyasaWeb.Admin.Written.Verse
+      admin_resource "/events", VyasaWeb.Admin.Medium.Event
+    end
+    
+   end
 
   # Other scopes may use custom stacks.
   # scope "/api", VyasaWeb do
@@ -47,6 +58,7 @@ defmodule VyasaWeb.Router do
 
     scope "/dev" do
       pipe_through :browser
+
 
       live_dashboard "/dashboard", metrics: VyasaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview

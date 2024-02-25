@@ -7,9 +7,10 @@ defmodule Vyasa.MixProject do
       version: "0.1.0-alpha.1",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-       elixirc_options: [
+      elixirc_options: [
         warnings_as_errors: true
       ],
+      escript: escript(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -24,6 +25,11 @@ defmodule Vyasa.MixProject do
       mod: {Vyasa.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
+  end
+
+  # Defining Scripting Env
+  defp escript do
+    [main_module: VyasaCLI]
   end
 
   # Specifies which paths to compile per environment.
@@ -42,7 +48,7 @@ defmodule Vyasa.MixProject do
       {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.1"},
-      {:floki, ">= 0.30.0", only: :test},
+      {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
@@ -54,7 +60,15 @@ defmodule Vyasa.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:ecto_ltree, "~> 0.4.0"}
+      {:ecto_ltree, "~> 0.4.0"},
+      {:image, "~> 0.37"},
+      {:vix, "~> 0.5"},
+      {:kino, "~> 0.12.0"},
+      {:cors_plug, "~> 3.0"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:live_admin, "~> 0.11.4"},
+      {:req, "~> 0.4.0"}
     ]
   end
 
@@ -72,7 +86,11 @@ defmodule Vyasa.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind default", "esbuild default"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify --loader:.ttf=file", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "esbuild default --minify --loader:.ttf=file",
+        "phx.digest"
+      ]
     ]
   end
 end

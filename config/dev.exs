@@ -10,6 +10,23 @@ config :vyasa, Vyasa.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# MINIO Object Store API Domain
+config :ex_aws,
+  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
+  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
+  region: "ap-southeast-1",
+  http_client: Vyasa.Medium.Ext.S3Client
+
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  port: 9000
+
+config :ex_aws, :retries,
+  max_attempts: 2,
+  base_backoff_in_ms: 10,
+  max_backoff_in_ms: 10_000
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -19,7 +36,7 @@ config :vyasa, Vyasa.Repo,
 config :vyasa, VyasaWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: 4000],
+  http: [ip: {127, 0, 0, 1}, port: System.get_env("PORT") || 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -51,6 +68,8 @@ config :vyasa, VyasaWeb.Endpoint,
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
 # different ports.
+#
+#config :ssl, cacertfile: 'priv/cacerts.pem'
 
 # Watch static and templates for browser reloading.
 config :vyasa, VyasaWeb.Endpoint,
