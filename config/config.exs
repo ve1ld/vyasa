@@ -31,6 +31,8 @@ config :vyasa, VyasaWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :vyasa, Vyasa.Mailer, adapter: Swoosh.Adapters.Local
 
+config :live_admin, ecto_repo: Vyasa.Repo
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

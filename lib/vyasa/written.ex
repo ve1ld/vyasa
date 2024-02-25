@@ -144,6 +144,7 @@ defmodule Vyasa.Written do
     |> Repo.preload([:verses, :translations])
 
     chapter.verses
+
     end
 
   @doc """
