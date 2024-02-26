@@ -13,9 +13,11 @@
         </:subtitle>
     </.header>
 
-    <.verse_list id={dom_id} :for={{dom_id, verse} <- @streams.verses}>
-        <:item title={"#{verse.chapter_no}.#{verse.no}"}
-            navigate={~p"/explore/#{@source_title}/#{@chap.no}/#{verse.no}"} >
+    <.verse_display id={dom_id} :for={{dom_id, verse} <- @streams.verses}>
+        <:item
+            title={"#{verse.chapter_no}.#{verse.no}"}
+            verse_id={verse.id}
+        >
 
         <p class="font-dn text-xl">
         <%= verse.body |> String.split("।।") |> List.first()  %>
@@ -36,7 +38,7 @@
                 <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body %>
             </p>
         </:item>
-    </.verse_list>
+    </.verse_display>
 
     <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= @source_title %> Chapters</.back>
 </div>
