@@ -53,7 +53,7 @@ ProgressBar = {
         playbackPercentage,
         positionMs
       })
-      this.pushEventTo("#audio-player-container", "seekToMs", { position_ms: positionMs });
+      this.pushEventTo("#media-player-container", "seekToMs", { position_ms: positionMs });
 
       return;
     });

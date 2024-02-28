@@ -54,6 +54,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
     |> assign(playback: playback)
     |> play_voice()
+    |> play_audio()
   end
 
   # fallback
@@ -201,6 +202,36 @@ defp play_voice(%{
     })
 end
 
+defp play_audio(%{
+      assigns: %{
+        voice: %Voice{
+          title: title,
+          file_path: file_path,
+          duration: duration,
+        } = _voice,
+        playback: %Playback{
+            elapsed: elapsed,
+            playing?: playing?,
+        } = _playback
+      } = _assigns,
+   } = socket) do
+
+  player_details = %{
+      artist: "testArtist",
+      title: title,
+      isPlaying: playing?,
+      elapsed: elapsed,
+      filePath: file_path,
+      duration: duration,
+  }
+  send_update(VyasaWeb.AudioPlayer, id: "audio-player", player_details: player_details)
+  |> dbg()
+
+  socket
+end
+
+
+
 defp pause_voice(%{assigns: %{playback: %Playback{
                                  elapsed: elapsed
                               }= _playback} = _assigns} = socket) do
@@ -212,7 +243,7 @@ end
 
   defp js_play_pause() do
     JS.push("play_pause") # server event
-    |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM
+    |> JS.dispatch("js:play_pause", to: "#media-player") # client-side event, dispatches to DOM
   end
 
 
@@ -221,7 +252,6 @@ end
 
   defp js_next() do
   end
-
 
   attr :id, :string, required: true
   attr :min, :integer, default: 0
@@ -257,7 +287,7 @@ end
       type="button"
       class="mx-auto scale-75"
       phx-click={js_play_pause()}
-      phx-target="#audio-player"
+      phx-target="#media-player"
       aria-label={
         if @playback && @playback.playing? do
           "Pause"

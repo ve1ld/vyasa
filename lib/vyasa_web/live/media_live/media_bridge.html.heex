@@ -1,6 +1,8 @@
-<div id="audio-player-container" class="sticky top-0" >
+<div id="media-player-container" class="sticky top-0" >
+  <%= inspect(@playback, label: "Playback struct") %>
     <!-- player -->
-    <div id="audio-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
+    <div id="media-player" phx-hook="AudioPlayer" class="w-full" role="region" aria-label="Player">
+      <.live_component module={VyasaWeb.AudioPlayer} id={"audio-player"}/>
       <div id="audio-ignore" phx-update="ignore">
         <audio></audio>
       </div>
