@@ -3,18 +3,20 @@ defmodule VyasaWeb.AudioPlayer do
 
     def mount(_, _, socket) do
       socket
+      |> assign(player_deetz: nil)
     end
 
     @impl true
     def render(assigns) do
+      IO.inspect(assigns)
       ~H"""
-      <div id="audio-player" phx-update="ignore">
+      <div id="audio-player">
         <audio></audio>
         <br/>
         <br/>
         <br/>
         <h1>audio player :: my state is:</h1>
-        <%= inspect @socket %>
+        <%= inspect @player_deetz %>
 
         <br/>
         <%= inspect @socket.assigns%>
@@ -27,16 +29,13 @@ defmodule VyasaWeb.AudioPlayer do
           player_details: player_details,
              } = _assigns, socket) do
       IO.inspect("handle update case in audio_player.ex", label: "checkpoint")
-      IO.inspect(player_details, label: "checkpoint: player details")
 
-      {:ok, socket
-      |> assign(player_details: player_details)
-      |> dbg()
-      }
+      {:ok, socket |> assign(player_deetz: player_details)}
     end
 
     @impl true
-    def update(_assigns, socket) do
-      {:ok, socket}
+    def update(assigns, socket) do
+      IO.inspect(assigns, label: "what")
+      {:ok, socket |> assign(player_deetz: nil)}
     end
   end

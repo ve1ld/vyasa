@@ -224,8 +224,8 @@ defp play_audio(%{
       filePath: file_path,
       duration: duration,
   }
-  send_update(VyasaWeb.AudioPlayer, id: "audio-player", player_details: player_details)
-  |> dbg()
+
+  send_update(self(), VyasaWeb.AudioPlayer, id: "audio-player", player_details: player_details)
 
   socket
 end
