@@ -1,7 +1,16 @@
 /**
  * Hooks for audio player.
+ * This hook shall interact with the html5 player via it's known apis, on things like:
+ * 1. playback info relevant to the audio player
+ *
+ *
+ * Additionally, it shall emit events back to it's corresponding parent hook (MediaPlayer)
+ * so that the media player can effect changes to visual info like player timestamps, durations and such.
+ *
+ * In this way, "Playback" state is managed by MediaBridge, and is displayed by the Media Library hook to follow a
+ * general player-agnostic fashion. "Playback" and actual playback (i.e. audio or video playback) is decoupled, allowing
+ * us the ability to reconcile bufferring states and other edge cases, mediated by the Media Bridge.
  * */
-
 let nowSeconds = () => Math.round(Date.now() / 1000)
 let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
 let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
@@ -10,78 +19,28 @@ let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
 
-
-
 AudioPlayer = {
   mounted() {
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
-    this.currentTime = this.el.querySelector("#player-time")
-    this.duration = this.el.querySelector("#player-duration")
-    this.progress = this.el.querySelector("#player-progress")
 
-    let enableAudio = () => {
-      if(this.player.src){
-        document.removeEventListener("click", enableAudio)
-        const hasNothingToPlay = this.player.readyState === 0;
-        if(hasNothingToPlay){
-          this.player.play().catch(error => null)
-          this.player.pause()
-        }
-      }
-    }
-
-    document.addEventListener("click", enableAudio)
-
-    this.player.addEventListener("loadedmetadata", e => {
-      console.log("Loaded metadata!", {
-        duration: this.player.duration,
-        event: e,
-      })
-    })
-
+    document.addEventListener("click", () => this.enableAudio())
+    this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
     this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
-    this.el.addEventListener("js:play_pause", () => {
-      console.log("{play_pause event triggerred} player:", this.player)
-      // toggle play-pause
-      if(this.player.paused){
-        this.play()
-      }
-    })
-
-    this.handleEvent("initSession", (sess) => {
-      localStorage.setItem("session", JSON.stringify(sess))
-    })
-
-    this.handleEvent("registerEventsTimeline", params => {
-      console.log("Register Events Timeline", params);
-      this.player.eventsTimeline = params.voice_events;
-    })
+    this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
+    this.handleEvent("initSession", (sess) => this.initSession(sess))
+    this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params))
 
 
-    /// events handled by audio player::
-    this.handleEvent("play", (params) => {
-      const {filePath, isPlaying, elapsed, artist, title} = params;
-      const beginTime = nowSeconds() - elapsed
-      this.playbackBeganAt = beginTime
-      let currentSrc = this.player.src.split("?")[0]
-      const isLoadedAndPaused = currentSrc === filePath && !isPlaying && this.player.paused;
-      if(isLoadedAndPaused){
-        this.play({sync: true})
-      } else if(currentSrc !== filePath) {
-        currentSrc = filePath
-        this.player.src = currentSrc
-        this.play({sync: true})
-      }
-
-      const isMediaSessionApiSupported = "mediaSession" in navigator;
-      if(isMediaSessionApiSupported){
-        navigator.mediaSession.metadata = new MediaMetadata({artist, title})
-      }
-    })
-    this.handleEvent("pause", () => this.pause())
+    /// events handled by media player::
+    this.handleEvent("play_media", (params) => this.playMedia(params))
+    this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
     this.handleEvent("seekTo", params => this.seekTo(params))
+  },
+  /// Handlers:
+  initSession(sess) {
+    localStorage.setItem("session", JSON.stringify(sess))
   },
   clearNextTimer(){
     clearTimeout(this.nextTimer)
@@ -93,6 +52,52 @@ AudioPlayer = {
       timer: this.progressTimer,
     })
     clearInterval(this.progressTimer)
+  },
+  handleMetadataLoad(e) {
+    console.log("Loaded metadata!", {
+      duration: this.player.duration,
+      event: e,
+    })
+  },
+  registerEventsTimeline(params) {
+    console.log("Register Events Timeline", params);
+    this.player.eventsTimeline = params.voice_events;
+  },
+  handlePlayPause() {
+    console.log("{play_pause event triggerred} player:", this.player)
+    // toggle play-pause
+    if(this.player.paused){
+      this.play()
+    }
+  },
+  enableAudio() {
+    if(this.player.src){
+      document.removeEventListener("click", enableAudio)
+      const hasNothingToPlay = this.player.readyState === 0;
+      if(hasNothingToPlay){
+        this.player.play().catch(error => null)
+        this.player.pause()
+      }
+    }
+  },
+  playMedia(params) {
+    const {filePath, isPlaying, elapsed, artist, title} = params;
+    const beginTime = nowSeconds() - elapsed
+    this.playbackBeganAt = beginTime
+    let currentSrc = this.player.src.split("?")[0]
+    const isLoadedAndPaused = currentSrc === filePath && !isPlaying && this.player.paused;
+    if(isLoadedAndPaused){
+      this.play({sync: true})
+    } else if(currentSrc !== filePath) {
+      currentSrc = filePath
+      this.player.src = currentSrc
+      this.play({sync: true})
+    }
+
+    const isMediaSessionApiSupported = "mediaSession" in navigator;
+    if(isMediaSessionApiSupported){
+      navigator.mediaSession.metadata = new MediaMetadata({artist, title})
+    }
   },
   play(opts = {}){
     console.log("Triggered playback, check params", {
@@ -108,7 +113,8 @@ AudioPlayer = {
       if(sync) {
         const currentTime = nowSeconds() - this.playbackBeganAt
         this.player.currentTime = currentTime;
-        this.currentTime.innerText = this.formatTime(currentTime);
+        const formattedCurrentTime = this.formatTime(currentTime);
+        this.emitMediaBridgeJSUpdate("currentTime", formattedCurrentTime)
       }
       this.syncProgressTimer()
     }, error => {
@@ -125,8 +131,8 @@ AudioPlayer = {
     this.player.pause()
     this.player.currentTime = 0
     this.clearProgressTimer()
-    this.duration.innerText = ""
-    this.currentTime.innerText = ""
+    this.emitMediaBridgeJSUpdate("currentTime", "")
+    this.emitMediaBridgeJSUpdate("duration", "")
   },
   seekTo(params) {
     const {
@@ -135,7 +141,8 @@ AudioPlayer = {
 
     const beginTime = nowSeconds() - positionS
     this.playbackBeganAt = beginTime;
-    this.currentTime.innerText = this.formatTime(positionS);
+    const formattedBeginTime = this.formatTime(positionS);
+    this.emitMediaBridgeJSUpdate("currentTime", formattedBeginTime)
     this.player.currentTime = positionS;
     this.syncProgressTimer()
   },
@@ -159,10 +166,6 @@ AudioPlayer = {
    * Updates playback progress information.
    * */
   updateProgress() {
-    // console.log("[updateProgress]", {
-    //   eventsTimeline: this.player.eventsTimeline
-    // })
-
     this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
 
     if(isNaN(this.player.duration)) {
@@ -187,7 +190,8 @@ AudioPlayer = {
       )
       return
     }
-    this.progress.style.width = `${(this.player.currentTime / (this.player.duration) * 100)}%`
+    const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
+    this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
     const durationVal = this.formatTime(this.player.duration);
     const currentTimeVal = this.formatTime(this.player.currentTime);
     console.log("update progress:", {
@@ -195,15 +199,14 @@ AudioPlayer = {
       durationVal,
       currentTimeVal,
     })
-    this.duration.innerText = durationVal;
-    this.currentTime.innerText = currentTimeVal;
+    this.emitMediaBridgeJSUpdate("currentTime", currentTimeVal);
+    this.emitMediaBridgeJSUpdate("duration", durationVal)
   },
 
   formatTime(seconds) {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
   },
   emphasizeActiveEvent(currentTime, events) {
-
     if (!events) {
       console.log("No events found")
       return;
@@ -230,7 +233,7 @@ AudioPlayer = {
 
     const classVals = ["bg-orange-500", "border-l-8", "border-black"]
 
-    // TODO: this is a pedestrian approach that can be improved significantly:
+    // TODO: this is a pedestrian approach to visual emphasis that can be improved significantly:
     for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
       classVals.forEach(classVal => otherDomNode.classList.remove(classVal))
       otherDomNode.classList.remove("bg-orange-500")
@@ -239,6 +242,9 @@ AudioPlayer = {
     const targetDomId = `verse-${verseId}`
     const node = document.getElementById(targetDomId)
     classVals.forEach(classVal => node.classList.add(classVal))
+  },
+  emitMediaBridgeJSUpdate = (key, value, extraKey="innerText") => {
+    this.pushEventTo("#MediaBridge", "update_display_value", [key , value, extraKey])
   }
 }
 

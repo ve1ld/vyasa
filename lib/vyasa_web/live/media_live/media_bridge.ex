@@ -4,7 +4,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   It will have the following responsibilities:
   1. stores a general playback state. This shall be agnostic to the players that rely on this playback state for synchronising their own playback states.
-  2. TODO: handle the sync between A/V players
+  2. It shall contain the common playback buttons because these buttons will be controlling all the supported players simultaneously. In so doing, playback state and actions are kept only in the media_bridge
+  3. TODO: handle the sync between A/V players
   """
   use VyasaWeb, :live_view
   alias Vyasa.Medium
@@ -34,9 +35,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
   end
 
-
-
-  # TODO: implement this next -- should handle aud / vid
+  # TODO: handle vid next
   defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
     IO.puts("play_media triggerred with elapsed = #{elapsed}")
     now = DateTime.utc_now()
@@ -53,8 +52,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     socket
     |> assign(playback: playback)
-    |> play_voice()
     |> play_audio()
+    # video...
   end
 
   # fallback
@@ -74,7 +73,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     socket
     |> assign(playback: playback)
-    |> pause_voice()
+    |> pause_audio()
+    # handle video next
   end
 
   @impl true
@@ -176,32 +176,6 @@ defp get_target_event([%Event{} | _] = events, verse_id) do
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
 end
 
-
-defp play_voice(%{
-      assigns: %{
-        voice: %Voice{
-          title: title,
-          file_path: file_path,
-          duration: duration,
-        } = _voice,
-        playback: %Playback{
-            elapsed: elapsed,
-            playing?: playing?,
-        } = _playback
-      } = _assigns,
-   } = socket) do
-
-  socket
-  |> push_event("play", %{
-        artist: "testArtist",
-        title: title,
-        isPlaying: playing?,
-        elapsed: elapsed,
-        filePath: file_path,
-        duration: duration,
-    })
-end
-
 defp play_audio(%{
       assigns: %{
         voice: %Voice{
@@ -225,31 +199,41 @@ defp play_audio(%{
       duration: duration,
   }
 
-  send_update(self(), VyasaWeb.AudioPlayer, id: "audio-player", player_details: player_details)
+  send_update(
+    self(),
+    VyasaWeb.AudioPlayer,
+    id: "audio-player",
+    player_details: player_details,
+    event: "play_audio"
+  )
 
   socket
 end
 
-
-
-defp pause_voice(%{assigns: %{playback: %Playback{
+defp pause_audio(%{assigns: %{playback: %Playback{
                                  elapsed: elapsed
                               }= _playback} = _assigns} = socket) do
+
+    send_update(self(), VyasaWeb.AudioPlayer,
+      id: "audio-player",
+      event: "pause_audio",
+      elapsed: elapsed
+    )
+
     socket
-    |> push_event("pause", %{
-          elapsed: elapsed,
-      })
 end
 
   defp js_play_pause() do
     JS.push("play_pause") # server event
-    |> JS.dispatch("js:play_pause", to: "#media-player") # client-side event, dispatches to DOM
+    |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM TODO: shift to the new audio player hook instead
   end
 
 
+  # TODO: add this when implementing tracks & playlists
   defp js_prev() do
   end
 
+  # TODO: add this when implementing tracks & playlists
   defp js_next() do
   end
 
