@@ -8,17 +8,21 @@
         <div class="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5">
           <div class="pr-5">
             <div class="min-w-0 max-w-xs flex-col space-y-0.5">
-              <h2 class="text-black dark:text-white text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
-                <%= if @playback && @playback.medium, do: @playback.medium.title, else: raw("&nbsp;") %>
+              <h2 :if={@voice} class="text-black dark:text-white text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
+                <%= @voice.title %>
               </h2>
               <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
-                <%= if @playback && @playback.medium, do: "Stub artist", else: raw("&nbsp;") %>
+                 <%= if @voice && Map.has_key?(@voice, "artist") do %>
+                   <%= @voice.artist %>
+                  <% else %>
+                    artist
+                  <% end %>
               </p>
             </div>
           </div>
           <.progress_bar
             id="player-progress"
-            max={@playback && @playback.medium && @playback.medium.duration || 100}
+            max={(@voice && @voice.duration) || 100}
             value={@playback && @playback.elapsed || 0}
           />
           <div
