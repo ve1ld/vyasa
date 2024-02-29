@@ -189,7 +189,6 @@ defmodule Vyasa.Written do
       preload: [:chapter]
 
     Repo.all(query_verse)
-    |> dbg()
     end
 
   @doc """

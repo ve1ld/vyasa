@@ -243,7 +243,8 @@ AudioPlayer = {
     const node = document.getElementById(targetDomId)
     classVals.forEach(classVal => node.classList.add(classVal))
   },
-  emitMediaBridgeJSUpdate = (key, value, extraKey="innerText") => {
+
+  emitMediaBridgeJSUpdate(key, value, extraKey = "innerText") {
     this.pushEventTo("#MediaBridge", "update_display_value", [key , value, extraKey])
   }
 }

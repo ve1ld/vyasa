@@ -20,14 +20,14 @@ MediaPlayer = {
 
     this.handleEvent("update_display_value", ([key, val, extraKey]) => {
       if (extraKey === "innerText") {
-        this.[key].[extraKey] = val;
+        this[key][extraKey] = val;
       }
 
       if (extraKey === "style.width") {
-        this.[key].style.width = val
+        this[key].style.width = val
       }
     })
 }
-
+}
 
 export default MediaPlayer;
