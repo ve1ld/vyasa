@@ -72,7 +72,7 @@ AudioPlayer = {
   },
   enableAudio() {
     if(this.player.src){
-      document.removeEventListener("click", enableAudio)
+      document.removeEventListener("click", this.enableAudio)
       const hasNothingToPlay = this.player.readyState === 0;
       if(hasNothingToPlay){
         this.player.play().catch(error => null)
@@ -243,9 +243,14 @@ AudioPlayer = {
     const node = document.getElementById(targetDomId)
     classVals.forEach(classVal => node.classList.add(classVal))
   },
-
   emitMediaBridgeJSUpdate(key, value, extraKey = "innerText") {
-    this.pushEventTo("#MediaBridge", "update_display_value", [key , value, extraKey])
+    const customEvent = new CustomEvent("update_display_value", {
+      bubbles: true,
+      detail: {payload: [key, value, extraKey]},
+    });
+
+    const targetElement = document.querySelector("#media-player-container");
+    targetElement.dispatchEvent(customEvent)
   }
 }
 

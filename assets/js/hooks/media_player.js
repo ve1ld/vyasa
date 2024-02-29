@@ -18,16 +18,21 @@ MediaPlayer = {
     this.duration = this.el.querySelector("#player-duration")
     this.progress = this.el.querySelector("#player-progress")
 
-    this.handleEvent("update_display_value", ([key, val, extraKey]) => {
-      if (extraKey === "innerText") {
-        this[key][extraKey] = val;
-      }
+    this.el.addEventListener("update_display_value", e => this.handleUpdateDisplayValue(e))
+  },
+  handleUpdateDisplayValue(e) {
+    const {
+      detail,
+    } = e
+    const [key, val, extraKey] = detail?.payload
+    if (extraKey === "innerText") {
+      this[key][extraKey] = val;
+    }
 
-      if (extraKey === "style.width") {
-        this[key].style.width = val
-      }
-    })
-}
+    if (extraKey === "style.width") {
+      this[key].style.width = val
+    }
+  }
 }
 
 export default MediaPlayer;
