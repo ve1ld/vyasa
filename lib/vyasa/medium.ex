@@ -1,7 +1,7 @@
 defmodule Vyasa.Medium do
 
   import Ecto.Query, warn: false
-  alias Vyasa.Medium.{Voice, Event}
+  alias Vyasa.Medium.{Video, Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Repo
 
@@ -31,6 +31,23 @@ defmodule Vyasa.Medium do
       where: v.source_id == ^src_id and v.chapter_no == ^c_no and v.lang == ^l,
       preload: [:events])
     |> Repo.all()
+  end
+
+  @doc """
+  Returns a resolved path to the video, bsed on its type attribute.
+
+  Currently mainly used for youtube videos, possibly more in the future.
+  """
+  def resolve_video_url(%Video{
+        type: type,
+        ext_uri: ext_uri,
+      } = _video) do
+
+    cond do
+      type == "youtube" -> "https://www.youtube.com/watch?v=#{ext_uri}"
+      true -> ext_uri
+    end
+    
   end
 
 

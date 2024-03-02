@@ -286,7 +286,10 @@ defmodule SourceSeeders do
   alias Vyasa.Repo
   alias G
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
-  alias Vyasa.Medium.{Event, Voice}
+  alias Vyasa.Medium.{Event, Voice, Video}
+
+  @gulshan_kumar_chalisa_uri "AETFvQonfV8"
+  @gita_video_uri "z4IQ4Laivtk"
 
   # generic
   def insert_source(uuid, source_title \\ "gita") do
@@ -297,6 +300,11 @@ defmodule SourceSeeders do
       })
 
     Repo.insert!(source_changeset)
+  end
+
+  def associate_video_to_voice(inserted_voice, video_attrs) do
+    Video.gen_changeset(%Video{}, video_attrs, inserted_voice)
+    |> Repo.insert()
   end
 
   def insert_gita_chapter(chap, source_id) do
@@ -404,6 +412,8 @@ defmodule SourceSeeders do
         source_id: gita.id,
         chapter_no: 1
       })
+
+    {:ok, video} = associate_video_to_voice(voice, %{ext_uri: @gita_video_uri, type: "youtube"})
 
     @gita_chap_1_events
     |> String.split("\n")
@@ -536,6 +546,10 @@ defmodule SourceSeeders do
         source_id: chalisa.id,
         chapter_no: 1
       })
+
+    # handle video: 
+    {:ok, video} =
+      associate_video_to_voice(voice, %{ext_uri: @gulshan_kumar_chalisa_uri, type: "youtube"})
 
     # now handle the events: 
     @chalisa_events
@@ -714,12 +728,12 @@ defmodule DBHelper do
   alias Vyasa.Repo
   alias G
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
-  alias Vyasa.Medium.{Event, Voice}
+  alias Vyasa.Medium.{Video, Event, Voice}
 
   # alias Vyasa.Medium.{Voice, Event, Store, Track, Video, Writer}
 
   def purge_db() do
-    [Event, Voice, Translation, Verse, Chapter, Source]
+    [Video, Event, Voice, Translation, Verse, Chapter, Source]
     |> Enum.map(fn mod -> Repo.delete_all(mod) end)
   end
 
@@ -736,4 +750,26 @@ end
 R.recompile()
 DBHelper.purge_db()
 DBHelper.seed_db()
+```
+
+### Exploring video-voice sync
+
+The following is a demo check that the seeding is working correctly. Once verified, the block may be removed.
+
+```elixir
+R.recompile()
+
+alias Vyasa.Written
+alias Vyasa.Written.{Source}
+alias Vyasa.Medium.{Voice, Video}
+alias Vyasa.Medium
+alias Vyasa.Repo
+
+%Source{id: chalisa_id} = chalisa = Written.get_source_by_title("hanuman_chalisa")
+h_voice = Repo.get_by!(Voice, source_id: chalisa_id) |> Repo.preload([:video])
+
+%Source{id: gita_id} = gita = Written.get_source_by_title("gita")
+g_voice = Repo.get_by!(Voice, source_id: gita_id) |> Repo.preload([:video])
+
+g_voice.video |> Medium.resolve_video_url()
 ```
