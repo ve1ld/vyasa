@@ -5,8 +5,13 @@
  */
 export const RenderYouTubePlayer = {
   mounted() {
+    const {
+      videoId
+    } = this.el.dataset;
+    console.log("Check dataset", this.el.dataset)
+
     injectIframeDownloadScript()
-    injectYoutubeInitialiserScript()
+    injectYoutubeInitialiserScript(videoId)
   },
 };
 
@@ -24,7 +29,7 @@ const injectIframeDownloadScript = () => {
 /**
  * Injects a script that contains initialisation logic for the Youtube Player object.
  * */
-const injectYoutubeInitialiserScript = () => {
+const injectYoutubeInitialiserScript = (videoId) => {
   const iframeInitialiserScript = document.createElement("script");
   document.body.appendChild(iframeInitialiserScript);
   window.callbackYouTubeIframeAPIReady = () => {
@@ -32,7 +37,7 @@ const injectYoutubeInitialiserScript = () => {
       {
         height: "225",
         width: "400",
-        videoId: "Q4tY92MuCiU",
+        videoId: videoId,
         playerVars: {
           "playsinline": 1,
         },

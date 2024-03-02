@@ -48,5 +48,12 @@
         <!-- next -->
       </div>
     </div>
-    <!-- /player -->
+  <!-- /player -->
+
+  <!-- VIDEO PLAYER -->
+  <div id="video-player-container" :if={@video}>
+    <.video_player
+      video={@video}
+    />
+  </div>
 </div>

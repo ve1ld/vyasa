@@ -38,6 +38,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   # TODO: handle vid next
   defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
     IO.puts("play_media triggerred with elapsed = #{elapsed}")
+    socket
+    |> assign(playback: update_playback_on_play(playback))
+    |> play_audio()
+  end
+
+  # fallback
+  defp play_media(socket, _playback) do
+    socket
+  end
+
+  defp update_playback_on_play(%Playback{elapsed: elapsed} = playback) do
     now = DateTime.utc_now()
     played_at = cond do
       elapsed > 0 -> # resume case
@@ -48,33 +59,21 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         now
     end
 
-    playback = %{playback | playing?: true, played_at: played_at}
-
-    socket
-    |> assign(playback: playback)
-    |> play_audio()
-    # video...
+    %{playback | playing?: true, played_at: played_at}
   end
 
-  # fallback
-  defp play_media(socket, _playback) do
+  defp pause_media(socket, %Playback{} = playback)  do
     socket
+    |> assign(playback: update_playback_on_pause(playback))
+    |> pause_audio()
   end
 
-  defp pause_media(socket, %Playback{
+  defp update_playback_on_pause( %Playback{
         played_at: played_at
-    } = playback)  do
-
+    } = playback) do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, played_at, :second)
-    playback = %{playback | playing?: false, paused_at: now, elapsed: elapsed}
-
-    IO.puts("pause_media triggerred with elapsed = #{elapsed}")
-
-    socket
-    |> assign(playback: playback)
-    |> pause_audio()
-    # handle video next
+    %{playback | playing?: false, paused_at: now, elapsed: elapsed}
   end
 
   @impl true
@@ -126,15 +125,16 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   A playback struct is created that represents this synced-state and the client-side hook is triggerred
   to register the associated events timeline.
   """
-  def handle_info({_, :voice_ack, voice}, socket) do
+  def handle_info({_, :voice_ack, %Voice{video: video} = voice}, socket) do
      %Voice{
-       events: voice_events
-     }= loaded_voice = voice |> Medium.load_events()
+       events: voice_events,
+     } = loaded_voice = voice |> Medium.load_events()
 
      {
       :noreply,
       socket
       |> assign(voice: loaded_voice)
+      |> assign(video: video)
       |> assign(playback: Playback.init_playback())
       |> push_event("registerEventsTimeline", %{voice_events: voice_events |> create_events_payload()})
      }
@@ -356,6 +356,29 @@ end
         </svg>
       </button>
     """
+  end
+
+  def video_player(assigns) do
+    ~H"""
+    <div>
+      <%= inspect @video%>
+      <.button id="button-YouTubePlayer">
+          Toggle Player
+      </.button>
+      <div
+        class="container-YouTubePlayer container-YouTubePlayerHidden"
+        phx-hook={"MiniPlayer"}
+        id={"container-YouTubePlayer"}>
+        <.live_component
+          module={VyasaWeb.YouTubePlayer}
+          id={"YouTubePlayer"}
+          video_id={@video.ext_uri}
+        />
+      </div>
+
+    </div>
+    """
+
   end
 
  end

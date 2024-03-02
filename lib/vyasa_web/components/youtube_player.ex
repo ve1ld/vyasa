@@ -9,6 +9,7 @@ defmodule VyasaWeb.YouTubePlayer do
           crossorigin="anonymous"
           id="player"
           phx-hook="RenderYouTubePlayer"
+          data-video-id={@video_id}
         />
         <br/>
         <br/>
@@ -19,7 +20,7 @@ defmodule VyasaWeb.YouTubePlayer do
           phx-hook="TriggerYouTubeFunction"
           data-function-name={"loadVideoById"}
           data-event-name={"click"}
-          data-video-id={"3jWRrafhO7M"}
+          data-video-id={@video_id}
           data-target-time-stamp={0}
         >
           Load New Video @ Start

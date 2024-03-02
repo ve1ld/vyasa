@@ -1,6 +1,7 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
+  alias Vyasa.Medium
 
   @default_lang "en"
   @default_voice_lang "sa"
@@ -81,13 +82,13 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
          chap: %Written.Chapter{no: c_no, source_id: src_id}
       }} = socket) do
 
-      Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
-          source_id: src_id,
-          chapter_no: c_no,
-          lang: @default_voice_lang
-      },
+    chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+    Vyasa.PubSub.publish(
+      chosen_voice,
       :voice_ack,
-      sess_id)
+      sess_id
+    )
+
     {:noreply, socket}
   end
 
