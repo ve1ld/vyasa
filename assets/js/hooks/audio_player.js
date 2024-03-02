@@ -233,6 +233,7 @@ AudioPlayer = {
 
     const classVals = ["bg-orange-500", "border-l-8", "border-black"]
 
+    // TODO: shift to media_bridge specific hook
     // TODO: this is a pedestrian approach to visual emphasis that can be improved significantly:
     for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
       classVals.forEach(classVal => otherDomNode.classList.remove(classVal))

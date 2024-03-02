@@ -33,7 +33,7 @@ defmodule VyasaWeb.AudioPlayer do
       {
         :ok, socket
         |> assign(player_details: player_details)
-        |> push_event("play_media", player_details)
+        |> push_event("play_media", player_details) # dispatches to the window, all listeners can hear
       }
     end
 

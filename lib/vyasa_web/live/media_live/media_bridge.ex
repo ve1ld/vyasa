@@ -51,12 +51,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
   end
 
-  # TODO: handle vid next
   defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
     IO.puts("play_media triggerred with elapsed = #{elapsed}")
     socket
     |> assign(playback: update_playback_on_play(playback))
-    |> play_audio()
+    |> play_audio() # TODO: allow the media player hook to send the window events instead of sending it from the audio player
   end
 
   # fallback
@@ -222,7 +221,6 @@ defp play_audio(%{
     player_details: player_details,
     event: "play_audio"
   )
-
   socket
 end
 
@@ -278,7 +276,7 @@ end
       </div>
     </div>
     """
-  end
+   end
 
   attr :playback, Playback, required: false
   def play_pause_button(assigns) do
