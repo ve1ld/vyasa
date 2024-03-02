@@ -11,10 +11,26 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback}
 
+  @default_player_config %{
+    height: "300",
+    width: "400",
+    playerVars: %{ # see supported params here: https://developers.google.com/youtube/player_parameters#Parameters
+      autoplay: 1,
+      mute: 1,
+      start: 0,
+      controls: 0,
+      enablejsapi: 1,
+      iv_load_policy: 3, # hide video annotations
+      playsinline: 1, # ensures it doesn't full-screen on ios
+    }
+  }
+
   @impl true
   def mount(_params, _sess, socket) do
+    encoded_config = Jason.encode!(@default_player_config)
     socket = socket
     |> assign(playback: nil)
+    |> assign(video_player_config: encoded_config)
     |> assign(voice: nil)
     |> assign(video: nil)
     |> sync_session()
@@ -373,6 +389,7 @@ end
           module={VyasaWeb.YouTubePlayer}
           id={"YouTubePlayer"}
           video_id={@video.ext_uri}
+          player_config={@player_config}
         />
       </div>
 

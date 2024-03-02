@@ -1,6 +1,11 @@
 defmodule VyasaWeb.YouTubePlayer do
     use VyasaWeb, :live_component
 
+    def mount(_, _, socket) do
+      socket
+      |> assign(player_details: nil)
+    end
+
     @impl true
     def render(assigns) do
       ~H"""
@@ -10,6 +15,7 @@ defmodule VyasaWeb.YouTubePlayer do
           id="player"
           phx-hook="RenderYouTubePlayer"
           data-video-id={@video_id}
+          data-player-config={@player_config}
         />
         <br/>
         <br/>

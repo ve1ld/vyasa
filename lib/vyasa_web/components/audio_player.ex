@@ -8,7 +8,6 @@ defmodule VyasaWeb.AudioPlayer do
 
     @impl true
     def render(assigns) do
-      IO.inspect(assigns)
       ~H"""
       <div id="audio-player" phx-hook="AudioPlayer">
         <audio></audio>

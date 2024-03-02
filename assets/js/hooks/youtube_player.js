@@ -6,12 +6,14 @@
 export const RenderYouTubePlayer = {
   mounted() {
     const {
-      videoId
+      videoId,
+      playerConfig: serialisedPlayerConfig,
     } = this.el.dataset;
     console.log("Check dataset", this.el.dataset)
 
+    const playerConfig = JSON.parse(serialisedPlayerConfig)
     injectIframeDownloadScript()
-    injectYoutubeInitialiserScript(videoId)
+    injectYoutubeInitialiserScript(videoId, playerConfig)
   },
 };
 
@@ -29,22 +31,21 @@ const injectIframeDownloadScript = () => {
 /**
  * Injects a script that contains initialisation logic for the Youtube Player object.
  * */
-const injectYoutubeInitialiserScript = (videoId) => {
+const injectYoutubeInitialiserScript = (videoId, playerConfig) => {
   const iframeInitialiserScript = document.createElement("script");
   document.body.appendChild(iframeInitialiserScript);
+
+
+
   window.callbackYouTubeIframeAPIReady = () => {
-    window.youtubePlayer = new YT.Player("player",
-      {
-        height: "225",
-        width: "400",
-        videoId: videoId,
-        playerVars: {
-          "playsinline": 1,
-        },
-        events: {
-          "onReady": onPlayerReady,
-        }
-      ,});
+    const assimilatedConfig = {
+      ...playerConfig,
+      videoId: videoId,
+      events: {
+        onReady: onPlayerReady,
+      }
+    }
+    window.youtubePlayer = new YT.Player("player", assimilatedConfig)
   }
   window.callbackOnPlayerReady = (event) => {
     event.target.playVideo();
