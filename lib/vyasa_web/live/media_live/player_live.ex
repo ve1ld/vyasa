@@ -41,8 +41,12 @@ defmodule VyasaWeb.MediaLive.Player do
 
   @impl true
   def handle_event("seekToMs", %{"position_ms" => position_ms} = _payload, socket) do
-    IO.puts("[handleEvent] seekToMs #{position_ms} is_integer? #{is_integer(position_ms)} is string? #{is_binary(position_ms)}")
+    IO.puts("[handleEvent] seekToMs #{position_ms}")
+    socket
+    |> handle_seek(position_ms)
+    end
 
+  defp handle_seek(socket, position_ms) do
     %{playback: %Playback{
          medium: %Voice{} = _voice,
          playing?: playing?,
@@ -58,12 +62,12 @@ defmodule VyasaWeb.MediaLive.Player do
 
     {:noreply, socket
      |> push_event("seekTo", %{positionS: position_s})
-     |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
+     |> assign(playback: %{playback | played_at: played_at, elapsed: position_s}) #modifies the socket after emitting client-side event
     }
-    end
+  end
 
   @impl true
-  @doc"""
+  @doc """
   On receiving a voice_ack, the written and player contexts are now synced.
   A playback struct is created that represents this synced-state and the client-side hook is triggerred
   to register the associated events timeline.
@@ -72,11 +76,10 @@ defmodule VyasaWeb.MediaLive.Player do
     %Playback{
       medium: %Voice{events: events},
     } = playback = voice |> Playback.create_playback()
-    # } = playback = voice |> MediaLibrary.gen_voice_playback()
+    # } = playback = voice |> MediaLibrary.gen_voice_playback() # TODO: example of where the media bridge can be introduced
 
     socket = socket
     |> assign(playback: playback)
-    # Registers Events Timeline on Client-Side:
     |> push_event("registerEventsTimeline", %{voice_events: events |> create_events_payload()})
 
     {:noreply, socket}
@@ -85,6 +88,26 @@ defmodule VyasaWeb.MediaLive.Player do
   def handle_info({_, :written_handshake, :init}, %{assigns: %{session: %{"id" => id}}} = socket) do
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
     {:noreply, socket}
+  end
+
+  # Handles playback sync relative to a particular verse id. In this case, the playback state is expected
+  # to get updated to the start of the event corresponding to that particular verse.
+  @impl true
+  def handle_info({_, :playback_sync, %{verse_id: verse_id} = _inner_msg} = _msg, socket) do
+    %{playback: %Playback{
+         medium: %Voice{
+           events: events,
+         } = _voice,
+     } = _playback} = socket.assigns
+
+    %Event{
+      origin: target_ms
+    } = _target_event = events
+    |> get_target_event(verse_id)
+
+
+    socket
+    |> handle_seek(target_ms)
   end
 
   def handle_info(msg, socket) do
@@ -97,6 +120,10 @@ defp create_events_payload([%Event{} | _] = events) do
   events|> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))
 end
 
+defp get_target_event([%Event{} | _] = events, verse_id) do
+  events
+  |> Enum.find(fn e -> e.verse_id === verse_id  end)
+end
 
 
 defp play_voice(socket, %Playback{

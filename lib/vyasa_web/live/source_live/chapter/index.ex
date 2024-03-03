@@ -58,6 +58,18 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign_meta()
   end
 
+  @impl true
+  @doc """
+  Handles the action of clicking to seek by emitting the verse_id to the live player
+  via the pubsub system.
+  """
+  def handle_event("clickVerseToSeek",
+                %{"verse_id" => verse_id} = _payload,
+                %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+    Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
+    {:noreply, socket}
+  end
+
   @doc """
   Upon rcv of :media_handshake, which indicates an intention to sync by the player,
   returns a message containing %Voice{} info that can be used to generate a playback.
@@ -79,8 +91,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     {:noreply, socket}
   end
 
-  def handle_info(msg, socket) do
-    IO.inspect(msg, label: "unexpected message in @chapter")
+  def handle_info(msg, socket) do IO.inspect(msg, label: "unexpected message in @chapter")
     {:noreply, socket}
   end
 
@@ -96,35 +107,36 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
 
   @doc """
-  Renders a clickable verse list.
+  Renders a clickable verse display.
 
   ## Examples
-      <.verse_list>
+      <.verse_display>
         <:item title="Title" navigate={~p"/myPath"}><%= @post.title %></:item>
-      </.list>
+      </.verse_display>
   """
   attr :id, :string, required: false
   slot :item, required: true do
     attr :title, :string
+    attr :verse_id, :string, required: false
     attr :navigate, :any, required: false
   end
-  def verse_list(assigns) do
+  def verse_display(assigns) do
     ~H"""
     <div class="mt-14" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
-            :if={Map.has_key?(item, :title) && Map.has_key?(item, :navigate)}
+            :if={Map.has_key?(item, :title) && Map.has_key?(item, :verse_id)}
             class="w-1/6 flex-none text-zinc-500"
           >
-            <.link
-              navigate={item[:navigate]}
+           <button
+              phx-click={JS.push("clickVerseToSeek", value: %{verse_id: item.verse_id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
               <div class="font-dn text-2xl mb-4">
                 <%= item.title %>
               </div>
-            </.link>
+           </button>
           </dt>
           <dd class="text-zinc-700"><%= render_slot(item) %></dd>
         </div>
@@ -133,4 +145,4 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     """
   end
 
-end
+ end
