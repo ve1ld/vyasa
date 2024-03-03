@@ -381,7 +381,6 @@ end
   def video_player(assigns) do
     ~H"""
     <div>
-      <%= inspect @video%>
       <div
         class={if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"}
         id={"container-YouTubePlayer"}>

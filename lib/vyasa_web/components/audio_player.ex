@@ -11,13 +11,6 @@ defmodule VyasaWeb.AudioPlayer do
       ~H"""
       <div id="audio-player" phx-hook="AudioPlayer">
         <audio></audio>
-        <br/>
-        <br/>
-        <br/>
-        <h1>audio player :: my state is:</h1>
-        <%= inspect @player_details %>
-        <br/>
-        <%= inspect @socket.assigns%>
       </div>
       """
     end
