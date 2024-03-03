@@ -24,6 +24,8 @@ AudioPlayer = {
     this.isFollowMode = false;
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
+
+
     this.emphasizedDomNode = {
       prev: null,
       current: null,
@@ -73,6 +75,7 @@ AudioPlayer = {
   registerEventsTimeline(params) {
     console.log("Register Events Timeline", params);
     this.player.eventsTimeline = params.voice_events;
+    // this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
   },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player)
@@ -240,9 +243,6 @@ AudioPlayer = {
     if (!verseId) {
       return
     }
-
-    // TODO: convert to a pre-defined css class "emphasizedVerse"
-    const classVals = ["emphasized-verse"]
 
     const {
       prev: prevDomNode,

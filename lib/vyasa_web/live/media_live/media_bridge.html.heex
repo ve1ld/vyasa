@@ -80,6 +80,7 @@
   <div id="video-player-container" :if={@video}>
     <.video_player
       video={@video}
+      heartbeat={@playback.elapsed}
       should_show_vid={@should_show_vid}
       player_config={@video_player_config}
     />

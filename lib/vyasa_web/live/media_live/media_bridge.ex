@@ -394,7 +394,12 @@ end
     <div>
       <div
         class={if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"}
-        id={"container-YouTubePlayer"}>
+        id={"container-YouTubePlayer"}
+        heartbeat={@heartbeat}
+        phx-hook={"Floater"}
+        data-floater-id={"container-YouTubePlayer"}
+        data-floater-reference-selector={".emphasized-verse"}
+        >
         <.live_component
           module={VyasaWeb.YouTubePlayer}
           id={"YouTubePlayer"}
