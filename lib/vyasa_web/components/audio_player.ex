@@ -16,7 +16,6 @@ defmodule VyasaWeb.AudioPlayer do
         <br/>
         <h1>audio player :: my state is:</h1>
         <%= inspect @player_details %>
-
         <br/>
         <%= inspect @socket.assigns%>
       </div>

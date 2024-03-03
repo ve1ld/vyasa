@@ -761,7 +761,7 @@ R.recompile()
 
 alias Vyasa.Written
 alias Vyasa.Written.{Source}
-alias Vyasa.Medium.{Voice, Video}
+alias Vyasa.Medium.{Voice, Video, Store}
 alias Vyasa.Medium
 alias Vyasa.Repo
 
@@ -773,7 +773,7 @@ g_voice = Repo.get_by!(Voice, source_id: gita_id) |> Repo.preload([:video])
 
 g_voice.video |> Medium.resolve_video_url()
 
-Medium.get_voice(chalisa_id, 1, "sa")
+Medium.get_voice(chalisa_id, 1, "sa") |> Store.hydrate()
 ```
 
 ```elixir

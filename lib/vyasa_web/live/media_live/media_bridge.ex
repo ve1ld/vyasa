@@ -33,6 +33,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> assign(video_player_config: encoded_config)
     |> assign(voice: nil)
     |> assign(video: nil)
+    |> assign(should_show_vid: true)
     |> sync_session()
 
 
@@ -89,6 +90,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, played_at, :second)
     %{playback | playing?: false, paused_at: now, elapsed: elapsed}
+  end
+
+  @impl true
+  def handle_event("toggle_should_show_vid", _, %{assigns: %{ should_show_vid: flag } = _assigns} = socket) do
+    {:noreply, socket |> assign(should_show_vid: !flag)}
   end
 
   @impl true
@@ -189,7 +195,7 @@ end
 defp get_target_event([%Event{} | _] = events, verse_id) do
   events
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
-end
+ end
 
 defp play_audio(%{
       assigns: %{
@@ -276,7 +282,7 @@ end
       </div>
     </div>
     """
-   end
+    end
 
   attr :playback, Playback, required: false
   def play_pause_button(assigns) do
@@ -376,12 +382,8 @@ end
     ~H"""
     <div>
       <%= inspect @video%>
-      <.button id="button-YouTubePlayer">
-          Toggle Player
-      </.button>
       <div
-        class="container-YouTubePlayer container-YouTubePlayerHidden"
-        phx-hook={"MiniPlayer"}
+        class={if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"}
         id={"container-YouTubePlayer"}>
         <.live_component
           module={VyasaWeb.YouTubePlayer}
@@ -390,10 +392,20 @@ end
           player_config={@player_config}
         />
       </div>
-
     </div>
     """
-
   end
 
- end
+  def video_toggler(assigns) do
+    ~H"""
+    <div
+      phx-click={JS.push("toggle_should_show_vid")}
+    >
+      <.icon :if={@should_show_vid} name="hero-video-camera-slash"/>
+      <.icon :if={!@should_show_vid} name="hero-video-camera"/>
+    </div>
+    """
+  end
+
+
+  end
