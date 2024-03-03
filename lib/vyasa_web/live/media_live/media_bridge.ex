@@ -34,6 +34,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> assign(voice: nil)
     |> assign(video: nil)
     |> assign(should_show_vid: true)
+    |> assign(is_follow_mode: true)
     |> sync_session()
 
 
@@ -95,6 +96,16 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   @impl true
   def handle_event("toggle_should_show_vid", _, %{assigns: %{ should_show_vid: flag } = _assigns} = socket) do
     {:noreply, socket |> assign(should_show_vid: !flag)}
+  end
+
+  @impl true
+  def handle_event("toggle_is_follow_mode", _, %{assigns: %{ is_follow_mode: flag } = _assigns} = socket) do
+    {
+      :noreply,
+      socket
+      |> assign(is_follow_mode: !flag)
+      |> push_event("toggleFollowMode", %{})
+    }
   end
 
   @impl true
@@ -406,5 +417,15 @@ end
     """
   end
 
-
+  def follow_mode_toggler(assigns) do
+    ~H"""
+    <div
+      phx-click={JS.push("toggle_is_follow_mode")}
+    >
+      <.icon :if={@is_follow_mode} name="hero-rectangle-stack"/>
+      <.icon :if={!@is_follow_mode} name="hero-queue-list"/>
+    </div>
+    """
   end
+
+end

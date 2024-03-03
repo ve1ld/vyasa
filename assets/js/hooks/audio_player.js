@@ -21,6 +21,7 @@ let execJS = (selector, attr) => {
 
 AudioPlayer = {
   mounted() {
+    this.isFollowMode = false;
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
     this.emphasizedDomNode = {
@@ -35,14 +36,20 @@ AudioPlayer = {
     this.handleEvent("initSession", (sess) => this.initSession(sess))
     this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params))
 
+    /// events handled by non-media player::
+    this.handleEvent("toggleFollowMode", () => this.toggleFollowMode())
 
     /// events handled by media player::
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
     this.handleEvent("seekTo", params => this.seekTo(params))
+
   },
   /// Handlers:
+  toggleFollowMode() {
+    this.isFollowMode = !this.isFollowMode
+  },
   initSession(sess) {
     localStorage.setItem("session", JSON.stringify(sess))
   },
@@ -252,6 +259,11 @@ AudioPlayer = {
     const targetNode = document.getElementById(targetDomId)
     targetNode.classList.add("emphasized-verse")
     updatedEmphasizedDomNode.current = targetNode;
+
+    if(this.isFollowMode) {
+      targetNode.focus()
+      targetNode.scrollIntoView({ behavior: 'smooth' });
+    }
 
     this.emphasizedDomNode = updatedEmphasizedDomNode;
   },
