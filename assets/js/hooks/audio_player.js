@@ -23,6 +23,10 @@ AudioPlayer = {
   mounted() {
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
+    this.emphasizedDomNode = {
+      prev: null,
+      current: null,
+    }
 
     document.addEventListener("click", () => this.enableAudio())
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
@@ -230,19 +234,26 @@ AudioPlayer = {
       return
     }
 
+    // TODO: convert to a pre-defined css class "emphasizedVerse"
+    const classVals = ["emphasized-verse"]
 
-    const classVals = ["bg-orange-500", "border-l-8", "border-black"]
+    const {
+      prev: prevDomNode,
+      current: currDomNode,
+    } = this.emphasizedDomNode; // @ this point it wouldn't have been updated yet
 
     // TODO: shift to media_bridge specific hook
-    // TODO: this is a pedestrian approach to visual emphasis that can be improved significantly:
-    for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
-      classVals.forEach(classVal => otherDomNode.classList.remove(classVal))
-      otherDomNode.classList.remove("bg-orange-500")
+    const updatedEmphasizedDomNode = {}
+    if(currDomNode) {
+      currDomNode.classList.remove("emphasized-verse")
+      updatedEmphasizedDomNode.prev = currDomNode;
     }
-
     const targetDomId = `verse-${verseId}`
-    const node = document.getElementById(targetDomId)
-    classVals.forEach(classVal => node.classList.add(classVal))
+    const targetNode = document.getElementById(targetDomId)
+    targetNode.classList.add("emphasized-verse")
+    updatedEmphasizedDomNode.current = targetNode;
+
+    this.emphasizedDomNode = updatedEmphasizedDomNode;
   },
   emitMediaBridgeJSUpdate(key, value, extraKey = "innerText") {
     const customEvent = new CustomEvent("update_display_value", {

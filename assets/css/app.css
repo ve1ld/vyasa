@@ -10,4 +10,10 @@
       url('/fonts/gotu/Gotu-Regular.woff') format('woff'),
       url('/fonts/gotu/Gotu-Regular.ttf') format('ttf');
 }
+
+
 /* This file is for your main   application CSS */
+
+.emphasized-verse {
+@apply bg-orange-500 border-l-8 border-black;
+}
