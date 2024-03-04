@@ -123,7 +123,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
   def verse_display(assigns) do
     ~H"""
-    <div class="mt-8 p-4 border-b-2 border-brandDark" id={@id}>
+    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt

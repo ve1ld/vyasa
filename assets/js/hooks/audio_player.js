@@ -279,7 +279,10 @@ AudioPlayer = {
 
     if(this.isFollowMode) {
       targetNode.focus()
-      targetNode.scrollIntoView({ behavior: 'smooth' });
+      targetNode.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
     }
 
     this.emphasizedDomNode = updatedEmphasizedDomNode;
