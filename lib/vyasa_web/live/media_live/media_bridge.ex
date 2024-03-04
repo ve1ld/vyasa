@@ -285,7 +285,7 @@ end
     >
       <div
         id={@id}
-        class="bg-lime-500 dark:bg-lime-400 h-1.5 w-0"
+        class="bg-brand dark:bg-brandAccentLight h-1.5 w-0"
         data-min={@min}
         data-max={@max}
         data-val={@value}
@@ -315,7 +315,7 @@ end
       <!-- play/pause -->
         <svg id="player-pause" width="50" height="50" fill="none">
           <circle
-            class="text-gray-300 dark:text-gray-500"
+            class="text-gray-300 dark:text-brandAccentLight"
             cx="25"
             cy="25"
             r="24"
@@ -341,7 +341,7 @@ end
             r="11.4"
             cy="12"
             cx="12"
-            class="text-gray-300 dark:text-gray-500"
+            class="text-gray-300 dark:text-brandAccentLight"
           />
           <path
             stroke="null"

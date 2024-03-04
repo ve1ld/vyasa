@@ -139,7 +139,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
               </div>
            </button>
           </dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
+          <dd class="text-zinc-700">
+            <%= render_slot(item) %>
+          </dd>
         </div>
       </dl>
     </div>

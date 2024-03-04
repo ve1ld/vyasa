@@ -27,14 +27,14 @@
     <!-- player -->
     <div id="media-player" class="w-full" role="region" aria-label="Player">
       <.live_component module={VyasaWeb.AudioPlayer} id={"audio-player"}/>
-      <div class="bg-white dark:bg-gray-800 p-4">
+      <div class="bg-white dark:bg-brandDark p-4">
         <div class="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5">
           <div class="pr-5">
             <div class="min-w-0 max-w-xs flex-col space-y-0.5">
-              <h2 :if={@voice} class="text-black dark:text-white text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
+              <h2 :if={@voice} class="text-black dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
                 <%= @voice.title %>
               </h2>
-              <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
+              <p class="text-gray-500 dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
                  <%= if @voice && Map.has_key?(@voice, "artist") do %>
                    <%= @voice.artist %>
                   <% else %>
@@ -50,7 +50,7 @@
           />
           <div
             id="player-info"
-            class="text-gray-500 dark:text-gray-400 flex-row justify-between text-sm font-medium tabular-nums"
+            class="text-gray-500 dark:text-brandAccentLight flex-row justify-between text-sm font-medium tabular-nums"
             phx-update="ignore"
           >
             <div id="player-time"></div>
@@ -58,7 +58,7 @@
           </div>
         </div>
       </div>
-      <div class="bg-gray-50 text-black dark:bg-gray-900 dark:text-white px-1 sm:px-3 lg:px-1 xl:px-3 flex items-center ">
+      <div class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight px-1 sm:px-3 lg:px-1 xl:px-3 flex items-center ">
           <!-- prev -->
         <!-- <.prev_button/> -->
         <!-- /prev -->

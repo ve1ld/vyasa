@@ -24,11 +24,11 @@ AudioPlayer = {
     this.isFollowMode = false;
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
-
-
+    // TODO: needs a refactor, this isn't the audioplayer's responsibilities
+    const emphasizedChapterPreamble = this.emphasizeChapterPreamble()
     this.emphasizedDomNode = {
       prev: null,
-      current: null,
+      current: emphasizedChapterPreamble,
     }
 
     document.addEventListener("click", () => this.enableAudio())
@@ -219,6 +219,23 @@ AudioPlayer = {
 
   formatTime(seconds) {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
+  },
+  /**
+   * Emphasizes then returns the node reference to the chapter's preamble.
+   * This is so that @ mount, at least the chapter preamble shall be emphasized
+   * */
+  emphasizeChapterPreamble() {
+    const preambleNode = document.querySelector("#chapter-preamble")
+    if (!preambleNode) {
+      console.log("[EMPHASIZE], no preamble node found")
+      return null
+    }
+
+    preambleNode.classList.add("emphasized-verse")
+
+    console.log("[EMPHASIZE], preamble node:", preambleNode)
+
+    return preambleNode
   },
   emphasizeActiveEvent(currentTime, events) {
     if (!events) {
