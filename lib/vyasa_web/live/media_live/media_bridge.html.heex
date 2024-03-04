@@ -58,20 +58,26 @@
           </div>
         </div>
       </div>
-      <div class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight px-1 sm:px-3 lg:px-1 xl:px-3 flex items-center ">
+      <div class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight
+                  px-1 sm:px-3 lg:px-1 xl:px-3 flex items-center justify-between">
+        <div id="spacer" class="w-1/6"></div>
           <!-- prev -->
         <!-- <.prev_button/> -->
         <!-- /prev -->
           <!-- play/pause -->
+        <div class="w-4/6 flex items-center">
           <.play_pause_button
             playback={@playback}
           />
+        </div>
           <!-- /play/pause -->
           <!-- next -->
         <!-- <.next_button/> -->
         <!-- next -->
-      <.follow_mode_toggler is_follow_mode={@is_follow_mode} />
-      <.video_toggler should_show_vid={@should_show_vid}/>
+        <div class="w-1/6 flex  gap-x-4">
+          <.follow_mode_toggler is_follow_mode={@is_follow_mode} />
+          <.video_toggler should_show_vid={@should_show_vid}/>
+        </div>
       </div>
     </div>
   <!-- /player -->
@@ -80,7 +86,7 @@
   <div id="video-player-container" :if={@video}>
     <.video_player
       video={@video}
-      heartbeat={@playback.elapsed}
+      heartbeat={@playback && @playback.elapsed}
       should_show_vid={@should_show_vid}
       player_config={@video_player_config}
     />

@@ -123,18 +123,18 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
   def verse_display(assigns) do
     ~H"""
-    <div class="mt-14" id={@id}>
+    <div class="mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
             :if={Map.has_key?(item, :title) && Map.has_key?(item, :verse_id)}
-            class="w-1/6 flex-none text-zinc-500"
+            class="w-1/12 flex-none text-zinc-500"
           >
            <button
               phx-click={JS.push("clickVerseToSeek", value: %{verse_id: item.verse_id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
-              <div class="font-dn text-2xl mb-4">
+              <div class="font-dn text-xl sm:text-2xl mb-4">
                 <%= item.title %>
               </div>
            </button>

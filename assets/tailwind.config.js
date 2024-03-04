@@ -25,6 +25,7 @@ module.exports = {
         secondary: 'var(--color-secondary)',
         brand: 'var(--color-brand)',
         brandLight: 'var(--color-brand-light)',
+        brandExtraLight: 'var(--color-brand-extra-light)',
         brandAccent: 'var(--color-brand-accent)',
         brandAccentLight: 'var(--color-brand-accent-light)',
         brandDark: 'var(--color-brand-dark)',

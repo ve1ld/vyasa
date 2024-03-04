@@ -55,11 +55,11 @@ Floater = {
         autoPlacement({
           allowedPlacements: [
             "right",
-            "bottom"
+            "top"
           ]
         }),
         shift({
-          padding: 32,
+          padding: 8,
           crossAxis: true,
         }),
         offset(6),

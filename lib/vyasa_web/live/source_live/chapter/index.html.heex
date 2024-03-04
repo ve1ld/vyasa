@@ -1,6 +1,5 @@
-<br/>
 <div id="chapter-index-container">
-    <.header>
+    <.header class="p-4">
         <div class="font-dn text-4xl mb-4">
            <%= @selected_transl.target.translit_title %> | <%= @chap.title%>
         </div>
@@ -20,22 +19,22 @@
             title={"#{verse.chapter_no}.#{verse.no}"}
             verse_id={verse.id}
         >
-            <p class="font-dn text-xl">
+            <p class="font-dn text-md sm:text-xl">
                 <%= verse.body |> String.split("।।") |> List.first()  %>
             </p>
         </:item>
         <:item title={"Transliteration"}>
-            <p class="font-dn text-lg">
+            <p class="font-dn text-sm sm:text-lg">
                     <%= verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit  %>
             </p>
         </:item>
         <:item title={"Transliteration Meaning"}>
-            <p class="font-dn text-m">
+            <p class="font-dn text:sm sm:text-lg">
                 <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit_meant  %>
             </p>
         </:item>
         <:item title={"Translation"}>
-            <p class="font-dn text-lg">
+            <p class="font-dn text:sm sm:text-lg">
                 <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body %>
             </p>
         </:item>

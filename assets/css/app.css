@@ -20,6 +20,7 @@
         --blood-red: #5B1208ff;
 
         --white-alabaster: #F3EFE3;
+        --linen: #FAF1E6;
 
         --aerospace-orange: #FD4F00;
         --coral-orange: #FF8349;
@@ -32,6 +33,7 @@
 
         --color-brand: var(--aerospace-orange);
         --color-brand-light: var(--atomic-tangerine);
+        --color-brand-extra-light: var(--linen);
         --color-brand-accent: var(--aerospace-orange);
         --color-brand-accent-light: var(--atomic-tangerine);
 
@@ -61,5 +63,5 @@
 /* This file is for your main   application CSS */
 
 .emphasized-verse {
-  @apply bg-brandAccentLight text-black border-l-8 border-black pl-8;
+  @apply bg-brandAccentLight border-b-0 border-l-8 border-black p-4 pl-8 rounded-sm;
 }

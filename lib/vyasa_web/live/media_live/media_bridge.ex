@@ -33,7 +33,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> assign(video_player_config: encoded_config)
     |> assign(voice: nil)
     |> assign(video: nil)
-    |> assign(should_show_vid: true)
+    |> assign(should_show_vid: false)
     |> assign(is_follow_mode: true)
     |> sync_session()
 
