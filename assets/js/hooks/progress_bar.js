@@ -2,6 +2,9 @@
  * Progress Bar hooks intended to sync playback related actions
  *
  * */
+
+import {seekTimeBridge} from "./media_bridge.js"
+
 ProgressBar = {
   mounted() {
     this.el.addEventListener("click", (e) => {
@@ -42,6 +45,9 @@ ProgressBar = {
       const currXOffset = e.offsetX;
       const playbackPercentage = (currXOffset / maxOffset)
       const positionMs = maxPlaybackMs * playbackPercentage
+      const progressStyleWidth = `${(playbackPercentage)}%`
+      this.el.style.width = progressStyleWidth
+
 
       // Optimistic update
       this.el.value = positionMs;
@@ -51,13 +57,17 @@ ProgressBar = {
         maxOffset,
         currXOffset,
         playbackPercentage,
+        maxPlaybackMs,
         positionMs
       })
-      this.pushEventTo("#media-player-container", "seekToMs", { position_ms: positionMs });
+
+      // push event to bridge
+      seekTimeBridge.dispatchTo(this, {seekToMs: positionMs}, "#media-player-container")
+      //this.pushEventTo(, "seekToMs", {  });
 
       return;
     });
-  },
+  }
 };
 
 

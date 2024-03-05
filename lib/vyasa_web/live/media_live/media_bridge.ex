@@ -125,7 +125,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
    end
 
   @impl true
-  def handle_event("seekToMs", %{"position_ms" => position_ms} = _payload, socket) do
+  def handle_event("seekTime", %{"seekToMs" => position_ms} = _payload, socket) do
     IO.puts("[handleEvent] seekToMs #{position_ms}")
     socket
     |> handle_seek(position_ms)
@@ -146,7 +146,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     end
 
     {:noreply, socket
-     |> push_event("seekTo", %{positionS: position_s}) # dispatches to player -- QQ: will mutliple players be able to receive this simultaneously?
+     #|> push_event("seekTo", %{positionS: position_s}) # dispatches to player -- QQ: will mutliple players be able to receive this simultaneously?
      |> assign(playback: %{playback | played_at: played_at, elapsed: position_s}) #modifies the socket after emitting client-side event
     }
   end
@@ -274,6 +274,7 @@ end
   attr :value, :integer
   def progress_bar(assigns) do
     assigns = assign_new(assigns, :value, fn -> assigns[:min] || 0 end)
+    IO.inspect(assigns, label: "progress hopefully we make some progress")
     ~H"""
     <div
       id={"#{@id}-container"}
@@ -281,7 +282,6 @@ end
       phx-hook="ProgressBar"
       data-value={@value}
       data-max={@max}
-      phx-update="ignore"
     >
       <div
         id={@id}

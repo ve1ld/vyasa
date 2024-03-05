@@ -1,6 +1,9 @@
 /**
+ * Follower
  * Validates if required parameters exist.
  * */
+import {seekTimeBridge} from "./media_bridge.js"
+
 const isYouTubeFnCallable = (dataset) => {
   const {functionName, eventName} = dataset;
   const areFnAndEventNamesProvided = functionName && eventName
@@ -72,12 +75,17 @@ export const RenderYouTubePlayer = {
     injectYoutubeInitialiserScript(videoId, playerConfig)
     this.el.addEventListener("js:listen_now", () => this.play())
     this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
+    seekTimeBridge.sub((data) => {
+      let {seekToMs: time} = data
+      this.seekTo(Math.round(time/1000))
+    })
+    // this.el.addEventListener("seekTo", params => this.seekTo(params))
 
     // events handled by media player:
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
-    this.handleEvent("seekTo", params => this.seekTo(params))
+    // this.handleEvent("seekTo", params => this.seekTo(params))
   },
   // TODO: wire up the event handlers completely
   handlePlayPause() {
@@ -100,16 +108,12 @@ export const RenderYouTubePlayer = {
   stop() {
     console.log("youtube player stop triggerred")
   },
-  seekTo(params) {
+  seekTo(time) {
     console.log("youtube player seekto triggerred", {
-      params,
+      time,
       player: window.youtubePlayer
     })
-    const {
-      positionS: targetS,
-    } = params
-
-    window.youtubePlayer.seekTo(targetS)
+    window.youtubePlayer.seekTo(time)
   }
 };
 

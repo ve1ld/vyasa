@@ -1,5 +1,6 @@
 /**
  * Hooks for audio player.
+ * Leader
  * This hook shall interact with the html5 player via it's known apis, on things like:
  * 1. playback info relevant to the audio player
  *
@@ -18,6 +19,8 @@ let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRect
 let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
+
+import {seekTimeBridge} from "./media_bridge.js"
 
 AudioPlayer = {
   mounted() {
@@ -45,8 +48,10 @@ AudioPlayer = {
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
-    this.handleEvent("seekTo", params => this.seekTo(params))
-
+    seekTimeBridge.sub((data) => {
+      let {seekToMs: time} = data
+      this.seekTo(Math.round(time/1000))
+    })
   },
   /// Handlers:
   toggleFollowMode() {
@@ -148,16 +153,13 @@ AudioPlayer = {
     this.emitMediaBridgeJSUpdate("currentTime", "")
     this.emitMediaBridgeJSUpdate("duration", "")
   },
-  seekTo(params) {
-    const {
-      positionS
-    } = params;
-
-    const beginTime = nowSeconds() - positionS
+  seekTo(time) {
+    console.log({"WOWaudioplayer": time})
+    const beginTime = nowSeconds() - time
     this.playbackBeganAt = beginTime;
-    const formattedBeginTime = this.formatTime(positionS);
+    const formattedBeginTime = this.formatTime(time);
     this.emitMediaBridgeJSUpdate("currentTime", formattedBeginTime)
-    this.player.currentTime = positionS;
+    this.player.currentTime = time;
     this.syncProgressTimer()
   },
 
@@ -204,8 +206,9 @@ AudioPlayer = {
       )
       return
     }
-    const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
-    this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
+    // TODO:
+    //const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
+    //this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
     const durationVal = this.formatTime(this.player.duration);
     const currentTimeVal = this.formatTime(this.player.currentTime);
     console.log("update progress:", {
@@ -246,7 +249,7 @@ AudioPlayer = {
     const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin &&
                                     currentTimeMs < (event.origin + event.duration))
-    console.log("activeEvent:", {currentTimeMs, activeEvent})
+    // console.log("activeEvent:", {currentTimeMs, activeEvent})
 
     if (!activeEvent) {
       console.log("No active event found @ time = ", currentTime)

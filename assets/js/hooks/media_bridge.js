@@ -1,8 +1,11 @@
 /**
- * Hooks for Media player.
+ * Media Event Bus
+ * Hooks for Media Bridge.
  * This hook shall interact with the display elements that give visual info about the generic
  * playback state, as well as emit events necessary to its children (i.e. the concrete players.)
  * */
+
+import { bridged } from "./media/bridged.js";
 
 let nowSeconds = () => Math.round(Date.now() / 1000)
 let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
@@ -12,7 +15,9 @@ let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
 
-MediaPlayer = {
+export const seekTimeBridge = bridged('seekTime');
+
+MediaBridge = {
   mounted() {
     this.currentTime = this.el.querySelector("#player-time")
     this.duration = this.el.querySelector("#player-duration")
@@ -35,4 +40,4 @@ MediaPlayer = {
   }
 }
 
-export default MediaPlayer;
+export default MediaBridge;
