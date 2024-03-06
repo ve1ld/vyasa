@@ -52,11 +52,10 @@ AudioPlayer = {
     /// maps eventName to its deregisterer:
     const seekTimeDeregisterer = seekTimeBridge.sub(payload => {
     console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
-      const {seekToMs: timeMs} = payload
+      const {seekToMs: timeMs} = payload;
       const timeS = Math.round(timeMs/1000);
       this.seekTo(timeS)
     })
-
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
     }

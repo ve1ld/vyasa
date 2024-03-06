@@ -75,10 +75,18 @@ export const RenderYouTubePlayer = {
     injectYoutubeInitialiserScript(videoId, playerConfig)
     this.el.addEventListener("js:listen_now", () => this.play())
     this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
-    seekTimeBridge.sub((data) => {
-      let {seekToMs: time} = data
-      this.seekTo(Math.round(time/1000))
+
+    const seekTimeDeregisterer = seekTimeBridge.sub((payload) => {
+      console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
+      let {seekToMs: timeMs} = payload;
+      const timeS = Math.round(timeMs / 1000);
+      this.seekTo(timeS)
     })
+
+    // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
+    this.eventBridgeDeregisterers = {
+      seekTime: seekTimeDeregisterer,
+    }
     // this.el.addEventListener("seekTo", params => this.seekTo(params))
 
     // events handled by media player:
