@@ -7,7 +7,9 @@ import {seekTimeBridge} from "./media_bridge.js"
 
 ProgressBar = {
   mounted() {
-    this.el.addEventListener("click", (e) => {
+    this.el.addEventListener("click", (e) => this.handleProgressBarClick(e));
+  },
+  handleProgressBarClick(e) {
       // The progress bar is measure in milliseconds,
       // with `min` set at 0 and `max` at the duration of the track.
       //
@@ -27,7 +29,6 @@ ProgressBar = {
       // To find X, we do:
       // console.log("check possible positions info:", {
       //   e.
-
       // })
 
       const {
@@ -45,29 +46,40 @@ ProgressBar = {
       const currXOffset = e.offsetX;
       const playbackPercentage = (currXOffset / maxOffset)
       const positionMs = maxPlaybackMs * playbackPercentage
-      const progressStyleWidth = `${(playbackPercentage)}%`
-      this.el.style.width = progressStyleWidth
+      const progressStyleWidth = `${(playbackPercentage * 100)}%`
+      console.log("updating progress bar to width = ", {
+        containerNode,
+        maxPlaybackMs,
+        maxOffset,
+        currXOffset,
+        playbackPercentage,
+        progressStyleWidth,
+        positionMs,
+      })
 
+      const progressBarNode = document.querySelector("#player-progress")
+      console.assert(!!progressBarNode, "progress bar node must always be present in the dom.")
+      progressBarNode.style.width = progressStyleWidth;
 
       // Optimistic update
       this.el.value = positionMs;
 
       console.log("seek attempt @ positionMs:", {
+        checkThis: this,
+        elem: this.el,
         event: e,
         maxOffset,
         currXOffset,
         playbackPercentage,
         maxPlaybackMs,
-        positionMs
+        positionMs,
+        progressBarNode,
       })
 
       // push event to bridge
-      seekTimeBridge.dispatchTo(this, {seekToMs: positionMs}, "#media-player-container")
-      //this.pushEventTo(, "seekToMs", {  });
-
+      seekTimeBridge.dispatch(this, {seekToMs: positionMs}, "#media-player-container")
       return;
-    });
-  }
+    }
 };
 
 

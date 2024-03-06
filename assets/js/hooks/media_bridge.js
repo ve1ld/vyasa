@@ -2,9 +2,10 @@
  * Media Event Bus
  * Hooks for Media Bridge.
  * This hook shall interact with the display elements that give visual info about the generic
- * playback state, as well as emit events necessary to its children (i.e. the concrete players.)
+ * playback state, as well as emit events necessary to its children (i.e. the concrete players.).
+ *
+ * Event-handling is done using custom bridged events as a proxy.
  * */
-
 import { bridged } from "./media/bridged.js";
 
 let nowSeconds = () => Math.round(Date.now() / 1000)
@@ -15,6 +16,7 @@ let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
 
+// TODO: consider switching to a map of bridges to support other key events
 export const seekTimeBridge = bridged('seekTime');
 
 MediaBridge = {

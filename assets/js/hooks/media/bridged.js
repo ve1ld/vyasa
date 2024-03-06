@@ -1,13 +1,33 @@
+/**
+ * BridgedEventTarget can receive events and push to events that have
+ * listen to itself (ref EventTarget interface: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget)
+ *
+ * BridgedEventTarget is essential in the brokering of playback state between our media_bridge (the broker)
+ * and our media players. Our players exhibit a leader-follower pattern, whereby the actions of the
+ * leader (the audio-player) is followed by the follower (video-player). This aligns with our intention
+ * to be audio-first.
+ * */
 class BridgedEventTarget extends EventTarget {}
 
-export const bridged = (eventName) => {
+/**
+ * Returns event-handling functions corresponding to the given eventName / topic,
+ * which allows others to subscribe/publish to this topic, or to dispatch events (to the server)
+ * using this EventTarget as a proxy.
+ * */
+export const bridged = (eventName) => { // TODO: consider renaming to registerBridgeEvent
     const customEventTarget = new BridgedEventTarget();
 
-    const sub = (eventHandler) => {
+    /**
+     * Registers the given callback to the custom event and
+     * returns a callback (nullary function) that can be used to de-register (undo) this registration.
+     * In order to stop listening to events published by this custom event target, one may
+     * call this nullary function.
+     * */
+    const sub = (callback) => {
         const EventHandler = (event) => {
             const data = event.detail ;
 
-            eventHandler(data);
+            callback(data);
         };
 
         customEventTarget.addEventListener(eventName, EventHandler);
@@ -17,18 +37,32 @@ export const bridged = (eventName) => {
         };
     };
 
-    const pub = (data)  => {
-        customEventTarget.dispatchEvent(new CustomEvent(eventName, { detail: data }));
+    /**
+     * Publishes a payload on this eventName topic via the detail attribute of
+     * a custom event, using the custom event target as a proxy.
+     * */
+    const pub = (payload)  => {
+        const event = new CustomEvent(eventName, { detail: payload })
+        customEventTarget.dispatchEvent(event);
     };
 
-    const dispatch = (el, data) => {
-        customEventTarget.dispatchEvent(new CustomEvent(eventName, { detail: data }));
-        el.pushEventTo(selector, eventName, data);
-    }
-    const dispatchTo = (el, data, selector) => {
-        customEventTarget.dispatchEvent(new CustomEvent(eventName, { detail: data }));
-        el.pushEventTo(selector, eventName, data);
+    /**
+     * Given a payload, publishes it on its topic and also pushes
+     * a server-side event to the LiveView.
+     *
+     * Preconditions:
+     * - if selector has been provided, then it's assumed to be a valid dom selector that can be queried.
+     * */
+    const dispatch = (el, payload, selector=null) => {
+        pub(payload)
+        // customEventTarget.dispatchEvent(new CustomEvent(eventName, { detail: data }));
+        const isTargettedDispatch = !!selector
+        if(isTargettedDispatch) {
+            el.pushEventTo(selector, eventName, payload)
+        } else {
+            el.pushEvent(eventName, payload);
+        }
     }
 
-    return { sub, pub, dispatch, dispatchTo};
+    return { sub, pub, dispatch };
 };

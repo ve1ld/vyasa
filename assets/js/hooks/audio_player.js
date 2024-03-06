@@ -48,14 +48,22 @@ AudioPlayer = {
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
-    seekTimeBridge.sub((data) => {
-      let {seekToMs: time} = data
-      this.seekTo(Math.round(time/1000))
+
+    /// maps eventName to its deregisterer:
+    const seekTimeDeregisterer = seekTimeBridge.sub(payload => {
+    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
+      const {seekToMs: timeMs} = payload
+      const timeS = Math.round(timeMs/1000);
+      this.seekTo(timeS)
     })
+
+    this.eventBridgeDeregisterers = {
+      seekTime: seekTimeDeregisterer,
+    }
   },
   /// Handlers:
   toggleFollowMode() {
-    this.isFollowMode = !this.isFollowMode
+    this.isFollowMode = !this.isFollowMode;
   },
   initSession(sess) {
     localStorage.setItem("session", JSON.stringify(sess))
@@ -162,7 +170,14 @@ AudioPlayer = {
     this.player.currentTime = time;
     this.syncProgressTimer()
   },
-
+  /// Callbacks:
+  seekTimeCallback(payload, handler) {
+    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] payload:", payload);
+    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
+      const {seekToMs: timeMs} = payload
+      const timeS = Math.round(timeMs/1000);
+      this.seekTo(timeS)
+  },
   /**
    * Calls the update progress fn at a set interval,
    * replaces an existing progress timer, if it exists.
@@ -206,9 +221,9 @@ AudioPlayer = {
       )
       return
     }
-    // TODO:
-    //const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
-    //this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
+    // TODO: create a progress bridge to broker changes..
+    const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
+    this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
     const durationVal = this.formatTime(this.player.duration);
     const currentTimeVal = this.formatTime(this.player.currentTime);
     console.log("update progress:", {
