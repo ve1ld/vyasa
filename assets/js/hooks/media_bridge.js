@@ -61,6 +61,33 @@ MediaBridge = {
       const timeS = Math.round(timeMs/1000);
       this.seekToS(originator, timeS)
     })
+
+    const playPauseDeregisterer = playPauseBridge.sub(payload => {
+      console.log("[playPauseBridge::media_bridge:playpause] payload:", payload)
+      const {
+        cmd,
+        player_details: playerDetails,
+        originator,
+      } = payload
+
+      const shouldIgnoreSignal = originator === "MediaBridge";
+      if (shouldIgnoreSignal) {
+        return;
+      }
+
+      // TODO: implement handler for actions emitted via interaction with youtube player
+      console.log(">> [media_bridge.js::playPauseBridge], received a signal but from someone else", payload)
+
+      if (cmd === "play") {
+      }
+      if (cmd === "pause") {
+      }
+    })
+
+    this.eventBridgeDeregisterers = {
+      seekTime: seekTimeDeregisterer,
+      playPause: playPauseDeregisterer,
+    }
   },
   updateTimeDisplay(timeS) {
     const beginTime = nowSeconds() - timeS

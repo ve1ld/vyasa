@@ -74,9 +74,6 @@ export const RenderYouTubePlayer = {
     injectIframeDownloadScript()
     injectYoutubeInitialiserScript(videoId, playerConfig)
 
-    // this.el.addEventListener("js:listen_now", () => this.play())
-    // this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
-
     const seekTimeDeregisterer = seekTimeBridge.sub((payload) => {
       console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
       let {seekToMs: timeMs} = payload;
@@ -95,7 +92,7 @@ export const RenderYouTubePlayer = {
         this.playMedia(playerDetails)
       }
       if (cmd === "pause") {
-        this.pause()
+        this.pauseMedia()
       }
     })
 
@@ -105,31 +102,16 @@ export const RenderYouTubePlayer = {
       seekTime: seekTimeDeregisterer,
       playPause: playPauseDeregisterer,
     }
-    // this.el.addEventListener("seekTo", params => this.seekTo(params))
-
-    // events handled by media player:
-    // this.handleEvent("play_media", (params) => this.playMedia(params))
-    // this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
-    // this.handleEvent("seekTo", params => this.seekTo(params))
-  },
-  // TODO: wire up the event handlers completely
-  handlePlayPause() {
-    console.log("youtube player handlePlayPause triggerred")
-    window.youtubePlayer.playVideo()
   },
   playMedia(params) {
     console.log("youtube player playMedia triggerred", params)
     window.youtubePlayer.playVideo()
   },
-  play(params) {
-    console.log("youtube player play triggerred", params)
-  },
-  pause() {
-    console.log("youtube player pause_media triggerred")
+  pauseMedia() {
+    console.log("youtube player pauseMedia triggerred")
     window.youtubePlayer.pauseVideo()
   },
-
   stop() {
     console.log("youtube player stop triggerred")
   },

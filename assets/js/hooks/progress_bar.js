@@ -39,8 +39,8 @@ ProgressBar = {
 
 
   },
-  handleProgressBarClick(e) {
-    // The progress bar is measure in milliseconds,
+  /*
+    // The progress bar is measured in milliseconds,
     // with `min` set at 0 and `max` at the duration of the track.
     //
     // [--------------------------X-----------]
@@ -60,10 +60,10 @@ ProgressBar = {
     // console.log("check possible positions info:", {
     //   e.
     // })
+   */
+  handleProgressBarClick(e) {
 
-    const {
-      max: maxTime,
-    } = this.el.dataset
+    const { max: maxTime } = this.el.dataset
 
     if (!maxTime) {
       console.log("unable to seek position, payload is incorrect")

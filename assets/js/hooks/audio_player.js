@@ -38,16 +38,12 @@ AudioPlayer = {
     document.addEventListener("click", () => this.enableAudio())
 
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
-    // this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
-    // this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
 
     this.handleEvent("initSession", (sess) => this.initSession(sess)) // TODO: candidate for shifting to media_bridge.js?
     this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params)) // TODO: candidate for shifting to media_bridge.js?
     this.handleEvent("toggleFollowMode", () => this.toggleFollowMode()) // TODO: candidate for shifting to media_bridge.js?
 
     /// Audio playback events:
-    // this.handleEvent("play_media", (params) => this.playMedia(params))
-    this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
 
     /// maps eventName to its deregisterer:
@@ -57,7 +53,6 @@ AudioPlayer = {
       const timeS = Math.round(timeMs/1000);
       this.seekToS(timeS)
     })
-
     const playPauseDeregisterer = playPauseBridge.sub(payload => {
       console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
       const {
@@ -78,11 +73,11 @@ AudioPlayer = {
     }
   },
   /// Handlers:
-  toggleFollowMode() {
-    this.isFollowMode = !this.isFollowMode;
-  },
   initSession(sess) {
     localStorage.setItem("session", JSON.stringify(sess))
+  },
+  toggleFollowMode() {
+    this.isFollowMode = !this.isFollowMode;
   },
   clearNextTimer(){
     clearTimeout(this.nextTimer)
@@ -104,7 +99,7 @@ AudioPlayer = {
   registerEventsTimeline(params) {
     console.log("Register Events Timeline", params);
     this.player.eventsTimeline = params.voice_events;
-    // this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
+    this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
   },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player)
@@ -158,13 +153,12 @@ AudioPlayer = {
     let {sync} = opts
     this.clearNextTimer()
 
-    //
     this.player.play().then(() => {
       if(sync) {
         const currentTime = nowSeconds() - this.playbackBeganAt
         this.player.currentTime = currentTime;
         const formattedCurrentTime = formatDisplayTime(currentTime);
-        this.emitMediaBridgeJSUpdate("currentTime", formattedCurrentTime)
+        // this.emitMediaBridgeJSUpdate("currentTime", formattedCurrentTime)
       }
       this.syncProgressTimer()
     }, error => {
@@ -186,7 +180,6 @@ AudioPlayer = {
     this.emitMediaBridgeJSUpdate("duration", "")
   },
   seekToS(time) {
-    console.log({"WOWaudioplayer": time})
     const beginTime = nowSeconds() - time
     this.playbackBeganAt = beginTime;
     // TODO: remove the rest of the calls to emitMediaBridgeJSUpdate() - no consumers should be emitting directly
