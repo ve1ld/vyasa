@@ -49,73 +49,20 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> push_event("initSession", sess |> Map.take(["id"]))
   end
 
-  defp sync_session(socket) do
-    socket
-  end
+  defp sync_session(socket), do: socket
 
-  defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
-    IO.puts("play_media triggerred with elapsed = #{elapsed}")
-    socket
-    |> assign(playback: update_playback_on_play(playback))
-    |> update_audio_player()
-  end
-
-  # fallback
-  defp play_media(socket, _playback) do
-    socket
-  end
-
-  defp update_playback_on_play(%Playback{elapsed: elapsed} = playback) do
-    now = DateTime.utc_now()
-    played_at = cond do
-      elapsed > 0 -> # resume case
-        DateTime.add(now, -elapsed, :second)
-      elapsed == 0 -> # fresh start case
-        now
-      true ->
-        now
-    end
-
-    %{playback | playing?: true, played_at: played_at}
-  end
-
-  defp pause_media(socket, %Playback{} = playback)  do
-    socket
-    |> assign(playback: update_playback_on_pause(playback))
-    |> update_audio_player()
-    # |> pause_audio()
-  end
-
-  defp update_playback_on_pause( %Playback{
-        played_at: played_at
-    } = playback) do
-    now = DateTime.utc_now()
-    # TODO elapse back into ms floor at yt
-    elapsed = DateTime.diff(now, played_at, :second)
-    %{playback | playing?: false, paused_at: now, elapsed: elapsed}
-  end
-
-
-  # internal action: updates the playback state on seek
-  defp update_playback_on_seek(socket, position_ms) do
-    %{playback: %Playback{
-         playing?: playing?,
-         played_at: played_at,
-      } = playback,
-    } = socket.assigns
-
-
-    position_s = round(position_ms / 1000)
-    played_at = cond do
-      !playing? -> played_at
-      playing? -> DateTime.add(DateTime.utc_now, -position_s, :second)
-    end
-
-    socket
-    |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
-  end
 
   @impl true
+  def handle_event("play_pause", _, %{assigns: %{playback: %{playing?: playing}}} = socket) when not playing do
+    {:noreply, play_media(socket)
+    |> publish_audio()}
+  end
+
+  def handle_event("play_pause", _, %{assigns: %{playback: %{playing?: playing}}} = socket) when playing do
+    {:noreply, pause_media(socket)
+    |> publish_audio()}
+  end
+
   def handle_event("toggle_should_show_vid", _, %{assigns: %{ should_show_vid: flag } = _assigns} = socket) do
     {:noreply, socket |> assign(should_show_vid: !flag)}
   end
@@ -129,22 +76,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       |> push_event("toggleFollowMode", %{})
     }
   end
-
-  @impl true
-  def handle_event("play_pause", _, socket) do
-    %{
-      playback: %Playback {
-        playing?: playing?,
-     } = playback,
-    } = socket.assigns
-
-    {:noreply,
-     cond do
-       playing? -> socket |> pause_media(playback)
-       !playing? -> socket |> play_media(playback)
-      end
-    }
-   end
 
 
   @doc"""
@@ -166,11 +97,78 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> handle_seek(position_ms, "MediaBridge")
     end
 
+
+
+  defp play_media(%{assigns: %{playback: %Playback{elapsed: elapsed} = playback}} = socket) when elapsed > 0 do
+    socket
+    |> assign(playback: %{playback | playing?: true, played_at: DateTime.add(now(), -elapsed, :millisecond)})
+  end
+
+  defp play_media(%{assigns: %{playback: %Playback{elapsed: _e} = playback}} = socket) do
+    socket
+    |> assign(playback: %{playback | playing?: true, played_at: now()})
+  end
+
+  defp play_media(socket), do: socket
+
+  defp pause_media(%{assigns: %{playback: %Playback{played_at: played_at} = playback}} = socket)  do
+    socket
+    |> assign(playback: %{playback | playing?: false, paused_at: now(), elapsed: DateTime.diff(now(), played_at, :millisecond)})
+  end
+
+  defp now(), do: DateTime.utc_now(:millisecond)
+
+
+  defp publish_audio(%{assigns: %{voice: %Voice{title: title, file_path: file_path, duration: duration},
+                                  playback: %Playback{elapsed: elapsed, playing?: playing?}}} = socket) do
+
+    # TODO this should be under the responsibility of playback struct we do  have need for another intermediate undefined struct
+    player_details = %{
+      artist: "Vyasa",
+      title: title,
+      isPlaying: playing?,
+      elapsed: elapsed,
+      filePath: file_path,
+      duration: duration,
+    }
+
+    send_update(self(), VyasaWeb.AudioPlayer, id: "audio-player", player_details: player_details,  event: "media_bridge:update_audio_player")
+
+    socket
+    |> push_event("media_bridge:play_pause", %{
+          cmd: playing? && "play" || "pause",
+          originator: "MediaBridge",
+          player_details: player_details,
+                  })
+                  |> push_event("media_bridge:seekTime", %{
+          seekToMs: elapsed,
+          originator: "MediaBridge"
+                                })
+  end
+
+  defp publish_audio(socket), do: socket
+
+  # internal action: updates the playback state on seek
+  defp update_playback_on_seek(socket, position_ms) do
+    %{playback: %Playback{
+         playing?: playing?,
+         played_at: played_at,
+      } = playback,
+    } = socket.assigns
+
+    played_at = cond do
+      !playing? -> played_at
+      playing? -> DateTime.add(DateTime.utc_now(:millisecond), -position_ms, :millisecond)
+    end
+
+    socket
+    |> assign(playback: %{playback | played_at: played_at, elapsed: position_ms})
+  end
+
   # when originator is the ProgressBar, then shall only consume and carry out internal actions only
   # i.e. updating of the playback state kept in MediaBridge liveview.
   defp handle_seek(socket, position_ms, "ProgressBar" = _originator) do
-    {
-      :noreply,
+    { :noreply,
       socket
       |> update_playback_on_seek(position_ms)
     }
@@ -255,77 +253,6 @@ defp get_target_event([%Event{} | _] = events, verse_id) do
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
   end
 
-defp update_audio_player(%{
-      assigns: %{
-        voice: %Voice{
-          title: title,
-          file_path: file_path,
-          duration: duration,
-        } = _voice,
-        playback: %Playback{
-            elapsed: elapsed,
-            playing?: playing?,
-        } = _playback
-      } = _assigns,
-   } = socket) do
-
-  player_details = %{
-      artist: "testArtist",
-      title: title,
-      isPlaying: playing?,
-      elapsed: elapsed,
-      filePath: file_path,
-      duration: duration,
-  }
-
-  send_update(
-    self(),
-    VyasaWeb.AudioPlayer,
-    id: "audio-player",
-    player_details: player_details,
-    elapsed: elapsed,
-    event: "media_bridge:update_audio_player"
-  )
-
-  cmd = cond do
-    playing? ->
-      "play"
-    !playing? ->
-      "pause"
-  end
-
-  seek_time_payload =  %{
-      seekToMs: elapsed * 1000,
-      originator: "MediaBridge"
-    }
-
-  socket
-  |> push_event("media_bridge:play_pause", %{
-        cmd: cmd,
-        originator: "MediaBridge",
-        player_details: player_details,
-    })
-  |> push_event("media_bridge:seekTime", seek_time_payload)
-
-end
-
-# defp pause_audio(%{assigns: %{playback: %Playback{
-#                                  elapsed: elapsed
-#                               }= _playback} = _assigns} = socket) do
-
-#     send_update(self(), VyasaWeb.AudioPlayer,
-#       id: "audio-player",
-#       event: "pause_audio",
-#       elapsed: elapsed
-#     )
-
-#     socket
-# end
-
-  # defp js_play_pause() do
-  #   JS.push("play_pause") # server event
-  #   # |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM TODO: shift to the new audio player hook instead
-  # end
 
 
   # TODO: add this when implementing tracks & playlists

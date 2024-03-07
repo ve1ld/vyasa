@@ -55,6 +55,7 @@ ProgressBar = {
       currentTime: currentTimeS,
       duration: durationS,
     } = playbackInfo || {};
+    console.log("go", [currentTimeS, durationS]);
 
     const playbackPercentage = (currentTimeS / durationS)
     const progressStyleWidth = `${(playbackPercentage * 100)}%`

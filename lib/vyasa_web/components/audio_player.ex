@@ -10,7 +10,7 @@ defmodule VyasaWeb.AudioPlayer do
     def render(assigns) do
       ~H"""
       <div id="audio-player" phx-hook="AudioPlayer">
-        <audio></audio>
+      <audio></audio>
       </div>
       """
     end
@@ -18,21 +18,18 @@ defmodule VyasaWeb.AudioPlayer do
     @impl true
     def update(%{
           event: "media_bridge:update_audio_player" = event,
-          player_details: player_details,
-          elapsed: elapsed,
-             } = _assigns, socket) do
+          player_details: %{elapsed: elapsed} = player_details,
+               } = _assigns, socket) do
       IO.inspect("handle update case in audio_player.ex with event = #{event}", label: "checkpoint")
 
-      {
-        :ok, socket
-        |> assign(player_details: player_details)
-        |> assign(elapsed: elapsed) # TODO: refactor candidate for removal
+      {:ok, socket
+      |> assign(player_details: player_details)
+      |> assign(elapsed: elapsed) # TODO: refactor candidate for removal
       }
     end
 
     @impl true
-    def update(assigns, socket) do
-      IO.inspect(assigns, label: "what")
+    def update(_assigns, socket) do
       {:ok, socket |> assign(player_details: nil)}
     end
   end

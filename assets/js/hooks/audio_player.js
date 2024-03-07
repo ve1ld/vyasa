@@ -12,7 +12,6 @@
  * general player-agnostic fashion. "Playback" and actual playback (i.e. audio or video playback) is decoupled, allowing
  * us the ability to reconcile bufferring states and other edge cases, mediated by the Media Bridge.
  * */
-let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
 let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
 
 let execJS = (selector, attr) => {
@@ -20,7 +19,7 @@ let execJS = (selector, attr) => {
 }
 
 import {seekTimeBridge, playPauseBridge, heartbeatBridge} from "./media_bridge.js"
-import {formatDisplayTime, nowSeconds} from "../utils/time_utils.js"
+import {formatDisplayTime, now} from "../utils/time_utils.js"
 
 AudioPlayer = {
   mounted() {
@@ -29,8 +28,6 @@ AudioPlayer = {
     this.player = this.el.querySelector("audio")
 
     document.addEventListener("click", () => this.enableAudio())
-
-    this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
 
     this.handleEvent("initSession", (sess) => this.initSession(sess))
 
@@ -62,8 +59,7 @@ AudioPlayer = {
   handleExternalSeekTime(payload) {
     console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
     const {seekToMs: timeMs} = payload;
-    const timeS = Math.round(timeMs/1000);
-    this.seekToS(timeS)
+    this.seekToMs(timeMs)
   },
   echoHeartbeat(heartbeatPayload) {
     const shouldIgnoreSignal = heartbeatPayload.originator === "AudioPlayer";
@@ -115,7 +111,7 @@ AudioPlayer = {
     console.log("PlayMedia", params)
     const {filePath, isPlaying, elapsed, artist, title} = params;
 
-    const beginTime = nowSeconds() - elapsed
+    const beginTime = now() - elapsed
     this.playbackBeganAt = beginTime
     let currentSrc = this.player.src.split("?")[0]
 
@@ -143,7 +139,7 @@ AudioPlayer = {
 
     this.player.play().then(() => {
       if(sync) {
-        const currentTime = nowSeconds() - this.playbackBeganAt
+        const currentTime = now() - this.playbackBeganAt
         this.player.currentTime = currentTime;
         const formattedCurrentTime = formatDisplayTime(currentTime);
       }
@@ -160,8 +156,8 @@ AudioPlayer = {
     this.player.pause()
     this.player.currentTime = 0
   },
-  seekToS(time) {
-    const beginTime = nowSeconds() - time
+  seekToMs(time) {
+    const beginTime = now() - time
     this.playbackBeganAt = beginTime;
     this.player.currentTime = time;
   },

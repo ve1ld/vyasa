@@ -7,10 +7,8 @@
  * Event-handling is done using custom bridged events as a proxy.
  * */
 import { bridged } from "./media/bridged.js";
-import { formatDisplayTime } from "../utils/time_utils.js"
+import { now, formatDisplayTime } from "../utils/time_utils.js"
 
-let nowSeconds = () => Math.round(Date.now() / 1000)
-let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
 let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
 
 let execJS = (selector, attr) => {
@@ -83,12 +81,12 @@ MediaBridge = {
     console.log(">>> progress update, payload:", {payload, eventsTimeline: this.eventsTimeline})
     const playbackInfo = payload.currentPlaybackInfo;
     const {
-      currentTime: currentTimeS,
-      duration: durationS,
+      currentTime: currentTimeMs,
+      duration: durationMs,
     } = playbackInfo || {};
 
-    this.updateTimeDisplay(currentTimeS, durationS)
-    this.emphasizeActiveEvent(currentTimeS, this.eventsTimeline)
+    this.updateTimeDisplay(currentTimeMs, durationMs)
+    this.emphasizeActiveEvent(currentTimeMs, this.eventsTimeline)
   },
   /**
    * Emphasizes then returns the node reference to the chapter's preamble.
@@ -107,13 +105,12 @@ MediaBridge = {
 
     return preambleNode
   },
-  emphasizeActiveEvent(currentTime, events) {
+  emphasizeActiveEvent(currentTimeMs, events) {
     if (!events) {
       console.log("No events found")
       return;
     }
 
-    const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin &&
                                     currentTimeMs < (event.origin + event.duration))
 
@@ -156,7 +153,7 @@ MediaBridge = {
     this.emphasizedDomNode = updatedEmphasizedDomNode;
   },
   startHeartbeat() {
-    const heartbeatInterval = 100 // 10fps, comfortable for human eye
+    const heartbeatInterval = 200 // 5fps, comfortable for human eye
     console.log("Starting heartbeat!")
     const heartbeatPayload = {
       originator: "MediaBridge",
@@ -170,24 +167,24 @@ MediaBridge = {
     console.log("Killing heartbeat!", {heartbeatTimer: this.heartbeatTimer})
     clearInterval(this.heartbeatTimer)
   },
-  updateTimeDisplay(timeS, durationS=null) {
-    const beginTime = nowSeconds() - timeS
-    const currentTimeDisplay = formatDisplayTime(timeS);
+  updateTimeDisplay(timeMs, durationMs=null) {
+    const beginTime = now() - timeMs
+    const currentTimeDisplay = formatDisplayTime(timeMs);
     this.currentTime.innerText = currentTimeDisplay
     console.log("Updated time display to", currentTimeDisplay);
 
-    if(durationS) {
-      const durationDisplay = formatDisplayTime(durationS)
+    if(durationMs) {
+      const durationDisplay = formatDisplayTime(durationMs)
       this.duration.innerText = durationDisplay
     }
   },
-  seekToS(originator, timeS) {
-    console.log("media_bridge.js::seekToS", {timeS, originator})
+  seekToMs(originator, timeMs) {
+    console.log("media_bridge.js::seekToMs", {timeMs, originator})
     const knownOriginators = ["ProgressBar", "MediaBridge"] // temp-list, will be removed
     if (!knownOriginators.includes(originator)) {
       console.warn(`originator ${originator} is not a known originator. Is not one of ${knownOriginators}.`)
     }
-    this.updateTimeDisplay(timeS);
+    this.updateTimeDisplay(timeMs);
   },
   handleUpdateDisplayValue(e) {
     const {
@@ -212,8 +209,8 @@ MediaBridge = {
       seekToMs: timeMs,
       originator,
     } = payload;
-    const timeS = Math.round(timeMs/1000);
-    this.seekToS(originator, timeS)
+
+    this.seekToMs(originator, timeMs)
   },
   handlePlayPause(payload) {
     console.log("[playPauseBridge::media_bridge:playpause] payload:", payload)
