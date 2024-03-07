@@ -25,6 +25,7 @@ export const heartbeatBridge = bridged("heartbeat")
 MediaBridge = {
   mounted() {
     this.currentTime = this.el.querySelector("#player-time")
+    this.isFollowMode = false;
     this.duration = this.el.querySelector("#player-duration")
     this.progress = this.el.querySelector("#player-progress")
 
@@ -57,47 +58,18 @@ MediaBridge = {
       playPauseBridge.pub(playPausePayload)
     })
 
+    this.handleEvent("toggleFollowMode", () => this.toggleFollowMode()) // TODO: candidate for shifting to media_bridge.js?
+
     // this callback: is internal to media_bridge
     // internal action
-    const seekTimeDeregisterer = seekTimeBridge.sub(payload => {
-    console.log("[media_bridge::seekTimeBridgeSub::seekTimeHandler] this:", this);
-      const {
-        seekToMs: timeMs,
-        originator,
-      } = payload;
-      const timeS = Math.round(timeMs/1000);
-      this.seekToS(originator, timeS)
-    })
-
-    const playPauseDeregisterer = playPauseBridge.sub(payload => {
-      console.log("[playPauseBridge::media_bridge:playpause] payload:", payload)
-      const {
-        cmd,
-        player_details: playerDetails,
-        originator,
-      } = payload
-
-      // const shouldIgnoreSignal = originator === "MediaBridge";
-      // if (shouldIgnoreSignal) {
-      //   return;
-      // }
-
-      // TODO: implement handler for actions emitted via interaction with youtube player
-      console.log(">> [media_bridge.js::playPauseBridge], received a signal", payload)
-      if (cmd === "play") {
-        this.startHeartbeat()
-      }
-      if (cmd === "pause") {
-        this.killHeartbeat()
-      }
-    })
-
-    const heartbeatDeregisterer = heartbeatBridge.sub(payload => this.handleHeartbeat(payload))
-
     this.eventBridgeDeregisterers = {
-      seekTime: seekTimeDeregisterer,
-      playPause: playPauseDeregisterer,
+      seekTime: seekTimeBridge.sub(payload => this.handleSeekTime(payload)),
+      playPause: playPauseBridge.sub(payload => this.handlePlayPause(payload)),
+      heartbeat: heartbeatBridge.sub(payload => this.handleHeartbeat(payload)),
     }
+  },
+  toggleFollowMode() {
+    this.isFollowMode = !this.isFollowMode;
   },
   handleHeartbeat(payload) {
     console.log("[MediaBridge::handleHeartbeat]", payload)
@@ -144,7 +116,6 @@ MediaBridge = {
     const currentTimeMs = currentTime * 1000
     const activeEvent = events.find(event => currentTimeMs >= event.origin &&
                                     currentTimeMs < (event.origin + event.duration))
-    // console.log("activeEvent:", {currentTimeMs, activeEvent})
 
     if (!activeEvent) {
       console.log("No active event found @ time = ", currentTime)
@@ -235,6 +206,38 @@ MediaBridge = {
     console.log("Register Events Timeline", params);
     this.eventsTimeline = params.voice_events
   },
+  handleSeekTime(payload) {
+    console.log("[media_bridge::seekTimeBridgeSub::seekTimeHandler] this:", this);
+    const {
+      seekToMs: timeMs,
+      originator,
+    } = payload;
+    const timeS = Math.round(timeMs/1000);
+    this.seekToS(originator, timeS)
+  },
+  handlePlayPause(payload) {
+    console.log("[playPauseBridge::media_bridge:playpause] payload:", payload)
+    const {
+      cmd,
+      player_details: playerDetails,
+      originator,
+    } = payload
+
+    // const shouldIgnoreSignal = originator === "MediaBridge";
+    // if (shouldIgnoreSignal) {
+    //   return;
+    // }
+
+    // TODO: implement handler for actions emitted via interaction with youtube player
+    console.log(">> [media_bridge.js::playPauseBridge], received a signal", payload)
+    if (cmd === "play") {
+      this.startHeartbeat()
+    }
+    if (cmd === "pause") {
+      this.killHeartbeat()
+    }
+  }
+
 }
 
 export default MediaBridge;
