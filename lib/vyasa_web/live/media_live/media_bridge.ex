@@ -90,6 +90,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         played_at: played_at
     } = playback) do
     now = DateTime.utc_now()
+    # TODO elapse back into ms floor at yt
     elapsed = DateTime.diff(now, played_at, :second)
     %{playback | playing?: false, paused_at: now, elapsed: elapsed}
   end
@@ -293,12 +294,18 @@ defp update_audio_player(%{
       "pause"
   end
 
+  seek_time_payload =  %{
+      seekToMs: elapsed * 1000,
+      originator: "MediaBridge"
+    }
+
   socket
   |> push_event("media_bridge:play_pause", %{
         cmd: cmd,
         originator: "MediaBridge",
         player_details: player_details,
     })
+  |> push_event("media_bridge:seekTime", seek_time_payload)
 
 end
 

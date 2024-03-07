@@ -13,8 +13,7 @@ ProgressBar = {
 
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
-      heatbeat: heartbeatDeregisterer,
-      // playPause: playPauseDeregisterer, // FIXME @bala
+      heartbeat: heartbeatDeregisterer,
     }
   },
   handleExternalSeekTime(payload) {
