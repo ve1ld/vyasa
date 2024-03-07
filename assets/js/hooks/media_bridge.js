@@ -36,8 +36,9 @@ MediaBridge = {
       } = seekTimePayload;
       console.assert(originator === "MediaBridge", "This event may only originate from the MediaBridge server.")
       console.log("found me? media_bridge:seekTime", seekTimePayload)
-      seekTimeBridge.pub(seekTimePayload)
 
+      // external action:
+      seekTimeBridge.pub(seekTimePayload)
     })
 
     // this callback: is internal to media_bridge
@@ -60,7 +61,7 @@ MediaBridge = {
   },
   seekToS(originator, timeS) {
     console.log("media_bridge.js::seekToS", {timeS, originator})
-    const knownOriginators = ["ProgressBar"] // temp-list, will be removed
+    const knownOriginators = ["ProgressBar", "MediaBridge"] // temp-list, will be removed
     if (!knownOriginators.includes(originator)) {
       console.warn(`originator ${originator} is not a known originator. Is not one of ${knownOriginators}.`)
     }

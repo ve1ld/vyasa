@@ -30,9 +30,9 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     encoded_config = Jason.encode!(@default_player_config)
     socket = socket
     |> assign(playback: nil)
-    |> assign(video_player_config: encoded_config)
     |> assign(voice: nil)
     |> assign(video: nil)
+    |> assign(video_player_config: encoded_config)
     |> assign(should_show_vid: false)
     |> assign(is_follow_mode: true)
     |> sync_session()
