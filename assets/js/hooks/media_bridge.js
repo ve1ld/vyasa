@@ -20,6 +20,7 @@ let execJS = (selector, attr) => {
 // TODO: consider switching to a map of bridges to support other key events
 export const seekTimeBridge = bridged("seekTime");
 export const playPauseBridge = bridged("playPause")
+export const heartbeatBridge = bridged("heartbeat")
 
 MediaBridge = {
   mounted() {
@@ -27,7 +28,13 @@ MediaBridge = {
     this.duration = this.el.querySelector("#player-duration")
     this.progress = this.el.querySelector("#player-progress")
 
+    const emphasizedChapterPreamble = this.emphasizeChapterPreamble()
+    this.emphasizedDomNode = {
+      prev: null,
+      current: emphasizedChapterPreamble,
+    }
     this.el.addEventListener("update_display_value", e => this.handleUpdateDisplayValue(e))
+    this.handleEvent("media_bridge:registerEventsTimeline", params => this.registerEventsTimeline(params))
 
     // pub: external action
     // this callback pubs to others
@@ -70,30 +77,138 @@ MediaBridge = {
         originator,
       } = payload
 
-      const shouldIgnoreSignal = originator === "MediaBridge";
-      if (shouldIgnoreSignal) {
-        return;
-      }
+      // const shouldIgnoreSignal = originator === "MediaBridge";
+      // if (shouldIgnoreSignal) {
+      //   return;
+      // }
 
       // TODO: implement handler for actions emitted via interaction with youtube player
-      console.log(">> [media_bridge.js::playPauseBridge], received a signal but from someone else", payload)
-
+      console.log(">> [media_bridge.js::playPauseBridge], received a signal", payload)
       if (cmd === "play") {
+        this.startHeartbeat()
       }
       if (cmd === "pause") {
+        this.killHeartbeat()
       }
     })
+
+    const heartbeatDeregisterer = heartbeatBridge.sub(payload => this.handleHeartbeat(payload))
 
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
       playPause: playPauseDeregisterer,
     }
   },
-  updateTimeDisplay(timeS) {
+  handleHeartbeat(payload) {
+    console.log("[MediaBridge::handleHeartbeat]", payload)
+    const shouldIgnoreSignal = payload.originator === "MediaBridge";
+    if(shouldIgnoreSignal) {
+      return;
+    }
+
+    // originator is expected to be audio player
+    console.assert(payload.originator === "AudioPlayer", "MediaBridge only expects heartbeat acks to come from AudioPlayer");
+    console.log(">>> progress update, payload:", {payload, eventsTimeline: this.eventsTimeline})
+    const playbackInfo = payload.currentPlaybackInfo;
+    const {
+      currentTime: currentTimeS,
+      duration: durationS,
+    } = playbackInfo || {};
+
+    this.updateTimeDisplay(currentTimeS, durationS)
+    this.emphasizeActiveEvent(currentTimeS, this.eventsTimeline)
+  },
+  /**
+   * Emphasizes then returns the node reference to the chapter's preamble.
+   * This is so that @ mount, at least the chapter preamble shall be emphasized
+   * */
+  emphasizeChapterPreamble() {
+    const preambleNode = document.querySelector("#chapter-preamble")
+    if (!preambleNode) {
+      console.log("[EMPHASIZE], no preamble node found")
+      return null
+    }
+
+    preambleNode.classList.add("emphasized-verse")
+
+    console.log("[EMPHASIZE], preamble node:", preambleNode)
+
+    return preambleNode
+  },
+  emphasizeActiveEvent(currentTime, events) {
+    if (!events) {
+      console.log("No events found")
+      return;
+    }
+
+    const currentTimeMs = currentTime * 1000
+    const activeEvent = events.find(event => currentTimeMs >= event.origin &&
+                                    currentTimeMs < (event.origin + event.duration))
+    // console.log("activeEvent:", {currentTimeMs, activeEvent})
+
+    if (!activeEvent) {
+      console.log("No active event found @ time = ", currentTime)
+      return;
+    }
+
+    const {
+      verse_id: verseId
+    } = activeEvent;
+
+    if (!verseId) {
+      return
+    }
+
+    const {
+      prev: prevDomNode,
+      current: currDomNode,
+    } = this.emphasizedDomNode; // @ this point it wouldn't have been updated yet
+
+    const updatedEmphasizedDomNode = {}
+    if(currDomNode) {
+      currDomNode.classList.remove("emphasized-verse")
+      updatedEmphasizedDomNode.prev = currDomNode;
+    }
+    const targetDomId = `verse-${verseId}`
+    const targetNode = document.getElementById(targetDomId)
+    targetNode.classList.add("emphasized-verse")
+    updatedEmphasizedDomNode.current = targetNode;
+
+    if(this.isFollowMode) {
+      targetNode.focus()
+      targetNode.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+
+    this.emphasizedDomNode = updatedEmphasizedDomNode;
+  },
+  startHeartbeat() {
+    const heartbeatInterval = 100 // 10fps, comfortable for human eye
+    console.log("Starting heartbeat!")
+    const heartbeatPayload = {
+      originator: "MediaBridge",
+    }
+    const heartbeatTimer = setInterval(() => heartbeatBridge.pub(heartbeatPayload), heartbeatInterval)
+    console.log("Started Heartbeat with:", {heartbeatTimer, heartbeatPayload, heartbeatInterval})
+
+    this.heartbeatTimer = heartbeatTimer
+  },
+  killHeartbeat() {
+    console.log("Killing heartbeat!", {heartbeatTimer: this.heartbeatTimer})
+    clearInterval(this.heartbeatTimer)
+  },
+  updateTimeDisplay(timeS, durationS=null) {
     const beginTime = nowSeconds() - timeS
     const currentTimeDisplay = formatDisplayTime(timeS);
     this.currentTime.innerText = currentTimeDisplay
     console.log("Updated time display to", currentTimeDisplay);
+
+    if(durationS) {
+      const durationDisplay = formatDisplayTime(durationS)
+      this.duration.innerText = durationDisplay
+    }
   },
   seekToS(originator, timeS) {
     console.log("media_bridge.js::seekToS", {timeS, originator})
@@ -115,7 +230,11 @@ MediaBridge = {
     if (extraKey === "style.width") {
       this[key].style.width = val
     }
-  }
+  },
+  registerEventsTimeline(params) {
+    console.log("Register Events Timeline", params);
+    this.eventsTimeline = params.voice_events
+  },
 }
 
 export default MediaBridge;

@@ -212,7 +212,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       |> assign(voice: loaded_voice)
       |> assign(video: video)
       |> assign(playback: Playback.init_playback())
-      |> push_event("registerEventsTimeline", %{voice_events: voice_events |> create_events_payload()})
+      |> push_event("media_bridge:registerEventsTimeline", %{voice_events: voice_events |> create_events_payload()})
      }
   end
 
