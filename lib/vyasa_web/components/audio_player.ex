@@ -26,26 +26,9 @@ defmodule VyasaWeb.AudioPlayer do
       {
         :ok, socket
         |> assign(player_details: player_details)
-        |> assign(elapsed: elapsed)
-        # |> push_event("play_media", player_details) # dispatches to the window, all listeners can hear
+        |> assign(elapsed: elapsed) # TODO: refactor candidate for removal
       }
     end
-
-    ## TODO: consider not even having these updates and just directly push_event from media bridge and allowing the
-    ##       players handle that event..
-    # @impl true
-    # def update(%{
-    #       event: "pause_audio" = event,
-    #       elapsed: elapsed,
-    #          } = _assigns, socket) do
-    #   IO.inspect("handle update case in audio_player.ex with event = #{event}", label: "checkpoint")
-
-    #   {
-    #     :ok, socket
-    #     |> assign(elapsed: elapsed) # TODO: consider not keeping in state, or keeping playback in state instead
-    #     # |> push_event("pause_media", %{elapsed: elapsed})
-    #   }
-    # end
 
     @impl true
     def update(assigns, socket) do

@@ -94,6 +94,26 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     %{playback | playing?: false, paused_at: now, elapsed: elapsed}
   end
 
+
+  # internal action: updates the playback state on seek
+  defp update_playback_on_seek(socket, position_ms) do
+    %{playback: %Playback{
+         playing?: playing?,
+         played_at: played_at,
+      } = playback,
+    } = socket.assigns
+
+
+    position_s = round(position_ms / 1000)
+    played_at = cond do
+      !playing? -> played_at
+      playing? -> DateTime.add(DateTime.utc_now, -position_s, :second)
+    end
+
+    socket
+    |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
+  end
+
   @impl true
   def handle_event("toggle_should_show_vid", _, %{assigns: %{ should_show_vid: flag } = _assigns} = socket) do
     {:noreply, socket |> assign(should_show_vid: !flag)}
@@ -174,24 +194,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   end
 
-  # internal action: updates the playback state on seek
-  defp update_playback_on_seek(socket, position_ms) do
-    %{playback: %Playback{
-         playing?: playing?,
-         played_at: played_at,
-      } = playback,
-    } = socket.assigns
-
-
-    position_s = round(position_ms / 1000)
-    played_at = cond do
-      !playing? -> played_at
-      playing? -> DateTime.add(DateTime.utc_now, -position_s, :second)
-    end
-
-    socket
-    |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
-  end
 
   @impl true
   @doc """
