@@ -2,7 +2,7 @@
  * Follower
  * Validates if required parameters exist.
  * */
-import {seekTimeBridge} from "./media_bridge.js"
+import {seekTimeBridge, playPauseBridge} from "./media_bridge.js"
 
 const isYouTubeFnCallable = (dataset) => {
   const {functionName, eventName} = dataset;
@@ -73,8 +73,9 @@ export const RenderYouTubePlayer = {
     const playerConfig = JSON.parse(serialisedPlayerConfig)
     injectIframeDownloadScript()
     injectYoutubeInitialiserScript(videoId, playerConfig)
-    this.el.addEventListener("js:listen_now", () => this.play())
-    this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
+
+    // this.el.addEventListener("js:listen_now", () => this.play())
+    // this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
 
     const seekTimeDeregisterer = seekTimeBridge.sub((payload) => {
       console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
@@ -83,15 +84,32 @@ export const RenderYouTubePlayer = {
       this.seekToS(timeS)
     })
 
+    const playPauseDeregisterer = playPauseBridge.sub(payload => {
+      console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
+      const {
+        cmd,
+        player_details: playerDetails,
+      } = payload
+
+      if (cmd === "play") {
+        this.playMedia(playerDetails)
+      }
+      if (cmd === "pause") {
+        this.pause()
+      }
+    })
+
+
     // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
+      playPause: playPauseDeregisterer,
     }
     // this.el.addEventListener("seekTo", params => this.seekTo(params))
 
     // events handled by media player:
-    this.handleEvent("play_media", (params) => this.playMedia(params))
-    this.handleEvent("pause_media", () => this.pause())
+    // this.handleEvent("play_media", (params) => this.playMedia(params))
+    // this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
     // this.handleEvent("seekTo", params => this.seekTo(params))
   },

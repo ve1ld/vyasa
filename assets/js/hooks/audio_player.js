@@ -20,7 +20,7 @@ let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
 
-import {seekTimeBridge} from "./media_bridge.js"
+import {seekTimeBridge, playPauseBridge} from "./media_bridge.js"
 import {formatDisplayTime} from "../utils/time_utils.js"
 
 AudioPlayer = {
@@ -36,13 +36,17 @@ AudioPlayer = {
     }
 
     document.addEventListener("click", () => this.enableAudio())
+
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
-    this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
-    this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
-    this.handleEvent("initSession", (sess) => this.initSession(sess))
-    this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params))
-    this.handleEvent("toggleFollowMode", () => this.toggleFollowMode())
-    this.handleEvent("play_media", (params) => this.playMedia(params))
+    // this.el.addEventListener("js:listen_now", () => this.play({sync: true}))
+    // this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
+
+    this.handleEvent("initSession", (sess) => this.initSession(sess)) // TODO: candidate for shifting to media_bridge.js?
+    this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params)) // TODO: candidate for shifting to media_bridge.js?
+    this.handleEvent("toggleFollowMode", () => this.toggleFollowMode()) // TODO: candidate for shifting to media_bridge.js?
+
+    /// Audio playback events:
+    // this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
 
@@ -53,8 +57,24 @@ AudioPlayer = {
       const timeS = Math.round(timeMs/1000);
       this.seekToS(timeS)
     })
+
+    const playPauseDeregisterer = playPauseBridge.sub(payload => {
+      console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
+      const {
+        cmd,
+        player_details: playerDetails,
+      } = payload
+
+      if (cmd === "play") {
+        this.playMedia(playerDetails)
+      }
+      if (cmd === "pause") {
+        this.pause()
+      }
+    })
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
+      playPause: playPauseDeregisterer,
     }
   },
   /// Handlers:
@@ -93,6 +113,10 @@ AudioPlayer = {
       this.play()
     }
   },
+  /**
+   * This "init" behaviour has been mimicked from live_beats.
+   * It is likely there to enable the audio player bufferring.
+   * */
   enableAudio() {
     if(this.player.src){
       document.removeEventListener("click", this.enableAudio)
@@ -104,10 +128,13 @@ AudioPlayer = {
     }
   },
   playMedia(params) {
+    console.log("PlayMedia", params)
     const {filePath, isPlaying, elapsed, artist, title} = params;
+
     const beginTime = nowSeconds() - elapsed
     this.playbackBeganAt = beginTime
     let currentSrc = this.player.src.split("?")[0]
+
     const isLoadedAndPaused = currentSrc === filePath && !isPlaying && this.player.paused;
     if(isLoadedAndPaused){
       this.play({sync: true})

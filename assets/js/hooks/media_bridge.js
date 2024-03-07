@@ -18,7 +18,8 @@ let execJS = (selector, attr) => {
 }
 
 // TODO: consider switching to a map of bridges to support other key events
-export const seekTimeBridge = bridged('seekTime');
+export const seekTimeBridge = bridged("seekTime");
+export const playPauseBridge = bridged("playPause")
 
 MediaBridge = {
   mounted() {
@@ -35,10 +36,18 @@ MediaBridge = {
         originator,
       } = seekTimePayload;
       console.assert(originator === "MediaBridge", "This event may only originate from the MediaBridge server.")
-      console.log("found me? media_bridge:seekTime", seekTimePayload)
 
-      // external action:
       seekTimeBridge.pub(seekTimePayload)
+    })
+
+    this.handleEvent("media_bridge:play_pause", (playPausePayload) => {
+      const {
+        originator,
+      } = playPausePayload;
+      console.assert(originator === "MediaBridge", "This event may only originate from the MediaBridge server.")
+
+      console.log("media_bridge:play_pause", playPausePayload)
+      playPauseBridge.pub(playPausePayload)
     })
 
     // this callback: is internal to media_bridge

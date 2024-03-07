@@ -57,7 +57,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     IO.puts("play_media triggerred with elapsed = #{elapsed}")
     socket
     |> assign(playback: update_playback_on_play(playback))
-    |> play_audio() # TODO: allow the media player hook to send the window events instead of sending it from the audio player
+    |> update_audio_player()
   end
 
   # fallback
@@ -82,7 +82,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   defp pause_media(socket, %Playback{} = playback)  do
     socket
     |> assign(playback: update_playback_on_pause(playback))
-    |> pause_audio()
+    |> update_audio_player()
+    # |> pause_audio()
   end
 
   defp update_playback_on_pause( %Playback{
@@ -251,7 +252,7 @@ defp get_target_event([%Event{} | _] = events, verse_id) do
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
   end
 
-defp play_audio(%{
+defp update_audio_player(%{
       assigns: %{
         voice: %Voice{
           title: title,
@@ -279,28 +280,43 @@ defp play_audio(%{
     VyasaWeb.AudioPlayer,
     id: "audio-player",
     player_details: player_details,
-    event: "play_audio"
+    elapsed: elapsed,
+    event: "media_bridge:update_audio_player"
   )
-  socket
-end
 
-defp pause_audio(%{assigns: %{playback: %Playback{
-                                 elapsed: elapsed
-                              }= _playback} = _assigns} = socket) do
-
-    send_update(self(), VyasaWeb.AudioPlayer,
-      id: "audio-player",
-      event: "pause_audio",
-      elapsed: elapsed
-    )
-
-    socket
-end
-
-  defp js_play_pause() do
-    JS.push("play_pause") # server event
-    |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM TODO: shift to the new audio player hook instead
+  cmd = cond do
+    playing? ->
+      "play"
+    !playing? ->
+      "pause"
   end
+
+  socket
+  |> push_event("media_bridge:play_pause", %{
+        cmd: cmd,
+        originator: "MediaBridge",
+        player_details: player_details,
+    })
+
+end
+
+# defp pause_audio(%{assigns: %{playback: %Playback{
+#                                  elapsed: elapsed
+#                               }= _playback} = _assigns} = socket) do
+
+#     send_update(self(), VyasaWeb.AudioPlayer,
+#       id: "audio-player",
+#       event: "pause_audio",
+#       elapsed: elapsed
+#     )
+
+#     socket
+# end
+
+  # defp js_play_pause() do
+  #   JS.push("play_pause") # server event
+  #   # |> JS.dispatch("js:play_pause", to: "#audio-player") # client-side event, dispatches to DOM TODO: shift to the new audio player hook instead
+  # end
 
 
   # TODO: add this when implementing tracks & playlists
@@ -344,7 +360,7 @@ end
     <button
       type="button"
       class="mx-auto scale-75"
-      phx-click={js_play_pause()}
+      phx-click={JS.push("play_pause")}
       phx-target="#media-player"
       aria-label={
         if @playback && @playback.playing? do
