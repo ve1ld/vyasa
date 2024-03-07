@@ -76,8 +76,8 @@ export const RenderYouTubePlayer = {
 
     // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
     this.eventBridgeDeregisterers = {
-      seekTime: seekTimeBridge.sub((payload) => handleSeekTime(payload)),
-      playPause: playPauseBridge.sub(payload => handlePlayPause(payload)),
+      seekTime: seekTimeBridge.sub((payload) => this.handleSeekTime(payload)),
+      playPause: playPauseBridge.sub(payload => this.handlePlayPause(payload)),
     }
     this.handleEvent("stop", () => this.stop())
   },
