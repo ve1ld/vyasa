@@ -74,35 +74,32 @@ export const RenderYouTubePlayer = {
     injectIframeDownloadScript()
     injectYoutubeInitialiserScript(videoId, playerConfig)
 
-    const seekTimeDeregisterer = seekTimeBridge.sub((payload) => {
-      console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
-      let {seekToMs: timeMs} = payload;
-      const timeS = Math.round(timeMs / 1000);
-      this.seekToS(timeS)
-    })
-
-    const playPauseDeregisterer = playPauseBridge.sub(payload => {
-      console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
-      const {
-        cmd,
-        player_details: playerDetails,
-      } = payload
-
-      if (cmd === "play") {
-        this.playMedia(playerDetails)
-      }
-      if (cmd === "pause") {
-        this.pauseMedia()
-      }
-    })
-
-
     // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
     this.eventBridgeDeregisterers = {
-      seekTime: seekTimeDeregisterer,
-      playPause: playPauseDeregisterer,
+      seekTime: seekTimeBridge.sub((payload) => handleSeekTime(payload)),
+      playPause: playPauseBridge.sub(payload => handlePlayPause(payload)),
     }
     this.handleEvent("stop", () => this.stop())
+  },
+  handlePlayPause(payload) {
+    console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
+    const {
+      cmd,
+      player_details: playerDetails,
+    } = payload
+
+    if (cmd === "play") {
+      this.playMedia(playerDetails)
+    }
+    if (cmd === "pause") {
+      this.pauseMedia()
+    }
+  },
+  handleSeekTime(payload) {
+    console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
+    let {seekToMs: timeMs} = payload;
+    const timeS = Math.round(timeMs / 1000);
+    this.seekToS(timeS)
   },
   playMedia(params) {
     console.log("youtube player playMedia triggerred", params)

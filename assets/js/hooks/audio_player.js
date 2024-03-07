@@ -12,8 +12,6 @@
  * general player-agnostic fashion. "Playback" and actual playback (i.e. audio or video playback) is decoupled, allowing
  * us the ability to reconcile bufferring states and other edge cases, mediated by the Media Bridge.
  * */
-// TODO: shift to utils
-let nowSeconds = () => Math.round(Date.now() / 1000)
 let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
 let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
 
@@ -22,7 +20,7 @@ let execJS = (selector, attr) => {
 }
 
 import {seekTimeBridge, playPauseBridge, heartbeatBridge} from "./media_bridge.js"
-import {formatDisplayTime} from "../utils/time_utils.js"
+import {formatDisplayTime, nowSeconds} from "../utils/time_utils.js"
 
 AudioPlayer = {
   mounted() {
@@ -34,9 +32,7 @@ AudioPlayer = {
 
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
 
-    this.handleEvent("initSession", (sess) => this.initSession(sess)) // TODO: candidate for shifting to media_bridge.js?
-    // this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params)) // TODO: candidate for shifting to media_bridge.js?
-    // this.handleEvent("toggleFollowMode", () => this.toggleFollowMode()) // TODO: candidate for shifting to media_bridge.js?
+    this.handleEvent("initSession", (sess) => this.initSession(sess))
 
     /// Audio playback events:
     this.handleEvent("stop", () => this.stop())
@@ -158,7 +154,6 @@ AudioPlayer = {
     })
   },
   pause(){
-    // this.clearProgressTimer()
     this.player.pause()
   },
   stop(){

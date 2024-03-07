@@ -223,11 +223,6 @@ MediaBridge = {
       originator,
     } = payload
 
-    // const shouldIgnoreSignal = originator === "MediaBridge";
-    // if (shouldIgnoreSignal) {
-    //   return;
-    // }
-
     // TODO: implement handler for actions emitted via interaction with youtube player
     console.log(">> [media_bridge.js::playPauseBridge], received a signal", payload)
     if (cmd === "play") {
