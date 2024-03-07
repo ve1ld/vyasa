@@ -21,6 +21,7 @@ let execJS = (selector, attr) => {
 }
 
 import {seekTimeBridge} from "./media_bridge.js"
+import {formatDisplayTime} from "../utils/time_utils.js"
 
 AudioPlayer = {
   mounted() {
@@ -40,11 +41,7 @@ AudioPlayer = {
     this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
     this.handleEvent("initSession", (sess) => this.initSession(sess))
     this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params))
-
-    /// events handled by non-media player::
     this.handleEvent("toggleFollowMode", () => this.toggleFollowMode())
-
-    /// events handled by media player::
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
@@ -54,7 +51,7 @@ AudioPlayer = {
     console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
       const {seekToMs: timeMs} = payload;
       const timeS = Math.round(timeMs/1000);
-      this.seekTo(timeS)
+      this.seekToS(timeS)
     })
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
@@ -139,7 +136,7 @@ AudioPlayer = {
       if(sync) {
         const currentTime = nowSeconds() - this.playbackBeganAt
         this.player.currentTime = currentTime;
-        const formattedCurrentTime = this.formatTime(currentTime);
+        const formattedCurrentTime = formatDisplayTime(currentTime);
         this.emitMediaBridgeJSUpdate("currentTime", formattedCurrentTime)
       }
       this.syncProgressTimer()
@@ -157,30 +154,26 @@ AudioPlayer = {
     this.player.pause()
     this.player.currentTime = 0
     this.clearProgressTimer()
+    // TODO: this should be handled by media_bridge.js since media_bridge is subbed to seekTime event
     this.emitMediaBridgeJSUpdate("currentTime", "")
     this.emitMediaBridgeJSUpdate("duration", "")
   },
-  seekTo(time) {
+  seekToS(time) {
     console.log({"WOWaudioplayer": time})
     const beginTime = nowSeconds() - time
     this.playbackBeganAt = beginTime;
-    const formattedBeginTime = this.formatTime(time);
-    this.emitMediaBridgeJSUpdate("currentTime", formattedBeginTime)
+    // TODO: remove the rest of the calls to emitMediaBridgeJSUpdate() - no consumers should be emitting directly
+    // this, should be handled by the mediabridge hook
+    // const formattedBeginTime = formatDisplayTime(time);
+    // this.emitMediaBridgeJSUpdate("currentTime", formattedBeginTime)
     this.player.currentTime = time;
     this.syncProgressTimer()
-  },
-  /// Callbacks:
-  seekTimeCallback(payload, handler) {
-    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] payload:", payload);
-    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
-      const {seekToMs: timeMs} = payload
-      const timeS = Math.round(timeMs/1000);
-      this.seekTo(timeS)
   },
   /**
    * Calls the update progress fn at a set interval,
    * replaces an existing progress timer, if it exists.
    * */
+  // TODO: refactor: shift this to media_bridge.js
   syncProgressTimer() {
     const progressUpdateInterval = 100 // 10fps, comfortable for human eye
     const hasExistingTimer = this.progressTimer
@@ -194,6 +187,7 @@ AudioPlayer = {
   },
   /**
    * Updates playback progress information.
+   * TODO: this is the metronome, it could be shifted to the media_bridge.
    * */
   updateProgress() {
     this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
@@ -220,22 +214,17 @@ AudioPlayer = {
       )
       return
     }
-    // TODO: create a progress bridge to broker changes..
     const progressStyleWidth = `${(this.player.currentTime / (this.player.duration) * 100)}%`
     this.emitMediaBridgeJSUpdate("progress", progressStyleWidth, "style.width")
-    const durationVal = this.formatTime(this.player.duration);
-    const currentTimeVal = this.formatTime(this.player.currentTime);
-    console.log("update progress:", {
-      player: this.player,
-      durationVal,
-      currentTimeVal,
-    })
+    const durationVal = formatDisplayTime(this.player.duration);
+    const currentTimeVal = formatDisplayTime(this.player.currentTime);
+    // console.log("update progress:", {
+    //   player: this.player,
+    //   durationVal,
+    //   currentTimeVal,
+    // })
     this.emitMediaBridgeJSUpdate("currentTime", currentTimeVal);
     this.emitMediaBridgeJSUpdate("duration", durationVal)
-  },
-
-  formatTime(seconds) {
-    return new Date(1000 * seconds).toISOString().substring(11, 19)
   },
   /**
    * Emphasizes then returns the node reference to the chapter's preamble.
@@ -304,6 +293,7 @@ AudioPlayer = {
 
     this.emphasizedDomNode = updatedEmphasizedDomNode;
   },
+  // TODO: candidate for refactor, this can use the appropriate eventBridges
   emitMediaBridgeJSUpdate(key, value, extraKey = "innerText") {
     const customEvent = new CustomEvent("update_display_value", {
       bubbles: true,

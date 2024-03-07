@@ -80,7 +80,7 @@ export const RenderYouTubePlayer = {
       console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
       let {seekToMs: timeMs} = payload;
       const timeS = Math.round(timeMs / 1000);
-      this.seekTo(timeS)
+      this.seekToS(timeS)
     })
 
     // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
@@ -109,14 +109,13 @@ export const RenderYouTubePlayer = {
   },
   pause() {
     console.log("youtube player pause_media triggerred")
-    window.youtubePlayer.seekTo(100)
     window.youtubePlayer.pauseVideo()
   },
 
   stop() {
     console.log("youtube player stop triggerred")
   },
-  seekTo(time) {
+  seekToS(time) {
     console.log("youtube player seekto triggerred", {
       time,
       player: window.youtubePlayer

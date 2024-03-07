@@ -124,14 +124,57 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
    end
 
+
+  @doc"""
+  Handles seekTime event originated from the ProgressBar
+  """
+  @impl true
+  def handle_event("seekTime", %{"seekToMs" => position_ms, "originator" => "ProgressBar" = originator} = _payload, socket) do
+    IO.puts("[handleEvent] seekToMs #{position_ms} ORIGINATOR = #{originator}")
+    socket
+    |> handle_seek(position_ms, originator)
+    end
+
+  # Fallback for seekTime, if no originator is present, shall be to treat MediaBridge as the originator
+  # and call handle_seek.
   @impl true
   def handle_event("seekTime", %{"seekToMs" => position_ms} = _payload, socket) do
     IO.puts("[handleEvent] seekToMs #{position_ms}")
     socket
-    |> handle_seek(position_ms)
+    |> handle_seek(position_ms, "MediaBridge")
     end
 
-  defp handle_seek(socket, position_ms) do
+  # when originator is the ProgressBar, then shall only consume and carry out internal actions only
+  # i.e. updating of the playback state kept in MediaBridge liveview.
+  defp handle_seek(socket, position_ms, "ProgressBar" = _originator) do
+    {
+      :noreply,
+      socket
+      |> update_playback_on_seek(position_ms)
+    }
+  end
+
+  # when the seek is originated by the MediaBridge, then it shall carry out both internal & external actions
+  # internal: updating of the playback state kept in the MediaBridge liveview
+  # external: pubbing via the seekTime targetEvent
+  defp handle_seek(socket, position_ms, "MediaBridge" = originator) do
+    seek_time_payload =  %{
+      seekToMs: position_ms,
+      originator: originator
+    }
+
+    IO.inspect("handle_seek originator: #{originator}, playback position ms: #{position_ms}", label: "checkpoint")
+
+    {
+      :noreply,
+      socket
+      |> push_event("media_bridge:seekTime", seek_time_payload)
+      |> update_playback_on_seek(position_ms)
+    }
+  end
+
+  # internal action: updates the playback state on seek
+  defp update_playback_on_seek(socket, position_ms) do
     %{playback: %Playback{
          playing?: playing?,
          played_at: played_at,
@@ -145,10 +188,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       playing? -> DateTime.add(DateTime.utc_now, -position_s, :second)
     end
 
-    {:noreply, socket
-     #|> push_event("seekTo", %{positionS: position_s}) # dispatches to player -- QQ: will mutliple players be able to receive this simultaneously?
-     |> assign(playback: %{playback | played_at: played_at, elapsed: position_s}) #modifies the socket after emitting client-side event
-    }
+    socket
+    |> assign(playback: %{playback | played_at: played_at, elapsed: position_s})
   end
 
   @impl true
@@ -183,6 +224,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   def handle_info({_, :playback_sync, %{verse_id: verse_id} = _inner_msg} = _msg, socket) do
     %{voice: %{ events: events } = _voice} = socket.assigns
 
+    IO.inspect("handle_info::playback_sync", label: "checkpoint")
+
     %Event{
       origin: target_ms
     } = _target_event = events
@@ -190,7 +233,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
 
     socket
-    |> handle_seek(target_ms)
+    |> handle_seek(target_ms, "MediaBridge")
   end
 
   def handle_info(msg, socket) do
@@ -206,7 +249,7 @@ end
 defp get_target_event([%Event{} | _] = events, verse_id) do
   events
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
- end
+  end
 
 defp play_audio(%{
       assigns: %{
