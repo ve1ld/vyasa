@@ -8,18 +8,9 @@ defmodule VyasaWeb.AudioPlayer do
 
     @impl true
     def render(assigns) do
-      IO.inspect(assigns)
       ~H"""
       <div id="audio-player" phx-hook="AudioPlayer">
         <audio></audio>
-        <br/>
-        <br/>
-        <br/>
-        <h1>audio player :: my state is:</h1>
-        <%= inspect @player_details %>
-
-        <br/>
-        <%= inspect @socket.assigns%>
       </div>
       """
     end
@@ -34,7 +25,7 @@ defmodule VyasaWeb.AudioPlayer do
       {
         :ok, socket
         |> assign(player_details: player_details)
-        |> push_event("play_media", player_details)
+        |> push_event("play_media", player_details) # dispatches to the window, all listeners can hear
       }
     end
 

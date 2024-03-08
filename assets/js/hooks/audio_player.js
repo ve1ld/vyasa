@@ -21,8 +21,15 @@ let execJS = (selector, attr) => {
 
 AudioPlayer = {
   mounted() {
+    this.isFollowMode = false;
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
+    // TODO: needs a refactor, this isn't the audioplayer's responsibilities
+    const emphasizedChapterPreamble = this.emphasizeChapterPreamble()
+    this.emphasizedDomNode = {
+      prev: null,
+      current: emphasizedChapterPreamble,
+    }
 
     document.addEventListener("click", () => this.enableAudio())
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
@@ -31,14 +38,20 @@ AudioPlayer = {
     this.handleEvent("initSession", (sess) => this.initSession(sess))
     this.handleEvent("registerEventsTimeline", params => this.registerEventsTimeline(params))
 
+    /// events handled by non-media player::
+    this.handleEvent("toggleFollowMode", () => this.toggleFollowMode())
 
     /// events handled by media player::
     this.handleEvent("play_media", (params) => this.playMedia(params))
     this.handleEvent("pause_media", () => this.pause())
     this.handleEvent("stop", () => this.stop())
     this.handleEvent("seekTo", params => this.seekTo(params))
+
   },
   /// Handlers:
+  toggleFollowMode() {
+    this.isFollowMode = !this.isFollowMode
+  },
   initSession(sess) {
     localStorage.setItem("session", JSON.stringify(sess))
   },
@@ -62,6 +75,7 @@ AudioPlayer = {
   registerEventsTimeline(params) {
     console.log("Register Events Timeline", params);
     this.player.eventsTimeline = params.voice_events;
+    // this.emphasizeActiveEvent(this.player.currentTime, this.player.eventsTimeline)
   },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player)
@@ -206,6 +220,23 @@ AudioPlayer = {
   formatTime(seconds) {
     return new Date(1000 * seconds).toISOString().substring(11, 19)
   },
+  /**
+   * Emphasizes then returns the node reference to the chapter's preamble.
+   * This is so that @ mount, at least the chapter preamble shall be emphasized
+   * */
+  emphasizeChapterPreamble() {
+    const preambleNode = document.querySelector("#chapter-preamble")
+    if (!preambleNode) {
+      console.log("[EMPHASIZE], no preamble node found")
+      return null
+    }
+
+    preambleNode.classList.add("emphasized-verse")
+
+    console.log("[EMPHASIZE], preamble node:", preambleNode)
+
+    return preambleNode
+  },
   emphasizeActiveEvent(currentTime, events) {
     if (!events) {
       console.log("No events found")
@@ -230,18 +261,31 @@ AudioPlayer = {
       return
     }
 
+    const {
+      prev: prevDomNode,
+      current: currDomNode,
+    } = this.emphasizedDomNode; // @ this point it wouldn't have been updated yet
 
-    const classVals = ["bg-orange-500", "border-l-8", "border-black"]
+    // TODO: shift to media_bridge specific hook
+    const updatedEmphasizedDomNode = {}
+    if(currDomNode) {
+      currDomNode.classList.remove("emphasized-verse")
+      updatedEmphasizedDomNode.prev = currDomNode;
+    }
+    const targetDomId = `verse-${verseId}`
+    const targetNode = document.getElementById(targetDomId)
+    targetNode.classList.add("emphasized-verse")
+    updatedEmphasizedDomNode.current = targetNode;
 
-    // TODO: this is a pedestrian approach to visual emphasis that can be improved significantly:
-    for (const otherDomNode of document.querySelectorAll('[id*="verse-"]')) {
-      classVals.forEach(classVal => otherDomNode.classList.remove(classVal))
-      otherDomNode.classList.remove("bg-orange-500")
+    if(this.isFollowMode) {
+      targetNode.focus()
+      targetNode.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
     }
 
-    const targetDomId = `verse-${verseId}`
-    const node = document.getElementById(targetDomId)
-    classVals.forEach(classVal => node.classList.add(classVal))
+    this.emphasizedDomNode = updatedEmphasizedDomNode;
   },
   emitMediaBridgeJSUpdate(key, value, extraKey = "innerText") {
     const customEvent = new CustomEvent("update_display_value", {

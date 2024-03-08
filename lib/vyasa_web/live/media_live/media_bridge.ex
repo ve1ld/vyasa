@@ -11,12 +11,30 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback}
 
+  @default_player_config %{
+    height: "300",
+    width: "400",
+    playerVars: %{ # see supported params here: https://developers.google.com/youtube/player_parameters#Parameters
+      autoplay: 1,
+      mute: 1,
+      start: 0,
+      controls: 0,
+      enablejsapi: 1,
+      iv_load_policy: 3, # hide video annotations
+      playsinline: 1, # ensures it doesn't full-screen on ios
+    }
+  }
+
   @impl true
   def mount(_params, _sess, socket) do
+    encoded_config = Jason.encode!(@default_player_config)
     socket = socket
     |> assign(playback: nil)
+    |> assign(video_player_config: encoded_config)
     |> assign(voice: nil)
     |> assign(video: nil)
+    |> assign(should_show_vid: false)
+    |> assign(is_follow_mode: true)
     |> sync_session()
 
 
@@ -35,9 +53,19 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
   end
 
-  # TODO: handle vid next
   defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
     IO.puts("play_media triggerred with elapsed = #{elapsed}")
+    socket
+    |> assign(playback: update_playback_on_play(playback))
+    |> play_audio() # TODO: allow the media player hook to send the window events instead of sending it from the audio player
+  end
+
+  # fallback
+  defp play_media(socket, _playback) do
+    socket
+  end
+
+  defp update_playback_on_play(%Playback{elapsed: elapsed} = playback) do
     now = DateTime.utc_now()
     played_at = cond do
       elapsed > 0 -> # resume case
@@ -48,33 +76,36 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         now
     end
 
-    playback = %{playback | playing?: true, played_at: played_at}
-
-    socket
-    |> assign(playback: playback)
-    |> play_audio()
-    # video...
+    %{playback | playing?: true, played_at: played_at}
   end
 
-  # fallback
-  defp play_media(socket, _playback) do
+  defp pause_media(socket, %Playback{} = playback)  do
     socket
+    |> assign(playback: update_playback_on_pause(playback))
+    |> pause_audio()
   end
 
-  defp pause_media(socket, %Playback{
+  defp update_playback_on_pause( %Playback{
         played_at: played_at
-    } = playback)  do
-
+    } = playback) do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, played_at, :second)
-    playback = %{playback | playing?: false, paused_at: now, elapsed: elapsed}
+    %{playback | playing?: false, paused_at: now, elapsed: elapsed}
+  end
 
-    IO.puts("pause_media triggerred with elapsed = #{elapsed}")
+  @impl true
+  def handle_event("toggle_should_show_vid", _, %{assigns: %{ should_show_vid: flag } = _assigns} = socket) do
+    {:noreply, socket |> assign(should_show_vid: !flag)}
+  end
 
-    socket
-    |> assign(playback: playback)
-    |> pause_audio()
-    # handle video next
+  @impl true
+  def handle_event("toggle_is_follow_mode", _, %{assigns: %{ is_follow_mode: flag } = _assigns} = socket) do
+    {
+      :noreply,
+      socket
+      |> assign(is_follow_mode: !flag)
+      |> push_event("toggleFollowMode", %{})
+    }
   end
 
   @impl true
@@ -126,15 +157,16 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   A playback struct is created that represents this synced-state and the client-side hook is triggerred
   to register the associated events timeline.
   """
-  def handle_info({_, :voice_ack, voice}, socket) do
+  def handle_info({_, :voice_ack, %Voice{video: video} = voice}, socket) do
      %Voice{
-       events: voice_events
-     }= loaded_voice = voice |> Medium.load_events()
+       events: voice_events,
+     } = loaded_voice = voice |> Medium.load_events()
 
      {
       :noreply,
       socket
       |> assign(voice: loaded_voice)
+      |> assign(video: video)
       |> assign(playback: Playback.init_playback())
       |> push_event("registerEventsTimeline", %{voice_events: voice_events |> create_events_payload()})
      }
@@ -174,7 +206,7 @@ end
 defp get_target_event([%Event{} | _] = events, verse_id) do
   events
   |> Enum.find(fn e -> e.verse_id === verse_id  end)
-end
+ end
 
 defp play_audio(%{
       assigns: %{
@@ -206,7 +238,6 @@ defp play_audio(%{
     player_details: player_details,
     event: "play_audio"
   )
-
   socket
 end
 
@@ -254,7 +285,7 @@ end
     >
       <div
         id={@id}
-        class="bg-lime-500 dark:bg-lime-400 h-1.5 w-0"
+        class="bg-brand dark:bg-brandAccentLight h-1.5 w-0"
         data-min={@min}
         data-max={@max}
         data-val={@value}
@@ -262,7 +293,7 @@ end
       </div>
     </div>
     """
-  end
+    end
 
   attr :playback, Playback, required: false
   def play_pause_button(assigns) do
@@ -284,7 +315,7 @@ end
       <!-- play/pause -->
         <svg id="player-pause" width="50" height="50" fill="none">
           <circle
-            class="text-gray-300 dark:text-gray-500"
+            class="text-gray-300 dark:text-brandAccentLight"
             cx="25"
             cy="25"
             r="24"
@@ -310,7 +341,7 @@ end
             r="11.4"
             cy="12"
             cx="12"
-            class="text-gray-300 dark:text-gray-500"
+            class="text-gray-300 dark:text-brandAccentLight"
           />
           <path
             stroke="null"
@@ -358,4 +389,48 @@ end
     """
   end
 
- end
+  def video_player(assigns) do
+    ~H"""
+    <div>
+      <div
+        class={if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"}
+        id={"container-YouTubePlayer"}
+        heartbeat={@heartbeat}
+        phx-hook={"Floater"}
+        data-floater-id={"container-YouTubePlayer"}
+        data-floater-reference-selector={".emphasized-verse"}
+        >
+        <.live_component
+          module={VyasaWeb.YouTubePlayer}
+          id={"YouTubePlayer"}
+          video_id={@video.ext_uri}
+          player_config={@player_config}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  def video_toggler(assigns) do
+    ~H"""
+    <div
+      phx-click={JS.push("toggle_should_show_vid")}
+    >
+      <.icon :if={@should_show_vid} name="hero-video-camera-slash"/>
+      <.icon :if={!@should_show_vid} name="hero-video-camera"/>
+    </div>
+    """
+  end
+
+  def follow_mode_toggler(assigns) do
+    ~H"""
+    <div
+      phx-click={JS.push("toggle_is_follow_mode")}
+    >
+      <.icon :if={@is_follow_mode} name="hero-rectangle-stack"/>
+      <.icon :if={!@is_follow_mode} name="hero-queue-list"/>
+    </div>
+    """
+  end
+
+end

@@ -16,10 +16,11 @@ defmodule Vyasa.Medium.Voice do
       field(:artist, {:array, :string})
     end
 
+    has_one :video, Video, references: :id, foreign_key: :voice_id
     has_many :events, Event, references: :id, foreign_key: :voice_id, preload_order: [asc: :origin]
+
     belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
-    has_one :video, Video, references: :id, foreign_key: :voice_id
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id
 
     timestamps(type: :utc_datetime)
