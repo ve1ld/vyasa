@@ -37,8 +37,10 @@ defmodule Vyasa.Medium.Voice do
 
   def changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:title, :duration, :lang, :file_path, :chapter_no, :source_id])
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
     |> cast_embed(:meta, with: &meta_changeset/2)
+    |> cast_assoc(:video)
+    |> cast_assoc(:events)
   end
 
   def meta_changeset(voice, attrs) do
