@@ -142,33 +142,7 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-  # def get_verses_by_chapter(no, source_title, lang) do
-  #   (from v in Verses,
-  #   where: v.chapter_no == ^no and v.source =)
-
-
-
-
-  #   # (from c in Chapter,
-  #   #   inner_join: src in assoc(c, :source),
-  #   #   where: src.title == ^source_title and c.no == ^no,
-  #   #   preload: [verses: ^(from v in Verse, preload: [translations: ^target_lang]) , translations: ^target_lang])
-  #   #   # left_join: v in assoc(c, :verses),
-  #   #   # on: c.source_id == v.source_id,
-  #   #   # where: c.no == ^no,
-  #   #   # left_join: t in assoc(v, :translations),
-  #   #   # on: t.source_id == v.source_id,
-  #   #   # where: t.lang == ^lang
-  #   # )
-  #   # |> Repo.all()
-  #   # # |> select_merge([src, c, v, t], %{
-  #   # #                   c |  verses: [%{v | translations: [t]}]
-  #   # #                 })
-  #   # # |> Repo.all()
-
-  # end
-
-  def get_chapter(no, source_title, lang) do
+    def get_chapter(no, source_title, lang) do
     %Source{id: id} = _src = get_source_by_title(source_title)
 
     target_lang = (from ts in Translation,

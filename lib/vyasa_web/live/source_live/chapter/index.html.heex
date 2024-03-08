@@ -14,7 +14,7 @@
         </:subtitle>
     </.header>
 
-    <.verse_display id={dom_id} :for={{dom_id, verse} <- @streams.verses}>
+    <.verse_display id={dom_id} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses}>
         <:item
             title={"#{verse.chapter_no}.#{verse.no}"}
             verse_id={verse.id}
@@ -24,18 +24,18 @@
             </p>
         </:item>
         <:item title={"Transliteration"}>
-            <p class="font-dn text-sm sm:text-lg">
-                    <%= verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit  %>
+        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
+                <%= hd(verse.translations).target.body_translit  %>
             </p>
         </:item>
         <:item title={"Transliteration Meaning"}>
-            <p class="font-dn text:sm sm:text-lg">
-                <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body_translit_meant  %>
+        <p :if={Enum.any?(verse.translations)} class="font-dn text-m">
+                <%=  hd(verse.translations).target.body_translit_meant  %>
             </p>
         </:item>
         <:item title={"Translation"}>
-            <p class="font-dn text:sm sm:text-lg">
-                <%=  verse && Enum.any?(verse.translations) && hd(verse.translations).target.body %>
+        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
+                <%=  hd(verse.translations).target.body %>
             </p>
         </:item>
     </.verse_display>
