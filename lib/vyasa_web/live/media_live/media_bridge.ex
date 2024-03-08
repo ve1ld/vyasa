@@ -467,6 +467,7 @@ end
         phx-hook={"Floater"}
         data-floater-id={"container-YouTubePlayer"}
         data-floater-reference-selector={".emphasized-verse"}
+        data-floater-fallback-reference-selector={"#media-player-container"}
         >
         <.live_component
           module={VyasaWeb.YouTubePlayer}
