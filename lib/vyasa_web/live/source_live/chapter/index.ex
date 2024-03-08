@@ -104,8 +104,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
           description: socket.assigns.chap.body,
           type: "website",
+          image: url(~p"/images/the_vyasa_project_1.png"),
           url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
-              })
+      })
   end
 
   @doc """

@@ -22,9 +22,10 @@ defmodule VyasaWeb.SourceLive.Index do
 
   defp assign_meta(socket) do
     assign(socket, :meta, %{
-      title: "Sources",
-      description: "Explore the wealth of indic knowledge, distilled into words",
+      title: "Sources to Explore",
+      description: "Explore the wealth of indic knowledge, distilled into words.",
       type: "website",
+      image: url(~p"/images/the_vyasa_project_1.png"),
       url: url(socket, ~p"/explore/"),
     })
   end

@@ -42,6 +42,7 @@ defmodule VyasaWeb.SourceLive.Show do
       title: socket.assigns.title,
       description: "Explore the #{socket.assigns.title}",
       type: "website",
+      image: url(~p"/images/the_vyasa_project_1.png"),
       url: url(socket, ~p"/explore/#{socket.assigns.title}")
     })
   end
