@@ -67,6 +67,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   def handle_event("clickVerseToSeek",
                 %{"verse_id" => verse_id} = _payload,
                 %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+    IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
   end

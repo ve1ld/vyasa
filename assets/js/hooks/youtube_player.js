@@ -1,6 +1,9 @@
 /**
+ * Follower
  * Validates if required parameters exist.
  * */
+import {seekTimeBridge, playPauseBridge} from "./media_bridge.js"
+
 const isYouTubeFnCallable = (dataset) => {
   const {functionName, eventName} = dataset;
   const areFnAndEventNamesProvided = functionName && eventName
@@ -70,46 +73,51 @@ export const RenderYouTubePlayer = {
     const playerConfig = JSON.parse(serialisedPlayerConfig)
     injectIframeDownloadScript()
     injectYoutubeInitialiserScript(videoId, playerConfig)
-    this.el.addEventListener("js:listen_now", () => this.play())
-    this.el.addEventListener("js:play_pause", () => this.handlePlayPause())
 
-    // events handled by media player:
-    this.handleEvent("play_media", (params) => this.playMedia(params))
-    this.handleEvent("pause_media", () => this.pause())
+    // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
+    this.eventBridgeDeregisterers = {
+      seekTime: seekTimeBridge.sub((payload) => this.handleSeekTime(payload)),
+      playPause: playPauseBridge.sub(payload => this.handlePlayPause(payload)),
+    }
     this.handleEvent("stop", () => this.stop())
-    this.handleEvent("seekTo", params => this.seekTo(params))
   },
-  // TODO: wire up the event handlers completely
-  handlePlayPause() {
-    console.log("youtube player handlePlayPause triggerred")
-    window.youtubePlayer.playVideo()
+  handlePlayPause(payload) {
+    console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
+    const {
+      cmd,
+      player_details: playerDetails,
+    } = payload
+
+    if (cmd === "play") {
+      this.playMedia(playerDetails)
+    }
+    if (cmd === "pause") {
+      this.pauseMedia()
+    }
+  },
+  handleSeekTime(payload) {
+    console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
+    let {seekToMs: timeMs} = payload;
+    const timeS = Math.round(timeMs / 1000);
+    this.seekToS(timeS)
   },
   playMedia(params) {
     console.log("youtube player playMedia triggerred", params)
     window.youtubePlayer.playVideo()
   },
-  play(params) {
-    console.log("youtube player play triggerred", params)
-  },
-  pause() {
-    console.log("youtube player pause_media triggerred")
-    window.youtubePlayer.seekTo(100)
+  pauseMedia() {
+    console.log("youtube player pauseMedia triggerred")
     window.youtubePlayer.pauseVideo()
   },
-
   stop() {
     console.log("youtube player stop triggerred")
   },
-  seekTo(params) {
+  seekToS(time) {
     console.log("youtube player seekto triggerred", {
-      params,
+      time,
       player: window.youtubePlayer
     })
-    const {
-      positionS: targetS,
-    } = params
-
-    window.youtubePlayer.seekTo(targetS)
+    window.youtubePlayer.seekTo(time)
   }
 };
 
