@@ -71,11 +71,15 @@ AudioPlayer = {
     const echoPayload = {
       originator: "AudioPlayer",
       currentPlaybackInfo: {
+        // values read from html5 audio player:
         isPlaying: !this.player.paused,
-        currentTime: this.player.currentTime,
-        duration: this.player.duration,
+        currentTime: this.player.currentTime * 1000,
+        duration: this.player.duration * 1000,
       }
     }
+    // console.log("[debug]: echoPayload", echoPayload)
+    console.log("[debug]: currentTime", this.player.currentTime)
+    console.log("[debug]: duration", this.player.duration)
     heartbeatBridge.pub(echoPayload)
   },
   initSession(sess) {
@@ -159,7 +163,7 @@ AudioPlayer = {
   seekToMs(time) {
     const beginTime = now() - time
     this.playbackBeganAt = beginTime;
-    this.player.currentTime = time;
+    this.player.currentTime = time / 1000;
   },
 }
 
