@@ -1,7 +1,7 @@
 defmodule VyasaWeb.SourceLive.Show do
   use VyasaWeb, :live_view
   alias Vyasa.Written
-  alias Vyasa.Written.{Source}
+  alias Vyasa.Written.{Chapter}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -11,12 +11,17 @@ defmodule VyasaWeb.SourceLive.Show do
 
   @impl true
   def handle_params(%{"source_title" => source_title}, _, socket) do
-    %Source{
-      id: id,
-      verses: verses,
-      chapters: chapters,
-      title: title
-    } = Written.get_source_by_title(source_title)
+    # %Source{
+    #   id: id,
+    #   # verses: verses,
+    #   chapters: chapters,
+    #   title: title
+    # } = Written.get_source_by_title(source_title)
+
+    [%Chapter{} |_]= chapters = Written.get_chapters_by_src(source_title)
+    src = hd(chapters).source
+    title = src.title
+    id = src.id
 
 
     {
@@ -25,7 +30,7 @@ defmodule VyasaWeb.SourceLive.Show do
       |> assign(:id, id)
       |> assign(:title, title)
       |> assign(:page_title, title)
-      |> stream(:verses, verses)
+      # |> stream(:verses, verses)
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }

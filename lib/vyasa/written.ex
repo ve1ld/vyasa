@@ -123,6 +123,18 @@ defmodule Vyasa.Written do
     Repo.one(query)
   end
 
+  def get_chapters_by_src(src_title) do
+    ( from c in Chapter,
+      inner_join: src in assoc(c, :source),
+      where: src.title == ^src_title,
+      inner_join: t in assoc(c, :translations),
+      on: t.source_id == src.id)
+    |> select_merge([c, src, t], %{
+                      c | translations: [t], source: src
+                    })
+    |> Repo.all()
+  end
+
   def get_chapter(no, source_title) do
     (from c in Chapter, where: c.no ==  ^no,
       inner_join: src in assoc(c, :source),
@@ -130,21 +142,27 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-  def get_chapter(no, source_title, lang) do
-    target_lang = (from ts in Translation, where: ts.lang == ^lang)
-    (from c in Chapter, where: c.no ==  ^no,
-      inner_join: src in assoc(c, :source),
-      where: src.title == ^source_title,
-      preload: [verses: ^(from v in Verse, preload: [translations: ^target_lang]) , translations: ^target_lang])
-      |> Repo.one()
-   end
+    def get_chapter(no, source_title, lang) do
+    %Source{id: id} = _src = get_source_by_title(source_title)
+
+    target_lang = (from ts in Translation,
+      where: ts.lang == ^lang and ts.source_id == ^id)
+
+    (from c in Chapter,
+      where: c.no ==  ^no and c.source_id == ^id,
+      preload: [verses: ^(from v in Verse, where: v.source_id == ^id, order_by: v.no,
+                   preload: [translations: ^target_lang]),
+                translations: ^target_lang]
+    )
+    |> Repo.one()
+  end
 
   def get_verses_in_chapter(no, source_id) do
-    chapter = Repo.get_by(Chapter, no: no, source_id: source_id)
-    |> Repo.preload([:verses, :translations])
+    query_verse = from v in Verse,
+      where: v.chapter_no == ^no and  v.source_id == ^source_id,
+      preload: [:chapter]
 
-    chapter.verses
-
+    Repo.all(query_verse)
     end
 
   @doc """
@@ -272,4 +290,4 @@ defmodule Vyasa.Written do
   def change_source(%Source{} = source, attrs \\ %{}) do
     Source.mutate_changeset(source, attrs)
   end
-end
+ end
