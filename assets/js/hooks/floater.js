@@ -1,6 +1,8 @@
 /*
  * Ideally generic hook for floating logic.
  */
+import {isMobileDevice} from "../utils/uncategorised_utils.js";
+
 Floater = {
   mounted() {
     console.log("[floater] floater mounted")
@@ -25,10 +27,10 @@ Floater = {
       console.log("[floater] Reference is out of viewport, should use fallback", {
         floater,
         reference,
-        fallback
+        fallback,
       })
     }
-    const target = isReferenceOutOfView ? fallback : reference
+    const target = (isMobileDevice() || isReferenceOutOfView) ? fallback : reference
     this.alignFloaterToRef(floater, target);
   },
   updated() { // gets called when the elem changes
@@ -60,7 +62,7 @@ Floater = {
         autoPlacement({
           allowedPlacements: [
             "right",
-            "top"
+            "top-end"
           ]
         }),
         shift({
@@ -91,6 +93,7 @@ Floater = {
       floater,
       reference,
       fallback,
+      isMobileDevice: isMobileDevice(),
     })
 
     return {

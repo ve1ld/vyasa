@@ -3,6 +3,7 @@
  * Validates if required parameters exist.
  * */
 import {seekTimeBridge, playPauseBridge} from "./media_bridge.js"
+import { isMobileDevice } from "../utils/uncategorised_utils.js"
 
 const isYouTubeFnCallable = (dataset) => {
   const {functionName, eventName} = dataset;
@@ -71,8 +72,9 @@ export const RenderYouTubePlayer = {
     console.log("Check dataset", this.el.dataset)
 
     const playerConfig = JSON.parse(serialisedPlayerConfig)
+    const updatedConfig = overrideConfigForMobile(playerConfig)
     injectIframeDownloadScript()
-    injectYoutubeInitialiserScript(videoId, playerConfig)
+    injectYoutubeInitialiserScript(videoId, updatedConfig)
 
     // TODO: capture youtube player events (play state changes and pub to the same event bridges, so as to control overall playback)
     this.eventBridgeDeregisterers = {
@@ -177,3 +179,21 @@ export const TriggerYouTubeFunction = {
   }
 }
 
+/// FIXME: this is a temp fix, that overrides the dimensions if it's a mobile.
+// there has to be a better, more generic way of handling this.
+// Alternatively, if we can reverse engineer a custom PIP mode (with resize and all that), then
+// we won't need to fix this.
+const overrideConfigForMobile = (playerConfig) => {
+  let overridedConfig = {...playerConfig}
+  if(isMobileDevice()) {
+    overridedConfig["height"] = "150",
+    overridedConfig["width"] = "200",
+    console.log("[iframe] updating the player config:", {
+      before: playerConfig,
+      after: overridedConfig,
+
+    })
+  }
+
+  return overridedConfig;
+}

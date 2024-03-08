@@ -457,6 +457,13 @@ end
     """
   end
 
+  # def volume_control(assigns) do
+  #   ~H"""
+
+  #   """
+
+  # end
+
   def video_player(assigns) do
     ~H"""
     <div>
