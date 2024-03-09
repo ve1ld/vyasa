@@ -67,7 +67,8 @@ defmodule Vyasa.MixProject do
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.5"},
       {:live_admin, "~> 0.11.4"},
-      {:req, "~> 0.4.0"}
+      {:req, "~> 0.4.0"},
+      {:recase, "~> 0.5"}
     ]
   end
 

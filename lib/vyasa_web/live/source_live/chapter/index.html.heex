@@ -40,5 +40,5 @@
         </:item>
     </.verse_display>
 
-    <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= @source_title %> Chapters</.back>
+    <.back navigate={~p"/explore/#{@source_title}"}>Back to <%= StringUtils.fmt_to_title_case(@source_title)%> Chapters</.back>
 </div>

@@ -2,6 +2,7 @@ defmodule VyasaWeb.SourceLive.Show do
   use VyasaWeb, :live_view
   alias Vyasa.Written
   alias Vyasa.Written.{Chapter}
+  alias Utils.StringUtils
 
   @impl true
   def mount(_params, _session, socket) do
@@ -29,8 +30,7 @@ defmodule VyasaWeb.SourceLive.Show do
       socket
       |> assign(:id, id)
       |> assign(:title, title)
-      |> assign(:page_title, title)
-      # |> stream(:verses, verses)
+      |> assign(:page_title, StringUtils.fmt_to_title_case(title))
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }

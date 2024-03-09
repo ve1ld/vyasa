@@ -17,7 +17,6 @@ defmodule VyasaWeb.SourceLive.Index do
     socket
     |> assign(:page_title, "Sources")
     |> assign_meta()
-
   end
 
   defp assign_meta(socket) do
@@ -28,5 +27,9 @@ defmodule VyasaWeb.SourceLive.Index do
       image: url(~p"/images/the_vyasa_project_1.png"),
       url: url(socket, ~p"/explore/"),
     })
+  end
+
+  defp format_source_title(title) do
+    Recase.to_title(title)
   end
 end
