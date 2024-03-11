@@ -8,13 +8,17 @@ javascript:(function() {
 
     function createOverlay() {
         const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '50px';
-        overlay.style.right = '0';
-        overlay.style.backgroundColor = 'rgba(255,0,0,0.88)';
-        overlay.style.color = 'white';
-        overlay.style.padding = '10px';
-        overlay.style.zIndex = '1000';
+        const overlayStyle = {
+            position: 'fixed',
+            top: '50px',
+            right: '0',
+            backgroundColor: 'rgba(255,0,0,0.66)',
+            padding: '10px',
+            zIndex: '1000',
+        }
+        for (const prop in overlayStyle) {
+            overlay.style[prop] = overlayStyle[prop];
+        }
         return overlay;
     }
 
@@ -33,10 +37,11 @@ javascript:(function() {
 
     function captureTimestamp() {
         const currentTime = getCurrentTime();
-        if (currentTime !== null) {
-            len = timestamps.length;
+        if (typeof(currentTime) === "number") {
+            const len = timestamps.length;
+            const PrevDurationEmpty = (len > 0) && (durations[len -1] == null);
             timestamps.push(currentTime);
-            if ((len > 0) && (durations[len -1] == null)) {
+            if (PrevDurationEmpty) {
                 // set prev duration
                 durations[len -1] = currentTime - timestamps[len -1]
             }
@@ -47,7 +52,7 @@ javascript:(function() {
     function endTimestamp() {
         const currentTime = getCurrentTime();
         console.log(currentTime)
-        if (currentTime !== null) {
+        if (typeof(currentTime) === "number") {
             // find closest on the left time is >
             const closestIndex = findClosestLeftTimestampIndex(currentTime);
             durations[closestIndex] =  currentTime - timestamps[closestIndex];
@@ -57,9 +62,9 @@ javascript:(function() {
 
     function removeNearestTimestamp() {
         const currentTime = getCurrentTime();
-        if (currentTime !== null) {
+        if (typeof(currentTime) === "number") {
             const closestIndex = findClosestTimestampIndex(currentTime);
-            prevTime = timestamps[closestIndex]
+            const prevTime = timestamps[closestIndex]
             timestamps.splice(closestIndex, 1);
             durations[closestIndex] = null
             if ( closestIndex > 0 && prevTime == (timestamps[closestIndex -1] + durations[closestIndex -1])){
@@ -70,7 +75,7 @@ javascript:(function() {
         }
     }
 
-  function removeNearestDuration() {
+    function removeNearestDuration() {
         const currentTime = getCurrentTime();
         console.log(currentTime)
         if (currentTime !== null) {
@@ -84,6 +89,11 @@ javascript:(function() {
     function getCurrentTime() {
         const player = document.getElementById('movie_player');
         return player ? player.getCurrentTime()*1000 : null;
+    }
+
+    function getTotalTime() {
+        const player = document.getElementById('movie_player');
+        return player ? player.getDuration()*1000 : null;
     }
 
     function findClosestTimestampIndex(currentTime) {
@@ -114,7 +124,7 @@ javascript:(function() {
     function createTimestampLink(time, index) {
         const link = document.createElement('a');
         link.href = '#';
-      link.style.color = 'yellow'
+        link.style.color = 'yellow'
         link.textContent = `Event ${index + 1}: ${formatTime(time)} - ${formatTime(time + durations[index])} `;
         link.onclick = () => {
             const player = document.getElementById('movie_player');
@@ -125,10 +135,14 @@ javascript:(function() {
     }
 
     function createCopyButton() {
+        const EventZip = timestamps.reduce((eventls, curr, i) => {
+            eventls[i] = {origin: curr, duration: duration[i] || timestamps[i+1] && (timestamps[i+1] - curr) || (getTotalTime() - curr)};
+            return eventls;
+        }, {});
         const copyButton = document.createElement('button');
         copyButton.textContent = 'Copy Events';
         copyButton.onclick = () => {
-            const jsonTimestamps = JSON.stringify(timestamps);
+            const jsonTimestamps = JSON.stringify(EventZip);
             copyToClipboard(jsonTimestamps);
         };
         return copyButton;
