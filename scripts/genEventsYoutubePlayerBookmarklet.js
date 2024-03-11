@@ -11,7 +11,7 @@ javascript:(function() {
         overlay.style.position = 'fixed';
         overlay.style.top = '50px';
         overlay.style.right = '0';
-        overlay.style.backgroundColor = 'rgba(255,255,255,0.33)';
+        overlay.style.backgroundColor = 'rgba(255,0,0,0.88)';
         overlay.style.color = 'white';
         overlay.style.padding = '10px';
         overlay.style.zIndex = '1000';
@@ -21,11 +21,14 @@ javascript:(function() {
     function handleKeyPress(event) {
         if (event.key === '=') {
             captureTimestamp();
+        } else if (event.key === '-') {
+            removeNearestDuration();
         } else if (event.key === 'Backspace') {
             removeNearestTimestamp();
         } else if (event.key === '+') {
             endTimestamp();
         }
+
     }
 
     function captureTimestamp() {
@@ -58,11 +61,22 @@ javascript:(function() {
             const closestIndex = findClosestTimestampIndex(currentTime);
             prevTime = timestamps[closestIndex]
             timestamps.splice(closestIndex, 1);
-            durations.splice(closestIndex)
+            durations[closestIndex] = null
             if ( closestIndex > 0 && prevTime == (timestamps[closestIndex -1] + durations[closestIndex -1])){
-                durations.splice(closestIndex -1)}
+                durations[closestIndex -1] = null}
             console.log(durations)
 
+            updateOverlay();
+        }
+    }
+
+  function removeNearestDuration() {
+        const currentTime = getCurrentTime();
+        console.log(currentTime)
+        if (currentTime !== null) {
+            // find closest on the left time is >
+            const closestIndex = findClosestLeftTimestampIndex(currentTime);
+            durations[closestIndex] = null
             updateOverlay();
         }
     }
@@ -100,6 +114,7 @@ javascript:(function() {
     function createTimestampLink(time, index) {
         const link = document.createElement('a');
         link.href = '#';
+      link.style.color = 'yellow'
         link.textContent = `Event ${index + 1}: ${formatTime(time)} - ${formatTime(time + durations[index])} `;
         link.onclick = () => {
             const player = document.getElementById('movie_player');
