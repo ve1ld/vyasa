@@ -111,7 +111,7 @@ function isElementOutOfViewport(el, offsets = {top: 0, bottom:0, left: 0, right:
   if (!el) {
     console.log("[floater] el is null", el)
 
-  }
+  } else {
 
   const rect = el.getBoundingClientRect();
   const { top, bottom, left, right } = offsets;
@@ -122,6 +122,8 @@ function isElementOutOfViewport(el, offsets = {top: 0, bottom:0, left: 0, right:
       rect.bottom + bottom > (window.innerHeight || document.documentElement.clientHeight) ||
       rect.right + right > (window.innerWidth || document.documentElement.clientWidth)
   );
+
+  }
 }
 
 export default Floater;
