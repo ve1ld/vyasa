@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include head.html %}
+  <body>
+    <a id="color-switcher" onclick="toggleTheme()">🌙</a>
+    <nav>{% include nav.html %}</nav>
+    <div class="wrapper">
+      <main>{{ content }}</main>
+      <footer>{% include footer.html %}</footer>
+    </div>
+
+    {% include link-previews.html wrapperQuerySelector="content" %}
+    {% include night-mode.html %}
+  </body>
+</html>
