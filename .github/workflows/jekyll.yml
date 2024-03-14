@@ -9,7 +9,7 @@ name: Write ✍️ Writing to Pages  📜
 on:
   # Runs on pushes targeting the default branch
   pull_request:
-    branches: ["master"]
+    branches: [ master ]
     paths:
       - 'writing/**'
 
