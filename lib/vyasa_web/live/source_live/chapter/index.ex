@@ -45,12 +45,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
-
-
-    # ==> replace this:
     chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)
-
-
 
     socket
     |> stream(:verses, verses)
@@ -59,6 +54,10 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     |> assign(:selected_transl, ts)
     |> assign_meta()
   end
+
+
+
+
 
   @impl true
   @doc """
@@ -106,9 +105,25 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           title: "#{fmted_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
           description: socket.assigns.chap.body,
           type: "website",
+          # FIXME: update the url for this, the delim for param is ~
           image: url(~p"/images/the_vyasa_project_1.png"),
           url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
       })
+  end
+
+
+  @doc """
+  Gives a blurb that shall be used for thumbnail creation to describe the chapter of a particular source.
+  """
+  def fetch_og_content(source_title, chap_no)  do
+    %Written.Chapter{body: _body, title: title} = _chap = Written.get_chapter(chap_no, source_title, @default_lang)
+
+    "#{Recase.to_title(source_title)} Chapter #{chap_no}\n\
+     #{title}"
+  end
+
+  def fetch_og_content() do
+    "TODO fallback content for chapter/index.ex"
   end
 
   @doc """

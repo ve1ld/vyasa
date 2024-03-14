@@ -36,7 +36,6 @@ defmodule Vyasa.Adapters.OgAdapter do
     gita_uuid <> "-" <> Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> ".png"
   end
 
-
   @doc """
   Returns a map of information that can be gleaned from the filename.
   """
@@ -45,16 +44,53 @@ defmodule Vyasa.Adapters.OgAdapter do
     %{chapter_num => chapter_num, verse_num => verse_num}
   end
 
-  @supported_src_ids ["gita"]
   @doc """
-  Resolves src id from filename. Currently merely converts it to an existing atom.
+  A filename shall encode information that allows us to recreate the queries needed to generate the content and generate the image JIT.
+
+  Broadly, it should be:
+    DELIM
+    <module_name_stringified><DELIM>[<PARAM>]
+
+  I have a feeling that since pattern matching exists, we might be implicitly
+  safe from injections.
   """
-  def resolve_src_id(filename) do
-    src_id = List.first(String.split(filename, "-"))
-    case Enum.member?(@supported_src_ids, src_id) do
-      true -> {:ok, String.to_existing_atom(src_id)}
-      _ -> {:error, "Unsupported source"}
+  def get_og_content(filename) do
+    delim = "~"
+    [ module_name | params ] = _split_name = filename
+    |> String.split(delim)
+
+    IO.inspect("module_name: #{module_name}", label: "checkpoint")
+
+    try do
+      {:ok, module_name
+      |> String.to_existing_atom()
+      |> apply_og_fetcher(params)
+      }
+    rescue
+      ArgumentError ->
+        msg = "Enountered an argument error, use fallbacks"
+        IO.inspect(msg, label: "checkpoint: error handled")
+        {:error, msg}
     end
   end
 
-end
+  def apply_og_fetcher(module, params) do
+    IO.inspect(params, label: "checkpoint: check params to og_fetcher")
+    fetcher_fn = "fetch_og_content" |> String.to_atom()
+    module
+    |> apply(fetcher_fn, params)
+  end
+
+  # @supported_src_ids ["gita"]
+  # @doc """
+  # Resolves src id from filename. Currently merely converts it to an existing atom.
+  # """
+  # def resolve_src_id(filename) do
+  #   src_id = List.first(String.split(filename, "-"))
+  #   case Enum.member?(@supported_src_ids, src_id) do
+  #     true -> {:ok, String.to_existing_atom(src_id)}
+  #     _ -> {:error, "Unsupported source"}
+  #   end
+  # end
+
+  end

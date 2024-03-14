@@ -142,7 +142,7 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-    def get_chapter(no, source_title, lang) do
+  def get_chapter(no, source_title, lang) do
     %Source{id: id} = _src = get_source_by_title(source_title)
 
     target_lang = (from ts in Translation,

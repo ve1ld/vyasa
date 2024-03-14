@@ -2,7 +2,7 @@ defmodule VyasaWeb.SourceLive.ImageGenerator do
   @moduledoc """
   Contains logic for creating images, initially for opengraph purposes mainly.
   """
-  @fallback_text "Gita -- The Song Celestial"
+  @fallback_text "Vyasa Project - Indic wisdom distilled into words"
   @col_width 20
   alias VyasaWeb.SourceLive.ImageGenerator
   alias Vix.Vips.Operation
