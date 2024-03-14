@@ -27,6 +27,9 @@ defmodule VyasaWeb do
       import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import Admin Routes
+      import LiveAdmin.Router
     end
   end
 

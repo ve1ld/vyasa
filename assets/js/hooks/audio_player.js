@@ -88,6 +88,7 @@ AudioPlayer = {
     this.nextTimer = null
   },
   clearProgressTimer() {
+    this.updateProgress()
     console.log("[clearProgressTimer]", {
       timer: this.progressTimer,
     })
@@ -109,30 +110,21 @@ AudioPlayer = {
         this.player.currentTime = currentTime;
         this.currentTime.innerText = this.formatTime(currentTime);
       }
-      const progressUpdateInterval = 100 // 10fps, comfortable for human eye
-
-      if (!this.progressTimer) { // single instance of progress timer
-        this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
-      }
-      console.log("[play: ProgressTimer]: ", this.progressTimer)
-
+      this.syncProgressTimer()
     }, error => {
       if(error.name === "NotAllowedError"){
         execJS("#enable-audio", "data-js-show")
       }
     })
   },
-
   pause(){
     this.clearProgressTimer()
     this.player.pause()
   },
-
   stop(){
-    this.clearProgressTimer()
     this.player.pause()
     this.player.currentTime = 0
-    this.updateProgress()
+    this.clearProgressTimer()
     this.duration.innerText = ""
     this.currentTime.innerText = ""
   },
@@ -145,7 +137,23 @@ AudioPlayer = {
     this.playbackBeganAt = beginTime;
     this.currentTime.innerText = this.formatTime(positionS);
     this.player.currentTime = positionS;
-    this.updateProgress()
+    this.syncProgressTimer()
+  },
+
+  /**
+   * Calls the update progress fn at a set interval,
+   * replaces an existing progress timer, if it exists.
+   * */
+  syncProgressTimer() {
+    const progressUpdateInterval = 100 // 10fps, comfortable for human eye
+    const hasExistingTimer = this.progressTimer
+    if(hasExistingTimer) {
+      this.clearProgressTimer()
+    }
+    if (this.player.paused) {
+      return
+    }
+    this.progressTimer = setInterval(() => this.updateProgress(), progressUpdateInterval)
   },
   /**
    * Updates playback progress information.
@@ -202,7 +210,8 @@ AudioPlayer = {
     }
 
     const currentTimeMs = currentTime * 1000
-    const activeEvent = events.find(event => currentTimeMs >= event.origin && currentTimeMs < (event.origin + event.duration))
+    const activeEvent = events.find(event => currentTimeMs >= event.origin &&
+                                    currentTimeMs < (event.origin + event.duration))
     console.log("activeEvent:", {currentTimeMs, activeEvent})
 
     if (!activeEvent) {
