@@ -168,12 +168,11 @@ alias VyasaWeb.OgImageController
 
 # testdecode and content extraction:
 uri = "http://localhost:4000/og/images/Elixir.VyasaWeb.SourceLive.Chapter.Index~gita~1.png"
-test_filename = "Elixir.VyasaWeb.SourceLive.Chapter.Index~gita~16.png"
+test_filename = "Elixir.VyasaWeb.SourceLive.Chapter.Index~gita~12.png"
 IO.inspect(URI.parse(uri), label: "check uri obj")
 
 # error input to be handled:
-# shall give fallback img
-test_filename = "bruh4.png"
+# test_filename = "bruh4.png" # shall give fallback img
 
 url = OgImageController.get_url_for_img_file(test_filename)
 {:ok, img} = Image.open(url)
@@ -191,4 +190,21 @@ fallback_url = "/Users/ritesh/desktop/vyasa_fallback.png"
 OgImageController.create_thumbnail(spaced_om <> "\n" <> text <> "\n" <> spaced_om)
 ```
 
-<!-- livebook:{"offset":5332,"stamp":{"token":"XCP.QMDqknbCJ1VMRrKKvOkB-TtCKtw4BVmDUyav_Gc-zERKRLMQDiTG8EhEfMbTn40Ip4Se5IVwMaN-xPC44GeajXMXX_c1X2kZuaaLkQ","version":2}} -->
+```elixir
+# filename encoding:
+x = ["a", "b", "c"]
+delim = "~"
+
+Enum.join(x, delim)
+
+module = "foo"
+params = ["a", "b", "c"]
+param_delim = "~"
+ext = ".png"
+
+[module | params]
+|> Enum.join(param_delim)
+|> (&(&1 <> ext)).()
+```
+
+<!-- livebook:{"offset":5561,"stamp":{"token":"XCP.cWbGvQ8TWtIKMz0v0F-IXktzvkTS5W-czpchwuLMhNja_V6W0nQOmyUutsfaP5-23O69wh2frlPMgqnliJwaAxHsSYQ0i0XDGlQGSw","version":2}} -->

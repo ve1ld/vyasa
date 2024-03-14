@@ -27,13 +27,21 @@ defmodule Vyasa.Adapters.OgAdapter do
     System.tmp_dir() |> Path.join(filename)
   end
 
-  @doc """
-  Returns a string representing the filename for a particular verse from a particular chapter of
-  the gita. Currently just supports gita.
-  """
-  def encode_filename(src, [chapter_num, verse_num]) when src == :gita do
-    gita_uuid = "gita" # TODO: consider better unique ids based on what we want to support for our corpus.
-    gita_uuid <> "-" <> Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> ".png"
+  # @doc """
+  # Returns a string representing the filename for a particular verse from a particular chapter of
+  # the gita. Currently just supports gita.
+  # """
+  # def encode_filename(src, [chapter_num, verse_num]) when src == :gita do
+  #   gita_uuid = "gita" # TODO: consider better unique ids based on what we want to support for our corpus.
+  #   gita_uuid <> "-" <> Integer.to_string(chapter_num) <> "-" <> Integer.to_string(verse_num) <> ".png"
+  # end
+
+  def encode_filename(module, params) do
+    param_delim = "~"
+    ext = ".png"
+    [module | params]
+    |> Enum.join(param_delim)
+    |> (&(&1 <> ext)).()
   end
 
   @doc """

@@ -1,8 +1,11 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
+  # alias Vyasa.Written.{Chapter}
   alias Vyasa.Medium
   alias Utils.StringUtils
+  alias Vyasa.Adapters.OgAdapter
+  alias VyasaWeb.OgImageController
 
   @default_lang "en"
   @default_voice_lang "sa"
@@ -98,17 +101,54 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
 
   defp assign_meta(socket) do
-    fmted_title = StringUtils.fmt_to_title_case(socket.assigns.source_title)
+    # src_title = socket.assigns.source_title
+    # %Written.Chapter{
+    #   no: chap_no,
+    #   title: chap_title,
+    #   body: chap_body,
+    # } =  socket.assigns.chap
+
+    %{
+      chap: %Written.Chapter{
+        no: chap_no,
+        title: chap_title,
+        body: chap_body,
+      } = _chap,
+      source_title: src_title,
+    }= socket.assigns
+
+    fmted_title = StringUtils.fmt_to_title_case(src_title)
     socket
-    |> assign(:page_title, "#{fmted_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
+    |> assign(:page_title, "#{fmted_title} Chapter #{chap_no} | #{chap_title}")
     |> assign(:meta, %{
-          title: "#{fmted_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
-          description: socket.assigns.chap.body,
+          title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
+          description: chap_body,
           type: "website",
           # FIXME: update the url for this, the delim for param is ~
-          image: url(~p"/images/the_vyasa_project_1.png"),
-          url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
+          # image: url(~p"/images/the_vyasa_project_1.png"),
+          image: url(~p"/og/#{get_og_img_url(src_title, chap_no)}"),
+          url: url(socket, ~p"/explore/#{src_title}/#{chap_no}"),
       })
+  end
+
+  @doc """
+  Given the src_title and chap_no, returns the url to its thumbnail.
+  Generates the image JIT if it doesn't exist.
+
+  NOTE: beware of circular dependencies.
+  """
+  def get_og_img_url(src_title, chap_no) do
+    target_url = OgAdapter.encode_filename(__MODULE__, [src_title, chap_no])
+    |> OgAdapter.get_og_file_url()
+
+
+    case File.exists?(target_url) do
+      true ->
+        target_url
+      false ->
+        OgImageController.get_url_for_img_file(target_url) # unsure if this is a bad pattern, intent was to streamline the subroutines
+    end
+
   end
 
 
