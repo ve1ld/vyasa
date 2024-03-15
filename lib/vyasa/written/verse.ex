@@ -17,7 +17,7 @@ defmodule Vyasa.Written.Verse do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:body, :no, :source_id])
+    |> cast(attrs, [:id, :body, :no, :source_id, :chapter_no])
     |> cast_assoc(:translations)
     |> validate_required([:no, :body])
   end

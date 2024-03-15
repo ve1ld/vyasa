@@ -37,11 +37,25 @@ defmodule Vyasa.Medium.Store do
     signer!(:put, path_constructor(struct))
   end
 
+  def hydrate([%Medium.Voice{} | _] = voices) do
+    Enum.map(voices, &(%{&1 | file_path: get!(&1)}))
+  end
+
   def hydrate(%Medium.Voice{} = voice) do
     %{voice | file_path: get!(voice)}
   end
 
   def hydrate(rt), do: rt
+
+  def download(%Medium.Voice{file_path: url} = v) do
+     bin = Finch.build(:get, url)
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+
+    Path.expand(path_constructor(v), "media")
+    |> tap(&File.mkdir_p!(Path.dirname(&1)))
+    |> File.write!(bin)
+  end
 
 
   def s3_config do

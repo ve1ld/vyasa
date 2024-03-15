@@ -1,6 +1,7 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
+  alias Vyasa.Medium
 
   @default_lang "en"
   @default_voice_lang "sa"
@@ -66,6 +67,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   def handle_event("clickVerseToSeek",
                 %{"verse_id" => verse_id} = _payload,
                 %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+    IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
   end
@@ -81,13 +83,13 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
          chap: %Written.Chapter{no: c_no, source_id: src_id}
       }} = socket) do
 
-      Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
-          source_id: src_id,
-          chapter_no: c_no,
-          lang: @default_voice_lang
-      },
+    chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+    Vyasa.PubSub.publish(
+      chosen_voice,
       :voice_ack,
-      sess_id)
+      sess_id
+    )
+
     {:noreply, socket}
   end
 
@@ -102,8 +104,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
           description: socket.assigns.chap.body,
           type: "website",
+          image: url(~p"/images/the_vyasa_project_1.png"),
           url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
-              })
+      })
   end
 
   @doc """
@@ -122,23 +125,25 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   end
   def verse_display(assigns) do
     ~H"""
-    <div class="mt-14" id={@id}>
+    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
             :if={Map.has_key?(item, :title) && Map.has_key?(item, :verse_id)}
-            class="w-1/6 flex-none text-zinc-500"
+            class="w-1/12 flex-none text-zinc-500"
           >
            <button
               phx-click={JS.push("clickVerseToSeek", value: %{verse_id: item.verse_id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
-              <div class="font-dn text-2xl mb-4">
+              <div class="font-dn text-xl sm:text-2xl mb-4">
                 <%= item.title %>
               </div>
            </button>
           </dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
+          <dd class="text-zinc-700">
+            <%= render_slot(item) %>
+          </dd>
         </div>
       </dl>
     </div>

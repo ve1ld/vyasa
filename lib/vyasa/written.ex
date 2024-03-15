@@ -124,7 +124,7 @@ defmodule Vyasa.Written do
   end
 
   def get_chapters_by_src(src_title) do
-    ( from c in Chapter,
+    (from c in Chapter,
       inner_join: src in assoc(c, :source),
       where: src.title == ^src_title,
       inner_join: t in assoc(c, :translations),
