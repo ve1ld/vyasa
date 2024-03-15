@@ -3,9 +3,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   alias Vyasa.Written
   # alias Vyasa.Written.{Chapter}
   alias Vyasa.Medium
-  alias Utils.StringUtils
   alias Vyasa.Adapters.OgAdapter
   alias VyasaWeb.OgImageController
+
 
   @default_lang "en"
   @default_voice_lang "sa"
@@ -117,7 +117,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       source_title: src_title,
     }= socket.assigns
 
-    fmted_title = StringUtils.fmt_to_title_case(src_title)
+    fmted_title = to_title_case(src_title)
+
     socket
     |> assign(:page_title, "#{fmted_title} Chapter #{chap_no} | #{chap_title}")
     |> assign(:meta, %{

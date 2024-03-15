@@ -28,8 +28,4 @@ defmodule VyasaWeb.SourceLive.Index do
       url: url(socket, ~p"/explore/"),
     })
   end
-
-  defp format_source_title(title) do
-    Recase.to_title(title)
-  end
 end
