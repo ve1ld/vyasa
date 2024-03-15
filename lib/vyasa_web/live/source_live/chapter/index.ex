@@ -99,9 +99,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   defp assign_meta(socket) do
     socket
-    |> assign(:page_title, "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
+    |> assign(:page_title, "#{to_title_case(socket.assigns.source_title)} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
     |> assign(:meta, %{
-          title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
+          title: "#{to_title_case(socket.assigns.source_title)} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
           description: socket.assigns.chap.body,
           type: "website",
           image: url(~p"/images/the_vyasa_project_1.png"),

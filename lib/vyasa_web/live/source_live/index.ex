@@ -17,7 +17,6 @@ defmodule VyasaWeb.SourceLive.Index do
     socket
     |> assign(:page_title, "Sources")
     |> assign_meta()
-
   end
 
   defp assign_meta(socket) do

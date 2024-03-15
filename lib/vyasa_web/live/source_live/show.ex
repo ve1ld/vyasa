@@ -29,8 +29,7 @@ defmodule VyasaWeb.SourceLive.Show do
       socket
       |> assign(:id, id)
       |> assign(:title, title)
-      |> assign(:page_title, title)
-      # |> stream(:verses, verses)
+      |> assign(:page_title, to_title_case(title))
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }
