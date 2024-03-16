@@ -4,8 +4,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Medium
   alias VyasaWeb.OgImageController
-
-
+  
   @default_lang "en"
   @default_voice_lang "sa"
 
@@ -71,6 +70,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   def handle_event("clickVerseToSeek",
     %{"verse_id" => verse_id} = _payload,
     %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+
     IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
