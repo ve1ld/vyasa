@@ -1,8 +1,10 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
+  alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Medium
-
+  alias VyasaWeb.OgImageController
+  
   @default_lang "en"
   @default_voice_lang "sa"
 
@@ -44,20 +46,21 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
+    with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
+         %{verses: verses, translations: [ts | _]} = chap  <- Written.get_chapter(chap_no, sid, @default_lang) do
 
-
-    # ==> replace this:
-    chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)
-
-
-
-    socket
-    |> stream(:verses, verses)
-    |> assign(:source_title, source_title)
-    |> assign(:chap, chap)
-    |> assign(:selected_transl, ts)
-    |> assign_meta()
+      socket
+      |> stream(:verses, verses)
+      |> assign(:src, source)
+      |> assign(:chap, chap)
+      |> assign(:selected_transl, ts)
+      |> assign_meta()
+    else
+      _ -> raise VyasaWeb.ErrorHTML.FourOFour, message: "Chapter not Found"
+    end
   end
+
+
 
   @impl true
   @doc """
@@ -65,8 +68,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   via the pubsub system.
   """
   def handle_event("clickVerseToSeek",
-                %{"verse_id" => verse_id} = _payload,
-                %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+    %{"verse_id" => verse_id} = _payload,
+    %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+
     IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
@@ -97,17 +101,28 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     {:noreply, socket}
   end
 
-  defp assign_meta(socket) do
+  defp assign_meta(%{assigns: %{
+      chap: %Chapter{
+        no: chap_no,
+        title: chap_title,
+        body: chap_body,
+      } = chap,
+      src: src,
+    }} = socket) do
+    fmted_title = to_title_case(src.title)
+
     socket
-    |> assign(:page_title, "#{to_title_case(socket.assigns.source_title)} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
+    |> assign(:page_title, "#{fmted_title} Chapter #{chap_no} | #{chap_title}")
     |> assign(:meta, %{
-          title: "#{to_title_case(socket.assigns.source_title)} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
-          description: socket.assigns.chap.body,
+          title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
+          description: chap_body,
           type: "website",
-          image: url(~p"/images/the_vyasa_project_1.png"),
-          url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
+          image: url(~p"/og/#{OgImageController.get_by_binding(%{chapter: chap, source: src})}"),
+          url: url(socket, ~p"/explore/#{src.title}/#{chap_no}"),
       })
   end
+
+  defp assign_meta(socket), do: socket
 
   @doc """
   Renders a clickable verse display.

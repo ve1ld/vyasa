@@ -142,7 +142,21 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-    def get_chapter(no, source_title, lang) do
+  def get_chapter(no, sid, lang) when is_uuid?(sid) do
+
+    target_lang = (from ts in Translation,
+      where: ts.lang == ^lang and ts.source_id == ^sid)
+
+    (from c in Chapter,
+      where: c.no ==  ^no and c.source_id == ^sid,
+      preload: [verses: ^(from v in Verse, where: v.source_id == ^sid, order_by: v.no,
+                   preload: [translations: ^target_lang]),
+                translations: ^target_lang]
+    )
+    |> Repo.one()
+  end
+
+  def get_chapter(no, source_title, lang) do
     %Source{id: id} = _src = get_source_by_title(source_title)
 
     target_lang = (from ts in Translation,
