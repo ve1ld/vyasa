@@ -1,9 +1,8 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
-  # alias Vyasa.Written.{Chapter}
+  alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Medium
-  alias Vyasa.Adapters.OgAdapter
   alias VyasaWeb.OgImageController
 
 
@@ -48,17 +47,19 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
-    chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)
+    with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
+         %{verses: verses, translations: [ts | _]} = chap  <- Written.get_chapter(chap_no, sid, @default_lang) do
 
-    socket
-    |> stream(:verses, verses)
-    |> assign(:source_title, source_title)
-    |> assign(:chap, chap)
-    |> assign(:selected_transl, ts)
-    |> assign_meta()
+      socket
+      |> stream(:verses, verses)
+      |> assign(:src, source)
+      |> assign(:chap, chap)
+      |> assign(:selected_transl, ts)
+      |> assign_meta()
+    else
+      _ -> raise VyasaWeb.ErrorHTML.FourOFour, message: "Chapter not Found"
+    end
   end
-
-
 
 
 
@@ -68,8 +69,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   via the pubsub system.
   """
   def handle_event("clickVerseToSeek",
-                %{"verse_id" => verse_id} = _payload,
-                %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+    %{"verse_id" => verse_id} = _payload,
+    %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
     IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
@@ -100,24 +101,15 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     {:noreply, socket}
   end
 
-  defp assign_meta(socket) do
-    # src_title = socket.assigns.source_title
-    # %Written.Chapter{
-    #   no: chap_no,
-    #   title: chap_title,
-    #   body: chap_body,
-    # } =  socket.assigns.chap
-
-    %{
-      chap: %Written.Chapter{
+  defp assign_meta(%{assigns: %{
+      chap: %Chapter{
         no: chap_no,
         title: chap_title,
         body: chap_body,
-      } = _chap,
-      source_title: src_title,
-    }= socket.assigns
-
-    fmted_title = to_title_case(src_title)
+      } = chap,
+      src: src,
+    }} = socket) do
+    fmted_title = to_title_case(src.title)
 
     socket
     |> assign(:page_title, "#{fmted_title} Chapter #{chap_no} | #{chap_title}")
@@ -125,47 +117,12 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
           description: chap_body,
           type: "website",
-          # FIXME: update the url for this, the delim for param is ~
-          # image: url(~p"/images/the_vyasa_project_1.png"),
-          image: url(~p"/og/#{get_og_img_url(src_title, chap_no)}"),
-          url: url(socket, ~p"/explore/#{src_title}/#{chap_no}"),
+          image: url(~p"/og/#{OgImageController.get_by_binding(%{chapter: chap, source: src})}"),
+          url: url(socket, ~p"/explore/#{src.title}/#{chap_no}"),
       })
   end
 
-  @doc """
-  Given the src_title and chap_no, returns the url to its thumbnail.
-  Generates the image JIT if it doesn't exist.
-
-  NOTE: beware of circular dependencies.
-  """
-  def get_og_img_url(src_title, chap_no) do
-    target_url = OgAdapter.encode_filename(__MODULE__, [src_title, chap_no])
-    |> OgAdapter.get_og_file_url()
-
-
-    case File.exists?(target_url) do
-      true ->
-        target_url
-      false ->
-        OgImageController.get_url_for_img_file(target_url) # unsure if this is a bad pattern, intent was to streamline the subroutines
-    end
-
-  end
-
-
-  @doc """
-  Gives a blurb that shall be used for thumbnail creation to describe the chapter of a particular source.
-  """
-  def fetch_og_content(source_title, chap_no)  do
-    %Written.Chapter{body: _body, title: title} = _chap = Written.get_chapter(chap_no, source_title, @default_lang)
-
-    "#{Recase.to_title(source_title)} Chapter #{chap_no}\n\
-     #{title}"
-  end
-
-  def fetch_og_content() do
-    "TODO fallback content for chapter/index.ex"
-  end
+  defp assign_meta(socket), do: socket
 
   @doc """
   Renders a clickable verse display.
