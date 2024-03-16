@@ -1,7 +1,7 @@
 
 <.header >
     <div class="font-dn text-4xl">
-        <%= to_title_case(@title)%>
+        <%= to_title_case(@source.title)%>
     </div>
 </.header>
 
@@ -10,7 +10,7 @@
 <.table
 id="chapters"
 rows={@streams.chapters}
-row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@title}/#{chap.no}") end}
+row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@source.title}/#{chap.no}") end}
 >
     <:col :let={{_id, chap}} label="Chapter">
         <div class="font-dn text-lg">

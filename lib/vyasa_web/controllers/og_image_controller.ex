@@ -41,6 +41,9 @@ defmodule VyasaWeb.OgImageController do
     get_by_binding(b)
   end
 
+  def encode_url(%Binding{source: %{title: title}}) do
+    "source_#{title}.png"
+  end
 
   def encode_url(%Binding{chapter: %{no: c_no}, source: %{title: title}}) do
     "source_#{title}_#{c_no}.png"
@@ -68,6 +71,10 @@ defmodule VyasaWeb.OgImageController do
     "
   end
 
+  def template(%Binding{source: %{title: title}}) do
+    "#{Recase.to_title(title)}"
+  end
+
   def template(_) do
     @fallback_text
   end
@@ -77,7 +84,7 @@ defmodule VyasaWeb.OgImageController do
     IO.inspect(content)
     content
     |> create_thumbnail()
-    |> Image.write!(System.tmp_dir() |> Path.join(filename))
+    |> Image.write!(encode_url(filename))
   end
 
   @img_bg_file_url Path.join([@base_url, "logo_with_gradient_and_stamp_1200x630.png"])
