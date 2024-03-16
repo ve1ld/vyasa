@@ -11,38 +11,27 @@ defmodule VyasaWeb.SourceLive.Show do
 
   @impl true
   def handle_params(%{"source_title" => source_title}, _, socket) do
-    # %Source{
-    #   id: id,
-    #   # verses: verses,
-    #   chapters: chapters,
-    #   title: title
-    # } = Written.get_source_by_title(source_title)
 
-    [%Chapter{} |_]= chapters = Written.get_chapters_by_src(source_title)
-    src = hd(chapters).source
-    title = src.title
-    id = src.id
-
+    [%Chapter{source: src} |_]= chapters = Written.get_chapters_by_src(source_title)
 
     {
       :noreply,
       socket
-      |> assign(:id, id)
-      |> assign(:title, title)
-      |> assign(:page_title, to_title_case(title))
+      |> assign(:source, src)
+      |> assign(:page_title, to_title_case(src.title))
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }
 
   end
 
-  defp assign_meta(socket) do
+  defp assign_meta(%{assigns: %{source: src}} = socket) do
     assign(socket, :meta, %{
-      title: socket.assigns.title,
-      description: "Explore the #{socket.assigns.title}",
+      title: to_title_case(src.title),
+      description: "Explore the #{to_title_case(src.title)}",
       type: "website",
-      image: url(~p"/images/the_vyasa_project_1.png"),
-      url: url(socket, ~p"/explore/#{socket.assigns.title}")
+      image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: src})}"),
+      url: url(socket, ~p"/explore/#{src.title}")
     })
   end
 

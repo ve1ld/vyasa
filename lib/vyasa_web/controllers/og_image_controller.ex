@@ -1,7 +1,7 @@
 defmodule VyasaWeb.OgImageController do
   use VyasaWeb, :controller
   # alias VyasaWeb.SourceLive.ImageGenerator
-  alias Vyasa.Adapters.OgAdapter
+  alias Vyasa.Adapters.Binding
 
   action_fallback VyasaWeb.FallbackController
 
@@ -18,86 +18,74 @@ defmodule VyasaWeb.OgImageController do
   def show(conn, %{"filename" => filename}) do
     conn
     |> put_resp_content_type("image/png")
-    |> send_file(200, get_url_for_img_file(filename))
+    |> send_file(200, encode_url(filename))
   end
 
-  @doc """
-  Returns a url based on the provided filename.
-  Generates images just-in-time if the file doesn't exsit.
-  If any error is encountered, fallsback to using the fallback image's url.
-  """
-  def get_url_for_img_file(filename) do
-    # TODO: Add try-catch since this involves file-io & db querying
-    case fetch_image_jit(filename) do
-      {:ok, target_url} -> target_url
-      {:error, _} ->
-        IO.inspect(".. returning fallback img url #{@fallback_img_url}")
-        @fallback_img_url
-    end
-  end
 
-  @doc """
-  Using the filename, returns a valid url in the tmp dir if it exists,
-  else it generates (and writes) an image just-in-time and returns its url.
-  """
-  def fetch_image_jit(filename) do
-    target_url = System.tmp_dir() |> Path.join(filename)
-
-    if File.exists?(target_url) do
-      {:ok, target_url}
+  def get_by_binding(%Binding{} = b) do
+    with target_url <- encode_url(b),
+         {:file, _ , false} <- {:file, target_url, File.exists?(target_url)},
+         template <- template(b),
+           image <- create(target_url, template) do
+      IO.inspect(image)
+      target_url
     else
-      case OgAdapter.get_og_content(remove_ext(filename)) do
-        {:ok, text} ->
-          {:ok, generate_og_image!(filename, text)}
-        _ ->
-          {:error, "Couldn't generate image, we shall use the fallback image instead"}
-      end
+      {:file, url, true} -> url
+
+      _ -> @fallback_img_url
     end
   end
 
-  @doc """
-  Given a filename with an extension, returns the filename without the extension.
-
-  NOTE: doesn't check if the extension is valid or not.
-  """
-  def remove_ext(filename) do
-    filename
-    |> String.split(".")
-    |> List.last() # this is the ext.
-    |> (&String.split(filename, ".#{&1}")).()
-    |> List.first()
+  def get_by_binding(params) do
+    {:ok, b} = Binding.cast(params)
+    get_by_binding(b)
   end
 
-  # @doc """
-  # Fetches the actual content, by parsing the filename.
+  def encode_url(%Binding{source: %{title: title}}) do
+    "source_#{title}.png"
+  end
 
-  # For now, this shall only fetch gita-related content. Subsequently, this function may be
-  # updated to support other texts and media formats.
-  # """
-  # def get_og_content(filename) do
-  #   case OgAdapter.resolve_src_id(filename) do
-  #     {:ok, :gita} -> OgAdapter.get_content(:gita, filename)
-  #     _ -> {:error}
-  #   end
-  # end
+  def encode_url(%Binding{chapter: %{no: c_no}, source: %{title: title}}) do
+    "source_#{title}_#{c_no}.png"
+  end
 
-  def generate_og_image!(filename, content \\ @fallback_text) when is_binary(content) do
+  def encode_url(path) do
+     System.tmp_dir() |> Path.join(path)
+  end
+
+
+  @doc """
+  templates derived from Binding for image pipes in the future
+  """
+
+  def template(%Binding{chapter: %{no: c_no, title: c_title, translations: [%{target: %{translit_title: t_title}} | _]}, source: %{title: title}}) do
+    "#{Recase.to_title(title)} Chapter #{c_no}\n\
+    #{c_title}\n
+    #{t_title}
+    "
+  end
+
+  def template(%Binding{chapter: %{no: c_no, title: c_title}, source: %{title: title}}) do
+    "#{Recase.to_title(title)} Chapter #{c_no}\n\
+    #{c_title} \n
+    "
+  end
+
+  def template(%Binding{source: %{title: title}}) do
+    "#{Recase.to_title(title)}"
+  end
+
+  def template(_) do
+    @fallback_text
+  end
+
+  def create(filename, content \\ @fallback_text) when is_binary(content) do
+    IO.inspect(filename)
+    IO.inspect(content)
     content
     |> create_thumbnail()
-    |> write_opengraph_image(filename)
+    |> Image.write!(encode_url(filename))
   end
-
-
-  # writes the opengraph img to tmp dir and returns the location's url
-  defp write_opengraph_image(img, filename) do
-    target_url = System.tmp_dir() |> Path.join(filename)
-    IO.puts(">> [write_opengraph_image] target url: #{target_url}")
-
-    Image.write!(img, target_url)
-    target_url
-  end
-
-
 
   @img_bg_file_url Path.join([@base_url, "logo_with_gradient_and_stamp_1200x630.png"])
   @doc """
@@ -140,4 +128,4 @@ defmodule VyasaWeb.OgImageController do
     |> Image.compose!(txt_img)
   end
 
-  end
+end
