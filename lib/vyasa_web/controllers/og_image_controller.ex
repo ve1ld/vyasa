@@ -41,13 +41,14 @@ defmodule VyasaWeb.OgImageController do
     get_by_binding(b)
   end
 
+  def encode_url(%Binding{chapter: %{no: c_no}, source: %{title: title}}) do
+    "source_#{title}_#{c_no}.png"
+  end
+
   def encode_url(%Binding{source: %{title: title}}) do
     "source_#{title}.png"
   end
 
-  def encode_url(%Binding{chapter: %{no: c_no}, source: %{title: title}}) do
-    "source_#{title}_#{c_no}.png"
-  end
 
   def encode_url(path) do
      System.tmp_dir() |> Path.join(path)
@@ -102,7 +103,15 @@ defmodule VyasaWeb.OgImageController do
     font_size = 70
     caption_text_color = "brown"
 
-    {:ok, base} = Image.open(@img_bg_file_url)
+    bg_url =
+    [:code.priv_dir(:vyasa), "static", "images" ,"logo_with_gradient_and_stamp_1200x630.png"]
+    |> Path.join()
+
+    IO.inspect(@img_bg_file_url, label: "compiletime")
+    IO.inspect(bg_url, label: "runtime")
+
+    {:ok, base} = bg_url
+    |> Image.open()
 
     {:ok, thumbed} =
       base
