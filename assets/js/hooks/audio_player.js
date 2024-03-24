@@ -62,8 +62,23 @@ AudioPlayer = {
   handleExternalSeekTime(payload) {
     console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
     const {seekToMs: timeMs} = payload;
-    const timeS = Math.round(timeMs/1000);
-    this.seekToS(timeS)
+    this.seekToMs(timeMs)
+  },
+  /**
+   * Returns information about the current playback.
+   *
+   * NOTE: time-related values shall be in ms, even though media related read information
+   * is documented to be in s.
+   * */
+  readCurrentPlaybackInfo() {
+    const currentTimeMs = this.player.currentTime * 1000
+    const durationMs = this.player.duration * 1000
+
+    return {
+        isPlaying: !this.player.paused,
+        currentTimeMs,
+        durationMs,
+      }
   },
   echoHeartbeat(heartbeatPayload) {
     const shouldIgnoreSignal = heartbeatPayload.originator === "AudioPlayer";
@@ -74,11 +89,7 @@ AudioPlayer = {
     console.log("[heartbeatBridge::audio_player] payload:", heartbeatPayload)
     const echoPayload = {
       originator: "AudioPlayer",
-      currentPlaybackInfo: {
-        isPlaying: !this.player.paused,
-        currentTime: this.player.currentTime,
-        duration: this.player.duration,
-      }
+      currentPlaybackInfo: this.readCurrentPlaybackInfo()
     }
     heartbeatBridge.pub(echoPayload)
   },
@@ -128,6 +139,7 @@ AudioPlayer = {
       this.play({sync: true})
     }
 
+    // TODO: supply necessary info for media sessions api here...
     const isMediaSessionApiSupported = "mediaSession" in navigator;
     if(isMediaSessionApiSupported){
       navigator.mediaSession.metadata = new MediaMetadata({artist, title})
@@ -143,9 +155,11 @@ AudioPlayer = {
 
     this.player.play().then(() => {
       if(sync) {
-        const currentTime = nowSeconds() - this.playbackBeganAt
-        this.player.currentTime = currentTime;
-        const formattedCurrentTime = formatDisplayTime(currentTime);
+        const currentTimeS = nowSeconds() - this.playbackBeganAt;
+        const currentTimeMs = currentTimeS * 1000;
+
+        this.player.currentTime = currentTimeS;
+        const formattedCurrentTime = formatDisplayTime(currentTimeMs);
       }
     }, error => {
       if(error.name === "NotAllowedError"){
@@ -160,10 +174,22 @@ AudioPlayer = {
     this.player.pause()
     this.player.currentTime = 0
   },
-  seekToS(time) {
-    const beginTime = nowSeconds() - time
+  /**
+   * The exposed api for html5 audio player is such that currentTime is a number value
+   * in seconds.
+   *
+   * Hence, we shall convert the argument (in ms) to s, but without rounding off because a double float is accepted.
+   * This preserves as much precision as possible.
+   * */
+  seekToMs(timeMs) {
+    const timeS = timeMs / 1000;
+    const beginTime = nowSeconds() - timeS
     this.playbackBeganAt = beginTime;
-    this.player.currentTime = time;
+    this.player.currentTime = timeS;
+
+    if (!this.player.paused) {
+      this.player.play() // force a play event if is not paused
+    }
   },
 }
 

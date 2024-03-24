@@ -50,13 +50,12 @@ ProgressBar = {
     if(shouldIgnoreSignal) {
       return;
     }
-    const playbackInfo = payload.currentPlaybackInfo;
     const {
-      currentTime: currentTimeS,
-      duration: durationS,
-    } = playbackInfo || {};
+      currentTimeMs,
+      durationMs,
+    } = payload.currentPlaybackInfo || {};
 
-    const playbackPercentage = (currentTimeS / durationS)
+    const playbackPercentage = (currentTimeMs / durationMs)
     const progressStyleWidth = `${(playbackPercentage * 100)}%`
     console.log("handleHeartbeat, set progress bar width", progressStyleWidth)
     this.setProgressBarWidth(progressStyleWidth)

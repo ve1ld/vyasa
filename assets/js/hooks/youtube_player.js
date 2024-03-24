@@ -100,8 +100,7 @@ export const RenderYouTubePlayer = {
   handleSeekTime(payload) {
     console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
     let {seekToMs: timeMs} = payload;
-    const timeS = Math.round(timeMs / 1000);
-    this.seekToS(timeS)
+    this.seekToMs(timeMs)
   },
   playMedia(params) {
     console.log("youtube player playMedia triggerred", params)
@@ -114,12 +113,14 @@ export const RenderYouTubePlayer = {
   stop() {
     console.log("youtube player stop triggerred")
   },
-  seekToS(time) {
+  seekToMs(timeMs) {
+    const timeS = timeMs / 1000;
     console.log("youtube player seekto triggerred", {
-      time,
+      timeS,
       player: window.youtubePlayer
     })
-    window.youtubePlayer.seekTo(time)
+
+    window.youtubePlayer.seekTo(timeS);
   }
 };
 
