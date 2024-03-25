@@ -3,7 +3,7 @@ defmodule VyasaWeb.AudioPlayer do
 
     def mount(_, _, socket) do
       socket
-      |> assign(player_details: nil)
+      |> assign(playback: nil)
     end
 
     @impl true
@@ -18,21 +18,21 @@ defmodule VyasaWeb.AudioPlayer do
     @impl true
     def update(%{
           event: "media_bridge:update_audio_player" = event,
-          player_details: player_details,
-          elapsed: elapsed,
+          playback: playback,
              } = _assigns, socket) do
       IO.inspect("handle update case in audio_player.ex with event = #{event}", label: "checkpoint")
 
       {
         :ok, socket
-        |> assign(player_details: player_details)
-        |> assign(elapsed: elapsed) # TODO: refactor candidate for removal
+        |> assign(playback: playback)
       }
     end
 
     @impl true
     def update(assigns, socket) do
       IO.inspect(assigns, label: "what")
-      {:ok, socket |> assign(player_details: nil)}
+      {:ok, socket
+      |> assign(playback: nil)
+      }
     end
   end
