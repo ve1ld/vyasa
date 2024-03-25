@@ -1,6 +1,7 @@
 defmodule VyasaWeb.Router do
   use VyasaWeb, :router
 
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
@@ -33,6 +34,12 @@ defmodule VyasaWeb.Router do
       live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
       live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
     end
+    
+    live_admin "/admin" do
+      admin_resource "/verses", VyasaWeb.Admin.Written.Verse
+      admin_resource "/events", VyasaWeb.Admin.Medium.Event
+    end
+    
    end
 
   # Other scopes may use custom stacks.

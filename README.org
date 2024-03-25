@@ -15,7 +15,7 @@ mix escript.build
 ./vyasa fetch shlokam.org/hanumanchalisa --storage file
 ```
 * Forms of Prior Art
-** [[http://worrydream.com/refs/Nelson-ComputerLibDreamMachines1975.pdf#page=57][Xanadu Pattern]]
+** [[http://worrydream.com/refs/Nelson-ComputerLibDreamMachines1975.pdf#page=57][Xanadu Pattern ]]
 
 Ted Nelson the granddaddy of hypertext media, need I say more. The introduction to [[https://cs.brown.edu/people/nmeyrowi/LiteraryMachinesChapter2.pdf#page=12][Literary Machines]] is instructive to delineating the problem boundaries for literature
 

@@ -1,7 +1,10 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.Written
-
+  alias Vyasa.Written.{Source, Chapter}
+  alias Vyasa.Medium
+  alias VyasaWeb.OgImageController
+  
   @default_lang "en"
   @default_voice_lang "sa"
 
@@ -43,14 +46,34 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp sync_session(socket), do: socket
 
   defp apply_action(socket, :index, %{"source_title" => source_title, "chap_no" => chap_no} = _params) do
-    chap  = %{verses: verses, translations: [ts | _]} = Written.get_chapter(chap_no, source_title, @default_lang)
+    with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
+         %{verses: verses, translations: [ts | _]} = chap  <- Written.get_chapter(chap_no, sid, @default_lang) do
 
-    socket
-    |> stream(:verses, verses)
-    |> assign(:source_title, source_title)
-    |> assign(:chap, chap)
-    |> assign(:selected_transl, ts)
-    |> assign_meta()
+      socket
+      |> stream(:verses, verses)
+      |> assign(:src, source)
+      |> assign(:chap, chap)
+      |> assign(:selected_transl, ts)
+      |> assign_meta()
+    else
+      _ -> raise VyasaWeb.ErrorHTML.FourOFour, message: "Chapter not Found"
+    end
+  end
+
+
+
+  @impl true
+  @doc """
+  Handles the action of clicking to seek by emitting the verse_id to the live player
+  via the pubsub system.
+  """
+  def handle_event("clickVerseToSeek",
+    %{"verse_id" => verse_id} = _payload,
+    %{assigns: %{session: %{"id" => sess_id}}}  = socket) do
+
+    IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
+    Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
+    {:noreply, socket}
   end
 
   @doc """
@@ -63,68 +86,83 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
          session: %{"id" => sess_id},
          chap: %Written.Chapter{no: c_no, source_id: src_id}
       }} = socket) do
-    Vyasa.PubSub.publish(%Vyasa.Medium.Voice{
-          source_id: src_id,
-          chapter_no: c_no,
-          lang: @default_voice_lang
-      },
+
+    chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+    Vyasa.PubSub.publish(
+      chosen_voice,
       :voice_ack,
-      sess_id)
+      sess_id
+    )
+
     {:noreply, socket}
   end
 
-  def handle_info(msg, socket) do
-    IO.inspect(msg, label: "unexpected message in @chapter")
+  def handle_info(msg, socket) do IO.inspect(msg, label: "unexpected message in @chapter")
     {:noreply, socket}
   end
 
-  defp assign_meta(socket) do
+  defp assign_meta(%{assigns: %{
+      chap: %Chapter{
+        no: chap_no,
+        title: chap_title,
+        body: chap_body,
+      } = chap,
+      src: src,
+    }} = socket) do
+    fmted_title = to_title_case(src.title)
+
     socket
-    |> assign(:page_title, "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}")
+    |> assign(:page_title, "#{fmted_title} Chapter #{chap_no} | #{chap_title}")
     |> assign(:meta, %{
-          title: "#{socket.assigns.source_title} Chapter #{socket.assigns.chap.no} | #{socket.assigns.chap.title}",
-          description: socket.assigns.chap.body,
+          title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
+          description: chap_body,
           type: "website",
-          url: url(socket, ~p"/explore/#{socket.assigns.source_title}/#{socket.assigns.chap.no}"),
-              })
+          image: url(~p"/og/#{OgImageController.get_by_binding(%{chapter: chap, source: src})}"),
+          url: url(socket, ~p"/explore/#{src.title}/#{chap_no}"),
+      })
   end
+
+  defp assign_meta(socket), do: socket
 
   @doc """
-  Renders a clickable verse list.
+  Renders a clickable verse display.
 
   ## Examples
-      <.verse_list>
+      <.verse_display>
         <:item title="Title" navigate={~p"/myPath"}><%= @post.title %></:item>
-      </.list>
+      </.verse_display>
   """
   attr :id, :string, required: false
   slot :item, required: true do
     attr :title, :string
+    attr :verse_id, :string, required: false
     attr :navigate, :any, required: false
   end
-  def verse_list(assigns) do
+  def verse_display(assigns) do
     ~H"""
-    <div class="mt-14" id={@id}>
+    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
-            :if={Map.has_key?(item, :title) && Map.has_key?(item, :navigate)}
-            class="w-1/6 flex-none text-zinc-500"
+            :if={Map.has_key?(item, :title) && Map.has_key?(item, :verse_id)}
+            class="w-1/12 flex-none text-zinc-500"
           >
-            <.link
-              navigate={item[:navigate]}
+           <button
+              phx-click={JS.push("clickVerseToSeek", value: %{verse_id: item.verse_id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
-              <div class="font-dn text-2xl mb-4">
+              <div class="font-dn text-xl sm:text-2xl mb-4">
                 <%= item.title %>
               </div>
-            </.link>
+           </button>
           </dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
+          <dd class="text-zinc-700">
+            <%= render_slot(item) %>
+          </dd>
         </div>
       </dl>
     </div>
     """
   end
 
-end
+ end

@@ -12,8 +12,9 @@
     >
     <:col :let={{_id, source}} label="">
         <div class="font-dn text-2xl">
-            <%= source.title %>
+            <%= to_title_case(source.title) %>
         </div>
     </:col>
     </.table>
 
+    <span :if={@streams.sources |> Enum.count() < 10} class="block h-96"/>

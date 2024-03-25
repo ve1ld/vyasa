@@ -25,6 +25,8 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
       add :type, :string
       add :ext_uri, :string
       add :voice_id, references(:voices, column: :id, type: :uuid, on_delete: :nothing)
+
+      timestamps([:utc_datetime])
     end
 
     create table(:events, primary_key: false) do
