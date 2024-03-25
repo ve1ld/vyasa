@@ -1,0 +1,229 @@
+<!-- livebook:{"file_entries":[{"name":"flowers_1.jpg","type":"attachment"},{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/ritesh/projects/vyasa/priv/static/images/the_vyasa_project_1.png"},"name":"the_vyasa_project_1.png","type":"file"}]} -->
+
+# Ritesh's Rough Work
+
+## Root Section -- Common Utils
+
+```elixir
+defmodule R do
+  def recompile() do
+    Mix.Task.reenable("app.start")
+    Mix.Task.reenable("compile")
+    Mix.Task.reenable("compile.all")
+    compilers = Mix.compilers()
+    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+    Mix.Task.run("compile.all")
+  end
+end
+```
+
+```elixir
+R.recompile()
+
+alias Vyasa.Medium.{Playback, Meta}
+
+p = Playback.init_playback()
+
+foo = [title: "hello world", artists: ["a", "b"]]
+dbg(foo)
+m = p.meta
+p = %Playback{p | meta: Map.merge(m, foo) |> dbg()}
+
+p
+```
+
+```elixir
+
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Explore Youtube dlp
+
+```elixir
+video_id = "pEskP0ulPlA"
+
+{url, _} =
+  System.cmd("youtube-dl", ["-g", "-f", "best", "https://www.youtube.com/watch?v=#{video_id}"])
+```
+
+```elixir
+url
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Image Gen Round 2
+
+```elixir
+defmodule Thumb do
+  @doc """
+  Returns a thumbnail with simple text overlaid onto the logo with gradient & project stamp.
+  """
+  @priv_dir :code.priv_dir(:vyasa)
+  @base_url Path.join([@priv_dir, "static", "images"])
+  @img_bg_file_url Path.join([@base_url, "logo_with_gradient_and_stamp_1200x630.png"])
+  @fallback_url Path.join([@base_url, "the_vyasa_project_1.png"])
+
+  def create_thumbnail(text) when is_binary(text) do
+    # overall config
+    dims = "1200x630"
+    # caption config
+    font = "Gotu"
+    font_weight = 800
+    caption_width = 800
+    caption_height = 400
+    font_size = 70
+    caption_text_color = "brown"
+
+    {:ok, base} = Image.open(@img_bg_file_url)
+
+    {:ok, thumbed} =
+      base
+      |> Image.thumbnail!(dims)
+      |> Image.blur(sigma: 0.1)
+
+    {:ok, txt_img} =
+      Image.Text.simple_text(
+        text,
+        align: :left,
+        font_size: font_size,
+        text_fill_color: caption_text_color,
+        x: :right,
+        y: :top,
+        autofit: true,
+        width: caption_width,
+        height: caption_height,
+        font: font,
+        font_weight: font_weight
+      )
+
+    thumbed
+    |> Image.compose!(txt_img)
+  end
+end
+
+Thumb.create_thumbnail("
+Arjun Viṣhād Yog | अर्जुनविषादयोग
+Chapter 1 - Arjuna's Dilemma
+")
+```
+
+```elixir
+alias VyasaWeb.SourceLive.ImageGenerator
+alias Vix.Vips.Operation
+dims = "1200x630"
+base_url = Path.join([:code.priv_dir(:vyasa), "static", "images"])
+# caption config
+file = Path.join([base_url, "logo_with_gradient_and_stamp_1200x630.png"])
+
+{:ok, base} = Image.open(file)
+
+{:ok, thumbed} =
+  base
+  |> Image.thumbnail!(dims)
+  |> Image.blur(sigma: 0.1)
+
+caption_width = 800
+caption_height = 400
+font_size = 70
+caption_text_color = "brown"
+
+text_input_ =
+  "Gita Chapter 1: Arjun Viṣhād Yog | अर्जुनविषादयोग Gita Chapter 1: Arjun Viṣhād Yog | अर्जुनविषादयोगGita Chapter 1: Arjun Viṣhād Yog | अर्जुनविषादयोगGita Chapter 1: Arjun Viṣhād Yog | अर्जुनविषादयोग"
+
+text_input = "Gita Chapter 1: Arjun Viṣhād Yog | अर्जुनविषादयोग"
+
+{:ok, txt_img} =
+  Image.Text.simple_text(
+    text_input,
+    align: :left,
+    background_fill_color: "#FF00FF",
+    background_fill_opacity: 1.0,
+    font_size: font_size,
+    text_fill_color: caption_text_color,
+    x: :right,
+    y: :top,
+    # padding: [10,5],
+    autofit: true,
+    width: caption_width,
+    height: caption_height,
+    font: "Gotu",
+    font_weight: 800
+  )
+
+{:ok}
+
+{:ok, rect} =
+  Image.Shape.rect(caption_width * 1.2, caption_height * 1.2, opacity: 0.5, fill_color: "gray")
+
+# {:ok, written} = 
+
+final =
+  thumbed
+  # |> Image.compose!(rect)
+  |> Image.compose!(txt_img)
+```
+
+```elixir
+base_url = Path.join([:code.priv_dir(:vyasa), "static", "images"])
+# caption config
+file = Path.join([base_url, "logo_with_gradient_and_stamp_1200x630.png"])
+```
+
+## JIT Thumbnail Generation from context-encoded-filename
+
+### Exploring the use of Module name
+
+Key idea:
+
+1. file name shall encode where that share location was
+2. since every module can have a module name which is a string, we should explore the use of module name for this encoding.
+3. since fn application can be done by just knowing the strinfied name of the module that the function is, then each module may have its own "generate_og_content" function. This way, every selectable thing can have its own og content that can be auto-generated. The og controller shall merely call this function when attempting to generate the og image
+
+```elixir
+R.recompile()
+alias VyasaWeb.OgImageController
+
+# testdecode and content extraction:
+uri = "http://localhost:4000/og/images/Elixir.VyasaWeb.SourceLive.Chapter.Index~gita~1.png"
+test_filename = "Elixir.VyasaWeb.SourceLive.Chapter.Index~gita~12.png"
+IO.inspect(URI.parse(uri), label: "check uri obj")
+
+# error input to be handled:
+# test_filename = "bruh4.png" # shall give fallback img
+
+url = OgImageController.get_url_for_img_file(test_filename)
+{:ok, img} = Image.open(url)
+
+img
+```
+
+Generate the default thumbnail here:
+
+```elixir
+spaced_om = "                       ॐ"
+text = "Come explore Indic wisdom; distilled into words."
+
+fallback_url = "/Users/ritesh/desktop/vyasa_fallback.png"
+OgImageController.create_thumbnail(spaced_om <> "\n" <> text <> "\n" <> spaced_om)
+```
+
+```elixir
+# filename encoding:
+x = ["a", "b", "c"]
+delim = "~"
+
+Enum.join(x, delim)
+
+module = "foo"
+params = ["a", "b", "c"]
+param_delim = "~"
+ext = ".png"
+
+[module | params]
+|> Enum.join(param_delim)
+|> (&(&1 <> ext)).()
+```
+
+<!-- livebook:{"offset":5799,"stamp":{"token":"XCP.szn6gg1F2nwI6bwLBxIgG9O6ZB88rXDUhTt_tQAW9Ihy64U0F4nR82c2CbbWMEHsfe0lJT_KgfZdw3-x611Y7AxQIPsstcv56KVWIg","version":2}} -->
