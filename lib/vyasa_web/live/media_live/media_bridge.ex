@@ -102,9 +102,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       } = playback,
     } = socket.assigns
 
+    now = DateTime.utc_now() # <=== sigil U
+
     played_at = cond do
       !playing? -> played_at
-      playing? -> DateTime.add(DateTime.utc_now, -position_ms, :millisecond)
+      playing? -> DateTime.add(now, -round(position_ms), :millisecond)
     end
 
     socket
