@@ -18,3 +18,5 @@ export const formatDisplayTime = (ms) => {
 }
 
 export const nowSeconds = () => Math.round(Date.now() / 1000)
+
+export const nowMs = () => Date.now()

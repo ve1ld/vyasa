@@ -20,7 +20,7 @@ let execJS = (selector, attr) => {
 }
 
 import {seekTimeBridge, playPauseBridge, heartbeatBridge} from "./media_bridge.js"
-import {formatDisplayTime, nowSeconds} from "../utils/time_utils.js"
+import {formatDisplayTime, nowMs} from "../utils/time_utils.js"
 
 AudioPlayer = {
   mounted() {
@@ -49,18 +49,18 @@ AudioPlayer = {
     console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
     const {
       cmd,
-      player_details: playerDetails,
+      playback,
     } = payload
 
     if (cmd === "play") {
-      this.playMedia(playerDetails)
+      this.playMedia(playback)
     }
     if (cmd === "pause") {
       this.pause()
     }
   },
   handleExternalSeekTime(payload) {
-    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] this:", this);
+    console.log("[audio_player::seekTimeBridgeSub::seekTimeHandler] payload:", payload);
     const {seekToMs: timeMs} = payload;
     this.seekToMs(timeMs)
   },
@@ -122,11 +122,13 @@ AudioPlayer = {
       }
     }
   },
-  playMedia(params) {
-    console.log("PlayMedia", params)
-    const {filePath, isPlaying, elapsed, artist, title} = params;
+  playMedia(playback) {
+    console.log("PlayMedia", playback)
+    const {meta: playbackMeta, "playing?": isPlaying, elapsed} = playback;
+    const { title, duration, file_path: filePath, artists } = playbackMeta;
+    const artist = artists ? artists[0] : "myArtist" // FIXME: this should be ready once seeding has been update to properly add in artist names
 
-    const beginTime = nowSeconds() - elapsed
+    const beginTime = nowMs() - elapsed
     this.playbackBeganAt = beginTime
     let currentSrc = this.player.src.split("?")[0]
 
@@ -155,10 +157,9 @@ AudioPlayer = {
 
     this.player.play().then(() => {
       if(sync) {
-        const currentTimeS = nowSeconds() - this.playbackBeganAt;
-        const currentTimeMs = currentTimeS * 1000;
+        const currentTimeMs = nowMs() - this.playbackBeganAt;
 
-        this.player.currentTime = currentTimeS;
+        this.player.currentTime = currentTimeMs / 1000;
         const formattedCurrentTime = formatDisplayTime(currentTimeMs);
       }
     }, error => {
@@ -182,10 +183,9 @@ AudioPlayer = {
    * This preserves as much precision as possible.
    * */
   seekToMs(timeMs) {
-    const timeS = timeMs / 1000;
-    const beginTime = nowSeconds() - timeS
+    const beginTime = nowMs() - timeMs
     this.playbackBeganAt = beginTime;
-    this.player.currentTime = timeS;
+    this.player.currentTime = timeMs / 1000;
 
     if (!this.player.paused) {
       this.player.play() // force a play event if is not paused

@@ -12,6 +12,7 @@ defmodule Vyasa.Medium.Voice do
     field :duration, :integer
     field :file_path, :string, virtual: true
 
+    ## FIXME: change field name to artists since it's an array..
     embeds_one :meta, VoiceMetadata do
       field(:artist, {:array, :string})
     end

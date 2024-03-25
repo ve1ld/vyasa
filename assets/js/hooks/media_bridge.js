@@ -9,14 +9,6 @@
 import { bridged } from "./media/bridged.js";
 import { formatDisplayTime } from "../utils/time_utils.js"
 
-let nowSeconds = () => Math.round(Date.now() / 1000)
-let rand = (min, max) => Math.floor(Math.random() * (max - min) + min)
-let isVisible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0)
-
-let execJS = (selector, attr) => {
-  document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
-}
-
 // TODO: consider switching to a map of bridges to support other key events
 export const seekTimeBridge = bridged("seekTime");
 export const playPauseBridge = bridged("playPause")
@@ -204,7 +196,7 @@ MediaBridge = {
     this.eventsTimeline = params.voice_events
   },
   handleSeekTime(payload) {
-    console.log("[media_bridge::seekTimeBridgeSub::seekTimeHandler] this:", this);
+    console.log("[media_bridge::seekTimeBridgeSub::seekTimeHandler] payload", payload);
     const {
       seekToMs: timeMs,
       originator,
@@ -215,7 +207,7 @@ MediaBridge = {
     console.log("[playPauseBridge::media_bridge:playpause] payload:", payload)
     const {
       cmd,
-      player_details: playerDetails,
+      playback,
       originator,
     } = payload
 
