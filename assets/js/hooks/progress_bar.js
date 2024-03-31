@@ -6,7 +6,10 @@ import {seekTimeBridge, heartbeatBridge} from "./media_bridge.js"
 
 ProgressBar = {
   mounted() {
-    this.el.addEventListener("click", (e) => this.handleProgressBarClick(e));
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.handleProgressBarClick(e)
+    });
 
     const heartbeatDeregisterer = heartbeatBridge.sub(payload => this.handleHeartbeat(payload))
     const seekTimeDeregisterer = seekTimeBridge.sub(payload => this.handleExternalSeekTime(payload))

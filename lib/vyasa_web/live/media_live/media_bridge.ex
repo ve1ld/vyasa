@@ -69,7 +69,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     now = DateTime.utc_now()
     played_at = cond do
       elapsed > 0 -> # resume case
-        DateTime.add(now, -elapsed, :millisecond)
+        DateTime.add(now, -round(elapsed), :millisecond)
       elapsed == 0 -> # fresh start case
         now
       true ->
@@ -329,6 +329,7 @@ end
     <div
       id={"#{@id}-container"}
       class="bg-gray-200 flex-auto dark:bg-black rounded-full overflow-hidden"
+      phx-update="ignore"
       phx-hook="ProgressBar"
       data-value={@value}
       data-max={@max}
