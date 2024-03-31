@@ -26,5 +26,5 @@ swap_size_mb = 512
   processes = ["app"]
   [http_service.concurrency]
     type = "connections"
-    hard_limit = 1000
-    soft_limit = 1000
+    hard_limit = 1001
+    soft_limit = 888

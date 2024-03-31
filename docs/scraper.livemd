@@ -1,0 +1,417 @@
+# Scraper Lite
+
+```elixir
+# Mix.install([
+#   {:poison, "~> 5.0"},
+#   {:floki, "~> 0.35.2"},
+#   {:req, "~> 0.4.8"},
+#   {:youtube_captions, "~> 0.1.0"}
+# ])
+```
+
+## Root
+
+```elixir
+# defmodule R do
+#   def recompile() do
+#     Mix.Task.reenable("app.start")
+#     Mix.Task.reenable("compile")
+#     Mix.Task.reenable("compile.all")
+#     compilers = Mix.compilers()
+#     Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+#     Mix.Task.run("compile.all")
+#   end
+# end
+
+R.recompile()
+```
+
+```elixir
+{:ok, src} = Vyasa.Written.create_source(%{title: "rama"})
+# Vyasa.Medium.Writer.init(%)
+```
+
+```elixir
+
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Valmiki Ramayana
+
+```elixir
+url = "https://www.valmikiramayan.net/utf8/"
+# fetch from root frame
+path = "baala/sarga1/"
+doc = "balasans1.htm"
+
+col =
+  Finch.build(:get, url <> path <> doc)
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+  |> Floki.parse_document!()
+  |> Floki.find("body")
+  |> List.first()
+  |> elem(2)
+```
+
+```elixir
+defmodule Rama do
+  # audio n+1
+  def parse(data, acc) do
+    case {data, acc} do
+      {{"p", [{"class", "SanSloka"}], [{"audio", _, _} | _] = audio},
+       [%{"count" => c} = curr | _] = acc} ->
+        #  IO.inspect(audio, label: "audio")
+        [src] =
+          audio
+          |> Floki.find("source")
+          |> Floki.attribute("src")
+
+        [
+          curr
+          |> Map.put("count", c + 1)
+          |> Map.put("audio", src)
+          | acc
+        ]
+
+      {{"p", [{"class", "SanSloka"}], [{"audio", _, _} | _] = audio}, []} ->
+        [src] =
+          audio
+          |> Floki.find("source")
+          |> Floki.attribute("src")
+
+        [%{"count" => 1, "audio" => src}]
+
+      # verse n + 1
+      {{"p", [{"class", "SanSloka"}], verses}, [curr | acc]} ->
+        [Map.put(curr, "verse", verses |> Floki.text() |> String.trim()) | acc]
+
+      # nesting in verloc
+
+      {{"p", [{"class", "verloc"}], [{"p", [{"class", "SanSloka"}], sloka} | _] = ns_tree},
+       [curr | _] = acc}
+      when is_map(curr) ->
+        # IO.inspect(ns_tree)
+        # IO.inspect(ns_tree)
+        Enum.reduce(ns_tree, acc, &parse/2)
+
+      {{"p", [{"class", "verloc"}], rem} = c_tree, [curr | acc]} when is_map(curr) ->
+        [curr | acc]
+
+      # # n case before verse break
+      {{"p", [{"class", class}], _} = c_tree, [curr | acc]} when is_map(curr) ->
+        [Map.put(curr, class, c_tree |> Floki.text() |> String.trim()) | acc]
+
+      {para, acc} ->
+        # IO.inspect(para, label: "div")
+        acc
+    end
+  end
+end
+
+output =
+  col
+  |> Enum.reduce([], &Rama.parse/2)
+
+# # formatting & tying loose ends
+# clean_verses =
+#   [Map.put(curr, "count", count + 1) | verses]
+#   |> Enum.reverse()
+```
+
+```elixir
+File.mkdir_p!(Path.expand(path, "media"))
+
+output
+|> Enum.reduce([], fn
+  %{"audio" => aud, "count" => 12 = count, "verse" => verse}, acc ->
+    aud_bin =
+      Finch.build(
+        :get,
+        Path.join(url <> path, aud)
+        |> String.replace(~r/\.\//, "")
+      )
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+
+    m_path = Path.expand(path <> "/#{count}.mp3", "media")
+    File.write!(m_path, aud_bin)
+
+    {:ok,
+     %Vyasa.Parser.MP3{
+       duration: d,
+       path: p,
+       title: title
+     }} = Vyasa.Parser.MP3.parse(m_path)
+
+    [
+      %Vyasa.Medium.Event{
+        origin: 0,
+        duration: d,
+        fragments: [%{status: "firstpass", quote: verse}]
+      }
+      | acc
+    ]
+
+  _, acc ->
+    acc
+end)
+```
+
+```elixir
+aud =
+  output
+  |> Enum.find(&(Map.get(&1, "count") == 1))
+  |> Map.get("audio")
+```
+
+```elixir
+aud_bin =
+  Finch.build(
+    :get,
+    Path.join(url <> path, aud)
+    |> String.replace(~r/\.\//, "")
+  )
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+```
+
+```elixir
+# # IO.binwrite(path, aud)
+# # |> :file.read_file_info()
+# File.open(Path.expand([path,aud], "media"), [:write, :binary])
+# # |> IO.binwrite(aud_bin)
+# Path.expand([path,aud], "media")
+# # |> File.touch!()
+File.mkdir_p!(Path.expand(path, "media"))
+{:ok, file} = File.write!(Path.expand(path, "media"), aud_bin)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Shlokam
+
+```elixir
+url = "https://shlokam.org/"
+path = "hanumanchalisa"
+
+col =
+  Finch.build(:get, url <> path)
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+  |> Floki.parse_document!()
+  |> Floki.find(".uncode_text_column")
+```
+
+```elixir
+# class_key = %{
+#   "verse_meaning" => "en_translation",
+# "verse_sanskrit" => "text",
+# "verse_trans" => "transliteration",
+# }
+output =
+  col
+  |> Enum.reduce(%{title: nil, description: nil, verses: []}, fn
+    {"div", _, [{"h3", [], ["Description"]} | para]}, acc ->
+      # IO.inspect(rem, label: "div")
+      desc =
+        para
+        |> Floki.text()
+
+      %{acc | description: desc}
+
+    {"div", _, [{"h3", _, _} = h3_tree]}, acc ->
+      title =
+        h3_tree
+        |> Floki.text()
+
+      %{acc | title: title}
+
+    {"div", _, [{"div", [{"class", "verse_sanskrit"}], _verse} | _] = verse_tree}, acc ->
+      [curr | [%{"count" => count} | _] = verses] =
+        Enum.reduce(verse_tree, [], fn
+          # n case verse break
+          {"hr", [{"class", "verse_separator"}], []}, [curr | [%{"count" => c} | _] = acc] ->
+            [Map.put(curr, "count", c + 1) | acc]
+
+          # init verse break
+          {"hr", [{"class", "verse_separator"}], []}, [curr | acc] ->
+            [Map.put(curr, "count", 1) | acc]
+
+          # n case after verse break
+          {"div", [{"class", class}], _} = c_tree, [%{"count" => _} | _] = acc ->
+            [%{class => c_tree |> Floki.text()} | acc]
+
+          # n case before verse break
+          {"div", [{"class", class}], _} = c_tree, [curr | acc] when is_map(curr) ->
+            [Map.put(curr, class, c_tree |> Floki.text()) | acc]
+
+          # init
+          {"div", [{"class", class}], _} = c_tree, [] ->
+            [%{class => c_tree |> Floki.text()}]
+
+          others, acc ->
+            IO.inspect(others)
+            acc
+        end)
+
+      # formatting & tying loose ends
+      clean_verses =
+        [Map.put(curr, "count", count + 1) | verses]
+        |> Enum.reverse()
+
+      %{acc | verses: clean_verses}
+
+    _, acc ->
+      acc
+  end)
+```
+
+```elixir
+contents = Poison.encode!(output)
+# File.write!("chalisa_scraped.json", contents)
+filename = "chalisa_scraped.json"
+url = "./Projects/vyasa/scripts/#{filename}"
+File.write!(url, contents)
+IO.puts(url)
+```
+
+```elixir
+Floki.traverse_and_update(html, fn
+  {"div", _, _} = node -> {"div", [], ["Modified Div"]}
+  node -> node
+end)
+
+text = find_element(:class, "verse_sanskrit") |> inner_text()
+transliteration = find_element(:class, "verse_trans") |> inner_text()
+en_translation = find_element(:class, "verse_meaning") |> inner_text()
+
+map = %{
+  verse_number: count,
+  text: text,
+  transliteration: transliteration,
+  en_translation: en_translation
+}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Gita Events
+
+```elixir
+gita = Vyasa.Written.get_source_by_title("Gita")
+verses = Vyasa.Written.get_verses_in_chapter(1, gita.id)
+verse_lookup = Enum.into(for(%{id: id, no: verse_no} <- verses, do: {verse_no, id}), %{})
+
+c1_path = Path.expand("./1.mp3", "media/gita")
+
+{:ok,
+ %Vyasa.Parser.MP3{
+   duration: tot_d,
+   path: p
+ }} = Vyasa.Parser.MP3.parse(c1_path)
+
+{:ok, voice} =
+  Vyasa.Medium.create_voice(%{lang: "sa", duration: tot_d, file_path: c1_path, source_id: gita.id})
+
+# Vyasa.Medium.get_voice!("4c73fb6d-4163-4b64-90d0-5d49680c1ee4")
+# |> Vyasa.Medium.delete_voice()
+```
+
+```elixir
+"""
+start :- 00:00
+Shloka 1:-    00:33
+Shloka 2 :-   00:49
+Shloka 3:-    01:06
+Shloka 4:-   01:19
+Shloka 5:-   01:32 
+Shloka 6:-   01:46
+Shloka 7:-   02:00
+Shloka 8:-   02:15
+Shloka 9:-   02:28
+Shloka 10:-  02:42
+Shloka 11:-  02:56
+Shloka 12:- 03:09
+Shloka 13:- 03:22
+Shloka 14:- 03:36
+Shloka 15:- 03:49
+Shloka 16:- 04:02
+Shloka 17:- 04:14
+Shloka 18:- 04:27
+Shloka 19:- 04:40
+Shloka 20:- 04:54
+Shloka 21:-  05:07
+Shloka 22:-  05:23
+Shloka 23:-  05:36
+Shloka 24:-  05:50
+Shloka 25:- 06:05
+Shloka 26:- 06:18
+Shloka 27:- 06:32
+Shloka 28:- 06:46
+Shloka 29:-  07:01
+Shloka 30:-  07:13
+Shloka 31:-  07:26
+Shloka 32 :-  07:38
+Shloka 33:-   07:52
+Shloka 34 :-  08:05
+Shloka 35 :-  08:18
+Shloka 36 :- 08:31
+Shloka 37:-  08:44
+Shloka 38 :- 08:57
+Shloka 39:-  09:09
+Shloka 40:-  09:22
+Shloka 41:- 09:35
+Shloka 42:- 09:48
+Shloka 43:-  10:02
+Shloka 44:-  10:16
+Shloka 45:-  10:29
+Shloka 46:-  10:40
+Shloka 47:- 10:53
+end:-  11:08
+"""
+|> String.split("\n")
+|> Enum.map(fn x ->
+  x
+  |> String.split(":-")
+  |> Enum.map(&String.trim/1)
+  |> Enum.reduce([], fn
+    <<"Shloka"::utf8, sep::utf8, verse_no::binary>>, acc ->
+      [verse_lookup[String.to_integer(verse_no)] | acc]
+
+    bin, acc ->
+      [bin | acc]
+  end)
+end)
+|> IO.inspect(limit: :infinity)
+|> Enum.reduce(
+  [],
+  fn
+    [time, "start"], acc ->
+      [%Vyasa.Medium.Event{origin: 0, phase: "start", voice_id: voice.id} | acc]
+
+    [time, "end"], [%{origin: o} = prev | acc] ->
+      [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+      d = (min * 60 + sec) * 1000
+
+      [
+        %Vyasa.Medium.Event{origin: d, duration: tot_d - d, phase: "end", voice_id: voice.id}
+        | [%{prev | duration: d - o} | acc]
+      ]
+
+    [time, id], [%{origin: o} = prev | acc] ->
+      [min, sec] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
+      d = (min * 60 + sec) * 1000
+
+      [
+        %Vyasa.Medium.Event{origin: d, verse_id: id, voice_id: voice.id}
+        | [%{prev | duration: d - o} | acc]
+      ]
+
+    _, acc ->
+      acc
+  end
+)
+|> Enum.map(&Vyasa.Medium.create_event(&1))
+```
