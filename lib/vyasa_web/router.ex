@@ -31,10 +31,16 @@ defmodule VyasaWeb.Router do
       on_mount: [{VyasaWeb.Session, :anon}] do
       live "/explore/", SourceLive.Index, :index
       live "/explore/:source_title/", SourceLive.Show, :show
-      live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      #live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      #live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
       live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
     end
-    
+
+    live_session :gen_sangh_session,
+      on_mount: [{VyasaWeb.Session, :sangh}] do
+        live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      end
+
     live_admin "/admin" do
       admin_resource "/verses", VyasaWeb.Admin.Written.Verse
       admin_resource "/events", VyasaWeb.Admin.Medium.Event

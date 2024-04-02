@@ -98,6 +98,8 @@ defmodule Vyasa.Written do
   """
   def get_text!(id), do: Repo.get!(Text, id)
 
+  def get_text_by_title!(title), do: Repo.get_by!(Text, title: title)
+
   @doc """
   Gets a single source by id.
 

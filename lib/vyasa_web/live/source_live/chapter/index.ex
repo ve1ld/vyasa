@@ -21,20 +21,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
     {:noreply, socket
     |> sync_session()
-    |> apply_action(socket.assigns.live_action, params)
-
-    #|> register_client_state()
-    }
+    |> apply_action(socket.assigns.live_action, params)}
   end
 
-  # defp register_client_state(%{assigns: %{voice_events: voice_events}} = socket) do
-  #   desired_keys = [:origin, :duration, :phase, :fragments, :verse_id]
-  #   events = Enum.map(voice_events, fn e -> Map.take(Map.from_struct(e), desired_keys) end)
-
-  #   socket
-  #   |> push_event("registerEventsTimeline",
-  #   %{voice_events:  events})
-  # end
 
   defp sync_session(%{assigns: %{session: %{"id" => sess_id}}} = socket) do
     # written channel for reading and media channel for writing to media bridge and to player
@@ -138,7 +127,10 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     attr :verse_id, :string, required: false
     attr :navigate, :any, required: false
   end
-  def verse_display(assigns) do
+
+  def verse_matrix(assigns) do
+    assigns = assigns
+      |> assign(:marginote_id, "marginote-#{Map.get(assigns, :id)}-#{Ecto.UUID.generate()}")
     ~H"""
     <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
@@ -165,4 +157,68 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     """
   end
 
- end
+  attr :current_user, :map, required: true
+
+  def comment_information(assigns) do
+    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
+
+    ~H"""
+    <div class="max-w-28 flex items-center hidden rounded-md bg-gray-200 px-2 py-1 shadow-2xl" id={Ecto.UUID.generate()}
+      phx-hook="PopoverComment"
+      style="max-width:7rem"
+      >
+      <button
+        id={"comment-button-#{Ecto.UUID.generate()}"}
+        phx-click={show_modal(@elem_id)}
+        class="inline-flex items-center gap-1 border-none w-full font-serif text-sm"
+      >
+      <.icon name="hero-chat-bubble-left-ellipsis" class="h-4 w-4" /> Comment
+      </button>
+      <.modal_comments id={@elem_id} show={true} current_user={@current_user} />
+    </div>
+    """
+  end
+
+
+  attr(:id, :string, required: true)
+  attr(:current_user, :map, required: true)
+  attr(:show, :boolean,
+    default: true,
+    doc: "Default value is not to show the message"
+  )
+  attr(:path, :string, default: "/")
+
+  def modal_comments(assigns) do
+    assigns = assigns
+
+    ~H"""
+    <.modal_wrapper id={@id} background="bg-black/50" close_button={true} main_width="lg:max-w-lg">
+      <div
+        id={"#{@id}-comments-content"}
+        data-selector="vyasa_modal_message"
+        class="relative w-full shadow-2xl"
+      >
+        <div class="pointer-events-none absolute inset-y-0 px-2 flex items-center">
+          <img src="https://picsum.photos/50/50" class="h-6 w-6 rounded-full bg-black" />
+        </div>
+        <.form for={%{}} phx-submit="submit-quoted-comment">
+          <input
+            name="body"
+            class="block w-full rounded-lg border border-gray-200 bg-gray-50 p-2 pl-10 text-sm text-gray-900"
+            placeholder="Add to comment..."
+          />
+        </.form>
+        <div class="absolute inset-y-0 right-0 flex items-center gap-2 px-3">
+          <button type="button" class="flex items-center">
+          <.icon name="hero-paper-clip" class="h-4 w-4" />
+          </button>
+          <button class="flex items-center rounded-full bg-gray-200 p-1.5">
+          <.icon name="hero-arrow-up" class="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </.modal_wrapper>
+    """
+  end
+
+end

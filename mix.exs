@@ -60,6 +60,7 @@ defmodule Vyasa.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
+      {:ecto_ltree, "~> 0.4.0"},
       {:image, "~> 0.37"},
       {:vix, "~> 0.5"},
       {:kino, "~> 0.12.0"},
@@ -68,7 +69,8 @@ defmodule Vyasa.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:live_admin, "~> 0.11.4"},
       {:req, "~> 0.4.0"},
-      {:recase, "~> 0.5"}
+      {:recase, "~> 0.5"},
+      {:timex, "~> 3.0"}
     ]
   end
 
