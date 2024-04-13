@@ -87,11 +87,11 @@ export const RenderYouTubePlayer = {
     console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
     const {
       cmd,
-      player_details: playerDetails,
+      playback,
     } = payload
 
     if (cmd === "play") {
-      this.playMedia(playerDetails)
+      this.playMedia(playback)
     }
     if (cmd === "pause") {
       this.pauseMedia()
@@ -100,11 +100,15 @@ export const RenderYouTubePlayer = {
   handleSeekTime(payload) {
     console.log("[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:", {payload} );
     let {seekToMs: timeMs} = payload;
-    const timeS = Math.round(timeMs / 1000);
-    this.seekToS(timeS)
+    this.seekToMs(timeMs)
   },
-  playMedia(params) {
-    console.log("youtube player playMedia triggerred", params)
+  playMedia(playback) {
+    console.log("youtube player playMedia triggerred", playback)
+    const {meta: playbackMeta, "playing?": isPlaying, elapsed} = playback;
+    const { title, duration, file_path: filePath, artists } = playbackMeta;
+    const artist = artists ? artists[0] : "myArtist" // FIXME: this should be ready once seeding has been update to properly add in artist names
+
+    // TODO: consider if the elapsed ms should be used here for better sync(?)
     window.youtubePlayer.playVideo()
   },
   pauseMedia() {
@@ -114,12 +118,14 @@ export const RenderYouTubePlayer = {
   stop() {
     console.log("youtube player stop triggerred")
   },
-  seekToS(time) {
+  seekToMs(timeMs) {
+    const timeS = timeMs / 1000;
     console.log("youtube player seekto triggerred", {
-      time,
+      timeS,
       player: window.youtubePlayer
     })
-    window.youtubePlayer.seekTo(time)
+
+    window.youtubePlayer.seekTo(timeS);
   }
 };
 

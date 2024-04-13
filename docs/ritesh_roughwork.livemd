@@ -17,6 +17,25 @@ defmodule R do
 end
 ```
 
+```elixir
+R.recompile()
+
+alias Vyasa.Medium.{Playback, Meta}
+
+p = Playback.init_playback()
+
+foo = [title: "hello world", artists: ["a", "b"]]
+dbg(foo)
+m = p.meta
+p = %Playback{p | meta: Map.merge(m, foo) |> dbg()}
+
+p
+```
+
+```elixir
+
+```
+
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## Explore Youtube dlp
@@ -207,4 +226,4 @@ ext = ".png"
 |> (&(&1 <> ext)).()
 ```
 
-<!-- livebook:{"offset":5561,"stamp":{"token":"XCP.cWbGvQ8TWtIKMz0v0F-IXktzvkTS5W-czpchwuLMhNja_V6W0nQOmyUutsfaP5-23O69wh2frlPMgqnliJwaAxHsSYQ0i0XDGlQGSw","version":2}} -->
+<!-- livebook:{"offset":5799,"stamp":{"token":"XCP.szn6gg1F2nwI6bwLBxIgG9O6ZB88rXDUhTt_tQAW9Ihy64U0F4nR82c2CbbWMEHsfe0lJT_KgfZdw3-x611Y7AxQIPsstcv56KVWIg","version":2}} -->
