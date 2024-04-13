@@ -4,6 +4,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Medium
   alias VyasaWeb.OgImageController
+  alias Utils.Struct
   
   @default_lang "en"
   @default_voice_lang "sa"
@@ -41,6 +42,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       socket
       |> stream(:verses, verses)
       |> assign(:src, source)
+      |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
       |> assign(:selected_transl, ts)
       |> assign_meta()
@@ -114,7 +116,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   defp assign_meta(socket), do: socket
 
   @doc """
-  Renders a clickable verse display.
+  Renders Abstract Verse Matrix
 
   ## Examples
       <.verse_display>
@@ -122,9 +124,17 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       </.verse_display>
   """
   attr :id, :string, required: false
-  slot :item, required: true do
+  attr :verse, :any, required: true
+  slot :edge, required: true do
     attr :title, :string
-    attr :verse_id, :string, required: false
+    attr(:node, :any,
+      required: false,
+      doc: "Written Nodes linked to Verse")
+    attr :field, :list
+    attr(:verseup, :atom,
+      values: ~w(big mid smol)a,
+      doc: "Markup Style"
+    )
     attr :navigate, :any, required: false
   end
 
@@ -134,28 +144,35 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     ~H"""
     <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
+        <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
-            :if={Map.has_key?(item, :title) && Map.has_key?(item, :verse_id)}
+            :if={Map.has_key?(elem, :title)}
             class="w-1/12 flex-none text-zinc-500"
           >
            <button
-              phx-click={JS.push("clickVerseToSeek", value: %{verse_id: item.verse_id})}
+              phx-click={JS.push("clickVerseToSeek", value: %{verse_id: @verse.id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
             >
               <div class="font-dn text-xl sm:text-2xl mb-4">
-                <%= item.title %>
+                <%= elem.title %>
               </div>
            </button>
           </dt>
-          <dd class="text-zinc-700">
-            <%= render_slot(item) %>
+          <dd node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
+            <%=  Struct.get_in(Map.get(elem, :node, @verse), elem.field)%>
           </dd>
         </div>
       </dl>
     </div>
     """
   end
+  # font by lang here
+  defp verse_class(:big),
+    do:
+      "font-dn text-lg sm:text-xl"
+  defp verse_class(:mid),
+    do:
+      "font-dn text-m"
 
   attr :current_user, :map, required: true
 

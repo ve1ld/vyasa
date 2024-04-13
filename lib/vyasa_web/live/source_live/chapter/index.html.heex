@@ -14,30 +14,25 @@
         </:subtitle>
     </.header>
 
-    <.verse_matrix id={dom_id} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses}>
-        <:item
+    <.verse_matrix id={dom_id} verse={verse} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses}>
+        <:edge
             title={"#{verse.chapter_no}.#{verse.no}"}
-            verse_id={verse.id}
-        >
-            <p class="font-dn text-lg sm:text-xl">
-                <%= verse.body |> String.split("।।") |> List.first()  %>
-            </p>
-        </:item>
-        <:item title={"Transliteration"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
-                <%= hd(verse.translations).target.body_translit  %>
-            </p>
-        </:item>
-        <:item title={"Transliteration Meaning"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-m">
-                <%=  hd(verse.translations).target.body_translit_meant  %>
-            </p>
-        </:item>
-        <:item title={"Translation"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
-                <%=  hd(verse.translations).target.body %>
-            </p>
-        </:item>
+            field={[:body]}
+            verseup={:big}/>
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit_meant]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body]}
+            verseup={:mid}/>
     </.verse_matrix>
     <.back navigate={~p"/explore/#{@src.title}"}>Back to <%= to_title_case(@src.title)%> Chapters</.back>
 </div>
