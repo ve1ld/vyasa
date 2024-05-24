@@ -1,6 +1,5 @@
 defmodule Vyasa.Medium.Event do
   use Ecto.Schema
-
   import Ecto.Changeset
 
   alias Vyasa.Written.{Verse, Source}

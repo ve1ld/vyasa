@@ -18,3 +18,11 @@ defmodule VyasaWeb.ErrorHTML do
     Phoenix.Controller.status_message_from_template(template)
   end
 end
+
+defmodule VyasaWeb.ErrorHTML.FourOThree do
+  defexception [:message, plug_status: 403]
+end
+
+defmodule VyasaWeb.ErrorHTML.FourOFour do
+  defexception [:message, plug_status: 404]
+end

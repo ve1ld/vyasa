@@ -1,7 +1,7 @@
 defmodule Vyasa.Medium do
 
   import Ecto.Query, warn: false
-  alias Vyasa.Medium.{Voice, Event}
+  alias Vyasa.Medium.{Video, Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Repo
 
@@ -25,12 +25,35 @@ defmodule Vyasa.Medium do
     |> Repo.preload([:events])
   end
 
+  def get_voice(source_id, chapter_no, lang) do
+    from(v in Voice,
+      where: v.source_id == ^source_id and v.lang == ^lang and v.chapter_no == ^chapter_no,
+      preload: [:events, :video])
+    |> Repo.one()
+  end
 
   def get_voices!(%Voice{source_id: src_id, chapter_no: c_no, lang: l}) do
     from(v in Voice,
       where: v.source_id == ^src_id and v.chapter_no == ^c_no and v.lang == ^l,
       preload: [:events])
     |> Repo.all()
+  end
+
+  @doc """
+  Returns a resolved path to the video, bsed on its type attribute.
+
+  Currently mainly used for youtube videos, possibly more in the future.
+  """
+  def resolve_video_url(%Video{
+        type: type,
+        ext_uri: ext_uri,
+      } = _video) do
+
+    cond do
+      type == "youtube" -> "https://www.youtube.com/watch?v=#{ext_uri}"
+      true -> ext_uri
+    end
+    
   end
 
 
@@ -113,6 +136,16 @@ defmodule Vyasa.Medium do
   """
   def get_event!(id), do: Repo.get!(Event, id)
 
+  def get_event_by_order!(%Event{origin: origin, voice_id: v_id}, order) do
+    #TODO merge Sangh Filters to fix -1 order case for origin backwards operators
+    (from e in Event,
+      preload: [:voice, :verse],
+      where: e.origin >= ^origin and e.voice_id == ^v_id,
+      order_by: e.origin,
+      offset: ^order,
+      limit: 1)
+    |> Repo.one!()
+  end
 
     @doc """
   Creates a event.

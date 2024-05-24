@@ -11,12 +11,6 @@ config :vyasa, Vyasa.Repo,
   pool_size: 10
 
 # MINIO Object Store API Domain
-config :ex_aws,
-  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
-  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
-  region: "ap-southeast-1",
-  http_client: Vyasa.Medium.Ext.S3Client
-
 config :ex_aws, :s3,
   scheme: "http://",
   host: "localhost",
@@ -36,7 +30,8 @@ config :ex_aws, :retries,
 config :vyasa, VyasaWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: System.get_env("PORT") || 4000],
+  # http: [ip: {127, 0, 0, 1}, port: System.get_env("PORT") || 4000],
+  http: [ip: {0, 0, 0, 0}, port: System.get_env("PORT") || 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

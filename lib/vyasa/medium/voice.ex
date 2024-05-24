@@ -12,14 +12,16 @@ defmodule Vyasa.Medium.Voice do
     field :duration, :integer
     field :file_path, :string, virtual: true
 
+    ## FIXME: change field name to artists since it's an array..
     embeds_one :meta, VoiceMetadata do
       field(:artist, {:array, :string})
     end
 
+    has_one :video, Video, references: :id, foreign_key: :voice_id
     has_many :events, Event, references: :id, foreign_key: :voice_id, preload_order: [asc: :origin]
+
     belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
-    has_one :video, Video, references: :id, foreign_key: :voice_id
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id
 
     timestamps(type: :utc_datetime)
@@ -36,8 +38,10 @@ defmodule Vyasa.Medium.Voice do
 
   def changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:title, :duration, :lang, :file_path, :chapter_no, :source_id])
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
     |> cast_embed(:meta, with: &meta_changeset/2)
+    |> cast_assoc(:video)
+    |> cast_assoc(:events)
   end
 
   def meta_changeset(voice, attrs) do
