@@ -44,3 +44,4 @@ npm-debug.log
 # Any Secret Configs
 /config/*.secret.exs
 /venv/
+**.DS_Store
