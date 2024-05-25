@@ -1,0 +1,10 @@
+#+title: All Posts
+
+#+hugo_base_dir: ../
+
+* DONE My first post :tag1:@category1:
+CLOSED: [2024-05-25 Sat 13:05]
+:PROPERTIES:
+:EXPORT_FILE_NAME: my-first-post
+:END:
+This is my post body
