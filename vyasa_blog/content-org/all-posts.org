@@ -1,0 +1,19 @@
+#+title: All Posts
+
+#+hugo_base_dir: ../
+
+* DONE Good Morning, World! :FirstSteps:@Progress:
+CLOSED: [2024-06-19 Wed 00:53]
+:PROPERTIES:
+:EXPORT_FILE_NAME: good_morning
+:END:
+
+
+We're two brothers, on a mission to build bridges across knowledge and between people.
+
+#+begin_quote
+> When I was a King and a Mason - a Master proven and skilled
+I cleared me ground for a Palace such as a King should build.
+I decreed and dug down to my levels. Presently under the silt
+I came on the wreck of a Palace such as a King had built.
+#+end_quote
