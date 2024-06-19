@@ -49,29 +49,29 @@ jobs:
         id: pages
         uses: actions/configure-pages@v4
       - name: check stuff
+        working-directory: ./vyasa_blog
         run: |
           echo "Hello world, it's time to test the working directory: " && pwd
-        working-directory: ./vyasa_blog
       - name: Install Node.js dependencies
-        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
         working-directory: ./vyasa_blog
+        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
       - name: Build with Hugo
         env:
           # For maximum backward compatibility with Hugo modules
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
           TZ: America/Los_Angeles
+        working-directory: ./vyasa_blog
         run: |
           hugo \
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
-        working-directory: ./vyasa_blog
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
-        working-directory: ./vyasa_blog
+          path: ./vyasa_blog/public
+
 
   # Deployment job
   deploy:
