@@ -115,6 +115,12 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   defp assign_meta(socket), do: socket
 
+  # TODO verse matrix id structure build hashed node ref from node and node_id, field pairs
+  # all comments where bindings -> where source and chapter
+  # construct flat map access head via verse_id => %{node_assocs => %{node_id => }} for existing bindings based comments (r)a
+  # create bindings based on node and node_id with the comment (w)
+
+
   @doc """
   Renders Abstract Verse Matrix
 
