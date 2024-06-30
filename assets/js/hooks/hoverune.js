@@ -19,20 +19,21 @@ export default HoveRune = {
     const t = this.el
     const hoverune = document.querySelector('#hoverune');
     window.addEventListener('click', ({ target }) => {
-      const selection = window.getSelection().toString()
+      const selection = window.getSelection()
+      var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
       //const validElem = findHook(target)
       // const isMarginote = findMarginote(target)
       const isNode = findNode(target)
 
       if (isNode) {
         binding = forgeBinding(target, ["node", "node_id", "field"])
-        binding = binding.set("selection", selection)
+        binding = binding.set("selection", selection.toString())
         console.log(binding)
 
-        computePosition(target, hoverune, {placement: 'top-end', middleware: [inline(), offset(1)]}).then(({x, y}) => {
+        computePosition(target, hoverune, {placement: 'top-end', middleware: [inline(getSelectRect.x, getSelectRect.y), offset(5)]}).then(({x, y}) => {
           hoverune.classList.remove("hidden")
           Object.assign(hoverune.style, {
-            left: `${x}px`,
+            left: `${getSelectRect.x}px`,
             top: `${y}px`,
           });
         })
