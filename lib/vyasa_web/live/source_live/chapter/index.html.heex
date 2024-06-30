@@ -1,4 +1,4 @@
-<div id="chapter-index-container">
+<div id="chapter-index-container" phx-hook="HoveRune">
     <.header class="p-4 pb-0">
         <div class="font-dn text-4xl mb-4">
            <%= @selected_transl.target.translit_title %> | <%= @chap.title%>
@@ -35,4 +35,19 @@
             verseup={:mid}/>
     </.verse_matrix>
     <.back navigate={~p"/explore/#{@src.title}"}>Back to <%= to_title_case(@src.title)%> Chapters</.back>
+</div>
+
+<div id="hoverune" class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out">
+  <button class="text-gray-600 hover:text-blue-600 focus:outline-none">
+    <.icon
+        name="hero-bars-3-bottom-left-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer"/>
+  </button>
+
+  <button class="text-gray-600 hover:text-red-600 focus:outline-none">
+    <.icon
+        name="hero-bookmark-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer"/>
+  </button>
+
 </div>
