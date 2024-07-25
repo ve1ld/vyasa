@@ -5,7 +5,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   alias Vyasa.Medium
   alias VyasaWeb.OgImageController
   alias Utils.Struct
-  
+  alias Vyasa.Sangh.Comment
+
   @default_lang "en"
   @default_voice_lang "sa"
 
@@ -41,7 +42,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       socket
       |> stream_configure(:verses, dom_id: &("verse-#{&1.id}"))
       |> stream(:verses, verses)
-      |> assign(:kv_verses,  Enum.into(verses, %{}, &({&1.id, &1})))
+      |> assign(:kv_verses,  Enum.into(verses, %{}, &({&1.id, %{&1 | comments: [%Comment{signature: "Pope", body: "Achilles’ wrath, to Greece the direful spring
+          Of woes unnumber’d, heavenly goddess, sing"}] }  })))
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
@@ -197,7 +199,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           <dd verse_id={@verse.id} node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
             <%=  Struct.get_in(Map.get(elem, :node, @verse), elem.field)%>
           </dd>
-           <.comment_binding :if={@verse.binding} quote={@verse.binding.selection} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
+           <.comment_binding :if={@verse.binding} comments={@verse.comments} quote={@verse.binding.selection} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
           </div>
           </div>
       </dl>
@@ -214,22 +216,22 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   attr :class, :string, default: nil
   attr :quote, :string, default: nil
+  attr :comments, :any, default: nil
 
   def comment_binding(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
 
     ~H"""
     <div class={["block mt-4 text-sm text-gray-700 font-serif leading-relaxed
-              lg:absolute lg:top-0 lg:right-0 md:mt-0 md:w-64
-              lg:float-right lg:clear-right lg:-mr-[45%] lg:w-[40%] lg:text-[0.9rem]
+              lg:absolute lg:top-0 lg:right-0 md:mt-0
+              lg:float-right lg:clear-right lg:-mr-[60%] lg:w-[50%] lg:text-[0.9rem]
               opacity-70 transition-opacity duration-300 ease-in-out
               hover:opacity-100", @class]}>
-       <span class="block
+       <span :for={comment <- @comments} class="block
                  before:content-['╰'] before:mr-1 before:text-gray-500
                  lg:before:content-none
                  lg:border-l-0 lg:pl-2">
-
-          Sangh comment here
+                <%= comment.body %> -  <b> <%= comment.signature %> </b>
           </span>
         <span :if={!is_nil(@quote) && @quote !== ""} class="block
                  pl-1
@@ -243,7 +245,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
         <.form for={%{}} phx-submit="create_comment">
           <input
             name="body"
-            class="block w-full rounded-lg border border-gray-200 bg-gray-50 p-2 pl-5 text-sm text-gray-800"
+            class="block lg:w-[80%] md:w-96 rounded-lg border border-gray-200 bg-gray-50 p-2 pl-5 text-sm text-gray-800"
             placeholder="Write here..."
           />
         </.form>
