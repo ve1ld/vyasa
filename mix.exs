@@ -41,13 +41,13 @@ defmodule Vyasa.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.10"},
+      {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.3"},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.1"},
+      {:phoenix_live_view, "~> 0.20.17"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
@@ -67,7 +67,7 @@ defmodule Vyasa.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.5"},
-      {:live_admin, "~> 0.11.4"},
+      {:live_admin, "~> 0.12"},
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
       {:timex, "~> 3.0"}

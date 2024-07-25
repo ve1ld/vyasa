@@ -126,7 +126,6 @@ defmodule VyasaWeb.OgImageController do
         text_fill_color: caption_text_color,
         x: :right,
         y: :top,
-        autofit: true,
         width: caption_width,
         height: caption_height,
         font: font,

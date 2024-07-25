@@ -11,8 +11,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket
-     |> stream_configure(:verses, dom_id: &("verse-#{&1.id}"))}
+    {:ok, socket}
   end
 
 
@@ -40,7 +39,9 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
          %{verses: verses, translations: [ts | _]} = chap  <- Written.get_chapter(chap_no, sid, @default_lang) do
 
       socket
+      |> stream_configure(:verses, dom_id: &("verse-#{&1.id}"))
       |> stream(:verses, verses)
+      |> assign(:kv_verses,  Enum.into(verses, %{}, &({&1.id, &1})))
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
@@ -55,8 +56,13 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   @impl true
   @doc """
+  events
+
+  "clickVersetoSeek" ->
   Handles the action of clicking to seek by emitting the verse_id to the live player
   via the pubsub system.
+
+  "binding"
   """
   def handle_event("clickVerseToSeek",
     %{"verse_id" => verse_id} = _payload,
@@ -64,8 +70,31 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
     IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
-    {:noreply, socket}
+    {:noreply, socket }
   end
+
+  @impl true
+  def handle_event("bindHoveRune",
+    %{
+      "binding" => %{
+        "field" => field,
+        "node" => node,
+        "node_id" => node_id,
+        "verse_id" => verse_id,
+        "selection" => selection}} = _payload,
+    %{assigns: %{kv_verses: verses}}  = socket) do
+    # bind = %{node => %{node_id => %{field => %{"selection" => selection}}}}
+
+    {:noreply, socket
+    |> stream_insert(:verses,
+        %{verses[verse_id] | binding: %{node: node,
+                                        node_id: node_id,
+                                        field: field,
+                                        selection: selection}})
+    |> push_event("genHoveRune", %{})
+    }
+  end
+
 
   @doc """
   Upon rcv of :media_handshake, which indicates an intention to sync by the player,
@@ -148,7 +177,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     assigns = assigns
       |> assign(:marginote_id, "marginote-#{Map.get(assigns, :id)}-#{Ecto.UUID.generate()}")
     ~H"""
-    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
+    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark"  id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt
@@ -164,10 +193,13 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
               </div>
            </button>
           </dt>
-          <dd node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
+          <div class="relative">
+          <dd verse_id={@verse.id} node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
             <%=  Struct.get_in(Map.get(elem, :node, @verse), elem.field)%>
           </dd>
-        </div>
+           <.comment_binding :if={@verse.binding} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
+          </div>
+          </div>
       </dl>
     </div>
     """
@@ -180,25 +212,25 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     do:
       "font-dn text-m"
 
-  attr :current_user, :map, required: true
+  attr :class, :string, default: nil
 
-  def comment_information(assigns) do
+  def comment_binding(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
 
     ~H"""
-    <div class="max-w-28 flex items-center hidden rounded-md bg-gray-200 px-2 py-1 shadow-2xl" id={Ecto.UUID.generate()}
-      phx-hook="PopoverComment"
-      style="max-width:7rem"
-      >
-      <button
-        id={"comment-button-#{Ecto.UUID.generate()}"}
-        phx-click={show_modal(@elem_id)}
-        class="inline-flex items-center gap-1 border-none w-full font-serif text-sm"
-      >
-      <.icon name="hero-chat-bubble-left-ellipsis" class="h-4 w-4" /> Comment
-      </button>
-      <.modal_comments id={@elem_id} show={true} current_user={@current_user} />
-    </div>
+    <div class={["block mt-4 text-sm text-gray-700 font-serif leading-relaxed
+              md:absolute md:top-0 md:right-0 md:mt-0 md:w-64
+              lg:float-right lg:clear-right lg:-mr-[45%] lg:w-[40%] lg:text-[0.9rem]
+              opacity-70 transition-opacity duration-300 ease-in-out
+              hover:opacity-100", @class]}>
+       <span class="block
+                 before:content-['╰'] before:mr-1 before:text-gray-500
+                 md:before:content-none
+                 md:border-l-4 md:border-gray-300 md:pl-3 lg:border-l-0 lg:pl-2">
+
+          Sangh comment here
+          </span>
+     </div>
     """
   end
 
