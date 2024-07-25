@@ -197,7 +197,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           <dd verse_id={@verse.id} node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
             <%=  Struct.get_in(Map.get(elem, :node, @verse), elem.field)%>
           </dd>
-           <.comment_binding :if={@verse.binding} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
+           <.comment_binding :if={@verse.binding} quote={@verse.binding.selection} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
           </div>
           </div>
       </dl>
@@ -213,23 +213,40 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       "font-dn text-m"
 
   attr :class, :string, default: nil
+  attr :quote, :string, default: nil
 
   def comment_binding(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
 
     ~H"""
     <div class={["block mt-4 text-sm text-gray-700 font-serif leading-relaxed
-              md:absolute md:top-0 md:right-0 md:mt-0 md:w-64
+              lg:absolute lg:top-0 lg:right-0 md:mt-0 md:w-64
               lg:float-right lg:clear-right lg:-mr-[45%] lg:w-[40%] lg:text-[0.9rem]
               opacity-70 transition-opacity duration-300 ease-in-out
               hover:opacity-100", @class]}>
        <span class="block
                  before:content-['╰'] before:mr-1 before:text-gray-500
-                 md:before:content-none
-                 md:border-l-4 md:border-gray-300 md:pl-3 lg:border-l-0 lg:pl-2">
+                 lg:before:content-none
+                 lg:border-l-0 lg:pl-2">
 
           Sangh comment here
           </span>
+        <span :if={!is_nil(@quote) && @quote !== ""} class="block
+                 pl-1
+                 ml-5
+                 mb-2
+                 border-l-4 border-gray-300
+                 before:mr-5 before:text-gray-500">
+
+          <%= @quote %>
+          </span>
+        <.form for={%{}} phx-submit="create_comment">
+          <input
+            name="body"
+            class="block w-full rounded-lg border border-gray-200 bg-gray-50 p-2 pl-5 text-sm text-gray-800"
+            placeholder="Write here..."
+          />
+        </.form>
      </div>
     """
   end
@@ -256,13 +273,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
         <div class="pointer-events-none absolute inset-y-0 px-2 flex items-center">
           <img src="https://picsum.photos/50/50" class="h-6 w-6 rounded-full bg-black" />
         </div>
-        <.form for={%{}} phx-submit="submit-quoted-comment">
-          <input
-            name="body"
-            class="block w-full rounded-lg border border-gray-200 bg-gray-50 p-2 pl-10 text-sm text-gray-900"
-            placeholder="Add to comment..."
-          />
-        </.form>
+
         <div class="absolute inset-y-0 right-0 flex items-center gap-2 px-3">
           <button type="button" class="flex items-center">
           <.icon name="hero-paper-clip" class="h-4 w-4" />

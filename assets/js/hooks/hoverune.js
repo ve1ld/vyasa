@@ -75,7 +75,7 @@ export default HoveRune = {
 
     }
       else {
-        hoverune.classList.remove("hidden")
+        hoverune.classList.add("hidden")
       }
     })},
 
