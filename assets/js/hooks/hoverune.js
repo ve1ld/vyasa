@@ -51,7 +51,7 @@ const forgeBinding = (el, attrs)  => attrs.reduce((acc, attr) => {
 export default HoveRune = {
   mounted() {
     const t = this.el
-    const targetEvents = ['click', 'pointermove']
+    const targetEvents = ['click', 'pointermove', 'pointerdown']
     targetEvents.forEach(e => window.addEventListener(e, ({ target }) => {
       var selection = window.getSelection()
       var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
