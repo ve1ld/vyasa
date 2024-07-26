@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04  # Use a specific version for stability
     name: Build OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} && Run Mix Test
     services:
       postgres:
@@ -17,7 +17,6 @@ jobs:
           POSTGRES_USER: postgres
         ports:
           - 5432:5432
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -28,43 +27,45 @@ jobs:
         otp: ['26.2']
         elixir: ['1.16.3']
     steps:
-      - uses: actions/checkout@v2
-      - name: Install dependecies for build
-        run: sudo apt-get install -y libncurses-dev libtinfo5
-      - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
+      - name: Checkout code
+        uses: actions/checkout@v4  # Pin to a specific version for stability
+
+      - name: Install dependencies for build
+        run: sudo apt-get update && sudo apt-get install -y libncurses-dev libtinfo5
+
+      - name: Setup Elixir and OTP
+        uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
-      - run: mix deps.get
-      - run: mix test
+
       - name: Restore dependencies cache
-      - uses: actions/cache@v4
+        uses: actions/cache@v4
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
+
       - name: Install dependencies
-        working-directory: ./
         run: mix deps.get
+
       - name: Run tests
         env:
-          # use localhost for the host here because we are running the job on the VM.
-          # If we were running the job on in a container this would be postgres
           POSTGRES_HOST: localhost
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-        working-directory: ./
         run: mix test
-
 
   deploy:
     needs: test
     name: Build & Deploy to Fly
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Use a specific version for stability
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: superfly/flyctl-actions@master
+      - name: Checkout code
+        uses: actions/checkout@v4  # Pin to a specific version for stability
+
+      - name: Deploy to Fly.io
+        uses: superfly/flyctl-actions@master
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_APP: vyasa
