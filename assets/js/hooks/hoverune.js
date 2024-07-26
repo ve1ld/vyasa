@@ -51,7 +51,8 @@ const forgeBinding = (el, attrs)  => attrs.reduce((acc, attr) => {
 export default HoveRune = {
   mounted() {
     const t = this.el
-    window.addEventListener('click', ({ target }) => {
+    const targetEvents = ['click', 'pointermove']
+    targetEvents.forEach(e => window.addEventListener(e, ({ target }) => {
       var selection = window.getSelection()
       var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
       const getSelectText = selection.toString()
@@ -77,7 +78,9 @@ export default HoveRune = {
       else {
         hoverune.classList.add("hidden")
       }
-    })},
+    }))
+
+  },
 
   updated() {
   }
