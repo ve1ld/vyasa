@@ -30,10 +30,10 @@ defmodule Vyasa.Sangh do
 
     ## Examples
 
-        iex> create_comment(comment, %{field: new_value})
+        iex> create_comment(%{field: new_value})
         {:ok, %Comment{}}
 
-        iex> create_comment(comment, %{field: bad_value})
+        iex> create_comment(%{field: bad_value})
         {:error, %Ecto.Changeset{}}
 
   """

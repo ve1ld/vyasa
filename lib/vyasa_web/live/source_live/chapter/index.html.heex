@@ -14,7 +14,7 @@
         </:subtitle>
     </.header>
   <div id="verses" phx-update="stream" phx-hook="HoveRune">
-    <.verse_matrix id={dom_id} verse={verse} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses}>
+    <.verse_matrix id={dom_id} verse={verse} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses} marks={@marks}>
         <:edge
             title={"#{verse.chapter_no}.#{verse.no}"}
             field={[:body]}
@@ -39,10 +39,10 @@
 </div>
 
 <div id="hoverune"  phx-update="ignore" class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white/80 rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out">
-  <button class="text-gray-600 hover:text-blue-600 focus:outline-none">
+  <button phx-click="markQuote" class="text-gray-600 hover:text-blue-600 focus:outline-none">
     <.icon
-        name="hero-bars-3-bottom-left-mini"
-        class="w-5 h-5 hover:text-black hover:cursor-pointer"/>
+        name="hero-link-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"/>
   </button>
 
   <button class="text-gray-600 hover:text-red-600 focus:outline-none">

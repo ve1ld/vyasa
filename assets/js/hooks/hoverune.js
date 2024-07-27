@@ -9,8 +9,6 @@ const findParent = (el, attr, stopper) => {
 }
 
 function floatHoveRune({clientX, clientY}) {
-
-  console.log("sting like a bees")
   const selection = window.getSelection()
   var getSelectRect = selection.getRangeAt(0).getBoundingClientRect()
   const virtualEl = {
@@ -51,7 +49,7 @@ const forgeBinding = (el, attrs)  => attrs.reduce((acc, attr) => {
 export default HoveRune = {
   mounted() {
     const t = this.el
-    const targetEvents = ['click', 'pointermove', 'pointerdown']
+    const targetEvents = ['pointerdown', 'pointerup']
     targetEvents.forEach(e => window.addEventListener(e, ({ target }) => {
       var selection = window.getSelection()
       var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
@@ -63,7 +61,10 @@ export default HoveRune = {
       if (isNode) {
         binding = forgeBinding(target, ["node", "node_id", "field", "verse_id"])
         binding["selection"] = getSelectText
+
         this.pushEvent("bindHoveRune", {"binding": binding})
+
+        console.log(binding)
 
 
         computePosition(target, hoverune, {placement: 'top-end', middleware: [inline(getSelectRect.x, getSelectRect.y), offset(5)]}).then(({x, y}) => {

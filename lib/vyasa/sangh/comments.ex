@@ -2,8 +2,7 @@ defmodule Vyasa.Sangh.Comment do
   use Ecto.Schema
   import Ecto.Changeset
   alias EctoLtree.LabelTree, as: Ltree
-  alias Vyasa.Sangh.{Comment, Session}
-  alias Vyasa.Adapters.Binding
+  alias Vyasa.Sangh.{Comment, Session, Mark}
 
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "comments" do
@@ -16,7 +15,8 @@ defmodule Vyasa.Sangh.Comment do
     belongs_to :session, Session, references: :id, type: Ecto.UUID
     belongs_to :parent, Comment, references: :id, type: Ecto.UUID
 
-    has_many :bindings, Binding, references: :id, foreign_key: :comment_bind_id, on_replace: :delete_if_exists
+    #has_many :marks, Mark, references: :id, foreign_key: :comment_bind_id, on_replace: :delete_if_exists
+    #has_many :bindings, Binding, references: :id, foreign_key: :comment_bind_id, on_replace: :delete_if_exists
 
     timestamps()
   end
@@ -25,7 +25,7 @@ defmodule Vyasa.Sangh.Comment do
   def changeset(%Comment{} = comment, attrs) do
     comment
       |> cast(attrs, [:id, :body, :path, :chapter_number, :p_type, :session_id, :parent_id, :text_id])
-      |> cast_assoc(:bindings, with: &Binding.bind_comment_changeset/2)
+      |> cast_assoc(:bindings, with: &Mark.changeset/2)
       |> validate_required([:id, :session_id])
   end
 

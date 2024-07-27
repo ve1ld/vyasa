@@ -1,11 +1,10 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
-  alias Vyasa.Written
+  alias Vyasa.{Written, Medium, Draft}
   alias Vyasa.Written.{Source, Chapter}
-  alias Vyasa.Medium
   alias VyasaWeb.OgImageController
   alias Utils.Struct
-  alias Vyasa.Sangh.Comment
+  alias Vyasa.Sangh.{Comment, Mark}
 
   @default_lang "en"
   @default_voice_lang "sa"
@@ -45,6 +44,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       |> assign(:kv_verses,  Enum.into(verses, %{}, &({&1.id, %{&1 | comments: [%Comment{signature: "Pope", body: "Achilles’ wrath, to Greece the direful spring
           Of woes unnumber’d, heavenly goddess, sing"}] }  })))
       |> assign(:src, source)
+      |> assign(:marks, [%Mark{state: :draft, order: 0}])
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
       |> assign(:selected_transl, ts)
@@ -77,24 +77,74 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   @impl true
   def handle_event("bindHoveRune",
-    %{
-      "binding" => %{
-        "field" => field,
-        "node" => node,
-        "node_id" => node_id,
-        "verse_id" => verse_id,
-        "selection" => selection}} = _payload,
-    %{assigns: %{kv_verses: verses}}  = socket) do
-    # bind = %{node => %{node_id => %{field => %{"selection" => selection}}}}
+    %{"binding" => bind = %{"verse_id" => verse_id}},
+    %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]}}  = socket) when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind)
 
     {:noreply, socket
     |> stream_insert(:verses,
-        %{verses[verse_id] | binding: %{node: node,
-                                        node_id: node_id,
-                                        field: field,
-                                        selection: selection}})
-    |> push_event("genHoveRune", %{})
+        %{verses[curr_verse_id] | binding: nil})
+    |> stream_insert(:verses,
+        %{verses[verse_id] | binding: bind})
+    |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])
     }
+  end
+
+  # already in mark in drafting state, remember to late bind binding => with a fn()
+  def handle_event("bindHoveRune",
+    %{"binding" => bind = %{"verse_id" => verse_id}},
+    %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}}  = socket) do
+
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind)
+
+    {:noreply, socket
+    |> stream_insert(:verses,
+        %{verses[verse_id] | binding: bind})
+    |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])
+    }
+  end
+
+  @impl true
+  def handle_event("bindHoveRune",
+    %{"binding" => bind = %{"verse_id" => verse_id}},
+    %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}}  = socket) do
+
+    bind = Draft.bind_node(bind)
+
+    {:noreply, socket
+    |> stream_insert(:verses,
+        %{verses[verse_id] | binding: bind})
+    |> assign(:marks, [%Mark{state: :draft,
+                            order: no + 1,
+                            verse_id: verse_id,
+                            binding: bind} | marks])}
+  end
+
+  @impl true
+  def handle_event("markQuote", _, %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket) do
+    IO.inspect(marks)
+    {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
+  end
+
+  def handle_event("markQuote", _, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("createMark", %{"body" => body}, %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket) do
+    {:noreply, socket |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])}
+  end
+
+  def handle_event("createMark", _event, socket) do
+    {:noreply, socket}
+  end
+
+
+  def handle_event(event, message , socket) do
+    IO.inspect(%{event: event, message: message}, label: "pokemon")
+    {:noreply, socket}
   end
 
 
@@ -119,7 +169,8 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     {:noreply, socket}
   end
 
-  def handle_info(msg, socket) do IO.inspect(msg, label: "unexpected message in @chapter")
+  def handle_info(msg, socket) do
+    IO.inspect(msg, label: "unexpected message in @chapter")
     {:noreply, socket}
   end
 
@@ -162,6 +213,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
   """
   attr :id, :string, required: false
   attr :verse, :any, required: true
+  attr :marks, :any
   slot :edge, required: true do
     attr :title, :string
     attr(:node, :any,
@@ -175,9 +227,10 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
     attr :navigate, :any, required: false
   end
 
+  # enum.split() from @verse binding to mark
   def verse_matrix(assigns) do
     assigns = assigns
-      |> assign(:marginote_id, "marginote-#{Map.get(assigns, :id)}-#{Ecto.UUID.generate()}")
+    
     ~H"""
     <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark"  id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
@@ -199,7 +252,16 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           <dd verse_id={@verse.id} node={Map.get(elem, :node, @verse).__struct__} node_id={Map.get(elem, :node, @verse).id} field={elem.field |> Enum.join("::")} class={"text-zinc-700 #{verse_class(elem.verseup)}"}>
             <%=  Struct.get_in(Map.get(elem, :node, @verse), elem.field)%>
           </dd>
-           <.comment_binding :if={@verse.binding} comments={@verse.comments} quote={@verse.binding.selection} class={(@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field == elem.field |> Enum.join("::")) && "" || "hidden"} />
+              <div :if={@verse.binding} class={["block mt-4 text-sm text-gray-700 font-serif leading-relaxed
+              lg:absolute lg:top-0 lg:right-0 md:mt-0
+              lg:float-right lg:clear-right lg:-mr-[60%] lg:w-[50%] lg:text-[0.9rem]
+              opacity-70 transition-opacity duration-300 ease-in-out
+              hover:opacity-100", (@verse.binding.node_id == Map.get(elem, :node, @verse).id && @verse.binding.field_key == elem.field ) && "" || "hidden"]}>
+               <.comment_binding  comments={@verse.comments}/>
+               <!-- for study https://ctan.math.illinois.edu/macros/latex/contrib/tkz/pgfornament/doc/ornaments.pdf-->
+               <span class="text-primaryAccent flex items-center justify-center" > ☙ ——— ›– ❊ –‹ ——— ❧ </span>
+               <.drafting  marks={@marks} quote={@verse.binding.window && @verse.binding.window.quote}/>
+           </div>
           </div>
           </div>
       </dl>
@@ -215,24 +277,45 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       "font-dn text-m"
 
   attr :class, :string, default: nil
-  attr :quote, :string, default: nil
   attr :comments, :any, default: nil
 
   def comment_binding(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
 
     ~H"""
-    <div class={["block mt-4 text-sm text-gray-700 font-serif leading-relaxed
-              lg:absolute lg:top-0 lg:right-0 md:mt-0
-              lg:float-right lg:clear-right lg:-mr-[60%] lg:w-[50%] lg:text-[0.9rem]
-              opacity-70 transition-opacity duration-300 ease-in-out
-              hover:opacity-100", @class]}>
        <span :for={comment <- @comments} class="block
                  before:content-['╰'] before:mr-1 before:text-gray-500
                  lg:before:content-none
                  lg:border-l-0 lg:pl-2">
                 <%= comment.body %> -  <b> <%= comment.signature %> </b>
           </span>
+    """
+  end
+
+  attr :quote, :string, default: nil
+  attr :marks, :list, default: []
+  def drafting(assigns) do
+    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
+
+    ~H"""
+      <div :for={mark <- @marks} :if={mark.state == :live}>
+      <span :if={!is_nil(mark.binding.window) && mark.binding.window.quote !== ""} class="block
+                 pl-1
+                 ml-5
+                 mb-2
+                 border-l-4 border-primaryAccent
+                 before:mr-5 before:text-gray-500">
+          <%= mark.binding.window.quote %>
+        </span>
+        <span  :if={is_binary(mark.body)} class="block
+                 before:mr-1 before:text-gray-500
+                 lg:before:content-none
+                 lg:border-l-0 lg:pl-2">
+                <%= mark.body %> -  <b> <%= "Self" %> </b>
+          </span>
+
+        </div>
+
         <span :if={!is_nil(@quote) && @quote !== ""} class="block
                  pl-1
                  ml-5
@@ -241,52 +324,26 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
                  before:mr-5 before:text-gray-500">
 
           <%= @quote %>
-          </span>
-        <.form for={%{}} phx-submit="create_comment">
-          <input
-            name="body"
-            class="block lg:w-[80%] md:w-96 rounded-lg border border-gray-200 bg-gray-50 p-2 pl-5 text-sm text-gray-800"
-            placeholder="Write here..."
+      </span>
+
+
+    <div class="relative">
+      <.form for={%{}} phx-submit="createMark">
+        <input
+          name="body"
+          class="block w-full focus:outline-none rounded-lg border border-gray-300 bg-transparent p-2 pl-5 pr-12 text-sm text-gray-800"
+          placeholder="Write here..."
+        />
+      </.form>
+      <div class="absolute inset-y-0 right-2 flex items-center">
+        <button class="flex items-center rounded-full bg-gray-200 p-1.5">
+          <.icon
+            name="hero-sun-mini"
+            class="w-3 h-3 hover:text-primaryAccent hover:cursor-pointer"
           />
-        </.form>
-     </div>
-    """
-  end
-
-
-  attr(:id, :string, required: true)
-  attr(:current_user, :map, required: true)
-  attr(:show, :boolean,
-    default: true,
-    doc: "Default value is not to show the message"
-  )
-  attr(:path, :string, default: "/")
-
-  def modal_comments(assigns) do
-    assigns = assigns
-
-    ~H"""
-    <.modal_wrapper id={@id} background="bg-black/50" close_button={true} main_width="lg:max-w-lg">
-      <div
-        id={"#{@id}-comments-content"}
-        data-selector="vyasa_modal_message"
-        class="relative w-full shadow-2xl"
-      >
-        <div class="pointer-events-none absolute inset-y-0 px-2 flex items-center">
-          <img src="https://picsum.photos/50/50" class="h-6 w-6 rounded-full bg-black" />
-        </div>
-
-        <div class="absolute inset-y-0 right-0 flex items-center gap-2 px-3">
-          <button type="button" class="flex items-center">
-          <.icon name="hero-paper-clip" class="h-4 w-4" />
-          </button>
-          <button class="flex items-center rounded-full bg-gray-200 p-1.5">
-          <.icon name="hero-arrow-up" class="h-4 w-4" />
-          </button>
-        </div>
+        </button>
       </div>
-    </.modal_wrapper>
+    </div>
     """
   end
-
 end

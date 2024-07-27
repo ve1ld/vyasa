@@ -12,13 +12,16 @@ defmodule Vyasa.Adapters.Binding do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "bindings" do
     field :w_type, Ecto.Enum, values: [:quote, :timestamp, :null]
-    field :field_key, :string
+
+    field :field_key, {:array, :string}
+
+    field :node_id, :string, virtual: true
+
     belongs_to :verse, Verse, foreign_key: :verse_id, type: :binary_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     belongs_to :source, Source, foreign_key: :source_id, type: :binary_id
     belongs_to :translation, Translation, foreign_key: :translation_id, type: :binary_id
     belongs_to :comment, Comment, foreign_key: :comment_id, type: :binary_id
-    belongs_to :comment_bind, Comment, foreign_key: :comment_bind_id, type: :binary_id
 
     embeds_one :window, Window, on_replace: :delete do
       field(:line_number, :integer)
@@ -37,7 +40,7 @@ defmodule Vyasa.Adapters.Binding do
   end
 
 
-  def bind_comment_changeset(%__MODULE__{} = binding, attrs) do
+  def windowing_changeset(%__MODULE__{} = binding, attrs) do
     binding
     |> cast(attrs, [:w_type, :verse_id, :chapter_no, :source_id])
     |> typed_window_switch(attrs)
@@ -98,4 +101,12 @@ defmodule Vyasa.Adapters.Binding do
       end
     end)
   end
+
+  def field_lookup(%Verse{}), do: :verse_id
+  def field_lookup(%Chapter{}), do: :chapter_no
+  def field_lookup(%Source{}), do: :source_id
+  def field_lookup(%Translation{}), do: :translation_id
+  def field_lookup(%Comment{}), do: :comment_id
+
+  def field_lookup(_), do: nil
 end
