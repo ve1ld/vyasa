@@ -111,3 +111,7 @@ File.ls!(target_media_folder)
 end)
 |> Enum.map(fn v -> Vyasa.Medium.Voice.gen_changeset(%Medium.Voice{}, v) end)
 ```
+
+```elixir
+Vyasa.Repo.all(Vyasa.Medium.Video)
+```

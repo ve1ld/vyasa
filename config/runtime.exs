@@ -116,6 +116,6 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
   #
-  else
-    Vyasa.Parser.Env.load_file('.env')
+else
+  Vyasa.Parser.Env.load_file(".env")
 end
