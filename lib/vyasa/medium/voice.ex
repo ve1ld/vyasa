@@ -29,6 +29,13 @@ defmodule Vyasa.Medium.Voice do
 
   @doc false
 
+  def gen_changeset(voice, %{"id" => id} = attrs) when is_binary(id) do
+    voice
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
+    |> cast_embed(:meta, with: &meta_changeset/2)
+    |> file_upload()
+  end
+
   def gen_changeset(voice, attrs) do
     %{voice | id: Ecto.UUID.generate()}
     |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
