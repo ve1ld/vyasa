@@ -28,7 +28,8 @@ defmodule Vyasa.Corpus.Migrator.Dump do
     |> Repo.preload(:video)
     |> Vyasa.Medium.Store.hydrate()
     |> Enum.map(&Vyasa.Medium.Store.download(&1))
-    %{record | voices: voices}
+
+    %{record | voices: voices |> Repo.preload(:video)}
   end
 
   def hydrate_voices(r), do: r
