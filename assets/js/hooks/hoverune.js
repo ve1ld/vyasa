@@ -52,6 +52,10 @@ export default HoveRune = {
     const targetEvents = ['pointerdown', 'pointerup']
     targetEvents.forEach(e => window.addEventListener(e, ({ target }) => {
       var selection = window.getSelection()
+      if (!selection || selection.rangeCount <= 0) {
+        return
+      }
+
       var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
       const getSelectText = selection.toString()
       //const validElem = findHook(target)
