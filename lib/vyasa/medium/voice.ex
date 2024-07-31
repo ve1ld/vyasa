@@ -58,7 +58,7 @@ defmodule Vyasa.Medium.Voice do
 
   def meta_changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:artist])
+    |> cast(attrs, [:artists])
   end
 
   def file_upload(%Ecto.Changeset{changes: %{file_path: _} = changes} = ec) do

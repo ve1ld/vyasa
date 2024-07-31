@@ -18,7 +18,6 @@ defmodule Vyasa.Medium.Video do
   def changeset(video, attrs) do
     video
     |> cast(attrs, [:type, :ext_uri])
-    |> validate_required([:title])
   end
 
   def gen_changeset(video, attrs, %Voice{id: voice_id}) do
