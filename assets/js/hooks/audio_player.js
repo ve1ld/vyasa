@@ -195,7 +195,7 @@ AudioPlayer = {
     }
     navigator.mediaSession.metadata = this.createMediaMetadata(playback)
     // TODO: register action handlers
-  }
+  },
   createMediaMetadata(playback) {
     const {meta} = playback
     const session = navigator.mediaSession
