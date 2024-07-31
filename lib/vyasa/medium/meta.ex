@@ -1,9 +1,12 @@
 defmodule Vyasa.Medium.Meta do
   @moduledoc """
-  Meta is a medium-agnostic struct for tracking metadata for that medium.
+  Meta is a medium-agnostic generic struct for tracking metadata for that medium doesn't entangle itself with DB meta.
+   We can construct adapters to specifc metadata for specific mediums from here
+   ## Adapters
+   iex> from_voice(%Voice{meta: meta})
 
   Since this relates to rich media, the intent is also to contain information that is helpful for interfacing
-  with APIs like the MediaSessions API.
+  with APIs like the MediaSessions API (Browser).
   """
 
   alias Vyasa.Medium.Meta
@@ -17,25 +20,8 @@ defmodule Vyasa.Medium.Meta do
             file_path: nil
 
   defimpl Jason.Encoder, for: Meta do
-    def encode(
-          %Meta{
-            title: title,
-            artists: artists,
-            album: album,
-            artwork: artwork,
-            duration: duration,
-            file_path: file_path
-          },
-          opts
-        ) do
-      %{
-        title: title,
-        artists: artists,
-        album: album,
-        artwork: artwork,
-        duration: duration,
-        file_path: file_path
-      }
+    def encode(%Meta{} = m, opts) do
+      Map.from_struct(m)
       |> Jason.Encode.map(opts)
     end
   end
