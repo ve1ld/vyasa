@@ -253,12 +253,16 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         } = meta
     } = loaded_voice = voice |> Medium.load_events()
 
+    generated_artwork = %{
+      src:
+        url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}")
+    }
+
     playback_meta = %Meta{
       title: title,
-      # TODO: use metadata present in db about the medium
       artists: artists,
       album: album,
-      artwork: artwork,
+      artwork: [generated_artwork | artwork],
       duration: duration,
       file_path: file_path
     }

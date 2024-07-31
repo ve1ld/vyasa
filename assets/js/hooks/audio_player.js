@@ -142,7 +142,7 @@ AudioPlayer = {
     }
 
     // TODO: supply necessary info for media sessions api here...
-    this.updateMediaSession({title, artist})
+    this.updateMediaSession(playbackMeta)
   },
   play(opts = {}){
     console.log("Triggered playback, check params", {
@@ -195,15 +195,31 @@ AudioPlayer = {
       return;
     }
 
-    const oldSessionData = navigator.mediaSession?.metadata
-    // FIXME: this spreading won't work since it's an obj and not an existing dict
+    const session = navigator.mediaSession
+    const sessionMetadata = session?.metadata
+    const oldMetadata = sessionMetadata
+          ? {
+            title: sessionMetadata.title,
+            artist: sessionMetadata.artist,
+            album: sessionMetadata.album,
+            artwork: sessionMetadata.artwork,
+
+          }
+          : {}
+
+    const artist = payload?.artists
+          ? payload.artists.join(", ")
+          : sessionMetadata.artist ?? "Unknown artist";
     const metadata = {
-      ...oldSessionData,
+      ...oldMetadata,
       ...payload,
+      artist,
     }
+
     console.log("Updating media session api", {
-      oldSessionData,
+      oldMetadata,
       payload,
+      sessionMetadata,
       metadata,
     })
 

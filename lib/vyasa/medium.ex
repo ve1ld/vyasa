@@ -34,7 +34,7 @@ defmodule Vyasa.Medium do
   def get_voices!(%Voice{source_id: src_id, chapter_no: c_no, lang: l}) do
     from(v in Voice,
       where: v.source_id == ^src_id and v.chapter_no == ^c_no and v.lang == ^l,
-      preload: [:events]
+      preload: [:events, :source]
     )
     |> Repo.all()
   end
