@@ -26,5 +26,12 @@ defmodule Vyasa.Medium.Meta do
         ) do
       Map.from_struct(m) |> Jason.Encode.map(opts)
     end
+
+    def encode(
+          nil,
+          opts
+        ) do
+      Jason.Encode.map(%{}, opts)
+    end
   end
 end
