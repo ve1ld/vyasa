@@ -20,8 +20,25 @@ defmodule Vyasa.Medium.Meta do
             file_path: nil
 
   defimpl Jason.Encoder, for: Meta do
-    def encode(%Meta{} = m, opts) do
-      Map.from_struct(m)
+    def encode(
+          %Meta{
+            title: title,
+            artists: artists,
+            album: album,
+            artwork: artwork,
+            duration: duration,
+            file_path: file_path
+          },
+          opts
+        ) do
+      %{
+        title: title,
+        artists: artists,
+        album: album,
+        artwork: artwork,
+        duration: duration,
+        file_path: file_path
+      }
       |> Jason.Encode.map(opts)
     end
   end
