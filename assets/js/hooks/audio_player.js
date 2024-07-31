@@ -140,9 +140,8 @@ AudioPlayer = {
       this.player.src = currentSrc
       this.play({sync: true})
     }
-
     // TODO: supply necessary info for media sessions api here...
-    this.updateMediaSession(playbackMeta)
+    this.updateMediaSession(playback)
   },
   play(opts = {}){
     console.log("Triggered playback, check params", {
@@ -189,12 +188,16 @@ AudioPlayer = {
       this.player.play() // force a play event if is not paused
     }
   },
-  updateMediaSession(payload) {
+  updateMediaSession(playback) {
     const isSupported = "mediaSession" in navigator;
     if (!isSupported) {
       return;
     }
-
+    navigator.mediaSession.metadata = this.createMediaMetadata(playback)
+    // TODO: register action handlers
+  }
+  createMediaMetadata(playback) {
+    const {meta} = playback
     const session = navigator.mediaSession
     const sessionMetadata = session?.metadata
     const oldMetadata = sessionMetadata
@@ -207,23 +210,23 @@ AudioPlayer = {
           }
           : {}
 
-    const artist = payload?.artists
-          ? payload.artists.join(", ")
+    const artist = meta?.artists
+          ? meta.artists.join(", ")
           : sessionMetadata.artist ?? "Unknown artist";
     const metadata = {
       ...oldMetadata,
-      ...payload,
+      ...meta,
       artist,
     }
 
-    console.log("Updating media session api", {
+    console.log("creating new MediaMetadata", {
       oldMetadata,
-      payload,
+      meta,
       sessionMetadata,
       metadata,
     })
 
-    navigator.mediaSession.metadata = new MediaMetadata(metadata)
+    return new MediaMetadata(metadata)
   }
 }
 

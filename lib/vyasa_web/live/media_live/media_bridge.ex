@@ -244,7 +244,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       title: title,
       file_path: file_path,
       duration: duration,
-      # FIXME: seeding has issues, loaded voice's meta should load something, it's nill at the moment
       meta:
         %{
           artists: artists,

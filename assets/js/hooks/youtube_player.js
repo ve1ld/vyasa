@@ -106,7 +106,6 @@ export const RenderYouTubePlayer = {
     console.log("youtube player playMedia triggerred", playback)
     const {meta: playbackMeta, "playing?": isPlaying, elapsed} = playback;
     const { title, duration, file_path: filePath, artists } = playbackMeta;
-    const artist = artists ? artists[0] : "myArtist" // FIXME: this should be ready once seeding has been update to properly add in artist names
 
     // TODO: consider if the elapsed ms should be used here for better sync(?)
     window.youtubePlayer.playVideo()
