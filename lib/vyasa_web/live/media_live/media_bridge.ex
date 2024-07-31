@@ -257,11 +257,16 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}")
     }
 
+    updated_artwork = cond do
+      artwork && is_list(artwork) -> [generated_artwork | artwork]
+      true -> [generated_artwork]
+    end
+
     playback_meta = %Meta{
       title: title,
       artists: artists,
       album: album,
-      artwork: [generated_artwork | artwork],
+      artwork: updated_artwork,
       duration: duration,
       file_path: file_path
     }
@@ -279,7 +284,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         voice_events: voice_events |> create_events_payload()
       })
     }
-  end
+   end
 
   def handle_info({_, :written_handshake, :init}, %{assigns: %{session: %{"id" => id}}} = socket) do
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)

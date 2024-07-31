@@ -9,7 +9,7 @@ defmodule Vyasa.Medium.Meta do
   with APIs like the MediaSessions API (Browser).
   """
 
-  @derive {Jason.Encoder, except: [:artwork]}
+  @derive Jason.Encoder
   defstruct title: nil,
             artists: [],
             album: nil,
