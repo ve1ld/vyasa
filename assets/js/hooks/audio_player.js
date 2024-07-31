@@ -126,7 +126,7 @@ AudioPlayer = {
     console.log("PlayMedia", playback)
     const {meta: playbackMeta, "playing?": isPlaying, elapsed} = playback;
     const { title, duration, file_path: filePath, artists } = playbackMeta;
-    const artist = artists ? artists[0] : "myArtist" // FIXME: this should be ready once seeding has been update to properly add in artist names
+    const artist = artists ? artists.join(", ") : "Unknown artist";
 
     const beginTime = nowMs() - elapsed
     this.playbackBeganAt = beginTime
@@ -142,10 +142,7 @@ AudioPlayer = {
     }
 
     // TODO: supply necessary info for media sessions api here...
-    const isMediaSessionApiSupported = "mediaSession" in navigator;
-    if(isMediaSessionApiSupported){
-      navigator.mediaSession.metadata = new MediaMetadata({artist, title})
-    }
+    this.updateMediaSession({title, artist})
   },
   play(opts = {}){
     console.log("Triggered playback, check params", {
@@ -168,6 +165,7 @@ AudioPlayer = {
       }
     })
   },
+  // TODO: add triggers for updateMediaSession()
   pause(){
     this.player.pause()
   },
@@ -191,6 +189,26 @@ AudioPlayer = {
       this.player.play() // force a play event if is not paused
     }
   },
+  updateMediaSession(payload) {
+    const isSupported = "mediaSession" in navigator;
+    if (!isSupported) {
+      return;
+    }
+
+    const oldSessionData = navigator.mediaSession?.metadata
+    // FIXME: this spreading won't work since it's an obj and not an existing dict
+    const metadata = {
+      ...oldSessionData,
+      ...payload,
+    }
+    console.log("Updating media session api", {
+      oldSessionData,
+      payload,
+      metadata,
+    })
+
+    navigator.mediaSession.metadata = new MediaMetadata(metadata)
+  }
 }
 
 
