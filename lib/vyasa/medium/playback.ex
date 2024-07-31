@@ -5,6 +5,7 @@ defmodule Vyasa.Medium.Playback do
   """
   alias Vyasa.Medium.{Playback, Meta}
 
+  @derive Jason.Encoder
   defstruct [
     :medium,
     meta: %Meta{},
@@ -16,31 +17,6 @@ defmodule Vyasa.Medium.Playback do
     current_time: 0
   ]
 
-  defimpl Jason.Encoder, for: Playback do
-    def encode(
-          %Playback{
-            medium: medium,
-            meta: meta,
-            playing?: playing,
-            played_at: played_at,
-            paused_at: paused_at,
-            elapsed: elapsed,
-            current_time: current_time
-          },
-          opts
-        ) do
-      %{
-        medium: medium,
-        meta: meta,
-        playing?: playing,
-        played_at: played_at,
-        paused_at: paused_at,
-        elapsed: elapsed,
-        current_time: current_time
-      }
-      |> Jason.Encode.map(opts)
-    end
-  end
 
   def new(%{} = attrs) do
     %Vyasa.Medium.Playback{

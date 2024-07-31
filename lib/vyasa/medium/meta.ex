@@ -9,29 +9,12 @@ defmodule Vyasa.Medium.Meta do
   with APIs like the MediaSessions API (Browser).
   """
 
-  alias Vyasa.Medium.Meta
-
+  @derive {Jason.Encoder, only: [:title, :artists, :album, :duration, :file_path]}
   defstruct title: nil,
             artists: [],
             album: nil,
-            artwork: %{},
+            artwork: [],
             # time, in ms
             duration: 0,
             file_path: nil
-
-  defimpl Jason.Encoder, for: Meta do
-    def encode(
-          %Meta{} = m,
-          opts
-        ) do
-      Map.from_struct(m) |> Jason.Encode.map(opts)
-    end
-
-    def encode(
-          nil,
-          opts
-        ) do
-      Jason.Encode.map(%{}, opts)
-    end
-  end
 end
