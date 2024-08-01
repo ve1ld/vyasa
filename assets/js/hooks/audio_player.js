@@ -126,6 +126,9 @@ AudioPlayer = {
     const { title, duration, file_path: filePath, artists } = playbackMeta;
     const artist = artists ? artists.join(", ") : "Unknown artist";
 
+    // TODO: supply necessary info for media sessions api here...
+    this.updateMediaSession(playback)
+
     const beginTime = nowMs() - elapsed
     this.playbackBeganAt = beginTime
     let currentSrc = this.player.src.split("?")[0]
@@ -138,8 +141,6 @@ AudioPlayer = {
       this.player.src = currentSrc
       this.play({sync: true})
     }
-    // TODO: supply necessary info for media sessions api here...
-    this.updateMediaSession(playback)
   },
   play(opts = {}){
     console.log("Triggered playback, check params", {
