@@ -203,6 +203,9 @@ AudioPlayer = {
     navigator.mediaSession.metadata = new MediaMetadata(payload)
   },
   createMediaMetadataPayload(playback) {
+    if (!playback) {
+      return {}
+    }
     const {meta} = playback
     const sessionMetadata = navigator?.mediaSession?.metadata
     const oldMetadata = sessionMetadata
