@@ -198,7 +198,7 @@ AudioPlayer = {
     // navigator.mediaSession.metadata = new MediaMetadata(payload)
 
     navigator.mediaSession.metadata = new MediaMetadata({
-        title: "Hanuman Chalisa",
+        "title": "Hanuman Chalisa",
         artist: "Hariharan, Gulshan Kumar",
         album: "Shree Hanuman Chalisa - Hanuman Ashtak",
         artwork: [
