@@ -193,7 +193,11 @@ AudioPlayer = {
     if (!isSupported) {
       return;
     }
-    navigator.mediaSession.metadata = this.createMediaMetadata(playback)
+    const newMetadata = this.createMediaMetadata(playback)
+    console.log("new metadata", newMetadata)
+    navigator.mediaSession.metadata = newMetadata
+
+
     // TODO: register action handlers
   },
   createMediaMetadata(playback) {
@@ -206,7 +210,6 @@ AudioPlayer = {
             artist: sessionMetadata.artist,
             album: sessionMetadata.album,
             artwork: sessionMetadata.artwork,
-
           }
           : {}
 
@@ -219,14 +222,17 @@ AudioPlayer = {
       artist,
     }
 
+
+    const res = new MediaMetadata(metadata)
     console.log("creating new MediaMetadata", {
       oldMetadata,
       meta,
       sessionMetadata,
       metadata,
+      res
     })
 
-    return new MediaMetadata(metadata)
+    return res
   }
 }
 
