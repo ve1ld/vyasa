@@ -255,7 +255,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     generated_artwork = %{
       src:
         url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}"),
-      type: "image/jpeg",
+      type: "image/png",
       sizes: "480x360"
     }
 
