@@ -197,20 +197,21 @@ AudioPlayer = {
     console.log("new metadata payload", {playback, payload})
     // navigator.mediaSession.metadata = new MediaMetadata(payload)
 
-    navigator.mediaSession.metadata = new MediaMetadata({
-      "title": "Hanuman Chalisa",
-      "album": "Shree Hanuman Chalisa - Hanuman Ashtak",
-      artwork: playback?.meta?.artwork,
-      // "artwork": [
-      //   {
-      //     "type": "image/jpeg",
-      //     "src": "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
-      //     "sizes": "480x360"
-      //   }
-      // ],
-      "artist": "Hariharan, Gulshan Kumar",
-      "extraKey": "foo"
-    });
+    navigator.mediaSession.metadata = new MediaMetadata(payload)
+    // navigator.mediaSession.metadata = new MediaMetadata({
+    //   "title": "Hanuman Chalisa",
+    //   "album": "Shree Hanuman Chalisa - Hanuman Ashtak",
+    //   artwork: playback?.meta?.artwork,
+    //   // "artwork": [
+    //   //   {
+    //   //     "type": "image/jpeg",
+    //   //     "src": "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
+    //   //     "sizes": "480x360"
+    //   //   }
+    //   // ],
+    //   "artist": "Hariharan, Gulshan Kumar",
+    //   "extraKey": "foo"
+    // });
 
     // TODO: register action handlers
   },
