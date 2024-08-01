@@ -200,7 +200,7 @@ AudioPlayer = {
     navigator.mediaSession.metadata = new MediaMetadata({
       "title": "Hanuman Chalisa",
       "album": "Shree Hanuman Chalisa - Hanuman Ashtak",
-      artwork: payload?.meta?.artwork
+      artwork: payload?.meta?.artwork,
       // "artwork": [
       //   {
       //     "type": "image/jpeg",
