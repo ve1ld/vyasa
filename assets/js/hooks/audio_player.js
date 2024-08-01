@@ -193,13 +193,26 @@ AudioPlayer = {
     if (!isSupported) {
       return;
     }
-    const newMetadata = this.createMediaMetadata(playback)
-    console.log("new metadata", newMetadata)
-    navigator.mediaSession.metadata = newMetadata
+    const payload = this.createMediaMetadataPayload(playback)
+    console.log("new metadata payload", payload)
+    // navigator.mediaSession.metadata = new MediaMetadata(payload)
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      "title": "Hanuman Chalisa",
+      "album": "Shree Hanuman Chalisa - Hanuman Ashtak",
+      "artwork": [
+        {
+          "type": "image/jpeg",
+          "src": "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
+          "sizes": "480x360"
+        }
+      ],
+      "artist": "Hariharan, Gulshan Kumar"
+    })
 
     // TODO: register action handlers
   },
-  createMediaMetadata(playback) {
+  createMediaMetadataPayload(playback) {
     const {meta} = playback
     const session = navigator.mediaSession
     const sessionMetadata = session?.metadata
@@ -221,17 +234,17 @@ AudioPlayer = {
       artist,
     }
 
-
-    const res = new MediaMetadata(metadata)
+    // const res = new MediaMetadata(metadata)
     console.log("creating new MediaMetadata", {
       oldMetadata,
       meta,
       sessionMetadata,
       metadata,
-      res
+      // res
     })
 
-    return res
+    // return res
+    return metadata
   }
 }
 
