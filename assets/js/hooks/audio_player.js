@@ -97,10 +97,8 @@ AudioPlayer = {
     localStorage.setItem("session", JSON.stringify(sess))
   },
   handleMetadataLoad(e) {
-    console.log("Loaded metadata!", {
-      duration: this.player.duration,
-      event: e,
-    })
+    const playback = JSON.parse(this?.player?.dataset?.playback)
+    this.initMediaSession(playback)
   },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player)
@@ -188,6 +186,13 @@ AudioPlayer = {
       this.player.play() // force a play event if is not paused
     }
   },
+  /**
+   * At the point of init, we register some action handlers and update the media session's metadata
+   * */
+  initMediaSession(playback) {
+    // TODO: register action handlers
+    this.updateMediaSession(playback)
+  },
   updateMediaSession(playback) {
     const isSupported = "mediaSession" in navigator;
     if (!isSupported) {
@@ -195,30 +200,11 @@ AudioPlayer = {
     }
     const payload = this.createMediaMetadataPayload(playback)
     console.log("new metadata payload", {playback, payload})
-    // navigator.mediaSession.metadata = new MediaMetadata(payload)
-
     navigator.mediaSession.metadata = new MediaMetadata(payload)
-    // navigator.mediaSession.metadata = new MediaMetadata({
-    //   "title": "Hanuman Chalisa",
-    //   "album": "Shree Hanuman Chalisa - Hanuman Ashtak",
-    //   artwork: playback?.meta?.artwork,
-    //   // "artwork": [
-    //   //   {
-    //   //     "type": "image/jpeg",
-    //   //     "src": "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
-    //   //     "sizes": "480x360"
-    //   //   }
-    //   // ],
-    //   "artist": "Hariharan, Gulshan Kumar",
-    //   "extraKey": "foo"
-    // });
-
-    // TODO: register action handlers
   },
   createMediaMetadataPayload(playback) {
     const {meta} = playback
-    const session = navigator.mediaSession
-    const sessionMetadata = session?.metadata
+    const sessionMetadata = navigator?.mediaSession?.metadata
     const oldMetadata = sessionMetadata
           ? {
             title: sessionMetadata.title,
@@ -237,16 +223,6 @@ AudioPlayer = {
       artist,
     }
 
-    // const res = new MediaMetadata(metadata)
-    console.log("creating new MediaMetadata", {
-      oldMetadata,
-      meta,
-      sessionMetadata,
-      metadata,
-      // res
-    })
-
-    // return res
     return metadata
   }
 }
