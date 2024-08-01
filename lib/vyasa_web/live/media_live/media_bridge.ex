@@ -254,8 +254,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     generated_artwork = %{
       src:
-        url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}")
+        url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}"),
+      type: "image/jpeg",
+      sizes: "480x360"
     }
+
+    # generated_artwork = %{
+    #   src:
+    #    "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
+    #   type: "image/jpeg",
+    #   sizes: "480x360"
+    # }
 
     updated_artwork = cond do
       artwork && is_list(artwork) -> [generated_artwork | artwork]
