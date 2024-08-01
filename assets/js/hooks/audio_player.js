@@ -28,8 +28,8 @@ AudioPlayer = {
     this.playbackBeganAt = null
     this.player = this.el.querySelector("audio")
 
-    document.addEventListener("click", () => this.enableAudio())
-
+    document.addEventListener("pointerdown", () => this.enableAudio())
+    this.player.addEventListener("canplay", e => this.handlePlayableState(e))
     this.player.addEventListener("loadedmetadata", e => this.handleMetadataLoad(e))
 
     this.handleEvent("initSession", (sess) => this.initSession(sess))
@@ -96,7 +96,13 @@ AudioPlayer = {
   initSession(sess) {
     localStorage.setItem("session", JSON.stringify(sess))
   },
+  handlePlayableState(e) {
+    console.log("HandlePlayableState", e)
+    const playback = JSON.parse(this?.player?.dataset?.playback)
+    this.initMediaSession(playback)
+  },
   handleMetadataLoad(e) {
+    console.log("HandleMetadataLoad", e)
     const playback = JSON.parse(this?.player?.dataset?.playback)
     this.initMediaSession(playback)
   },
@@ -112,7 +118,7 @@ AudioPlayer = {
    * */
   enableAudio() {
     if(this.player.src){
-      document.removeEventListener("click", this.enableAudio)
+      document.removeEventListener("pointerdown", this.enableAudio)
       const hasNothingToPlay = this.player.readyState === 0;
       if(hasNothingToPlay){
         this.player.play().catch(error => null)
