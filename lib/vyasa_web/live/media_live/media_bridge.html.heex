@@ -69,6 +69,8 @@
         <div class="w-4/6 flex items-center">
           <.play_pause_button
             playback={@playback}
+              isReady={not is_nil(@playback)}
+              isPlaying={@playback && @playback.playing?}
           />
         </div>
           <!-- /play/pause -->

@@ -266,10 +266,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     #   sizes: "480x360"
     # }
 
-    updated_artwork = cond do
-      artwork && is_list(artwork) -> [generated_artwork | artwork]
-      true -> [generated_artwork]
-    end
+    updated_artwork =
+      cond do
+        artwork && is_list(artwork) -> [generated_artwork | artwork]
+        true -> [generated_artwork]
+      end
 
     playback_meta = %Meta{
       title: title,
@@ -293,7 +294,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         voice_events: voice_events |> create_events_payload()
       })
     }
-   end
+  end
 
   def handle_info({_, :written_handshake, :init}, %{assigns: %{session: %{"id" => id}}} = socket) do
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
@@ -415,6 +416,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   attr :playback, Playback, required: false
+  attr :isReady, :boolean, required: false, default: false
+  attr :isPlaying, :boolean, required: true
 
   def play_pause_button(assigns) do
     ~H"""
@@ -424,55 +427,63 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       phx-click={JS.push("play_pause")}
       phx-target="#media-player"
       aria-label={
-        if @playback && @playback.playing? do
-          "Pause"
-        else
-          "Play"
+        cond do
+          not @isReady ->
+            "Not ready to play"
+
+          @isPlaying ->
+            "Pause"
+
+          true ->
+            "Play"
         end
       }
     >
-      <%= if @playback && @playback.playing? do %>
-        <!-- play/pause -->
-        <svg id="player-pause" width="50" height="50" fill="none">
-          <circle
-            class="text-gray-300 dark:text-brandAccentLight"
-            cx="25"
-            cy="25"
-            r="24"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path d="M18 16h4v18h-4V16zM28 16h4v18h-4z" fill="currentColor" />
-        </svg>
+      <%= if not @isReady do %>
+        <.spinner />
       <% else %>
-        <svg
-          id="player-play"
-          width="50"
-          height="50"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <circle
-            id="svg_1"
-            stroke-width="0.8"
-            stroke="currentColor"
-            r="11.4"
-            cy="12"
-            cx="12"
-            class="text-gray-300 dark:text-brandAccentLight"
-          />
-          <path
-            stroke="null"
-            fill="currentColor"
-            transform="rotate(90 12.8947 12.3097)"
-            id="svg_6"
-            d="m9.40275,15.10014l3.49194,-5.58088l3.49197,5.58088l-6.98391,0z"
-            stroke-width="1.5"
+        <%= if @isPlaying  do %>
+          <svg id="player-pause" width="50" height="50" fill="none">
+            <circle
+              class="text-gray-300 dark:text-brandAccentLight"
+              cx="25"
+              cy="25"
+              r="24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M18 16h4v18h-4V16zM28 16h4v18h-4z" fill="currentColor" />
+          </svg>
+        <% else %>
+          <svg
+            id="player-play"
+            width="50"
+            height="50"
+            xmlns="http://www.w3.org/2000/svg"
             fill="none"
-          />
-        </svg>
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <circle
+              id="svg_1"
+              stroke-width="0.8"
+              stroke="currentColor"
+              r="11.4"
+              cy="12"
+              cx="12"
+              class="text-gray-300 dark:text-brandAccentLight"
+            />
+            <path
+              stroke="null"
+              fill="currentColor"
+              transform="rotate(90 12.8947 12.3097)"
+              id="svg_6"
+              d="m9.40275,15.10014l3.49194,-5.58088l3.49197,5.58088l-6.98391,0z"
+              stroke-width="1.5"
+              fill="none"
+            />
+          </svg>
+        <% end %>
       <% end %>
     </button>
     """
