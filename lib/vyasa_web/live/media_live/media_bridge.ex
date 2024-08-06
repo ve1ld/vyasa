@@ -94,8 +94,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
     |> assign(playback: update_playback_on_pause(playback))
     |> update_audio_player()
-
-    # |> pause_audio()
   end
 
   defp update_playback_on_pause(

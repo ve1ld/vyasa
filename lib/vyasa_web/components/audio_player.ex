@@ -33,9 +33,7 @@ defmodule VyasaWeb.AudioPlayer do
   end
 
   @impl true
-  def update(assigns, socket) do
-    IO.inspect(assigns, label: "what")
-
+  def update(_assigns, socket) do
     {:ok,
      socket
      |> assign(playback: nil)}

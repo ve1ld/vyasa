@@ -28,7 +28,6 @@ MediaBridge = {
     }
     this.el.addEventListener("update_display_value", e => this.handleUpdateDisplayValue(e))
     this.handleEvent("media_bridge:registerEventsTimeline", params => this.registerEventsTimeline(params))
-
     // pub: external action
     // this callback pubs to others
     this.handleEvent("media_bridge:seekTime", (seekTimePayload) => {
@@ -37,6 +36,7 @@ MediaBridge = {
       } = seekTimePayload;
       console.assert(originator === "MediaBridge", "This event may only originate from the MediaBridge server.")
 
+      console.log("media_bridge:seekTime event handler", seekTimePayload)
       seekTimeBridge.pub(seekTimePayload)
     })
 
@@ -220,7 +220,6 @@ MediaBridge = {
       this.killHeartbeat()
     }
   }
-
 }
 
 export default MediaBridge;

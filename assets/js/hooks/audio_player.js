@@ -44,7 +44,7 @@ AudioPlayer = {
       heartbeat: heartbeatBridge.sub(payload => this.echoHeartbeat(payload)),
     }
   },
-  /// Handlers:
+  /// Handlers for events received via the events bridge:
   handleMediaPlayPause(payload) {
     console.log("[playPauseBridge::audio_player::playpause] payload:", payload)
     const {
@@ -94,15 +94,16 @@ AudioPlayer = {
     heartbeatBridge.pub(echoPayload)
   },
   initSession(sess) {
+    console.log("TRACE initSession", sess)
     localStorage.setItem("session", JSON.stringify(sess))
   },
   handlePlayableState(e) {
-    console.log("HandlePlayableState", e)
+    console.log("TRACE HandlePlayableState", e)
     const playback = JSON.parse(this?.player?.dataset?.playback)
     this.initMediaSession(playback)
   },
   handleMetadataLoad(e) {
-    console.log("HandleMetadataLoad", e)
+    console.log("TRACE HandleMetadataLoad", e)
     const playback = JSON.parse(this?.player?.dataset?.playback)
     this.initMediaSession(playback)
   },
@@ -117,7 +118,12 @@ AudioPlayer = {
    * It is likely there to enable the audio player bufferring.
    * */
   enableAudio() {
+    console.log("TRACE: enable audio")
     if(this.player.src){
+      console.log("TRACE: enable audio -- has a source", {
+        src: this.player.src
+      })
+      // we wait until the player is ready for this to be enabled, thereafter, we don't need to enable the player
       document.removeEventListener("pointerdown", this.enableAudio)
       const hasNothingToPlay = this.player.readyState === 0;
       if(hasNothingToPlay){
@@ -127,7 +133,6 @@ AudioPlayer = {
     }
   },
   playMedia(playback) {
-    console.log("PlayMedia", playback)
     const {meta: playbackMeta, "playing?": isPlaying, elapsed} = playback;
     const { title, duration, file_path: filePath, artists } = playbackMeta;
     const artist = artists ? artists.join(", ") : "Unknown artist";
@@ -137,6 +142,9 @@ AudioPlayer = {
 
     const beginTime = nowMs() - elapsed
     this.playbackBeganAt = beginTime
+    console.log("TRACE @playMedia", {
+      player: this.player
+    })
     let currentSrc = this.player.src.split("?")[0]
 
     const isLoadedAndPaused = currentSrc === filePath && !isPlaying && this.player.paused;
@@ -149,7 +157,7 @@ AudioPlayer = {
     }
   },
   play(opts = {}){
-    console.log("Triggered playback, check params", {
+    console.log("TRACE Triggered playback, check params", {
       player: this.player,
       opts,
     })
