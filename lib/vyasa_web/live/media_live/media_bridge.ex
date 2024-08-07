@@ -246,6 +246,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   end
 
+  # todo: consolidate other hook events that need to be sent to the media bridge hook
   defp push_hook_events(
          %Socket{
            assigns: %{
