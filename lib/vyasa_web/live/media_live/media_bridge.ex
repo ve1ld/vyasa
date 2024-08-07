@@ -8,6 +8,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   3. TODO: handle the sync between A/V players
   """
   use VyasaWeb, :live_view
+  alias Phoenix.LiveView.Socket
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback, Meta}
 
@@ -57,20 +58,43 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
   end
 
-  defp play_media(socket, %Playback{elapsed: elapsed} = playback) do
-    IO.puts("play_media triggerred with elapsed = #{elapsed} ms")
-
+  defp update_playback(
+         %Socket{
+           assigns:
+             %{
+               playback:
+                 %Playback{
+                   played_at: _played_at,
+                   elapsed: _elapsed,
+                   playing?: _playing?,
+                   paused_at: _paused_at
+                 } = playback_bef
+             } = _assigns
+         } =
+           socket
+       ) do
+    # TODO: add case for updating playback on seek
     socket
-    |> assign(playback: update_playback_on_play(playback))
-    |> update_audio_player()
+    |> assign(
+      playback:
+        case playback_bef do
+          %Playback{playing?: false} ->
+            create_playback_on_play(playback_bef)
+
+          %Playback{playing?: true} ->
+            create_playback_on_pause(playback_bef)
+
+          _ ->
+            playback_bef
+        end
+    )
   end
 
-  # fallback
-  defp play_media(socket, _playback) do
+  defp update_playback(%Socket{} = socket) do
     socket
   end
 
-  defp update_playback_on_play(%Playback{elapsed: elapsed} = playback) do
+  defp create_playback_on_play(%Playback{elapsed: elapsed} = playback) do
     now = DateTime.utc_now()
 
     played_at =
@@ -90,13 +114,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     %{playback | playing?: true, played_at: played_at}
   end
 
-  defp pause_media(socket, %Playback{} = playback) do
-    socket
-    |> assign(playback: update_playback_on_pause(playback))
-    |> update_audio_player()
-  end
-
-  defp update_playback_on_pause(
+  defp create_playback_on_pause(
          %Playback{
            played_at: played_at
          } = playback
@@ -106,7 +124,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     %{playback | playing?: false, paused_at: now, elapsed: elapsed}
   end
 
-  # internal action: updates the playback state on seek
+  # TODO: merge with the other update playback functions
   defp update_playback_on_seek(socket, position_ms) do
     %{
       playback:
@@ -153,24 +171,27 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   @impl true
+  @doc """
+  Handle the user-generated action of playing or pausing.
+  First updates the playback struct then uses it to notify others that depend on that playback struct.
+
+  TODO: use event structs in the same fashion as livebeats to standardise the user-generated events
+  """
   def handle_event("play_pause", _, socket) do
     %{
-      playback:
-        %Playback{
-          playing?: playing?
-        } = playback
-    } = socket.assigns
+      assigns: %{
+        playback: %Playback{} = playback
+      }
+    } = socket
+
+    IO.inspect(playback, label: "TRACE :handling play_pause event")
 
     {:noreply,
-     cond do
-       playing? -> socket |> pause_media(playback)
-       !playing? -> socket |> play_media(playback)
-     end}
+     socket
+     |> update_playback()
+     |> notify_audio_player()}
   end
 
-  @doc """
-  Handles seekTime event originated from the ProgressBar
-  """
   @impl true
   def handle_event(
         "seekTime",
@@ -257,13 +278,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       sizes: "480x360"
     }
 
-    # generated_artwork = %{
-    #   src:
-    #    "https://i.ytimg.com/vi/AETFvQonfV8/hqdefault.jpg",
-    #   type: "image/jpeg",
-    #   sizes: "480x360"
-    # }
-
     updated_artwork =
       cond do
         artwork && is_list(artwork) -> [generated_artwork | artwork]
@@ -332,7 +346,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> Enum.find(fn e -> e.verse_id === verse_id end)
   end
 
-  defp update_audio_player(
+  # dispatches events to the audio player
+  defp notify_audio_player(
          %{
            assigns:
              %{
@@ -348,9 +363,10 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       VyasaWeb.AudioPlayer,
       id: "audio-player",
       playback: playback,
-      event: "media_bridge:update_audio_player"
+      event: "media_bridge:notify_audio_player"
     )
 
+    # TODO: since this involves the audio player hook, these should be handled by the audio player live component:
     cmd =
       cond do
         playing? ->
