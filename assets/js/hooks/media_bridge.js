@@ -211,13 +211,37 @@ MediaBridge = {
       "This event may only originate from the MediaBridge server.",
     );
 
-    console.log("media_bridge:play_pause", playPausePayload);
+    console.log(
+      "TRACE media_bridge:receivePlayPauseFromServer",
+      playPausePayload,
+    );
+    this.updateHeartbeatFromPlayPause(playPausePayload);
     playPauseBridge.pub(playPausePayload);
   },
   handlePlayPause(payload) {
-    console.log("[playPauseBridge::media_bridge:playpause] payload:", payload);
+    // TODO: implement handler for actions emitted via interaction with youtube player
+    console.log(
+      "TRACE EXT[playPauseBridge::media_bridge:playpause] payload:",
+      payload,
+    );
     const { cmd, playback, originator } = payload;
 
+    const shouldIgnoreSignal = originator === "MediaBridge";
+    if (shouldIgnoreSignal) {
+      return;
+    }
+
+    this.updateHeartbeatFromPlayPause(payload);
+  },
+  /**
+   * Updates the MediaBridgeHook's internal heartbeat timer depending on the command
+   * given (play or pause).
+   *
+   * NOTE: This doesn't guard for the originator of the command.
+   * */
+  updateHeartbeatFromPlayPause(payload) {
+    console.log("[playPauseBridge::media_bridge:playpause] payload:", payload);
+    const { cmd } = payload;
     // TODO: implement handler for actions emitted via interaction with youtube player
     console.log(
       ">> [media_bridge.js::playPauseBridge], received a signal",
