@@ -353,7 +353,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
              %{
                playback:
                  %Playback{
-                   playing?: playing?
+                   playing?: _playing?
                  } = playback
              } = _assigns
          } = socket
@@ -366,28 +366,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       event: "media_bridge:notify_audio_player"
     )
 
-    # TODO: since this involves the audio player hook, these should be handled by the audio player live component:
-    cmd =
-      cond do
-        playing? ->
-          "play"
-
-        !playing? ->
-          "pause"
-      end
-
-    seek_time_payload = %{
-      seekToMs: playback.elapsed,
-      originator: "MediaBridge"
-    }
-
     socket
-    |> push_event("media_bridge:play_pause", %{
-      cmd: cmd,
-      originator: "MediaBridge",
-      playback: playback
-    })
-    |> push_event("media_bridge:seekTime", seek_time_payload)
   end
 
   # TODO: add this when implementing tracks & playlists
