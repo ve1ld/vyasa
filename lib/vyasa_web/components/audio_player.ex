@@ -27,11 +27,7 @@ defmodule VyasaWeb.AudioPlayer do
   def update(
         %{
           event: "media_bridge:notify_audio_player" = event,
-          playback:
-            %Playback{
-              playing?: playing?,
-              elapsed: elapsed
-            } = playback
+          playback: %Playback{} = playback
         } = _assigns,
         socket
       ) do
@@ -40,28 +36,9 @@ defmodule VyasaWeb.AudioPlayer do
       label: "checkpoint"
     )
 
-    # TODO: merge into a single push_event, let the hook use the Playback::elapsed to determine where to start playing from.
-    {
-      :ok,
-      socket
-      |> push_event("media_bridge:play_pause", %{
-        cmd:
-          cond do
-            playing? ->
-              "play"
-
-            !playing? ->
-              "pause"
-          end,
-        originator: "MediaBridge",
-        playback: playback
-      })
-      |> push_event("media_bridge:seekTime", %{
-        seekToMs: elapsed,
-        originator: "MediaBridge"
-      })
-      |> assign(playback: playback)
-    }
+    {:ok,
+     socket
+     |> assign(playback: playback)}
   end
 
   @impl true

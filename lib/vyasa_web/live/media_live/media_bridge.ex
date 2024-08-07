@@ -189,7 +189,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     {:noreply,
      socket
      |> update_playback()
-     |> notify_audio_player()}
+     |> notify_audio_player()
+     |> push_hook_events()}
   end
 
   @impl true
@@ -243,6 +244,37 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       |> push_event("media_bridge:seekTime", seek_time_payload)
       |> update_playback_on_seek(position_ms)
     }
+  end
+
+  defp push_hook_events(
+         %Socket{
+           assigns: %{
+             playback:
+               %Playback{
+                 playing?: playing?,
+                 elapsed: elapsed
+               } = playback
+           }
+         } = socket
+       ) do
+    # TODO: merge into a single push_event, let the hook use the Playback::elapsed to determine where to start playing from.
+    socket
+    |> push_event("media_bridge:play_pause", %{
+      cmd:
+        cond do
+          playing? ->
+            "play"
+
+          !playing? ->
+            "pause"
+        end,
+      originator: "MediaBridge",
+      playback: playback
+    })
+    |> push_event("media_bridge:seekTime", %{
+      seekToMs: elapsed,
+      originator: "MediaBridge"
+    })
   end
 
   @impl true
