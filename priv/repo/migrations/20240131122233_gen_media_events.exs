@@ -46,6 +46,5 @@ defmodule Vyasa.Repo.Migrations.GenMediaEvents do
       add :parent_no, references(:chapters, column: :no, type: :integer, with: [source_id: :source_id])
     end
 
-    create unique_index(:sources, [:title])
   end
 end

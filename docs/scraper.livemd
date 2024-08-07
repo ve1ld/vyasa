@@ -12,27 +12,194 @@
 ## Root
 
 ```elixir
-# defmodule R do
-#   def recompile() do
-#     Mix.Task.reenable("app.start")
-#     Mix.Task.reenable("compile")
-#     Mix.Task.reenable("compile.all")
-#     compilers = Mix.compilers()
-#     Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
-#     Mix.Task.run("compile.all")
-#   end
-# end
+defmodule R do
+  def recompile() do
+    Mix.Task.reenable("app.start")
+    Mix.Task.reenable("compile")
+    Mix.Task.reenable("compile.all")
+    compilers = Mix.compilers()
+    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+    Mix.Task.run("compile.all")
+  end
+end
 
 R.recompile()
 ```
 
 ```elixir
-{:ok, src} = Vyasa.Written.create_source(%{title: "rama"})
+# {:ok, src} = Vyasa.Written.create_source(%{title: "rama"})
 # Vyasa.Medium.Writer.init(%)
 ```
 
 ```elixir
 
+```
+
+## Thiruvaasagam
+
+```elixir
+url = "https://www.sivaya.org/"
+# fetch from root frame
+path = "thiruvaasagam_complete.php"
+doc = "?lang=english"
+
+col =
+  Finch.build(:get, url <> path <> doc)
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+  |> Floki.parse_document!()
+  |> Floki.find("body")
+  |> tap(&IO.inspect(&1, limit: :infinity))
+```
+
+```elixir
+defmodule ThiruvaasagamScraper do
+  @base_url "https://www.sivaya.org/thiruvaasagam_complete.php"
+
+  def scrape(lang) do
+    {:ok, html} =
+      Finch.build(:get, @base_url <> "?lang=" <> lang)
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+      |> Floki.parse_document()
+
+    chapters = extract_chapters(html, lang)
+    %{chapters: chapters}
+  end
+
+  def extract_chapters(html, lang) do
+    html
+    |> Floki.find("a[href^='thirumurai_song.php?&pathigam_no=8.']")
+    |> Enum.map(&extract_chapter(&1, lang))
+  end
+
+  defp extract_chapter(chapter_link, lang) do
+    href = Floki.attribute(chapter_link, "href")
+
+    chapter_number =
+      href
+      |> List.first()
+      |> extract_chapter_number()
+
+    chapter_title = Floki.text(chapter_link)
+    # verses = extract_verses(chapter_number, lang)
+
+    %{
+      number: chapter_number,
+      title: chapter_title,
+      url: href
+      # verses: verses
+    }
+  end
+
+  defp extract_chapter_number(href) do
+    Regex.run(~r/pathigam_no=8\.(\d+)/, href)
+    |> List.last()
+    |> String.to_integer()
+  end
+
+  def extract_verses(chapter_number, lang) when is_number(chapter_number) do
+    chapter_url =
+      "https://www.sivaya.org/thirumurai_song.php?&pathigam_no=8.#{chapter_number}&lang=" <> lang
+
+    extract_verses(chapter_url, lang)
+  end
+
+  def extract_verses(chapter_url, lang) when is_binary(chapter_url) do
+    {:ok, chapter_html} =
+      Finch.build(:get, chapter_url)
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+      |> Floki.parse_document()
+
+    chapter_html
+    |> Floki.find("table td")
+    |> extract_verse_texts()
+  end
+
+  defp extract_verse_texts(td) do
+    td
+    |> Enum.reduce([], fn
+      {"td", [],
+       [
+         {"a", [{"id", _}], []},
+         links,
+         _
+       ]} = td,
+      acc ->
+        [links | acc]
+
+      _, acc ->
+        acc
+    end)
+    |> Enum.reverse()
+    |> Enum.map(
+      &(Floki.text(&1)
+        |> String.split("\n\n")
+        |> Enum.reject(fn
+          "" -> true
+          _ -> false
+        end))
+    )
+    |> List.flatten()
+  end
+end
+```
+
+```elixir
+e_v = ThiruvaasagamScraper.extract_verses(101, "english")
+
+t_v = ThiruvaasagamScraper.extract_verses(101, "tamil")
+```
+
+```elixir
+# %Vyasa.Written.Source{
+#     title: "Thiruvasagam",
+#     verses: (for i <- 0..length(t_v) do
+#     %Vyasa.Written.Verse{no: i, body: Enum.at(t_v, i), translations: (for i <- 0..length(e_v) do
+#     %Vyasa.Written.Translation{lang: "en", body: Enum.at(t_v, i)}
+#     end)}
+#     end)
+
+#   }
+
+# %Vyasa.Written.Source{}
+#   |> Vyasa.Written.Source.gen_changeset(%{title: "Thiruvasagam", chapters: })
+
+chapters_t = ThiruvaasagamScraper.scrape("tamil")
+```
+
+```elixir
+chapters_t[:chapters]
+|> Enum.reduce(
+  [],
+  fn
+    %{number: no, title: title, url: [url]}, [%{number: curr_no, url: curr_url} = curr | acc]
+    when no == curr_no + 100 ->
+      Map.put(curr, :url, [url | curr_url])
+
+    %{number: no, title: title, url: url}, acc ->
+      [
+        %{
+          number: no - 100,
+          title:
+            String.split(title, "-")
+            |> List.first()
+            |> String.split("   ")
+            |> List.last()
+            |> String.trim(),
+          url: url
+        }
+        | acc
+      ]
+  end
+)
+
+# |> Enum.find(&(&1.number == 5 ))
+```
+
+```elixir
+t_v = ThiruvaasagamScraper.extract_verses(101, "hindi")
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
