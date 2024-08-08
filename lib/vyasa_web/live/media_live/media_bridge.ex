@@ -37,6 +37,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       socket
       |> assign(playback: nil)
       |> assign(voice: nil)
+      |> assign(ack_val: nil)
       |> assign(video: nil)
       |> assign(video_player_config: encoded_config)
       |> assign(should_show_vid: false)
@@ -246,7 +247,38 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   end
 
-  # todo: consolidate other hook events that need to be sent to the media bridge hook
+  defp receive_voice_ack(
+         %Socket{} = socket,
+         %Voice{
+           video: video
+         } = voice,
+         ack_val
+       ) do
+    %Voice{
+      events: voice_events
+    } = loaded_voice = voice |> Medium.load_events()
+
+    generated_artwork = %{
+      src:
+        url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}"),
+      type: "image/png",
+      sizes: "480x360"
+    }
+
+    {
+      :noreply,
+      socket
+      |> assign(voice: loaded_voice)
+      |> assign(ack_val: ack_val)
+      |> assign(video: video)
+      |> assign(playback: Playback.create_playback(loaded_voice, generated_artwork))
+      |> push_event("media_bridge:registerEventsTimeline", %{
+        voice_events: voice_events |> create_events_payload()
+      })
+    }
+  end
+
+  # TODO: consolidate other hook events that need to be sent to the media bridge hook
   defp push_hook_events(
          %Socket{
            assigns: %{
@@ -280,36 +312,28 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @impl true
   # On receiving a voice_ack, the written and player contexts are now synced.
-  # A playback struct is created that represents this synced-state and the client-side hook is triggerred
+  # The ack_val is used to check if the voice_ack is duplicate, in which case, it's ignored.
+  #
+  # If the ack is fresh, then we shall pipe it to receive_voice_ack() where in
+  # a playback struct is created that represents this synced-state and the client-side hook is triggerred
   # to register the associated events timeline.
   def handle_info(
         {_, :voice_ack,
          %Voice{
-           video: video
-         } = voice} = _msg,
-        socket
+           video: _video
+         } = voice, ack_val} = _msg,
+        %Socket{
+          assigns: %{
+            ack_val: prev_ack_val
+          }
+        } = socket
       ) do
-    %Voice{
-      events: voice_events
-    } = loaded_voice = voice |> Medium.load_events()
+    is_duplicate_ack = ack_val === prev_ack_val
 
-    generated_artwork = %{
-      src:
-        url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: loaded_voice.source})}"),
-      type: "image/png",
-      sizes: "480x360"
-    }
-
-    {
-      :noreply,
-      socket
-      |> assign(voice: loaded_voice)
-      |> assign(video: video)
-      |> assign(playback: Playback.create_playback(loaded_voice, generated_artwork))
-      |> push_event("media_bridge:registerEventsTimeline", %{
-        voice_events: voice_events |> create_events_payload()
-      })
-    }
+    cond do
+      not is_duplicate_ack -> socket |> receive_voice_ack(voice, ack_val)
+      true -> {:noreply, socket}
+    end
   end
 
   @doc """

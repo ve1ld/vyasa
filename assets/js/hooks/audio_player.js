@@ -41,7 +41,6 @@ AudioPlayer = {
     this.player.addEventListener("loadedmetadata", (e) =>
       this.handleMetadataLoad(e),
     );
-    this.handleEvent("initSession", (sess) => this.initSession(sess));
     /// Audio playback events:
     this.handleEvent("stop", () => this.stop());
 
@@ -109,10 +108,6 @@ AudioPlayer = {
       currentPlaybackInfo: this.readCurrentPlaybackInfo(),
     };
     heartbeatBridge.pub(echoPayload);
-  },
-  initSession(sess) {
-    console.log("TRACE initSession", sess);
-    localStorage.setItem("session", JSON.stringify(sess));
   },
   handlePlayableState(e) {
     console.log("TRACE HandlePlayableState", e);

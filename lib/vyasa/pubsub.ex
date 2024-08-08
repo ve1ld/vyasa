@@ -29,11 +29,6 @@ defmodule Vyasa.PubSub do
     message
   end
 
-  def publish(%Vyasa.Medium.Voice{} = voice, event, sess_id) do
-    PubSub.broadcast(__MODULE__, "media:session:#{sess_id}", {__MODULE__, event, voice})
-    voice
-  end
-
   def publish(message, event, topic) when not is_nil(topic) do
     msg = {__MODULE__, event, message}
     PubSub.broadcast(Vyasa.PubSub, topic, msg)
@@ -46,5 +41,15 @@ defmodule Vyasa.PubSub do
 
   def publish({:error, reason}, _event) do
     {:error, reason}
+  end
+
+  @doc """
+  Publishes %Voice{} structs, while also ensuring that an ack_num is associated to the
+  sending of that message so that the receipient may handle duplicates.
+  """
+  def publish(%Vyasa.Medium.Voice{} = voice, event, sess_id, ack_val) do
+    msg = {__MODULE__, event, voice, ack_val}
+    PubSub.broadcast(__MODULE__, "media:session:#{sess_id}", msg)
+    voice
   end
 end

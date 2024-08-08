@@ -27,6 +27,8 @@ MediaBridge = {
     this.handleEvent("media_bridge:registerEventsTimeline", (params) =>
       this.registerEventsTimeline(params),
     );
+
+    this.handleEvent("initSession", (sess) => this.initSession(sess));
     // pub: external action
     // this callback pubs to others
     this.handleEvent("media_bridge:play_pause", (payload) =>
@@ -47,6 +49,13 @@ MediaBridge = {
         this.handleHeartbeat(payload),
       ),
     };
+  },
+  /**
+   * Saves current session id
+   * */
+  initSession(sess) {
+    console.log("TRACE initSession", sess);
+    localStorage.setItem("session", JSON.stringify(sess));
   },
   toggleFollowMode() {
     this.isFollowMode = !this.isFollowMode;

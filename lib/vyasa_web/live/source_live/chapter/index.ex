@@ -1,6 +1,7 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
   use VyasaWeb, :live_view
   alias Vyasa.{Written, Medium, Draft}
+  alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias VyasaWeb.OgImageController
   alias Utils.Struct
@@ -201,12 +202,13 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           }
         } = socket
       ) do
-    chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+    %Voice{id: ack_val} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
 
     Vyasa.PubSub.publish(
       chosen_voice,
       :voice_ack,
-      sess_id
+      sess_id,
+      ack_val
     )
 
     {:noreply, socket}
