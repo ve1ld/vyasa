@@ -10,7 +10,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   use VyasaWeb, :live_view
   alias Phoenix.LiveView.Socket
   alias Vyasa.Medium
-  alias Vyasa.Medium.{Voice, Event, Playback, Meta}
+  alias Vyasa.Medium.{Voice, Event, Playback}
 
   @default_player_config %{
     height: "300",
@@ -279,29 +279,18 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   @impl true
-  @doc """
-  On receiving a voice_ack, the written and player contexts are now synced.
-  A playback struct is created that represents this synced-state and the client-side hook is triggerred
-  to register the associated events timeline.
-  """
+  # On receiving a voice_ack, the written and player contexts are now synced.
+  # A playback struct is created that represents this synced-state and the client-side hook is triggerred
+  # to register the associated events timeline.
   def handle_info(
         {_, :voice_ack,
          %Voice{
            video: video
-         } = voice},
+         } = voice} = _msg,
         socket
       ) do
     %Voice{
-      events: voice_events,
-      title: title,
-      file_path: file_path,
-      duration: duration,
-      meta:
-        %{
-          artists: artists,
-          album: album,
-          artwork: artwork
-        } = meta
+      events: voice_events
     } = loaded_voice = voice |> Medium.load_events()
 
     generated_artwork = %{
@@ -311,37 +300,26 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       sizes: "480x360"
     }
 
-    updated_artwork =
-      cond do
-        artwork && is_list(artwork) -> [generated_artwork | artwork]
-        true -> [generated_artwork]
-      end
-
-    playback_meta = %Meta{
-      title: title,
-      artists: artists,
-      album: album,
-      artwork: updated_artwork,
-      duration: duration,
-      file_path: file_path
-    }
-
-    IO.inspect(meta, label: "Checkpoint: voice meta:")
-    IO.inspect(playback_meta, label: "Checkpoint: playback meta:")
-
     {
       :noreply,
       socket
       |> assign(voice: loaded_voice)
       |> assign(video: video)
-      |> assign(playback: Playback.init_playback(playback_meta))
+      |> assign(playback: Playback.create_playback(loaded_voice, generated_artwork))
       |> push_event("media_bridge:registerEventsTimeline", %{
         voice_events: voice_events |> create_events_payload()
       })
     }
   end
 
-  def handle_info({_, :written_handshake, :init}, %{assigns: %{session: %{"id" => id}}} = socket) do
+  @doc """
+  Handles the custom message that correponds to the :written_handshake event
+  with the :init msg, regardless of the module that dispatched the message.
+  """
+  def handle_info(
+        {_, :written_handshake, :init} = _msg,
+        %{assigns: %{session: %{"id" => id}}} = socket
+      ) do
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
     {:noreply, socket}
   end

@@ -15,6 +15,7 @@ defmodule Vyasa.PubSub do
   def publish({:ok, message}, event, topics) when is_list(topics) do
     topics
     |> Enum.map(fn topic -> publish(message, event, topic) end)
+
     {:ok, message}
   end
 
@@ -34,7 +35,8 @@ defmodule Vyasa.PubSub do
   end
 
   def publish(message, event, topic) when not is_nil(topic) do
-    PubSub.broadcast(Vyasa.PubSub, topic, {__MODULE__, event, message})
+    msg = {__MODULE__, event, message}
+    PubSub.broadcast(Vyasa.PubSub, topic, msg)
     message
   end
 

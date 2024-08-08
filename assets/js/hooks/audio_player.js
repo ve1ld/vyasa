@@ -34,6 +34,7 @@ AudioPlayer = {
     this.isFollowMode = false;
     this.playbackBeganAt = null;
     this.player = this.el.querySelector("audio");
+    console.log("MOUNT PING");
 
     document.addEventListener("pointerdown", () => this.enableAudio());
     this.player.addEventListener("canplay", (e) => this.handlePlayableState(e));
@@ -55,12 +56,14 @@ AudioPlayer = {
       heartbeat: heartbeatBridge.sub((payload) => this.echoHeartbeat(payload)),
     };
   },
+
   /// Handlers for events received via the events bridge:
   handleMediaPlayPause(payload) {
     console.log(
       "TRACE [playPauseBridge::audio_player::playpause] payload:",
       payload,
     );
+    console.log("[playPauseBridge::audio_player::playpause] payload:", payload);
     const { cmd, playback } = payload;
 
     if (cmd === "play") {
@@ -147,6 +150,8 @@ AudioPlayer = {
     }
   },
   playMedia(playback) {
+    console.log("PlayMedia", playback);
+
     const { meta: playbackMeta, "playing?": isPlaying, elapsed } = playback;
     const { title, duration, file_path: filePath, artists } = playbackMeta;
     const artist = artists ? artists.join(", ") : "Unknown artist";
