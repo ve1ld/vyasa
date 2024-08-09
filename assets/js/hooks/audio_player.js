@@ -262,7 +262,24 @@ AudioPlayer = {
    * */
   initMediaSession(playback) {
     // TODO: register action handlers
+    this.registerActionHandlers(playback);
     this.updateMediaSession(playback);
+  },
+  registerActionHandlers(playback) {
+    const isSupported = "mediaSession" in navigator;
+    if (!isSupported) {
+      return;
+    }
+
+    const session = navigator.mediaSession;
+    const playPauseEvents = ["play", "pause"];
+    playPauseEvents.forEach((e) =>
+      session.setActionHandler(e, (e) => this.dispatchPlayPauseToServer(e)),
+    );
+  },
+  dispatchPlayPauseToServer(e) {
+    console.log("TRACE Action handler invoked. Type: ", e);
+    this.pushEvent("play_pause");
   },
   updateMediaSession(playback) {
     const isSupported = "mediaSession" in navigator;
