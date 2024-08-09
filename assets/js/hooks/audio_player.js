@@ -12,6 +12,13 @@
  * general player-agnostic fashion. "Playback" and actual playback (i.e. audio or video playback) is decoupled, allowing
  * us the ability to reconcile bufferring states and other edge cases, mediated by the Media Bridge.
  * */
+import {
+  seekTimeBridge,
+  playPauseBridge,
+  heartbeatBridge,
+  playbackMetaBridge,
+} from "./mediaEventBridges";
+
 let rand = (min, max) => Math.floor(Math.random() * (max - min) + min);
 let isVisible = (el) =>
   !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0);
@@ -22,11 +29,6 @@ let execJS = (selector, attr) => {
     .forEach((el) => liveSocket.execJS(el, el.getAttribute(attr)));
 };
 
-import {
-  seekTimeBridge,
-  playPauseBridge,
-  heartbeatBridge,
-} from "./media_bridge.js";
 import { formatDisplayTime, nowMs } from "../utils/time_utils.js";
 
 AudioPlayer = {
@@ -36,11 +38,15 @@ AudioPlayer = {
     this.player = this.el.querySelector("audio");
     console.log("MOUNT PING");
 
-    document.addEventListener("pointerdown", () => this.enableAudio());
-    this.player.addEventListener("canplay", (e) => this.handlePlayableState(e));
-    this.player.addEventListener("loadedmetadata", (e) =>
-      this.handleMetadataLoad(e),
+    // TO DEPRECATED
+    // document.addEventListener("pointerdown", () => this.enableAudio());
+
+    this.player.addEventListener("canplaythrough", (e) =>
+      this.handlePlayableState(e),
     );
+    // this.player.addEventListener("loadedmetadata", (e) =>
+    //   this.handleMetadataLoad(e),
+    // );
     /// Audio playback events:
     this.handleEvent("stop", () => this.stop());
 
@@ -53,9 +59,24 @@ AudioPlayer = {
         this.handleMediaPlayPause(payload),
       ),
       heartbeat: heartbeatBridge.sub((payload) => this.echoHeartbeat(payload)),
+      playbackMeta: playbackMetaBridge.sub((playback) =>
+        this.handlePlaybackMetaUpdate(playback),
+      ),
     };
   },
-
+  /**
+   * Loads the audio onto the audio player and inits the MediaSession as soon as playback information is received.
+   * This allows the metadata and audio load to happen independently of users'
+   * actions that effect playback (e.g. play/pause) -- bufferring gets init a lot earlier
+   * as a result.
+   * */
+  handlePlaybackMetaUpdate(playback) {
+    console.log("TRACE: handle playback meta update:", playback);
+    const { meta: playbackMeta } = playback;
+    const { file_path: filePath } = playbackMeta;
+    this.loadAudio(filePath);
+    this.initMediaSession(playback);
+  },
   /// Handlers for events received via the events bridge:
   handleMediaPlayPause(payload) {
     console.log(
@@ -112,12 +133,13 @@ AudioPlayer = {
   handlePlayableState(e) {
     console.log("TRACE HandlePlayableState", e);
     const playback = JSON.parse(this?.player?.dataset?.playback);
-    this.initMediaSession(playback);
+    // this.initMediaSession(playback);
   },
+  // DEPRECATED: the state setting already happens at the point of loading, we don't need to listen to any metadata load event now now.
   handleMetadataLoad(e) {
     console.log("TRACE HandleMetadataLoad", e);
     const playback = JSON.parse(this?.player?.dataset?.playback);
-    this.initMediaSession(playback);
+    // this.initMediaSession(playback);
   },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player);
@@ -125,10 +147,13 @@ AudioPlayer = {
       this.play();
     }
   },
-  /**
+
+  /*
    * This "init" behaviour has been mimicked from live_beats.
    * It is likely there to enable the audio player bufferring.
-   * */
+   */
+  // DEPRECATED: the intent of this function is no longer clear. It can be removed in a cleanup commit coming soon.
+  // the actual loading of audio to the audio player is already handled by loadAudio()
   enableAudio() {
     console.log("TRACE: enable audio");
     if (this.player.src) {
@@ -159,17 +184,32 @@ AudioPlayer = {
     console.log("TRACE @playMedia", {
       player: this.player,
     });
-    let currentSrc = this.player.src.split("?")[0];
-
+    let currentSrc = this.getCurrentSrc();
     const isLoadedAndPaused =
       currentSrc === filePath && !isPlaying && this.player.paused;
     if (isLoadedAndPaused) {
       this.play({ sync: true });
     } else if (currentSrc !== filePath) {
-      currentSrc = filePath;
-      this.player.src = currentSrc;
+      this.loadAudio(filePath);
       this.play({ sync: true });
     }
+  },
+  loadAudio(src) {
+    const isSrcAlreadyLoaded = src === this.getCurrentSrc();
+    if (isSrcAlreadyLoaded) {
+      return;
+    }
+    this.player.src = src;
+  },
+  getCurrentSrc() {
+    if (!this?.player?.src) {
+      return null;
+    }
+    // since the html5 player's src value is typically a url string, it will have url encodings e.g. ContentType.
+    // Therefore, we strip away these urlencodes:
+    const src = this.player.src.split("?")[0];
+
+    return src;
   },
   play(opts = {}) {
     console.log("TRACE Triggered playback, check params", {

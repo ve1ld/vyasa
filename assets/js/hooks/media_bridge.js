@@ -6,13 +6,13 @@
  *
  * Event-handling is done using custom bridged events as a proxy.
  * */
-import { bridged } from "./media/bridged.js";
 import { formatDisplayTime } from "../utils/time_utils.js";
-
-// TODO: consider switching to a map of bridges to support other key events
-export const seekTimeBridge = bridged("seekTime");
-export const playPauseBridge = bridged("playPause");
-export const heartbeatBridge = bridged("heartbeat");
+import {
+  seekTimeBridge,
+  playPauseBridge,
+  heartbeatBridge,
+  playbackMetaBridge,
+} from "./mediaEventBridges";
 
 MediaBridge = {
   mounted() {
@@ -27,7 +27,9 @@ MediaBridge = {
     this.handleEvent("media_bridge:registerEventsTimeline", (params) =>
       this.registerEventsTimeline(params),
     );
-
+    this.handleEvent("media_bridge:registerPlayback", (params) =>
+      this.registerPlaybackInfo(params),
+    );
     this.handleEvent("initSession", (sess) => this.initSession(sess));
     // pub: external action
     // this callback pubs to others
@@ -207,9 +209,19 @@ MediaBridge = {
   },
   registerEventsTimeline(params) {
     console.log("Register Events Timeline", params);
-    this.eventsTimeline = params.voice_events;
+    const { voice_events } = params;
+    this.eventsTimeline = voice_events;
   },
-
+  /**
+   * First registers the playback information about a playable medium (e.g. voice).
+   * The intent of this is to separate out tasks for interfacing with things like MediaSessions api
+   * from interfacing with the concrete players (e.g. play pause event on the audio player).
+   * */
+  registerPlaybackInfo(params) {
+    const { playback } = params;
+    console.log("TRACE: registerPlaybackInfo", params);
+    playbackMetaBridge.pub(playback);
+  },
   /**
    * Receives event pushed from the server, then pubs through the
    * */

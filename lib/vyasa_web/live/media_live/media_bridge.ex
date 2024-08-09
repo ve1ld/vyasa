@@ -247,16 +247,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   end
 
-  defp receive_voice_ack(
+  # assigns necessary states if voice is legit and events can be loaded.
+  defp apply_voice_action(
          %Socket{} = socket,
          %Voice{
            video: video
          } = voice,
          ack_val
        ) do
-    %Voice{
-      events: voice_events
-    } = loaded_voice = voice |> Medium.load_events()
+    loaded_voice = voice |> Medium.load_events()
 
     generated_artwork = %{
       src:
@@ -265,17 +264,31 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       sizes: "480x360"
     }
 
-    {
-      :noreply,
-      socket
-      |> assign(voice: loaded_voice)
-      |> assign(ack_val: ack_val)
-      |> assign(video: video)
-      |> assign(playback: Playback.create_playback(loaded_voice, generated_artwork))
-      |> push_event("media_bridge:registerEventsTimeline", %{
-        voice_events: voice_events |> create_events_payload()
-      })
-    }
+    playback = Playback.create_playback(loaded_voice, generated_artwork)
+
+    socket
+    |> assign(voice: loaded_voice)
+    |> assign(ack_val: ack_val)
+    |> assign(video: video)
+    |> assign(playback: playback)
+  end
+
+  defp dispatch_voice_registering_events(
+         %Socket{
+           assigns: %{
+             voice:
+               %Voice{
+                 events: voice_events
+               } = _voice,
+             playback: playback
+           }
+         } = socket
+       ) do
+    socket
+    |> push_event("media_bridge:registerEventsTimeline", %{
+      voice_events: voice_events |> create_events_payload()
+    })
+    |> push_event("media_bridge:registerPlayback", %{playback: playback})
   end
 
   # TODO: consolidate other hook events that need to be sent to the media bridge hook
@@ -328,11 +341,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           }
         } = socket
       ) do
-    is_duplicate_ack = ack_val === prev_ack_val
+    is_new_voice = ack_val !== prev_ack_val
 
     cond do
-      not is_duplicate_ack -> socket |> receive_voice_ack(voice, ack_val)
-      true -> {:noreply, socket}
+      is_new_voice ->
+        {:noreply,
+         socket
+         |> apply_voice_action(voice, ack_val)
+         |> dispatch_voice_registering_events()}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
