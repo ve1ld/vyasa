@@ -18,7 +18,7 @@ defmodule VyasaWeb.AudioPlayer do
     # TODO: remove the reliance on the playback prop passed here, it forces a remounting of the node, which is undesirable
     ~H"""
     <div id="audio-player" phx-hook="AudioPlayer">
-      <audio data-playback={Jason.encode!(@playback)}></audio>
+      <audio></audio>
     </div>
     """
   end

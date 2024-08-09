@@ -132,13 +132,11 @@ AudioPlayer = {
   },
   handlePlayableState(e) {
     console.log("TRACE HandlePlayableState", e);
-    const playback = JSON.parse(this?.player?.dataset?.playback);
     // this.initMediaSession(playback);
   },
   // DEPRECATED: the state setting already happens at the point of loading, we don't need to listen to any metadata load event now now.
   handleMetadataLoad(e) {
     console.log("TRACE HandleMetadataLoad", e);
-    const playback = JSON.parse(this?.player?.dataset?.playback);
     // this.initMediaSession(playback);
   },
   handlePlayPause() {
