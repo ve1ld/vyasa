@@ -2,66 +2,71 @@
  * Progress Bar hooks intended to sync playback related actions
  * */
 
-import {seekTimeBridge, heartbeatBridge} from "./media_bridge.js"
+import { seekTimeBridge, heartbeatBridge } from "./mediaEventBridges";
 
 ProgressBar = {
   mounted() {
     this.el.addEventListener("click", (e) => {
       e.preventDefault();
-      this.handleProgressBarClick(e)
+      this.handleProgressBarClick(e);
     });
 
-    const heartbeatDeregisterer = heartbeatBridge.sub(payload => this.handleHeartbeat(payload))
-    const seekTimeDeregisterer = seekTimeBridge.sub(payload => this.handleExternalSeekTime(payload))
+    const heartbeatDeregisterer = heartbeatBridge.sub((payload) =>
+      this.handleHeartbeat(payload),
+    );
+    const seekTimeDeregisterer = seekTimeBridge.sub((payload) =>
+      this.handleExternalSeekTime(payload),
+    );
 
     this.eventBridgeDeregisterers = {
       seekTime: seekTimeDeregisterer,
       heartbeat: heartbeatDeregisterer,
-    }
+    };
   },
   handleExternalSeekTime(payload) {
-    console.log("[progress_bar::seekTimeBridgeSub::seekTimeHandler] this:", {payload});
-    const {
-      seekToMs: timeMs,
-      originator,
-    } = payload;
+    console.log("[progress_bar::seekTimeBridgeSub::seekTimeHandler] this:", {
+      payload,
+    });
+    const { seekToMs: timeMs, originator } = payload;
 
     const shouldIgnoreSignal = originator === "ProgressBar";
     if (shouldIgnoreSignal) {
-      console.info("Ignoring signal for seekTime", payload)
+      console.info("Ignoring signal for seekTime", payload);
 
       return;
     }
 
-    const maxTime = this.el.dataset?.max || this.maxTime
-    if(!maxTime) {
-      console.warn("Max time not available in element's state or dataset, ignoring progress bar update.")
-      return
+    const maxTime = this.el.dataset?.max || this.maxTime;
+    if (!maxTime) {
+      console.warn(
+        "Max time not available in element's state or dataset, ignoring progress bar update.",
+      );
+      return;
     }
 
-    const playbackPercentage = (timeMs / maxTime)
-    const progressStyleWidth = `${(playbackPercentage * 100)}%`
+    const playbackPercentage = timeMs / maxTime;
+    const progressStyleWidth = `${playbackPercentage * 100}%`;
     console.log("[DEBUG]", {
       maxTime,
       playbackPercentage,
-    })
-    this.setProgressBarWidth(progressStyleWidth)
+    });
+    this.setProgressBarWidth(progressStyleWidth);
   },
   handleHeartbeat(payload) {
-    console.log("[ProgressBar::handleHeartbeat]", payload)
+    console.log("[ProgressBar::handleHeartbeat]", payload);
     const shouldIgnoreSignal = payload.originator === "MediaBridge";
-    if(shouldIgnoreSignal) {
+    if (shouldIgnoreSignal) {
       return;
     }
-    const {
-      currentTimeMs,
-      durationMs,
-    } = payload.currentPlaybackInfo || {};
+    const { currentTimeMs, durationMs } = payload.currentPlaybackInfo || {};
 
-    const playbackPercentage = (currentTimeMs / durationMs)
-    const progressStyleWidth = `${(playbackPercentage * 100)}%`
-    console.log("handleHeartbeat, set progress bar width", progressStyleWidth)
-    this.setProgressBarWidth(progressStyleWidth)
+    const playbackPercentage = currentTimeMs / durationMs;
+    const progressStyleWidth = `${playbackPercentage * 100}%`;
+    console.log("handleHeartbeat, set progress bar width", {
+      progressStyleWidth,
+      payload,
+    });
+    this.setProgressBarWidth(progressStyleWidth);
   },
   /*
     // The progress bar is measured in milliseconds,
@@ -86,24 +91,24 @@ ProgressBar = {
     // })
    */
   handleProgressBarClick(e) {
-    const { max: maxTime } = this.el.dataset
+    const { max: maxTime } = this.el.dataset;
 
     if (!maxTime) {
-      console.log("unable to seek position, payload is incorrect")
-      return
+      console.log("unable to seek position, payload is incorrect");
+      return;
     }
 
-    const containerNode = document.getElementById("player-progress-container")
-    const maxOffset = containerNode.offsetWidth
+    const containerNode = document.getElementById("player-progress-container");
+    const maxOffset = containerNode.offsetWidth;
     this.maxTime = maxTime;
     this.maxOffset = maxOffset;
 
     const currXOffset = e.offsetX;
-    const maxPlaybackMs = Number(maxTime)
-    const playbackPercentage = (currXOffset / maxOffset)
-    const positionMs = maxPlaybackMs * playbackPercentage
-    const progressStyleWidth = `${(playbackPercentage * 100)}%`
-    this.setProgressBarWidth(progressStyleWidth)
+    const maxPlaybackMs = Number(maxTime);
+    const playbackPercentage = currXOffset / maxOffset;
+    const positionMs = maxPlaybackMs * playbackPercentage;
+    const progressStyleWidth = `${playbackPercentage * 100}%`;
+    this.setProgressBarWidth(progressStyleWidth);
 
     // Optimistic update
     this.el.value = positionMs;
@@ -117,23 +122,25 @@ ProgressBar = {
       playbackPercentage,
       maxPlaybackMs,
       positionMs,
-    })
+    });
 
     // pubs & dispatches this position
     const seekTimePayload = {
       seekToMs: positionMs,
       originator: "ProgressBar",
-    }
-    seekTimeBridge.dispatch(this, seekTimePayload, "#media-player-container")
+    };
+    seekTimeBridge.dispatch(this, seekTimePayload, "#media-player-container");
     return;
   },
-  setProgressBarWidth(progressStyleWidth, selector="#player-progress") {
-    console.log("setting progress bar width:", progressStyleWidth)
-    const progressBarNode = document.querySelector(selector)
-    console.assert(!!progressBarNode, "progress bar node must always be present in the dom.")
+  setProgressBarWidth(progressStyleWidth, selector = "#player-progress") {
+    console.log("setting progress bar width:", progressStyleWidth);
+    const progressBarNode = document.querySelector(selector);
+    console.assert(
+      !!progressBarNode,
+      "progress bar node must always be present in the dom.",
+    );
     progressBarNode.style.width = progressStyleWidth;
-  }
+  },
 };
-
 
 export default ProgressBar;
