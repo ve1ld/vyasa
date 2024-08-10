@@ -25,7 +25,7 @@ defmodule VyasaWeb.AudioPlayer do
   @impl true
   def update(
         %{
-          event: "media_bridge:notify_audio_player" = event,
+          event: "media_bridge:notify_audio_player" = _event,
           playback: %Playback{} = playback
         } = _assigns,
         socket
