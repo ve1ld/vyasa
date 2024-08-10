@@ -24,15 +24,10 @@ ProgressBar = {
     };
   },
   handleExternalSeekTime(payload) {
-    console.log("[progress_bar::seekTimeBridgeSub::seekTimeHandler] this:", {
-      payload,
-    });
     const { seekToMs: timeMs, originator } = payload;
 
     const shouldIgnoreSignal = originator === "ProgressBar";
     if (shouldIgnoreSignal) {
-      console.info("Ignoring signal for seekTime", payload);
-
       return;
     }
 
@@ -46,14 +41,9 @@ ProgressBar = {
 
     const playbackPercentage = timeMs / maxTime;
     const progressStyleWidth = `${playbackPercentage * 100}%`;
-    console.log("[DEBUG]", {
-      maxTime,
-      playbackPercentage,
-    });
     this.setProgressBarWidth(progressStyleWidth);
   },
   handleHeartbeat(payload) {
-    console.log("[ProgressBar::handleHeartbeat]", payload);
     const shouldIgnoreSignal = payload.originator === "MediaBridge";
     if (shouldIgnoreSignal) {
       return;
@@ -62,10 +52,6 @@ ProgressBar = {
 
     const playbackPercentage = currentTimeMs / durationMs;
     const progressStyleWidth = `${playbackPercentage * 100}%`;
-    console.log("handleHeartbeat, set progress bar width", {
-      progressStyleWidth,
-      payload,
-    });
     this.setProgressBarWidth(progressStyleWidth);
   },
   /*
@@ -94,7 +80,6 @@ ProgressBar = {
     const { max: maxTime } = this.el.dataset;
 
     if (!maxTime) {
-      console.log("unable to seek position, payload is incorrect");
       return;
     }
 
@@ -113,17 +98,6 @@ ProgressBar = {
     // Optimistic update
     this.el.value = positionMs;
 
-    console.log("seek attempt @ positionMs:", {
-      checkThis: this,
-      elem: this.el,
-      event: e,
-      maxOffset,
-      currXOffset,
-      playbackPercentage,
-      maxPlaybackMs,
-      positionMs,
-    });
-
     // pubs & dispatches this position
     const seekTimePayload = {
       seekToMs: positionMs,
@@ -133,7 +107,6 @@ ProgressBar = {
     return;
   },
   setProgressBarWidth(progressStyleWidth, selector = "#player-progress") {
-    console.log("setting progress bar width:", progressStyleWidth);
     const progressBarNode = document.querySelector(selector);
     console.assert(
       !!progressBarNode,

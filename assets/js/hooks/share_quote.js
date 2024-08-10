@@ -24,7 +24,6 @@ ShareQuoteButton = {
     } else if ("clipboard" in navigator) {
       // copies to clipboard:
       callback = () => {
-        console.log(">> see me:", { "floating ui:": window });
         const {
           chapter_number: chapterNum,
           verse_number: verseNum,
@@ -76,20 +75,11 @@ import { computePosition, flip, shift, offset } from "floating-ui.dom.umd.min";
 
 const alignTooltip = () => {
   const { button, tooltip } = getButtonAndTooltip();
-  console.log(">>> found?", {
-    button,
-    tooltip,
-  });
-
   computePosition(button, tooltip, {
     placement: "right",
     // NOTE: order of middleware matters.
     middleware: [offset(6), flip(), shift({ padding: 16 })],
   }).then(({ x, y }) => {
-    console.log(">>> computed new position!", {
-      x,
-      y,
-    });
     Object.assign(tooltip.style, {
       left: `${x}px`,
       top: `${y}px`,

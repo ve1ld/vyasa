@@ -56,14 +56,12 @@ MediaBridge = {
    * Saves current session id
    * */
   initSession(sess) {
-    console.log("TRACE initSession", sess);
     localStorage.setItem("session", JSON.stringify(sess));
   },
   toggleFollowMode() {
     this.isFollowMode = !this.isFollowMode;
   },
   handleHeartbeat(payload) {
-    console.log("[MediaBridge::handleHeartbeat]", payload);
     const shouldIgnoreSignal = payload.originator === "MediaBridge";
     if (shouldIgnoreSignal) {
       return;
@@ -74,10 +72,6 @@ MediaBridge = {
       payload.originator === "AudioPlayer",
       "MediaBridge only expects heartbeat acks to come from AudioPlayer",
     );
-    console.log(">>> progress update, payload:", {
-      payload,
-      eventsTimeline: this.eventsTimeline,
-    });
     const { currentTimeMs, durationMs } = payload.currentPlaybackInfo || {};
 
     this.updateTimeDisplay(currentTimeMs, durationMs);
@@ -111,7 +105,6 @@ MediaBridge = {
   },
   emphasizeActiveEvent(currentTimeMs, events) {
     if (!events) {
-      console.log("No events found");
       return;
     }
 
@@ -122,7 +115,6 @@ MediaBridge = {
     );
 
     if (!activeEvent) {
-      console.log("No active event found @ time = ", currentTime);
       return;
     }
 
@@ -156,7 +148,6 @@ MediaBridge = {
   },
   startHeartbeat() {
     const heartbeatInterval = 100; // 10fps, comfortable for human eye
-    console.log("Starting heartbeat!");
     const heartbeatPayload = {
       originator: "MediaBridge",
     };
@@ -164,22 +155,14 @@ MediaBridge = {
       () => heartbeatBridge.pub(heartbeatPayload),
       heartbeatInterval,
     );
-    console.log("Started Heartbeat with:", {
-      heartbeatTimer,
-      heartbeatPayload,
-      heartbeatInterval,
-    });
-
     this.heartbeatTimer = heartbeatTimer;
   },
   killHeartbeat() {
-    console.log("Killing heartbeat!", { heartbeatTimer: this.heartbeatTimer });
     clearInterval(this.heartbeatTimer);
   },
   updateTimeDisplay(timeMs, durationMs = null) {
     const currentTimeDisplay = formatDisplayTime(timeMs);
     this.currentTime.innerText = currentTimeDisplay;
-    console.log("Updated time display to", currentTimeDisplay);
 
     if (durationMs) {
       const durationDisplay = formatDisplayTime(durationMs);
@@ -187,7 +170,6 @@ MediaBridge = {
     }
   },
   seekToMs(originator, timeMs) {
-    console.log("media_bridge.js::seekToMs", { timeMs, originator });
     const knownOriginators = ["ProgressBar", "MediaBridge"]; // temp-list, will be removed
     if (!knownOriginators.includes(originator)) {
       console.warn(
@@ -208,7 +190,6 @@ MediaBridge = {
     }
   },
   registerEventsTimeline(params) {
-    console.log("Register Events Timeline", params);
     const { voice_events } = params;
     this.eventsTimeline = voice_events;
   },
@@ -219,7 +200,6 @@ MediaBridge = {
    * */
   registerPlaybackInfo(params) {
     const { playback } = params;
-    console.log("TRACE: registerPlaybackInfo", params);
     playbackMetaBridge.pub(playback);
   },
   /**
@@ -232,20 +212,11 @@ MediaBridge = {
       "This event may only originate from the MediaBridge server.",
     );
 
-    console.log(
-      "TRACE media_bridge:receivePlayPauseFromServer",
-      playPausePayload,
-    );
     this.updateHeartbeatFromPlayPause(playPausePayload);
     playPauseBridge.pub(playPausePayload);
   },
   handlePlayPause(payload) {
-    // TODO: implement handler for actions emitted via interaction with youtube player
-    console.log(
-      "TRACE EXT[playPauseBridge::media_bridge:playpause] payload:",
-      payload,
-    );
-    const { cmd, playback, originator } = payload;
+    const { originator } = payload;
 
     const shouldIgnoreSignal = originator === "MediaBridge";
     if (shouldIgnoreSignal) {
@@ -261,13 +232,7 @@ MediaBridge = {
    * NOTE: This doesn't guard for the originator of the command.
    * */
   updateHeartbeatFromPlayPause(payload) {
-    console.log("[playPauseBridge::media_bridge:playpause] payload:", payload);
     const { cmd } = payload;
-    // TODO: implement handler for actions emitted via interaction with youtube player
-    console.log(
-      ">> [media_bridge.js::playPauseBridge], received a signal",
-      payload,
-    );
     if (cmd === "play") {
       this.startHeartbeat();
     }
@@ -281,14 +246,9 @@ MediaBridge = {
       originator === "MediaBridge",
       "This event may only originate from the MediaBridge server.",
     );
-    console.log("media_bridge:seekTime event handler", seekTimePayload);
     seekTimeBridge.pub(seekTimePayload);
   },
   handleSeekTime(payload) {
-    console.log(
-      "[media_bridge::seekTimeBridgeSub::seekTimeHandler] payload",
-      payload,
-    );
     const { seekToMs: timeMs, originator } = payload;
     this.seekToMs(originator, timeMs);
   },

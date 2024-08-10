@@ -36,12 +36,10 @@ const youtubePlayerCallbacks = {
   seekTo: function (options) {
     const { targetTimeStamp, player } = options;
     const target = Number(targetTimeStamp);
-    console.log("seeking to: ", target);
     return player.seekTo(target);
   },
   loadVideoById: function (options) {
     const { targetTimeStamp: startSeconds, videoId, player } = options;
-    console.log(`Loading video with id ${videoId} at t=${startSeconds}s`);
     player.loadVideoById({ videoId, startSeconds });
   },
   getAllStats: function (options) {
@@ -64,7 +62,6 @@ const youtubePlayerCallbacks = {
 export const RenderYouTubePlayer = {
   mounted() {
     const { videoId, playerConfig: serialisedPlayerConfig } = this.el.dataset;
-    console.log("Check dataset", this.el.dataset);
 
     const playerConfig = JSON.parse(serialisedPlayerConfig);
     const updatedConfig = overrideConfigForMobile(playerConfig);
@@ -81,7 +78,6 @@ export const RenderYouTubePlayer = {
     this.handleEvent("stop", () => this.stop());
   },
   handlePlayPause(payload) {
-    console.log("[playPauseBridge::audio_player::playpause] payload:", payload);
     const { cmd, playback } = payload;
 
     if (cmd === "play") {
@@ -92,35 +88,19 @@ export const RenderYouTubePlayer = {
     }
   },
   handleSeekTime(payload) {
-    console.log(
-      "[youtube_player::seekTimeBridgeSub::seekTimeHandler] check params:",
-      { payload },
-    );
     let { seekToMs: timeMs } = payload;
     this.seekToMs(timeMs);
   },
-  playMedia(playback) {
-    console.log("youtube player playMedia triggerred", playback);
-    const { meta: playbackMeta, "playing?": isPlaying, elapsed } = playback;
-    const { title, duration, file_path: filePath, artists } = playbackMeta;
-
+  playMedia(_playback) {
     // TODO: consider if the elapsed ms should be used here for better sync(?)
     window.youtubePlayer.playVideo();
   },
   pauseMedia() {
-    console.log("youtube player pauseMedia triggerred");
     window.youtubePlayer.pauseVideo();
   },
-  stop() {
-    console.log("youtube player stop triggerred");
-  },
+  stop() {},
   seekToMs(timeMs) {
     const timeS = timeMs / 1000;
-    console.log("youtube player seekto triggerred", {
-      timeS,
-      player: window.youtubePlayer,
-    });
-
     window.youtubePlayer.seekTo(timeS);
   },
 };

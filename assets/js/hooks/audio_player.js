@@ -19,10 +19,6 @@ import {
   playbackMetaBridge,
 } from "./mediaEventBridges";
 
-let rand = (min, max) => Math.floor(Math.random() * (max - min) + min);
-let isVisible = (el) =>
-  !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length > 0);
-
 let execJS = (selector, attr) => {
   document
     .querySelectorAll(selector)
@@ -36,7 +32,6 @@ AudioPlayer = {
     this.isFollowMode = false;
     this.playbackBeganAt = null;
     this.player = this.el.querySelector("audio");
-    console.log("MOUNT PING");
 
     this.player.addEventListener("canplaythrough", (e) =>
       this.handlePlayableState(e),
@@ -65,7 +60,6 @@ AudioPlayer = {
    * as a result.
    * */
   handlePlaybackMetaUpdate(playback) {
-    console.log("TRACE: handle playback meta update:", playback);
     const { meta: playbackMeta } = playback;
     const { file_path: filePath } = playbackMeta;
     this.loadAudio(filePath);
@@ -73,11 +67,6 @@ AudioPlayer = {
   },
   /// Handlers for events received via the events bridge:
   handleMediaPlayPause(payload) {
-    console.log(
-      "TRACE [playPauseBridge::audio_player::playpause] payload:",
-      payload,
-    );
-    console.log("[playPauseBridge::audio_player::playpause] payload:", payload);
     const { cmd, playback } = payload;
 
     if (cmd === "play") {
@@ -88,10 +77,6 @@ AudioPlayer = {
     }
   },
   handleExternalSeekTime(payload) {
-    console.log(
-      "[audio_player::seekTimeBridgeSub::seekTimeHandler] payload:",
-      payload,
-    );
     const { seekToMs: timeMs } = payload;
     this.seekToMs(timeMs);
   },
@@ -116,8 +101,6 @@ AudioPlayer = {
     if (shouldIgnoreSignal) {
       return;
     }
-
-    console.log("[heartbeatBridge::audio_player] payload:", heartbeatPayload);
     const echoPayload = {
       originator: "AudioPlayer",
       currentPlaybackInfo: this.readCurrentPlaybackInfo(),
@@ -125,30 +108,24 @@ AudioPlayer = {
     heartbeatBridge.pub(echoPayload);
   },
   handlePlayableState(e) {
-    console.log("TRACE HandlePlayableState", e);
-    // this.initMediaSession(playback);
+    // TODO: consider if a handler is needed for the "canplaythrough" event
+    console.log(
+      "TRACE HandlePlayableState -- the audio can be played through completely now.",
+      e,
+    );
   },
   handlePlayPause() {
-    console.log("{play_pause event triggerred} player:", this.player);
     if (this.player.paused) {
       this.play();
     }
   },
   playMedia(playback) {
-    console.log("PlayMedia", playback);
-
     const { meta: playbackMeta, "playing?": isPlaying, elapsed } = playback;
-    const { title, duration, file_path: filePath, artists } = playbackMeta;
-    const artist = artists ? artists.join(", ") : "Unknown artist";
-
-    // TODO: supply necessary info for media sessions api here...
+    const { file_path: filePath } = playbackMeta;
     this.updateMediaSession(playback);
 
     const beginTime = nowMs() - elapsed;
     this.playbackBeganAt = beginTime;
-    console.log("TRACE @playMedia", {
-      player: this.player,
-    });
     let currentSrc = this.getCurrentSrc();
     const isLoadedAndPaused =
       currentSrc === filePath && !isPlaying && this.player.paused;
@@ -177,11 +154,6 @@ AudioPlayer = {
     return src;
   },
   play(opts = {}) {
-    console.log("TRACE Triggered playback, check params", {
-      player: this.player,
-      opts,
-    });
-
     let { sync } = opts;
 
     this.player.play().then(
@@ -200,7 +172,6 @@ AudioPlayer = {
       },
     );
   },
-  // TODO: add triggers for updateMediaSession()
   pause() {
     this.player.pause();
   },
@@ -244,8 +215,7 @@ AudioPlayer = {
       session.setActionHandler(e, (e) => this.dispatchPlayPauseToServer(e)),
     );
   },
-  dispatchPlayPauseToServer(e) {
-    console.log("TRACE Action handler invoked. Type: ", e);
+  dispatchPlayPauseToServer(_e) {
     this.pushEvent("play_pause");
   },
   updateMediaSession(playback) {
@@ -254,7 +224,6 @@ AudioPlayer = {
       return;
     }
     const payload = this.createMediaMetadataPayload(playback);
-    console.log("new metadata payload", { playback, payload });
     navigator.mediaSession.metadata = new MediaMetadata(payload);
   },
   createMediaMetadataPayload(playback) {
