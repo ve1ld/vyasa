@@ -38,15 +38,9 @@ AudioPlayer = {
     this.player = this.el.querySelector("audio");
     console.log("MOUNT PING");
 
-    // TO DEPRECATED
-    // document.addEventListener("pointerdown", () => this.enableAudio());
-
     this.player.addEventListener("canplaythrough", (e) =>
       this.handlePlayableState(e),
     );
-    // this.player.addEventListener("loadedmetadata", (e) =>
-    //   this.handleMetadataLoad(e),
-    // );
     /// Audio playback events:
     this.handleEvent("stop", () => this.stop());
 
@@ -134,37 +128,10 @@ AudioPlayer = {
     console.log("TRACE HandlePlayableState", e);
     // this.initMediaSession(playback);
   },
-  // DEPRECATED: the state setting already happens at the point of loading, we don't need to listen to any metadata load event now now.
-  handleMetadataLoad(e) {
-    console.log("TRACE HandleMetadataLoad", e);
-    // this.initMediaSession(playback);
-  },
   handlePlayPause() {
     console.log("{play_pause event triggerred} player:", this.player);
     if (this.player.paused) {
       this.play();
-    }
-  },
-
-  /*
-   * This "init" behaviour has been mimicked from live_beats.
-   * It is likely there to enable the audio player bufferring.
-   */
-  // DEPRECATED: the intent of this function is no longer clear. It can be removed in a cleanup commit coming soon.
-  // the actual loading of audio to the audio player is already handled by loadAudio()
-  enableAudio() {
-    console.log("TRACE: enable audio");
-    if (this.player.src) {
-      console.log("TRACE: enable audio -- has a source", {
-        src: this.player.src,
-      });
-      // we wait until the player is ready for this to be enabled, thereafter, we don't need to enable the player
-      document.removeEventListener("pointerdown", this.enableAudio);
-      const hasNothingToPlay = this.player.readyState === 0;
-      if (hasNothingToPlay) {
-        this.player.play().catch((error) => null);
-        this.player.pause();
-      }
     }
   },
   playMedia(playback) {
