@@ -2,6 +2,12 @@
  * Ideally generic hook for floating logic.
  */
 import {isMobileDevice} from "../utils/uncategorised_utils.js";
+import {
+  computePosition,
+  autoPlacement,
+  shift,
+  offset,
+} from "floating-ui.dom.umd.min";
 
 Floater = {
   mounted() {
@@ -47,13 +53,6 @@ Floater = {
       console.log("[floater] Can't be aligned")
       return
     }
-
-    const {
-      computePosition,
-      autoPlacement,
-      shift,
-      offset,
-    } = window.FloatingUIDOM;
 
     computePosition(reference, floater, {
       placement: 'right',

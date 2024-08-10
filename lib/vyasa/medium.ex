@@ -1,10 +1,8 @@
 defmodule Vyasa.Medium do
-
   import Ecto.Query, warn: false
   alias Vyasa.Medium.{Video, Voice, Event}
   alias Vyasa.Medium
   alias Vyasa.Repo
-
 
   @doc """
   Gets a single voice.
@@ -28,14 +26,16 @@ defmodule Vyasa.Medium do
   def get_voice(source_id, chapter_no, lang) do
     from(v in Voice,
       where: v.source_id == ^source_id and v.lang == ^lang and v.chapter_no == ^chapter_no,
-      preload: [:events, :video])
+      preload: [:events, :video]
+    )
     |> Repo.one()
   end
 
   def get_voices!(%Voice{source_id: src_id, chapter_no: c_no, lang: l}) do
     from(v in Voice,
       where: v.source_id == ^src_id and v.chapter_no == ^c_no and v.lang == ^l,
-      preload: [:events])
+      preload: [:events, :source]
+    )
     |> Repo.all()
   end
 
@@ -44,18 +44,17 @@ defmodule Vyasa.Medium do
 
   Currently mainly used for youtube videos, possibly more in the future.
   """
-  def resolve_video_url(%Video{
-        type: type,
-        ext_uri: ext_uri,
-      } = _video) do
-
+  def resolve_video_url(
+        %Video{
+          type: type,
+          ext_uri: ext_uri
+        } = _video
+      ) do
     cond do
       type == "youtube" -> "https://www.youtube.com/watch?v=#{ext_uri}"
       true -> ext_uri
     end
-    
   end
-
 
   @doc """
   Creates a voice.
@@ -137,17 +136,18 @@ defmodule Vyasa.Medium do
   def get_event!(id), do: Repo.get!(Event, id)
 
   def get_event_by_order!(%Event{origin: origin, voice_id: v_id}, order) do
-    #TODO merge Sangh Filters to fix -1 order case for origin backwards operators
-    (from e in Event,
+    # TODO merge Sangh Filters to fix -1 order case for origin backwards operators
+    from(e in Event,
       preload: [:voice, :verse],
       where: e.origin >= ^origin and e.voice_id == ^v_id,
       order_by: e.origin,
       offset: ^order,
-      limit: 1)
+      limit: 1
+    )
     |> Repo.one!()
   end
 
-    @doc """
+  @doc """
   Creates a event.
 
   ## Examples
@@ -161,10 +161,12 @@ defmodule Vyasa.Medium do
   """
 
   def create_event(attrs \\ %{})
+
   def create_event(%Event{} = event) do
     event
     |> Repo.insert()
   end
+
   def create_event(attrs) do
     %Event{}
     |> Event.changeset(attrs)
@@ -222,5 +224,4 @@ defmodule Vyasa.Medium do
     |> List.first()
     |> Medium.Store.hydrate()
   end
-
 end
