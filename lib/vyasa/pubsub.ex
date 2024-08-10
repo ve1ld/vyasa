@@ -3,6 +3,7 @@ defmodule Vyasa.PubSub do
     Publish Subscriber Pattern
   """
   alias Phoenix.PubSub
+  alias Vyasa.Medium.{Voice}
 
   def subscribe(topic, opts \\ []) do
     PubSub.subscribe(Vyasa.PubSub, topic, opts)
@@ -24,6 +25,16 @@ defmodule Vyasa.PubSub do
     {:ok, message}
   end
 
+  @doc """
+  Publishes %Voice{} structs, any duplicate message check shall be done implicitly, based on the
+  struct that is being passed.
+  """
+  def publish(%Voice{} = voice, event, sess_id) do
+    msg = {__MODULE__, event, voice}
+    PubSub.broadcast(__MODULE__, "media:session:#{sess_id}", msg)
+    voice
+  end
+
   def publish(message, event, topics) when is_list(topics) do
     topics |> Enum.map(fn topic -> publish(message, event, topic) end)
     message
@@ -41,15 +52,5 @@ defmodule Vyasa.PubSub do
 
   def publish({:error, reason}, _event) do
     {:error, reason}
-  end
-
-  @doc """
-  Publishes %Voice{} structs, while also ensuring that an ack_num is associated to the
-  sending of that message so that the receipient may handle duplicates.
-  """
-  def publish(%Vyasa.Medium.Voice{} = voice, event, sess_id, ack_val) do
-    msg = {__MODULE__, event, voice, ack_val}
-    PubSub.broadcast(__MODULE__, "media:session:#{sess_id}", msg)
-    voice
   end
 end

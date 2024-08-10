@@ -202,13 +202,12 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
           }
         } = socket
       ) do
-    %Voice{id: ack_val} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+    %Voice{} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
 
     Vyasa.PubSub.publish(
       chosen_voice,
       :voice_ack,
-      sess_id,
-      ack_val
+      sess_id
     )
 
     {:noreply, socket}

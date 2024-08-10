@@ -37,7 +37,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       socket
       |> assign(playback: nil)
       |> assign(voice: nil)
-      |> assign(ack_val: nil)
       |> assign(video: nil)
       |> assign(video_player_config: encoded_config)
       |> assign(should_show_vid: false)
@@ -252,8 +251,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
          %Socket{} = socket,
          %Voice{
            video: video
-         } = voice,
-         ack_val
+         } = voice
        ) do
     loaded_voice = voice |> Medium.load_events()
 
@@ -268,7 +266,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     socket
     |> assign(voice: loaded_voice)
-    |> assign(ack_val: ack_val)
     |> assign(video: video)
     |> assign(playback: playback)
   end
@@ -325,29 +322,38 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @impl true
   # On receiving a voice_ack, the written and player contexts are now synced.
-  # The ack_val is used to check if the voice_ack is duplicate, in which case, it's ignored.
+  # The voice's id shall be used as a sort of implicit ack number to check if the voice received
+  # has already been received and in the case of a duplicate message, we shall ignore the msg.
   #
-  # If the ack is fresh, then we shall pipe it to receive_voice_ack() where in
+  # If the voice is new, then we shall pipe it to the respective apply_action where in
   # a playback struct is created that represents this synced-state and the client-side hook is triggerred
   # to register the associated events timeline.
   def handle_info(
         {_, :voice_ack,
          %Voice{
+           id: id,
            video: _video
-         } = voice, ack_val} = _msg,
+         } = voice} = _msg,
         %Socket{
           assigns: %{
-            ack_val: prev_ack_val
+            voice: prev_voice
           }
         } = socket
       ) do
-    is_new_voice = ack_val !== prev_ack_val
+    prev_id =
+      cond do
+        is_nil(prev_voice) -> nil
+        %Voice{id: prev_id} = prev_voice -> prev_id
+        true -> nil
+      end
+
+    is_new_voice = id !== prev_id
 
     cond do
       is_new_voice ->
         {:noreply,
          socket
-         |> apply_voice_action(voice, ack_val)
+         |> apply_voice_action(voice)
          |> dispatch_voice_registering_events()}
 
       true ->
