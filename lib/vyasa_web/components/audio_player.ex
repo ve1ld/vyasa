@@ -15,7 +15,6 @@ defmodule VyasaWeb.AudioPlayer do
 
   @impl true
   def render(assigns) do
-    # TODO: remove the reliance on the playback prop passed here, it forces a remounting of the node, which is undesirable
     ~H"""
     <div id="audio-player" phx-hook="AudioPlayer">
       <audio></audio>
@@ -31,11 +30,6 @@ defmodule VyasaWeb.AudioPlayer do
         } = _assigns,
         socket
       ) do
-    IO.inspect(
-      "TRACE: audio player notified by media bridge -- audio_player.ex with event = #{event}",
-      label: "checkpoint"
-    )
-
     {:ok,
      socket
      |> assign(playback: playback)}

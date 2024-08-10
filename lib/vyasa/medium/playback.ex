@@ -25,7 +25,6 @@ defmodule Vyasa.Medium.Playback do
       played_at: nil,
       # timestamps
       paused_at: nil,
-      # seconds TODO: convert to ms to standardise w HTML players?
       elapsed: 0
     }
   end

@@ -73,7 +73,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
          } =
            socket
        ) do
-    # TODO: add case for updating playback on seek
+    # TODO: [refactor] add case for updating playback on seek
     socket
     |> assign(
       playback:
@@ -124,7 +124,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     %{playback | playing?: false, paused_at: now, elapsed: elapsed}
   end
 
-  # TODO: merge with the other update playback functions
+  # TODO: [refactor] merge with the other update playback functions
   defp update_playback_on_seek(socket, position_ms) do
     %{
       playback:
