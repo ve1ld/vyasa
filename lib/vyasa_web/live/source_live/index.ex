@@ -7,7 +7,6 @@ defmodule VyasaWeb.SourceLive.Index do
     {:ok, stream(socket, :sources, Written.list_sources())}
   end
 
-
   @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
@@ -25,7 +24,16 @@ defmodule VyasaWeb.SourceLive.Index do
       description: "Explore the wealth of indic knowledge, distilled into words.",
       type: "website",
       image: url(~p"/images/the_vyasa_project_1.png"),
-      url: url(socket, ~p"/explore/"),
+      url: url(socket, ~p"/explore/")
     })
+  end
+
+  @impl true
+  def handle_event("navigate_to_source", %{"target" => target} = _payload, socket) do
+    IO.inspect(target, label: "TRACE: push navigate to the following target:")
+
+    {:noreply,
+     socket
+     |> push_navigate(to: target)}
   end
 end

@@ -817,9 +817,7 @@ defmodule VyasaWeb.CoreComponents do
   attr :name, :string, required: true
   attr :class, :string, default: nil
 
-  def icon(%{name: "hero-" <> _ = name} = assigns) do
-    IO.inspect(name, label: "TRACE icon name:")
-
+  def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
     """

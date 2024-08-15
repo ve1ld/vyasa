@@ -33,7 +33,10 @@ defmodule Vyasa.Display.UserMode do
     "draft" => %{
       mode: "draft",
       mode_icon_name: "hero-pencil-square",
-      action_bar_component: VyasaWeb.MediaLive.MediaBridge,
+      # TODO: add drafting form for this
+      # TODO: to test swaps of action bar component
+      # action_bar_component: VyasaWeb.MediaLive.MediaBridge,
+      action_bar_component: nil,
       control_panel_component: VyasaWeb.ControlPanel
     }
   }

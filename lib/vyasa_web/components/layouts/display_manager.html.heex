@@ -2,7 +2,9 @@
     <!-- Collapsible Vertical Button Group -->
     <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
     <!-- Bottom Action Bar -->
-    <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
-        <%= live_render(@socket, @mode.action_bar_component, id: "MediaBridge", session: @session, sticky: true) %>
-    </div>
+    <%= if @mode.action_bar_component do %>
+        <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
+            <%= live_render(@socket, @mode.action_bar_component, id: "MediaBridge", session: @session, sticky: true) %>
+        </div>
+    <% end %>
 </div>
