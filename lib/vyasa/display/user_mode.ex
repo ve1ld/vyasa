@@ -35,8 +35,8 @@ defmodule Vyasa.Display.UserMode do
       mode_icon_name: "hero-pencil-square",
       # TODO: add drafting form for this
       # TODO: to test swaps of action bar component
-      # action_bar_component: VyasaWeb.MediaLive.MediaBridge,
-      action_bar_component: nil,
+      action_bar_component: VyasaWeb.MediaLive.MediaBridge,
+      # action_bar_component: nil,
       control_panel_component: VyasaWeb.ControlPanel
     }
   }
