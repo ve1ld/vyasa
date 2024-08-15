@@ -3,6 +3,7 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
   Testing out nested live_views
   """
   use VyasaWeb, :live_view
+  alias Vyasa.Display.UserMode
   # alias Phoenix.LiveView.Socket
   # alias Vyasa.Medium
   # alias Vyasa.Medium.{Voice, Event, Playback}
@@ -27,27 +28,14 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
   @impl true
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
-    IO.inspect(sess, label: "TRACE session:")
-
-    from_parent =
-      cond do
-        Map.has_key?(sess, "from_parent") ->
-          sess["from_parent"]
-
-        true ->
-          "default from parent"
-      end
+    %UserMode{} = mode = UserMode.get_initial_mode()
 
     {
       :ok,
       socket
-      |> assign(example: "foo")
+      # to allow passing to children live-views
       |> assign(session: sess)
-      |> assign(from_parent: from_parent)
-      # |> assign(content: SourceLive.Chapter.Index)
-      # TODO: wire up conditional component selection based the mode here:
-      |> assign(action_bar_component: VyasaWeb.MediaLive.MediaBridge)
-      |> assign(control_panel_component: VyasaWeb.ControlPanel),
+      |> assign(mode: mode),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
 

@@ -12,6 +12,8 @@ defmodule VyasaWeb.ControlPanel do
 
   @impl true
   def render(assigns) do
+    IO.inspect(assigns, label: "Component Assigns")
+
     ~H"""
     <div class="fixed top-15 right-5">
       <!-- SVG Icon Button -->
@@ -21,20 +23,7 @@ defmodule VyasaWeb.ControlPanel do
         phx-click={JS.push("toggle_show_control_panel")}
         phx-target={@myself}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-6 h-6"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 14.25l4.5-4.5m0 0L12 5.25m4.5 4.5H3"
-          />
-        </svg>
+        <.icon name={@mode.mode_icon_name} />
       </.button>
       <div
         id="buttonGroup"
@@ -79,9 +68,10 @@ defmodule VyasaWeb.ControlPanel do
   end
 
   @impl true
-  def update(_assigns, socket) do
+  def update(%{id: _id, mode: mode} = _assigns, socket) do
     {:ok,
      socket
-     |> assign(show_control_panel?: false)}
+     |> assign(show_control_panel?: false)
+     |> assign(mode: mode)}
   end
 end
