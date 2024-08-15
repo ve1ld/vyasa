@@ -28,7 +28,9 @@ defmodule Vyasa.Display.UserMode do
       mode: "read",
       mode_icon_name: "hero-book-open",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
-      control_panel_component: VyasaWeb.ControlPanel
+      action_bar_target_selector: VyasaWeb.MediaLive.MediaBridge,
+      control_panel_component: VyasaWeb.ControlPanel,
+      control_panel_target_selector: VyasaWeb.ControlPanel
     },
     "draft" => %{
       mode: "draft",
@@ -36,8 +38,10 @@ defmodule Vyasa.Display.UserMode do
       # TODO: add drafting form for this
       # TODO: to test swaps of action bar component
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
+      action_bar_target_selector: VyasaWeb.MediaLive.MediaBridge,
       # action_bar_component: nil,
-      control_panel_component: VyasaWeb.ControlPanel
+      control_panel_component: VyasaWeb.ControlPanel,
+      control_panel_target_selector: VyasaWeb.ControlPanel
     }
   }
 
