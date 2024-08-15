@@ -9,6 +9,7 @@ defmodule VyasaWeb.SourceLive.Index do
 
   @impl true
   def handle_params(params, _url, socket) do
+    # dbg()
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
@@ -35,5 +36,7 @@ defmodule VyasaWeb.SourceLive.Index do
     {:noreply,
      socket
      |> push_navigate(to: target)}
+
+    # |> push_patch(to: target)}
   end
 end

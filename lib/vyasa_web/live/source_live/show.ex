@@ -31,6 +31,7 @@ defmodule VyasaWeb.SourceLive.Show do
       :noreply,
       socket
       |> push_navigate(to: target)
+      # |> push_patch(to: target)
     }
   end
 
