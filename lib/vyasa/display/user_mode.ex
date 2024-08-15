@@ -38,8 +38,19 @@ defmodule Vyasa.Display.UserMode do
     }
   }
 
+  def supported_modes, do: Map.keys(@defs)
+
   def get_initial_mode() do
     mode = "read"
     struct(UserMode, @defs[mode])
+  end
+
+  def get_mode(mode_name) when is_map_key(@defs, mode_name) do
+    struct(UserMode, @defs[mode_name])
+  end
+
+  # defaults to the intial mode
+  def get_mode(_) do
+    get_initial_mode()
   end
 end

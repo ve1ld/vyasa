@@ -25,6 +25,8 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
   #   }
   # }
 
+  @supported_modes UserMode.supported_modes()
+
   @impl true
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
@@ -153,14 +155,29 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
   #   |> assign(playback: %{playback | played_at: played_at, elapsed: position_ms})
   # end
 
-  #   @impl true
-  #   def handle_event(
-  #         "toggle_should_show_vid",
-  #         _,
-  #         %{assigns: %{should_show_vid: flag} = _assigns} = socket
-  #       ) do
-  #     {:noreply, socket |> assign(should_show_vid: !flag)}
-  #   end
+  @impl true
+  def handle_event(
+        "change_mode",
+        %{
+          "current_mode" => current_mode,
+          "target_mode" => target_mode
+        } = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> change_mode(current_mode, target_mode)}
+  end
+
+  defp change_mode(socket, curr, target)
+       when is_binary(curr) and is_binary(target) and target in @supported_modes do
+    socket
+    |> assign(mode: UserMode.get_mode(target))
+  end
+
+  defp change_mode(socket, _, _) do
+    socket
+  end
 
   #   @impl true
   #   def handle_event(

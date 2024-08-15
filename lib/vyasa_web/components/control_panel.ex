@@ -12,11 +12,10 @@ defmodule VyasaWeb.ControlPanel do
 
   @impl true
   def render(assigns) do
-    IO.inspect(assigns, label: "Component Assigns")
-
     ~H"""
-    <div class="fixed top-15 right-5">
+    <div class="fixed top-15 right-5 z-10 justify-end">
       <!-- SVG Icon Button -->
+      <%= @mode.mode %>
       <.button
         id="toggleButton"
         class="bg-blue-500 text-white p-2 rounded-full focus:outline-none"
@@ -33,15 +32,18 @@ defmodule VyasaWeb.ControlPanel do
             else: "flex flex-col mt-2 space-y-2 hidden"
         }
       >
-        <button class="bg-green-500 text-white px-4 py-2 rounded-md focus:outline-none">
-          Button 1
-        </button>
-        <button class="bg-red-500 text-white px-4 py-2 rounded-md focus:outline-none">
-          Button 2
-        </button>
-        <button class="bg-yellow-500 text-white px-4 py-2 rounded-md focus:outline-none">
-          Button 3
-        </button>
+        <.button
+          phx-click={JS.push("change_mode", value: %{current_mode: @mode.mode, target_mode: "read"})}
+          class="bg-green-500 text-white px-4 py-2 rounded-md focus:outline-none"
+        >
+          Change to Read
+        </.button>
+        <.button
+          phx-click={JS.push("change_mode", value: %{current_mode: @mode.mode, target_mode: "draft"})}
+          class="bg-red-500 text-white px-4 py-2 rounded-md focus:outline-none"
+        >
+          Change to Draft
+        </.button>
       </div>
     </div>
     """
