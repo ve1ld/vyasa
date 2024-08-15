@@ -1,10 +1,10 @@
-defmodule VyasaWeb.CommandGroup do
+defmodule VyasaWeb.ControlPanel do
   @moduledoc """
+  The ControlPanel is the hover-overlay of buttons that allow the user to access
+  usage-modes and carry out actions related to a specific mode.
   """
   use VyasaWeb, :live_component
   alias Phoenix.LiveView.Socket
-
-  # alias Vyasa.Medium.{Playback}
 
   def mount(_, _, socket) do
     socket
@@ -15,11 +15,10 @@ defmodule VyasaWeb.CommandGroup do
     ~H"""
     <div class="fixed top-15 right-5">
       <!-- SVG Icon Button -->
-      <h1>show_command_group?: <%= @show_command_group? %></h1>
       <.button
         id="toggleButton"
         class="bg-blue-500 text-white p-2 rounded-full focus:outline-none"
-        phx-click={JS.push("toggle_show_command_group")}
+        phx-click={JS.push("toggle_show_control_panel")}
         phx-target={@myself}
       >
         <svg
@@ -40,7 +39,7 @@ defmodule VyasaWeb.CommandGroup do
       <div
         id="buttonGroup"
         class={
-          if @show_command_group?,
+          if @show_control_panel?,
             do: "flex flex-col mt-2 space-y-2",
             else: "flex flex-col mt-2 space-y-2 hidden"
         }
@@ -61,21 +60,21 @@ defmodule VyasaWeb.CommandGroup do
 
   @impl true
   def handle_event(
-        "toggle_show_command_group",
+        "toggle_show_control_panel",
         _params,
         %Socket{
           assigns:
             %{
-              show_command_group?: show_command_group?
+              show_control_panel?: show_control_panel?
             } = _assigns
         } = socket
       ) do
-    IO.inspect(show_command_group?, label: "TRACE handle event for toggle_show_command_group")
+    IO.inspect(show_control_panel?, label: "TRACE handle event for toggle_show_control_panel")
 
     {
       :noreply,
       socket
-      |> assign(show_command_group?: !show_command_group?)
+      |> assign(show_control_panel?: !show_control_panel?)
     }
   end
 
@@ -83,26 +82,6 @@ defmodule VyasaWeb.CommandGroup do
   def update(_assigns, socket) do
     {:ok,
      socket
-     |> assign(show_command_group?: false)}
+     |> assign(show_control_panel?: false)}
   end
-
-  # @impl true
-  # def update(
-  #       %{
-  #         event: "media_bridge:notify_audio_player" = _event,
-  #         playback: %Playback{} = playback
-  #       } = _assigns,
-  #       socket
-  #     ) do
-  #   {:ok,
-  #    socket
-  #    |> assign(playback: playback)}
-  # end
-
-  # @impl true
-  # def update(_assigns, socket) do
-  #   {:ok,
-  #    socket
-  #    |> assign(playback: nil)}
-  # end
 end

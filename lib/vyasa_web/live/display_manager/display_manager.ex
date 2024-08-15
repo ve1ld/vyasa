@@ -44,9 +44,10 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
       |> assign(example: "foo")
       |> assign(session: sess)
       |> assign(from_parent: from_parent)
+      # |> assign(content: SourceLive.Chapter.Index)
       # TODO: wire up conditional component selection based the mode here:
       |> assign(action_bar_component: VyasaWeb.MediaLive.MediaBridge)
-      |> assign(command_group_component: VyasaWeb.CommandGroup),
+      |> assign(control_panel_component: VyasaWeb.ControlPanel),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
 
