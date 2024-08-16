@@ -5,63 +5,23 @@
 <%= if @content_action == :show_sources do%>
     <div>
         SHOW SOURCES
-    <.header>
-        <div class="text-3xl">
-            <%= @page_title %>
-        </div>
-    </.header>
-
-    <.table
-    id="sources"
-    rows={@streams.sources}
-    row_click={fn {_id, source} -> JS.push("navigate_to_source", value: %{target: ~p"/explore/#{source.title}/"}) end}
-    >
-    <:col :let={{_id, source}} label="">
-        <div class="font-dn text-2xl">
-            <%= to_title_case(source.title) %>
-        </div>
-    </:col>
-    </.table>
-
-    <span :if={@streams.sources |> Enum.count() < 10} class="block h-96"/>
+      <.live_component
+      module={VyasaWeb.Content.Sources}
+      id={"content-sources"}
+      sources={@streams.sources}
+      />
     </div>
 <% end %>
 
 <%= if @content_action == :show_chapters do%>
     <div>
         SHOW CHAPTERS
-
-<.header >
-    <div class="font-dn text-4xl">
-        <%= to_title_case(@source.title)%>
-    </div>
-</.header>
-
-<.table
-id="chapters"
-rows={@streams.chapters}
-row_click={fn {_id, chap} -> JS.push("navigate_to_chapter", value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"}) end}
->
-    <:col :let={{_id, chap}} label="Chapter">
-        <div class="font-dn text-lg">
-            <%= chap.no %>. <%= hd(chap.translations).target.translit_title %>
-        </div>
-    </:col>
-    <:col :let={{_id, chap}} label="Description">
-    <div class="font-dn text-md" >
-        <%= chap.title %>
-    </div>
-    <div class="font-dn text-md" >
-        <%= hd(chap.translations).target.title %>
-    </div>
-    </:col>
-
-</.table>
-
-<.back navigate={~p"/explore/"}>Back to All Sources</.back>
-
-<span :if={@streams.chapters |> Enum.count() < 10} class="block h-96"/>
-
+   <.live_component
+      module={VyasaWeb.Content.Chapters}
+      id={"content-sources"}
+      source={@source}
+      chapters={@streams.chapters}
+      />
     </div>
 <% end %>
 

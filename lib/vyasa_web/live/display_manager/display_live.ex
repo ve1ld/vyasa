@@ -92,7 +92,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     })
     |> stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
     |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
-    |> dbg()
+
+    # |> dbg()
   end
 
   defp apply_action(
