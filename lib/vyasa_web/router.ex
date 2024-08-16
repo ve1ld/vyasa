@@ -33,10 +33,15 @@ defmodule VyasaWeb.Router do
 
     live_session :gen_sangh_session,
       on_mount: [{VyasaWeb.Session, :sangh}] do
-      live "/explore/", SourceLive.Index, :index
-      live "/explore/:source_title/", SourceLive.Show, :show
-      live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-      live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+      # live "/explore/", SourceLive.Index, :index
+      # live "/explore/:source_title/", SourceLive.Show, :show
+      # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+      # live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+
+      live "/explore/", DisplayManager.DisplayLive, :show_sources
+      live "/explore/:source_title/", DisplayManager.DisplayLive, :show_chapters
+      live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
+      # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
     end
 
     live_admin "/admin" do

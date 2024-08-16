@@ -1,0 +1,38 @@
+<div>
+<.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
+
+<!-- TODO: this can be a live_component instead, the data-loading can happen within it  -->
+<%= if @content_action === :show_sources do%>
+    <div>
+    <.header>
+        <div class="text-3xl">
+            <%= @page_title %>
+        </div>
+    </.header>
+
+    <.table
+    id="sources"
+    rows={@streams.sources}
+    row_click={fn {_id, source} -> JS.push("navigate_to_source", value: %{target: ~p"/explore/#{source.title}/"}) end}
+    >
+    <:col :let={{_id, source}} label="">
+        <div class="font-dn text-2xl">
+            <%= to_title_case(source.title) %>
+        </div>
+    </:col>
+    </.table>
+
+    <span :if={@streams.sources |> Enum.count() < 10} class="block h-96"/>
+    </div>
+<% end %>
+
+
+
+<!-- Bottom Action Bar -->
+<%= if @mode.action_bar_component do %>
+    <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
+        <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", session: @session, sticky: true) %>
+    </div>
+<% end %>
+
+</div>
