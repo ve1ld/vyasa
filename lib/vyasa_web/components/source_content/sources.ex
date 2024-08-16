@@ -14,7 +14,6 @@ defmodule VyasaWeb.Content.Sources do
   def render(assigns) do
     ~H"""
     <div>
-      <h1>SOURCES LIVE COMPONENT</h1>
       <.table
         id="sources"
         rows={@sources}
@@ -45,6 +44,7 @@ defmodule VyasaWeb.Content.Sources do
 
     {:noreply,
      socket
-     |> push_patch(to: target)}
+     |> push_patch(to: target)
+     |> push_event("scroll-to-top", %{})}
   end
 end

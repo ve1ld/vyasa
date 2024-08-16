@@ -7,11 +7,9 @@ defmodule VyasaWeb.Content.Chapters do
       :ok,
       socket
       |> assign(params)
-      # |> dbg()
     }
   end
 
-  # TODO: navigate() -> patch() on links...
   @impl true
   def render(assigns) do
     ~H"""
@@ -69,6 +67,7 @@ defmodule VyasaWeb.Content.Chapters do
 
     {:noreply,
      socket
-     |> push_patch(to: target)}
+     |> push_patch(to: target)
+     |> push_event("scroll-to-top", %{})}
   end
 end

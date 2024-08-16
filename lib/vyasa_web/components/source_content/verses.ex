@@ -228,6 +228,7 @@ defmodule VyasaWeb.Content.Verses do
 
     {:noreply,
      socket
-     |> push_patch(to: target)}
+     |> push_patch(to: target)
+     |> push_event("scroll-to-top", %{})}
   end
 end
