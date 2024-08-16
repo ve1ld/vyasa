@@ -28,7 +28,8 @@ defmodule VyasaWeb.Content.Chapters do
         row_click={
           fn {_id, chap} ->
             JS.push("navigate_to_chapter",
-              value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"}
+              value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"},
+              target: @myself
             )
           end
         }
@@ -60,4 +61,12 @@ defmodule VyasaWeb.Content.Chapters do
   #   IO.inspect(payload)
   #   {:noreply, socket}
   # end
+  @impl true
+  def handle_event("navigate_to_chapter", %{"target" => target} = _payload, socket) do
+    IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")
+
+    {:noreply,
+     socket
+     |> push_patch(to: target)}
+  end
 end

@@ -5,12 +5,12 @@
 <%= if @content_action == :show_sources do%>
     <div>
         SHOW SOURCES
-      <.live_component
-      module={VyasaWeb.Content.Sources}
-      id={"content-sources"}
-      sources={@streams.sources}
-      />
-    </div>
+        <.live_component
+        module={VyasaWeb.Content.Sources}
+        id={"content-sources"}
+        sources={@streams.sources}
+        />
+        </div>
 <% end %>
 
 <%= if @content_action == :show_chapters do%>
@@ -28,8 +28,65 @@
 <%= if @content_action == :show_verses do%>
     <div>
         SHOW VERSES
-
     </div>
+    <%= @page_title %>
+<div id="chapter-index-container">
+    <.header class="p-4 pb-0">
+        <div class="font-dn text-4xl mb-4">
+           <%= @selected_transl.target.translit_title %> | <%= @chap.title%>
+        </div>
+       <div class="font-dn text-2xl mb-4">
+        Chapter <%= @chap.no%> - <%= @selected_transl.target.title %>
+        </div>
+
+        <:subtitle>
+            <div id="chapter-preamble" class="font-dn text-sm sm:text-lg">
+                <%= @selected_transl.target.body %>
+            </div>
+        </:subtitle>
+    </.header>
+  <div id="verses" phx-update="stream" phx-hook="HoveRune">
+    <.verse_matrix id={dom_id} verse={verse} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses} marks={@marks}>
+        <:edge
+            title={"#{verse.chapter_no}.#{verse.no}"}
+            field={[:body]}
+            verseup={:big}/>
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit_meant]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body]}
+            verseup={:mid}/>
+    </.verse_matrix>
+  </div>
+    <.back navigate={~p"/explore/#{@src.title}"}>Back to <%= to_title_case(@src.title)%> Chapters</.back>
+</div>
+
+<div id="hoverune"  phx-update="ignore" class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white/80 rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out">
+  <button phx-click="markQuote" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+    <.icon
+        name="hero-link-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"/>
+  </button>
+
+  <button class="text-gray-600 hover:text-red-600 focus:outline-none">
+    <.icon
+        name="hero-bookmark-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer"/>
+  </button>
+
+</div>
+
+
+
 <% end %>
 
 <!-- Bottom Action Bar -->
