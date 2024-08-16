@@ -1,4 +1,26 @@
-<div>
+<header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
+  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+    <div class="flex items-center gap-4">
+      <a href="/" class="">
+        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal"/>
+      </a>
+      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
+        v<%= Application.spec(:vyasa, :vsn) %>
+      </p>
+    </div>
+    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+      <a
+        href="https://github.com/ve1ld/vyasa"
+        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+      >
+       <span aria-hidden="true">~</span>/vyasa
+      </a>
+    </div>
+  </div>
+</header>
+
+
+<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
     <div>
         <div id="control-panel-container">
             <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
@@ -7,36 +29,27 @@
     <!-- CONTENT DISPLAY: -->
     <div
     id="content-display"
-    class="pb-16"
+    class="mx-auto max-w-2xl"
     >
         <%= if @content_action == :show_sources do%>
-            <div>
-                SHOW SOURCES
-                <.live_component
-                module={VyasaWeb.Content.Sources}
-                id={"content-sources"}
-                sources={@streams.sources}
-                />
-                </div>
+            <.live_component
+            module={VyasaWeb.Content.Sources}
+            id={"content-sources"}
+            sources={@streams.sources}
+            />
         <% end %>
 
         <%= if @content_action == :show_chapters do%>
-            <div>
-                SHOW CHAPTERS
-        <.live_component
-            module={VyasaWeb.Content.Chapters}
-            id={"content-chapters"}
-            source={@source}
-            chapters={@streams.chapters}
+            <.live_component
+                module={VyasaWeb.Content.Chapters}
+                id={"content-chapters"}
+                source={@source}
+                chapters={@streams.chapters}
             />
-            </div>
         <% end %>
 
         <%= if @content_action == :show_verses do%>
-            <div>
-                SHOW VERSES
-            </div>
-        <.live_component
+            <.live_component
                 module={VyasaWeb.Content.Verses}
                 id={"content-verses"}
                 src={@src}
@@ -60,4 +73,4 @@
     <% end %>
 
     </div>
-</div>
+</main>

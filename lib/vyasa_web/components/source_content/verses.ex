@@ -18,7 +18,6 @@ defmodule VyasaWeb.Content.Verses do
   def render(assigns) do
     ~H"""
     <div>
-      VERSES LIVE COMPONENT
       <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class="font-dn text-4xl mb-4">
