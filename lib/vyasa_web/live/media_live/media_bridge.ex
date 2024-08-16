@@ -329,6 +329,10 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     events |> Enum.map(&(&1 |> Map.take([:origin, :duration, :phase, :fragments, :verse_id])))
   end
 
+  defp create_events_payload([]) do
+    []
+  end
+
   defp get_target_event([%Event{} | _] = events, verse_id) do
     events
     |> Enum.find(fn e -> e.verse_id === verse_id end)
