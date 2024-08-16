@@ -1,10 +1,9 @@
 <div>
 <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
 <!-- Bottom Action Bar -->
-<%= if @mode.action_bar_component do %>
+
     <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
-        <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", session: @session, sticky: true) %>
+        <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", sticky: true)%>
     </div>
-<% end %>
 
 </div>

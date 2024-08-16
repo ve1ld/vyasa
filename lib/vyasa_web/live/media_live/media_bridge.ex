@@ -30,9 +30,9 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   }
 
   @impl true
-  def mount(_params, _sess, socket) do
+  def mount(_params, sess, socket) do
     encoded_config = Jason.encode!(@default_player_config)
-
+    IO.inspect(sess, label: "be alive")
     socket =
       socket
       |> assign(playback: nil)
@@ -41,20 +41,33 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       |> assign(video_player_config: encoded_config)
       |> assign(should_show_vid: false)
       |> assign(is_follow_mode: true)
-      |> sync_session()
+      |> sync_session(sess)
 
     {:ok, socket, layout: false}
   end
 
-  defp sync_session(%{assigns: %{session: %{"id" => id} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %{"id" => id} = sess}} = socket, _) when is_binary(id) do
     Vyasa.PubSub.subscribe("media:session:" <> id)
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
+
+    IO.inspect(id, label: "media handshake INIT")
 
     socket
     |> push_event("initSession", sess |> Map.take(["id"]))
   end
 
-  defp sync_session(socket) do
+  defp sync_session(socket, %{"id" => id} = sess ) when is_binary(id) do
+    IO.inspect(id, label: "media handshake INIT")
+    Vyasa.PubSub.subscribe("media:session:" <> id)
+    Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
+
+
+    socket
+    |> push_event("initSession", sess |> Map.take(["id"]))
+  end
+
+  defp sync_session(socket, sess) do
+    IO.inspect(sess, label: "WHERE")
     socket
   end
 
@@ -349,6 +362,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     is_new_voice = id !== prev_id
 
+    IO.inspect("Voice ack", label: "be alive")
     cond do
       is_new_voice ->
         {:noreply,
@@ -369,6 +383,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         {_, :written_handshake, :init} = _msg,
         %{assigns: %{session: %{"id" => id}}} = socket
       ) do
+    IO.inspect("WRITTEN HANDSHAKE FELT", label: "be alive")
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
     {:noreply, socket}
   end

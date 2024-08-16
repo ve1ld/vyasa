@@ -26,6 +26,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
 
   defp sync_session(%{assigns: %{session: %{"id" => sess_id}}} = socket) do
     # written channel for reading and media channel for writing to media bridge and to player
+    IO.inspect(sess_id, label: "Written Handshake Init")
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
     socket
@@ -205,6 +206,7 @@ defmodule VyasaWeb.SourceLive.Chapter.Index do
       ) do
     %Voice{} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
 
+    IO.inspect("VOICE CHOSEN", label: "be alive")
     Vyasa.PubSub.publish(
       chosen_voice,
       :voice_ack,

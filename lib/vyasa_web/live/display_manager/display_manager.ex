@@ -2,7 +2,7 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
   @moduledoc """
   Testing out nested live_views
   """
-  use VyasaWeb, :live_view
+  use Phoenix.LiveView, layout: false
   alias Vyasa.Display.UserMode
   # alias Phoenix.LiveView.Socket
   # alias Vyasa.Medium
@@ -32,13 +32,12 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
     # encoded_config = Jason.encode!(@default_player_config)
     %UserMode{} = mode = UserMode.get_initial_mode()
 
+    IO.inspect(sess, label: "dm")
     {
       :ok,
       socket
       # to allow passing to children live-views
-      |> assign(session: sess)
-      |> assign(mode: mode),
-      layout: {VyasaWeb.Layouts, :display_manager}
+      |> assign(mode: mode)
     }
 
     # socket =
