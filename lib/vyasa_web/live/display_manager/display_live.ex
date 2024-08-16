@@ -138,6 +138,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       )
       |> assign(:marks, [%Mark{state: :draft, order: 0}])
       # DEPRECATED
+      # RENAME?
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
