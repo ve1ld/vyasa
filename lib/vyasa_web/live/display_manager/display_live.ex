@@ -6,6 +6,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   alias Vyasa.Display.UserMode
   alias Phoenix.LiveView.Socket
   alias Vyasa.Written
+  alias Vyasa.Written.{Chapter}
   @supported_modes UserMode.supported_modes()
 
   @impl true
@@ -65,6 +66,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     })
   end
 
+  # TODO: change navigate -> patch on the html side
   defp apply_action(
          %Socket{} = socket,
          :show_chapters,
@@ -74,7 +76,23 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     IO.inspect(:show_chapters, label: "TRACE: apply action DM action show_chapters:")
     IO.inspect(params, label: "TRACE: apply action DM params:")
     IO.inspect(source_title, label: "TRACE: apply action DM params source_title:")
+
+    [%Chapter{source: src} | _] = chapters = Written.get_chapters_by_src(source_title)
+
     socket
+    |> assign(:content_action, :show_chapters)
+    |> assign(:page_title, to_title_case(src.title))
+    |> assign(:source, src)
+    |> assign(:meta, %{
+      title: to_title_case(src.title),
+      description: "Explore the #{to_title_case(src.title)}",
+      type: "website",
+      image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: src})}"),
+      url: url(socket, ~p"/explore/#{src.title}")
+    })
+    |> stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
+    |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
+    |> dbg()
   end
 
   defp apply_action(
