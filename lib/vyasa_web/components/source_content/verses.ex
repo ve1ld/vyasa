@@ -34,6 +34,9 @@ defmodule VyasaWeb.Content.Verses do
             </div>
           </:subtitle>
         </.header>
+        <.back patch={~p"/explore/#{@src.title}"}>
+          Back to <%= to_title_case(@src.title) %> Chapters
+        </.back>
         <div id="verses" phx-update="stream" phx-hook="HoveRune">
           <.verse_matrix
             :for={{dom_id, %Verse{} = verse} <- @verses}
@@ -53,7 +56,7 @@ defmodule VyasaWeb.Content.Verses do
             <:edge node={hd(verse.translations)} field={[:target, :body]} verseup={:mid} />
           </.verse_matrix>
         </div>
-        <.back navigate={~p"/explore/#{@src.title}"}>
+        <.back patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
       </div>
@@ -79,7 +82,6 @@ defmodule VyasaWeb.Content.Verses do
   end
 
   # ---- CHECKPOINT: all the sangha stuff goes here ----
-
   # enum.split() from @verse binding to mark
   def verse_matrix(assigns) do
     assigns = assigns

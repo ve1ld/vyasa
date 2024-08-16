@@ -6,15 +6,15 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   alias Vyasa.Display.UserMode
   alias VyasaWeb.OgImageController
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Written
+  alias Vyasa.{Medium, Written, Draft}
+  alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
-  alias Vyasa.Written.{Chapter}
   alias Vyasa.Sangh.{Comment, Mark}
   alias Utils.Struct
 
   @supported_modes UserMode.supported_modes()
   @default_lang "en"
-  # @default_voice_lang "sa"
+  @default_voice_lang "sa"
 
   @impl true
   def mount(_params, sess, socket) do
@@ -25,7 +25,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       :ok,
       socket
       # to allow passing to children live-views
-      |> assign(session: sess)
+      # TODO: figure out if this is important
+      |> assign(stored_session: sess)
       |> assign(mode: mode),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
@@ -97,7 +98,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: src})}"),
       url: url(socket, ~p"/explore/#{src.title}")
     })
-    |> stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
+    |> maybe_stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
     |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
   end
 
@@ -116,10 +117,12 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
            Written.get_chapter(chap_no, sid, @default_lang) do
       fmted_title = to_title_case(source.title)
 
+      IO.inspect(fmted_title, label: "TRACE: am i WITH it?")
+
       socket
       |> sync_session()
       |> assign(:content_action, :show_verses)
-      |> stream_configure(:verses, dom_id: &"verse-#{&1.id}")
+      |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
       |> assign(
         :kv_verses,
@@ -169,20 +172,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     |> assign(:page_title, "Sources")
   end
 
-  @impl true
-  def handle_event(
-        "change_mode",
-        %{
-          "current_mode" => current_mode,
-          "target_mode" => target_mode
-        } = _params,
-        socket
-      ) do
-    {:noreply,
-     socket
-     |> change_mode(current_mode, target_mode)}
-  end
-
   defp change_mode(socket, curr, target)
        when is_binary(curr) and is_binary(target) and target in @supported_modes do
     socket
@@ -197,10 +186,15 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     # written channel for reading and media channel for writing to media bridge and to player
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
+
+    IO.inspect(sess_id, label: "TRACE: synced the sess with session id: ")
     socket
   end
 
-  defp sync_session(socket), do: socket
+  defp sync_session(socket) do
+    IO.inspect(socket, label: "TRACE: NO SYNC OF SESSION!")
+    socket
+  end
 
   # ---- CHECKPOINT: all the sangha stuff goes here ----
 
@@ -338,5 +332,200 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       </div>
     </div>
     """
+  end
+
+  @impl true
+  def handle_event(
+        "change_mode",
+        %{
+          "current_mode" => current_mode,
+          "target_mode" => target_mode
+        } = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> change_mode(current_mode, target_mode)}
+  end
+
+  # CHECKPOINT: event handlers related to hoverrune and stuff
+  #
+  #
+
+  @impl true
+  @doc """
+  events
+
+  "clickVersetoSeek" ->
+  Handles the action of clicking to seek by emitting the verse_id to the live player
+  via the pubsub system.
+
+  "binding"
+  """
+  def handle_event(
+        "clickVerseToSeek",
+        %{"verse_id" => verse_id} = _payload,
+        %{assigns: %{session: %{"id" => sess_id}}} = socket
+      ) do
+    IO.inspect("handle_event::clickVerseToSeek", label: "checkpoint")
+    Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
+          }
+        } = socket
+      )
+      when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind)
+
+    {:noreply,
+     socket
+     |> stream_insert(
+       :verses,
+       %{verses[curr_verse_id] | binding: nil}
+     )
+     |> stream_insert(
+       :verses,
+       %{verses[verse_id] | binding: bind}
+     )
+     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  end
+
+  # already in mark in drafting state, remember to late bind binding => with a fn()
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+      ) do
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind)
+
+    {:noreply,
+     socket
+     |> stream_insert(
+       :verses,
+       %{verses[verse_id] | binding: bind}
+     )
+     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  end
+
+  @impl true
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+      ) do
+    bind = Draft.bind_node(bind)
+
+    {:noreply,
+     socket
+     |> stream_insert(
+       :verses,
+       %{verses[verse_id] | binding: bind}
+     )
+     |> assign(:marks, [
+       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+     ])}
+  end
+
+  @impl true
+  def handle_event(
+        "markQuote",
+        _,
+        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+      ) do
+    IO.inspect(marks)
+    {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
+  end
+
+  def handle_event("markQuote", _, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "createMark",
+        %{"body" => body},
+        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+      ) do
+    {:noreply, socket |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])}
+  end
+
+  def handle_event("createMark", _event, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event(event, message, socket) do
+    IO.inspect(%{event: event, message: message}, label: "pokemon")
+    {:noreply, socket}
+  end
+
+  # CHECKPOINT: handle_info functions in DM
+  @doc """
+  Handles the custom message that corresponds to the :media_handshake event with the :init
+  message, regardless of the module that dispatched the message.
+
+  This indicates an intention to sync the media library with the chapter, hence it
+  returns a message containing %Voice{} info that can be used to generate a playback struct.
+  """
+  @impl true
+  def handle_info(
+        {_, :media_handshake, :init} = _msg,
+        %{
+          assigns: %{
+            session: %{"id" => sess_id},
+            chap: %Chapter{no: c_no, source_id: src_id}
+          }
+        } = socket
+      ) do
+    %Voice{} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+
+    Vyasa.PubSub.publish(
+      chosen_voice,
+      :voice_ack,
+      sess_id
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(msg, socket) do
+    IO.inspect(msg, label: "unexpected message in @chapter")
+    {:noreply, socket}
+  end
+
+  # NOTE: This is needed because a stream can't be reconfigured.
+  # Consider the case where we move from :show_chapters -> :show_verses -> :show_chapters.
+  # In this case, because the state is held @ the live_view side (DM), we will end up with a situation
+  # where the stream (e.g. chapters stream) would have already been configed.
+  # Hence, a maybe_stream_configure/3 is necessary to avoid throwing an error.
+  defp maybe_stream_configure(
+         %Socket{
+           assigns: assigns
+         } = socket,
+         stream_name,
+         opts
+       )
+       when is_list(opts) do
+    case Map.has_key?(assigns, :streams) && Map.has_key?(assigns.streams, stream_name) do
+      true ->
+        socket
+
+      false ->
+        socket |> stream_configure(stream_name, opts)
+    end
+  end
+
+  def maybe_config_stream(%Socket{} = socket, _, _) do
+    socket
   end
 end

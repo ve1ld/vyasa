@@ -22,6 +22,8 @@ defmodule VyasaWeb.Content.Chapters do
         </div>
       </.header>
 
+      <.back patch={~p"/explore/"}>Back to All Sources</.back>
+
       <.table
         id="chapters"
         rows={@chapters}
@@ -49,7 +51,7 @@ defmodule VyasaWeb.Content.Chapters do
         </:col>
       </.table>
 
-      <.back navigate={~p"/explore/"}>Back to All Sources</.back>
+      <.back patch={~p"/explore/"}>Back to All Sources</.back>
 
       <span :if={@chapters |> Enum.count() < 10} class="block h-96" />
     </div>

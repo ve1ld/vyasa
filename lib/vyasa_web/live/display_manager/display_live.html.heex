@@ -1,53 +1,63 @@
 <div>
-<.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
-
-<!-- TODO: this can be a live_component instead, the data-loading can happen within it  -->
-<%= if @content_action == :show_sources do%>
     <div>
-        SHOW SOURCES
-        <.live_component
-        module={VyasaWeb.Content.Sources}
-        id={"content-sources"}
-        sources={@streams.sources}
-        />
+        <div id="control-panel-container">
+            <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
         </div>
-<% end %>
 
-<%= if @content_action == :show_chapters do%>
-    <div>
-        SHOW CHAPTERS
-   <.live_component
-      module={VyasaWeb.Content.Chapters}
-      id={"content-chapters"}
-      source={@source}
-      chapters={@streams.chapters}
-      />
+    <!-- CONTENT DISPLAY: -->
+    <div
+    id="content-display"
+    class="pb-16"
+    >
+        <%= if @content_action == :show_sources do%>
+            <div>
+                SHOW SOURCES
+                <.live_component
+                module={VyasaWeb.Content.Sources}
+                id={"content-sources"}
+                sources={@streams.sources}
+                />
+                </div>
+        <% end %>
+
+        <%= if @content_action == :show_chapters do%>
+            <div>
+                SHOW CHAPTERS
+        <.live_component
+            module={VyasaWeb.Content.Chapters}
+            id={"content-chapters"}
+            source={@source}
+            chapters={@streams.chapters}
+            />
+            </div>
+        <% end %>
+
+        <%= if @content_action == :show_verses do%>
+            <div>
+                SHOW VERSES
+            </div>
+        <.live_component
+                module={VyasaWeb.Content.Verses}
+                id={"content-verses"}
+                src={@src}
+                verses={@streams.verses}
+                chap={@chap}
+                kv_verses={@kv_verses}
+                marks={@marks}
+                lang={@lang}
+                selected_transl={@selected_transl}
+                page_title={@page_title}
+            />
+        <% end %>
     </div>
-<% end %>
 
-<%= if @content_action == :show_verses do%>
-    <div>
-        SHOW VERSES
+
+    <!-- Bottom Action Bar -->
+    <%= if @mode.action_bar_component do %>
+        <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
+            <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", session: @session, sticky: true) %>
+        </div>
+    <% end %>
+
     </div>
-   <.live_component
-      module={VyasaWeb.Content.Verses}
-      id={"content-verses"}
-      src={@src}
-      verses={@streams.verses}
-       chap={@chap}
-    kv_verses={@kv_verses}
-   marks={@marks}
-   lang={@lang}
-   selected_transl={@selected_transl}
-   page_title={@page_title}
-      />
-<% end %>
-
-<!-- Bottom Action Bar -->
-<%= if @mode.action_bar_component do %>
-    <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
-        <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", session: @session, sticky: true) %>
-    </div>
-<% end %>
-
 </div>
