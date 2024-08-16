@@ -5,14 +5,13 @@ defmodule VyasaWeb.SourceLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = stream_configure(socket, :chapters, dom_id: &("Chapter-#{&1.no}"))
+    socket = stream_configure(socket, :chapters, dom_id: &"Chapter-#{&1.no}")
     {:ok, socket}
   end
 
   @impl true
   def handle_params(%{"source_title" => source_title}, _, socket) do
-
-    [%Chapter{source: src} |_]= chapters = Written.get_chapters_by_src(source_title)
+    [%Chapter{source: src} | _] = chapters = Written.get_chapters_by_src(source_title)
 
     {
       :noreply,
@@ -22,7 +21,18 @@ defmodule VyasaWeb.SourceLive.Show do
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }
+  end
 
+  @impl true
+  def handle_event("navigate_to_chapter", %{"target" => target} = _payload, socket) do
+    IO.inspect(target, label: "TRACE: navigate_to_chapter:")
+
+    {
+      :noreply,
+      socket
+      |> push_navigate(to: target)
+      # |> push_patch(to: target)
+    }
   end
 
   defp assign_meta(%{assigns: %{source: src}} = socket) do
