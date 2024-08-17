@@ -16,7 +16,7 @@ module.exports = {
     extend: {
       fontFamily: {
         dn: ['"Gotu"', "sans-serif"],
-        tl: ['"Tamil Font"', "sans-serif"],
+        tl: ['"Vyas", "sans-serif"'],
       },
       colors: {
         primary: "var(--color-primary)",
