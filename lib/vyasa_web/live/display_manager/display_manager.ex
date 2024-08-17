@@ -36,6 +36,8 @@ defmodule VyasaWeb.DisplayManager.DisplayManager do
     {
       :ok,
       socket
+      #dont need to explicitly pass upon actual mount the real session id passes through socket
+      #|> assign(session: sess)
       # to allow passing to children live-views
       |> assign(mode: mode)
     }

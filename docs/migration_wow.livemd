@@ -36,7 +36,9 @@ R.recompile()
 ```
 
 ```elixir
-Vyasa.Release.rollback(Vyasa.Repo, 0)
+# Vyasa.Release.rollback(Vyasa.Repo, 0)
+
+Ecto.Migrator.run(Vyasa.Repo, :down, all: true)
 ```
 
 ```elixir
@@ -87,6 +89,14 @@ end)
     |> Vyasa.Written.Source.gen_changeset(&1)
     |> Vyasa.Repo.insert!())
 )
+
+Path.expand(mypath, "data")
+|> Vyasa.Corpus.Migrator.Restore.read()
+|> Enum.map(fn x ->
+  # &1["translations"]
+  x["events"]
+  |> Enum.map(&(&1 |> Vyasa.Medium.create_event()))
+end)
 ```
 
 #### Migrates the events

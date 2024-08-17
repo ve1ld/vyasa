@@ -88,7 +88,7 @@ javascript:(function() {
 
     function getCurrentTime() {
         const player = document.getElementById('movie_player');
-        return player ? player.getCurrentTime()*1000 : null;
+        return player ? player.getCurrentTime()*1000-250 : null;
     }
 
     function getTotalTime() {

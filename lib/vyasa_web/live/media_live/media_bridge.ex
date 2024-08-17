@@ -507,11 +507,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         end
       }
     >
-      <%= if not @isReady do %>
-        <.spinner />
-      <% else %>
-        <%= if @isPlaying  do %>
-          <svg id="player-pause" width="50" height="50" fill="none">
+        <.spinner :if={!@isReady} />
+          <svg :if={@isPlaying && @isReady} id="player-pause" width="50" height="50" fill="none">
             <circle
               class="text-gray-300 dark:text-brandAccentLight"
               cx="25"
@@ -522,8 +519,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
             />
             <path d="M18 16h4v18h-4V16zM28 16h4v18h-4z" fill="currentColor" />
           </svg>
-        <% else %>
           <svg
+           :if={!@isPlaying && @isReady}
             id="player-play"
             width="50"
             height="50"
@@ -551,8 +548,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
               fill="none"
             />
           </svg>
-        <% end %>
-      <% end %>
     </button>
     """
   end
