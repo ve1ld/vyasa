@@ -328,10 +328,13 @@ defmodule Vyasa.Written do
     Source.mutate_changeset(source, attrs)
   end
 
-  #Sanskrit
+  # Sanskrit
   defp lang2script(%Source{lang: "sa"} = s), do: %{s | script: "dn"}
-  #Awadhi
+  # Awadhi
   defp lang2script(%Source{lang: "awadi"} = s), do: %{s | script: "dn"}
-  #Tamil
+  # Tamil
   defp lang2script(%Source{lang: "ta"} = s), do: %{s | script: "ta"}
+
+  # fallthrough to devanagari
+  defp lang2script(%Source{} = s), do: %{s | script: "dn"}
 end
