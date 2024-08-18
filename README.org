@@ -1,6 +1,7 @@
 #+title: Vyasa
 
 
+[[file:priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png]]
 
 #+BEGIN_HTML
 <div style="background-image: url('priv/static/images/logo_with_gradient-3e4bdf0aec288b3eb682a5cef43692b6.png'); background-size: cover; padding: 20px;">
