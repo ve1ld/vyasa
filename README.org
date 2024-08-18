@@ -15,6 +15,13 @@
 </div>
 #+END_HTML
 
+#+BEGIN_EXPORT html
+<div style="background-image: url('priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png'); padding: 20px;">
+  <p>This paragraph has a background image.</p>
+</div>
+#+END_EXPORT
+
+
 
 * CLI Helpsheet
 
