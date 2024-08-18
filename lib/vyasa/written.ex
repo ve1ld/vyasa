@@ -124,6 +124,7 @@ defmodule Vyasa.Written do
         preload: [verses: [:translations], chapters: [:translations]]
 
     Repo.one(query)
+    |> lang2script()
   end
 
   def get_chapters_by_src(src_title) do
@@ -326,4 +327,11 @@ defmodule Vyasa.Written do
   def change_source(%Source{} = source, attrs \\ %{}) do
     Source.mutate_changeset(source, attrs)
   end
+
+  #Sanskrit
+  defp lang2script(%Source{lang: "sa"} = s), do: %{s | script: "dn"}
+  #Awadhi
+  defp lang2script(%Source{lang: "awadi"} = s), do: %{s | script: "dn"}
+  #Tamil
+  defp lang2script(%Source{lang: "ta"} = s), do: %{s | script: "ta"}
 end

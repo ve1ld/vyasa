@@ -8,6 +8,8 @@ defmodule Vyasa.Written.Source do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "sources" do
     field :title, :string
+    field :lang, :string
+    field :script, :string, virtual: true
     has_many :verses, Verse
     has_many :translations, Translation
     has_many :chapters, Chapter
@@ -20,7 +22,7 @@ defmodule Vyasa.Written.Source do
   @doc false
   def gen_changeset(source, attrs) do
     source
-    |> cast(attrs, [:id, :title])
+    |> cast(attrs, [:id, :title, :lang])
     |> cast_assoc(:chapters)
     |> cast_assoc(:verses)
     |> validate_required([:title])
@@ -28,7 +30,7 @@ defmodule Vyasa.Written.Source do
 
   def mutate_changeset(source, attrs) do
     source
-    |> cast(attrs, [:id, :title])
+    |> cast(attrs, [:id, :title, :lang])
     |> cast_assoc(:chapters)
     |> cast_assoc(:verses)
     |> validate_required([:id, :title])

@@ -36,7 +36,9 @@ R.recompile()
 ```
 
 ```elixir
-Vyasa.Release.rollback(Vyasa.Repo, 0)
+# Vyasa.Release.rollback(Vyasa.Repo, 0)
+
+Ecto.Migrator.run(Vyasa.Repo, :down, all: true)
 ```
 
 ```elixir
