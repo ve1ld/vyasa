@@ -2,14 +2,8 @@
 
 
 
-#+BEGIN_QUOTE
-Wherever there be anything you dost not comprehend, cease to continue writing
-
--- Vyasa, Adi Parva - Mahabharatam
-#+END_QUOTE
-
 #+BEGIN_HTML
-<div style="background-image: url('priv/static/images/logo_with_gradient_1200x630-9e9a17ff8c67f6790579f1bf35d20d25.png'); background-size: cover; padding: 20px;">
+<div style="background-image: url('priv/static/images/logo_with_gradient-3e4bdf0aec288b3eb682a5cef43692b6.png'); background-size: cover; padding: 20px;">
 <blockquote >
     <p>"Wherever there be anything you dost not comprehend, cease to continue writing."</p>
     <footer>— Vyasa, Adi Parva - Mahabharatam</footer>
