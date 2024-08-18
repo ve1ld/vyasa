@@ -1,7 +1,9 @@
 #+title: Vyasa
 
+#+BEGIN_EXPORT html
+<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=flat&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
+#+END_EXPORT
 
-[[img:https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=flat&logo=elixir&label=Application%20Status][Deployment Status Badge]]
 
 [[file:priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png]]
 
@@ -14,12 +16,6 @@
 
 </div>
 #+END_HTML
-
-#+BEGIN_EXPORT html
-<div style="background-image: url('priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png'); padding: 20px;">
-  <p>This paragraph has a background image.</p>
-</div>
-#+END_EXPORT
 
 
 
