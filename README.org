@@ -1,6 +1,8 @@
 #+title: Vyasa
 
 
+[[img:https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=flat&logo=elixir&label=Application%20Status][Deployment Status Badge]]
+
 [[file:priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png]]
 
 #+BEGIN_HTML
