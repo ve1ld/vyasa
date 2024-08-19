@@ -1,24 +1,23 @@
 
 
 <div style="text-align: center;">
-  <blockquote>
-Wherever there be anything you dost not comprehend, cease to continue writing. <br/>
--- Vyasa, Adi Parva - Mahabharatam
-  </blockquote>
-<img alt="Project Image Banner" src="priv/static/images/the_vyasa_project_1-1902f4c6f3150014731cb2b8a66fe4f0.png" title="The Vyasa Project Banner"> 
-<br/>
-<div style="display: flex; justify-content: space-between;">
-<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=flat&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
-
-<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=flat&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
+    <blockquote>
+    Wherever there be anything you dost not comprehend, cease to continue writing. <br/>
+    -- Vyasa, Adi Parva - Mahabharatam
+    </blockquote>
+    <img alt="Project Image Banner" src="priv/static/images/logo_readme_banner.png" title="The Vyasa Project Banner"> 
+    <br/>
+    <div style="display: flex; justify-content: space-between;">
+    <img alt="Prod Deployment Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=for-the-badge&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
+    <img alt="Blog Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/hugo.yaml?style=for-the-badge&logo=org&logoSize=auto&label=blog.vyasa&link=https%3A%2F%2Fblog.vyasa.tv%2F">
+    <img alt="GitHub License" src="https://img.shields.io/github/license/ve1ld/vyasa?style=for-the-badge&logo=unlicense&link=https%3A%2F%2Fwww.gnu.org%2Flicenses%2Fquick-guide-gplv3.html">
+    </div>
 </div>
-</div>
 
 
+## Housekeeping
 
-# Housekeeping
-
-This project will always be a passion project, for the benefit of the greater community at large.
+This project seeks to serve the community at large, hence it will always be a non-profit 
 
 Here are some aspect of housekeeping to take note of:
 
