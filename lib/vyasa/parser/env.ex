@@ -313,7 +313,7 @@ defmodule Vyasa.Parser.Env do
 
   defp maybe_linefeed(%Continuation{start_quote: "\""}, input) do
     if String.ends_with?(input, "\\") do
-      String.slice(input, 0..-2)
+      String.slice(input, 0..-2//-1)
     else
       input <> "\n"
     end

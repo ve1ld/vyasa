@@ -28,29 +28,30 @@
     <div id="media-player" class="w-full" role="region" aria-label="Player">
       <.live_component module={VyasaWeb.AudioPlayer} id={"audio-player"}/>
       <div class="bg-white dark:bg-brandDark opacity-85 hover:opacity-100 backdrop-blur-lg p-4">
-        <div class="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5">
-          <div class="pr-5">
-            <div class="min-w-0 max-w-xs flex-col space-y-0.5">
-              <h2 :if={@voice} class="text-black dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
-                <%= @voice.title %>
-              </h2>
-              <p class="text-gray-500 dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-medium">
-                 <%= if @voice && Map.has_key?(@voice, "artist") do %>
-                   <%= @voice.artist %>
-                  <% else %>
-                    artist
-                  <% end %>
-              </p>
-            </div>
+        <div class="flex justify-between items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5">
+          <div id="playback-info" class="w-2/12 pr-2 min-w-0 max-w-xs flex-col space-y-0.5">
+            <h2 :if={@playback} class="text-black dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-semibold truncate">
+            <%= @playback.meta.title %>
+            </h2>
+            <p class="text-gray-500 dark:text-brandAccentLight text-sm sm:text-sm lg:text-sm xl:text-sm font-medium truncate">
+            <%= if @playback && @playback.meta.artists do %>
+                <%= Enum.join(@playback.meta.artists, ", ") %>
+            <% else %>
+            Unknown artist
+            <% end %>
+            </p>
+
+
+
           </div>
-          <.progress_bar
-            id="player-progress"
-            max={(@voice && @voice.duration) || 100}
-            value={@playback && @playback.elapsed || 0}
-          />
+            <.progress_bar
+              id="player-progress"
+              max={(@voice && @voice.duration) || 100}
+              value={@playback && @playback.elapsed || 0}
+            />
           <div
             id="player-info"
-            class="text-gray-500 dark:text-brandAccentLight flex-row justify-between text-sm font-medium tabular-nums"
+            class="w-1/12 pl-2 text-gray-500 dark:text-brandAccentLight justify-items-end flex-row text-sm font-medium tabular-nums"
             phx-update="ignore"
           >
             <div id="player-time"></div>
@@ -68,6 +69,8 @@
         <div class="w-4/6 flex items-center">
           <.play_pause_button
             playback={@playback}
+              isReady={not is_nil(@playback)}
+              isPlaying={@playback && @playback.playing?}
           />
         </div>
           <!-- /play/pause -->

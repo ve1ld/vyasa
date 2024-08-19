@@ -3,13 +3,13 @@
  */
 import { getSharer } from "./web_share.js";
 
-
 ShareQuoteButton = {
   mounted() {
     initTooltip();
     let callback = () => console.log("share quote!");
 
-    if ("share" in navigator) { // uses webshare api:
+    if ("share" in navigator) {
+      // uses webshare api:
       callback = () => {
         const shareTitle = this.el.getAttribute("data-share-title");
         const shareUrl = window.location.href;
@@ -21,9 +21,9 @@ ShareQuoteButton = {
         window.shareUrl = sharer;
         window.shareUrl(shareUrl);
       };
-    } else if ("clipboard" in navigator) { // copies to clipboard:
+    } else if ("clipboard" in navigator) {
+      // copies to clipboard:
       callback = () => {
-        console.log(">> see me:", {"floating ui:": window})
         const {
           chapter_number: chapterNum,
           verse_number: verseNum,
@@ -31,7 +31,7 @@ ShareQuoteButton = {
           text,
         } = JSON.parse(this.el.getAttribute("data-verse"));
 
-        const content = `[Gita Chapter ${chapterNum} Verse ${verseNum}] \n${text}\n${transliteration}\nRead more at ${document.URL}`
+        const content = `[Gita Chapter ${chapterNum} Verse ${verseNum}] \n${text}\n${transliteration}\nRead more at ${document.URL}`;
         navigator.clipboard.writeText(content);
       };
     }
@@ -41,66 +41,50 @@ ShareQuoteButton = {
 };
 
 function showTooltip() {
-  const {tooltip} = getButtonAndTooltip();
-  tooltip.style.display = 'block';
+  const { tooltip } = getButtonAndTooltip();
+  tooltip.style.display = "block";
   alignTooltip();
 }
 
 function hideTooltip() {
-  const {tooltip} = getButtonAndTooltip();
-  tooltip.style.display = '';
+  const { tooltip } = getButtonAndTooltip();
+  tooltip.style.display = "";
 }
 
 const initTooltip = () => {
-  const {button} = getButtonAndTooltip();
+  const { button } = getButtonAndTooltip();
 
   [
-    ['mouseenter', showTooltip],
-    ['mouseleave', hideTooltip],
-    ['focus', showTooltip],
-    ['blur', hideTooltip],
+    ["mouseenter", showTooltip],
+    ["mouseleave", hideTooltip],
+    ["focus", showTooltip],
+    ["blur", hideTooltip],
   ].forEach(([event, listener]) => {
     button.addEventListener(event, listener);
   });
-}
+};
 
 const getButtonAndTooltip = () => {
-  const id = "ShareQuoteButton"
-  const button = document.getElementById(id)
-  const tooltip = document.getElementById(`tooltip-${id}`)
-  return {button, tooltip}
+  const id = "ShareQuoteButton";
+  const button = document.getElementById(id);
+  const tooltip = document.getElementById(`tooltip-${id}`);
+  return { button, tooltip };
+};
 
-}
-
+import { computePosition, flip, shift, offset } from "floating-ui.dom.umd.min";
 
 const alignTooltip = () => {
-  const {button, tooltip} = getButtonAndTooltip()
-  console.log(">>> found?", {
-    button,
-    tooltip,
-  })
-  const {
-    computePosition,
-    flip,
-    shift,
-    offset,
-  } = window.FloatingUIDOM;
-
+  const { button, tooltip } = getButtonAndTooltip();
   computePosition(button, tooltip, {
-    placement: 'right',
+    placement: "right",
     // NOTE: order of middleware matters.
-    middleware: [offset(6), flip(), shift({padding: 16})],
-  }).then(({x, y}) => {
-    console.log(">>> computed new position!", {
-      x,
-      y
-    })
+    middleware: [offset(6), flip(), shift({ padding: 16 })],
+  }).then(({ x, y }) => {
     Object.assign(tooltip.style, {
       left: `${x}px`,
       top: `${y}px`,
     });
   });
-}
-
+};
 
 export default ShareQuoteButton;

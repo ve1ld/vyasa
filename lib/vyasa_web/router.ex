@@ -1,7 +1,6 @@
 defmodule VyasaWeb.Router do
   use VyasaWeb, :router
 
-
   pipeline :browser do
     plug :accepts, ["html"]
     plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
@@ -16,31 +15,35 @@ defmodule VyasaWeb.Router do
     plug :accepts, ["json"]
   end
 
-
-
   scope "/", VyasaWeb do
     pipe_through :browser
 
-
     get "/og/:filename", OgImageController, :show
-
 
     get "/", PageController, :home
 
-    live_session :gen_anon_session,
-      on_mount: [{VyasaWeb.Session, :anon}] do
-      live "/explore/", SourceLive.Index, :index
-      live "/explore/:source_title/", SourceLive.Show, :show
-      live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-      live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+    # live_session :gen_anon_session,
+    #   on_mount: [{VyasaWeb.Session, :anon}] do
+    #   live "/explore/", SourceLive.Index, :index
+    #   live "/explore/:source_title/", SourceLive.Show, :show
+    #   # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+    #   live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
+    #   live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
+    # end
+
+    live_session :gen_sangh_session,
+      on_mount: [{VyasaWeb.Session, :sangh}] do
+      live "/explore/", DisplayManager.DisplayLive, :show_sources
+      live "/explore/:source_title/", DisplayManager.DisplayLive, :show_chapters
+      live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
+      # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
     end
-    
+
     live_admin "/admin" do
-      admin_resource "/verses", VyasaWeb.Admin.Written.Verse
-      admin_resource "/events", VyasaWeb.Admin.Medium.Event
+      admin_resource("/verses", VyasaWeb.Admin.Written.Verse)
+      admin_resource("/events", VyasaWeb.Admin.Medium.Event)
     end
-    
-   end
+  end
 
   # Other scopes may use custom stacks.
   # scope "/api", VyasaWeb do
@@ -58,7 +61,6 @@ defmodule VyasaWeb.Router do
 
     scope "/dev" do
       pipe_through :browser
-
 
       live_dashboard "/dashboard", metrics: VyasaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview

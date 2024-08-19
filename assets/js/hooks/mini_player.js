@@ -34,17 +34,16 @@ const bindListenersToEventsOnEl = (el, listeners, events) => {
   });
 };
 
+import { autoUpdate} from "floating-ui.dom.umd.min";
+
 const autoUpdatePosition = () => {
   const {
     verseContainer,
     youtubePlayerContainer,
   } = getRelevantElements();
 
-  const {
-    autoUpdate
-  } = window.FloatingUIDOM
 
-  window.FloatingUIDOM.cleanupAutoPositioning = autoUpdate(
+  autoUpdate(
     verseContainer,
     youtubePlayerContainer,
     alignMiniPlayer,
@@ -71,15 +70,15 @@ const getRelevantElements = () => {
   return {button, youtubePlayerContainer, verseContainer}
 }
 
-const alignMiniPlayer = () => {
-  const {verseContainer, youtubePlayerContainer} = getRelevantElements();
-
-  const {
+import {
     computePosition,
     autoPlacement,
     shift,
     offset,
-  } = window.FloatingUIDOM;
+  } from "floating-ui.dom.umd.min";
+
+const alignMiniPlayer = () => {
+  const {verseContainer, youtubePlayerContainer} = getRelevantElements();
 
 
   computePosition(verseContainer, youtubePlayerContainer, {
