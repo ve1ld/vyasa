@@ -137,7 +137,7 @@ defmodule VyasaWeb.CoreComponents do
                   class="-m-3 flex-none p-3 opacity-80 hover:opacity-40"
                   aria-label={gettext("close")}
                 >
-                 <.icon name="hero-x-mark-solid" class="h-5 w-5 text-white" />
+                  <.icon name="hero-x-mark-solid" class="h-5 w-5 text-white" />
                 </button>
               </div>
               <div id={"#{@id}-content"}>
@@ -331,11 +331,13 @@ defmodule VyasaWeb.CoreComponents do
       <.button phx-click="go" class="ml-2">Send!</.button>
   """
   attr :type, :string, default: nil
+
   attr(:tone, :atom,
     default: :primary,
     values: ~w(primary inline success warning danger)a,
     doc: "Theme of the button"
   )
+
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
 
@@ -361,6 +363,7 @@ defmodule VyasaWeb.CoreComponents do
   defp button_class(:primary),
     do:
       "focus:outline-none focus:ring-4 font-bold rounded-xl lg:text-base text-sm px-5 py-2.5 text-center bg-[#9747FF] text-[#D1D1D1] hover:bg-purple-700 focus:ring-purple-900 font-poppins"
+
   defp button_class(:inline),
     do:
       "inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none"
@@ -589,7 +592,10 @@ defmodule VyasaWeb.CoreComponents do
                   <div class="mr-2">
                     <div class="w-5 h-5 overflow-hidden">
                       <!-- User Profile Image -->
-                      <img src="https://yt3.ggpht.com/3L3vTo8jRmmhs1DPOyriFSxav8BZK87btsSd3taeiwo9a2T5bjzCBKscy1NeFZJbKMlTVKhg=s88-c-k-c0x00ffffff-no-rj" class="block object-cover w-full h-full rounded-full">
+                      <img
+                        src="https://yt3.ggpht.com/3L3vTo8jRmmhs1DPOyriFSxav8BZK87btsSd3taeiwo9a2T5bjzCBKscy1NeFZJbKMlTVKhg=s88-c-k-c0x00ffffff-no-rj"
+                        class="block object-cover w-full h-full rounded-full"
+                      />
                     </div>
                   </div>
                   <!-- User Info -->
@@ -605,7 +611,7 @@ defmodule VyasaWeb.CoreComponents do
                     <div class="pb-px mr-2 w-1 bg-yellow-500 rounded"></div>
                     <div class="overflow-hidden">
                       <span class="text-left no-underline">
-                       <%= render_slot(@quote) %>
+                        <%= render_slot(@quote) %>
                       </span>
                     </div>
                   </div>
@@ -627,15 +633,25 @@ defmodule VyasaWeb.CoreComponents do
               <div class="flex items-center flex-grow">
                 <!-- Comment Input Box -->
                 <div class="flex flex-col self-center w-full text-sm leading-5 rounded cursor-text">
-                 <div class="max-w-full whitespace-pre-wrap" spellcheck="true" contenteditable="true" placeholder="Reply..."></div>
+                  <div
+                    class="max-w-full whitespace-pre-wrap"
+                    spellcheck="true"
+                    contenteditable="true"
+                    placeholder="Reply..."
+                  ></div>
                   <div class="inline-block items-center absolute bottom-0 right-0 opacity-1">
-                   <!-- Comment Action Buttons Section -->
-                   <div class="flex items-left ">
-                     <button class="inline-block items-center p-0 mr-5 w-5 h-5 rounded pointer-events-auto select-none">
-                     <svg role="graphics-symbol" viewBox="0 0 20 20" class="block flex-shrink-0 w-6 h-6 align-middle">
-                      <path d="M9.79883 18.5894C14.6216 18.5894 18.5894 14.6216 18.5894 9.79883C18.5894 4.96777 14.6216 1 9.79053 1C4.95947 1 1 4.96777 1 9.79883C1 14.6216 4.96777 18.5894 9.79883 18.5894ZM9.79883 14.3062C9.20947 14.3062 8.76953 13.9077 8.76953 13.3433V9.69922L8.86914 8.00586L8.25488 8.84424L7.3916 9.81543C7.23389 10.0063 6.98486 10.1143 6.72754 10.1143C6.21289 10.1143 5.84766 9.75732 5.84766 9.25928C5.84766 8.99365 5.92236 8.79443 6.12158 8.58691L8.96045 5.61523C9.19287 5.35791 9.4585 5.2417 9.79883 5.2417C10.1309 5.2417 10.4048 5.36621 10.6372 5.61523L13.4761 8.58691C13.667 8.79443 13.75 8.99365 13.75 9.25928C13.75 9.75732 13.3848 10.1143 12.8618 10.1143C12.6128 10.1143 12.3638 10.0063 12.2061 9.81543L11.3428 8.86914L10.7202 7.99756L10.8281 9.69922V13.3433C10.8281 13.9077 10.3799 14.3062 9.79883 14.3062Z"></path>
-                     </svg>
-                     </button>
+                    <!-- Comment Action Buttons Section -->
+                    <div class="flex items-left ">
+                      <button class="inline-block items-center p-0 mr-5 w-5 h-5 rounded pointer-events-auto select-none">
+                        <svg
+                          role="graphics-symbol"
+                          viewBox="0 0 20 20"
+                          class="block flex-shrink-0 w-6 h-6 align-middle"
+                        >
+                          <path d="M9.79883 18.5894C14.6216 18.5894 18.5894 14.6216 18.5894 9.79883C18.5894 4.96777 14.6216 1 9.79053 1C4.95947 1 1 4.96777 1 9.79883C1 14.6216 4.96777 18.5894 9.79883 18.5894ZM9.79883 14.3062C9.20947 14.3062 8.76953 13.9077 8.76953 13.3433V9.69922L8.86914 8.00586L8.25488 8.84424L7.3916 9.81543C7.23389 10.0063 6.98486 10.1143 6.72754 10.1143C6.21289 10.1143 5.84766 9.75732 5.84766 9.25928C5.84766 8.99365 5.92236 8.79443 6.12158 8.58691L8.96045 5.61523C9.19287 5.35791 9.4585 5.2417 9.79883 5.2417C10.1309 5.2417 10.4048 5.36621 10.6372 5.61523L13.4761 8.58691C13.667 8.79443 13.75 8.99365 13.75 9.25928C13.75 9.75732 13.3848 10.1143 12.8618 10.1143C12.6128 10.1143 12.3638 10.0063 12.2061 9.81543L11.3428 8.86914L10.7202 7.99756L10.8281 9.69922V13.3433C10.8281 13.9077 10.3799 14.3062 9.79883 14.3062Z">
+                          </path>
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -746,7 +762,9 @@ defmodule VyasaWeb.CoreComponents do
       <%= render_slot(@inner_block) %>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500"><%= item.title %></dt>
+          <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500">
+            <%= item.title %>
+          </dt>
           <dd class="text-zinc-700"><%= render_slot(item) %></dd>
         </div>
       </dl>

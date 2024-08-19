@@ -8,7 +8,7 @@
     <.table
     id="sources"
     rows={@streams.sources}
-    row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.title}/") end}
+    row_click={fn {_id, source} -> JS.push("navigate_to_source", value: %{target: ~p"/explore/#{source.title}/"}) end}
     >
     <:col :let={{_id, source}} label="">
         <div class="font-dn text-2xl">

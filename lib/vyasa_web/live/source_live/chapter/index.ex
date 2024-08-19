@@ -1,4 +1,5 @@
 defmodule VyasaWeb.SourceLive.Chapter.Index do
+  # use VyasaWeb, {:live_view, layout: {VyasaWeb.Layouts, :content_layout}}
   use VyasaWeb, :live_view
   alias Vyasa.{Written, Medium, Draft}
   alias Vyasa.Medium.{Voice}

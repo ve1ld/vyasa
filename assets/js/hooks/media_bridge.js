@@ -95,7 +95,7 @@ MediaBridge = {
   emphasizeChapterPreamble() {
     const preambleNode = document.querySelector("#chapter-preamble");
     if (!preambleNode) {
-      console.warning("[EMPHASIZE], no preamble node found");
+      console.warn("[EMPHASIZE], no preamble node found");
       return null;
     }
 
