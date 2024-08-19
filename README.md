@@ -1,5 +1,7 @@
 
 
+# Welcome
+
 <div style="text-align: center;">
     <blockquote>
     Wherever there be anything you dost not comprehend, cease to continue writing. <br/>
@@ -8,9 +10,15 @@
     <img alt="Project Image Banner" src="priv/static/images/logo_readme_banner.png" title="The Vyasa Project Banner"> 
     <br/>
     <div style="display: flex; justify-content: space-between;">
-    <img alt="Prod Deployment Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=for-the-badge&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
-    <img alt="Blog Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/hugo.yaml?style=for-the-badge&logo=org&logoSize=auto&label=blog.vyasa&link=https%3A%2F%2Fblog.vyasa.tv%2F">
+    <a href="https://vyasa.tv">
+        <img alt="Prod Deployment Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/prod.yml?style=for-the-badge&logo=elixir&label=vyasa.tv&link=https%3A%2F%2Fvyasa.tv">
+    </a>
+    <a href="https://blog.vyasa.tv">
+        <img alt="Blog Status" src="https://img.shields.io/github/actions/workflow/status/ve1ld/vyasa/hugo.yaml?style=for-the-badge&logo=org&logoSize=auto&label=blog.vyasa&link=https%3A%2F%2Fblog.vyasa.tv%2F">
+    </a>
+    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html>
     <img alt="GitHub License" src="https://img.shields.io/github/license/ve1ld/vyasa?style=for-the-badge&logo=unlicense&link=https%3A%2F%2Fwww.gnu.org%2Flicenses%2Fquick-guide-gplv3.html">
+    </a>
     </div>
 </div>
 
