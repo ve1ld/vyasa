@@ -1,6 +1,9 @@
 
 
-# Welcome
+<div style="text-align: center">
+  <h1>Welcome</h1>
+</div>
+
 <div style="text-align: center">
   <img
     alt="Project Image Banner"
@@ -31,17 +34,15 @@
   <blockquote>
     Wherever there be anything you dost not comprehend, cease to continue
     writing. <br />
-    -- Vyasa, Adi Parva - Mahabharatam
+     — Vyasa, Adi Parva; Mahabharatam
   </blockquote>
 </div>
 
 ## Overview
 
-### What is this project about?
-
 ---
 
-**This is a home for the fables and hymns that bring young and old together.**
+****This is a home for the fables and hymns that bring young and old together.****
 
 ---
 
@@ -50,7 +51,7 @@
 > Please watch this repo on GitHub and follow [the blog](https://blog.vyasa.tv" "Vyasa Blog") for development updates.
 
 
-Indic philosophy has always had a rich oral tradition, passed down across generations through word of mouth in the form of fables and hymns -- inspiring people both in and out of the diaspora.
+Indic philosophy has always had a rich oral tradition, passed down across generations through word of mouth in the form of fables and hymns — inspiring people both in and out of the diaspora.
 
 This project provides a digital medium for people to learn, share and engage in meaningful discourse around the topic of Indic philosophy. 
 
@@ -77,15 +78,13 @@ TODO closer to soft launch for initial test users
 TODO closer to soft launch for initial test users
 </pre>
 
-
-
 # Housekeeping
 
 This project seeks to serve the community at large and will always remain free-to-use. Here are some housekeeping-aspects to take note of:
 
 ## Licensing Information
 
-We believe in the free software movement (free as in freedom) and hope that the spirit leads this project to achieve the longevity that it needs.
+We believe in the free software movement and that the values within it shall lead this project to achieve the longevity that it needs.
 
 Therefore, we have put this software under the copyleft license, GNU General Public License v3 (GPLv3, here is the [license certificate](LICENSE)). This means that users can freely use, study, modify, and share software, with the condition that any distributed modifications must also be shared under the same license to ensure these freedoms are preserved.
 
