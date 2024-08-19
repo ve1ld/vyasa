@@ -3,21 +3,26 @@ defmodule Vyasa.Written.Verse do
   import Ecto.Changeset
 
   alias Vyasa.Written.{Source, Chapter, Translation}
+  alias Vyasa.Sangh.{Comment}
+  alias Vyasa.Adapters.Binding
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "verses" do
     field :no, :integer
     field :body, :string
+    field :binding, :any, virtual: true
 
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_many :translations, Translation
+
+    many_to_many :comments, Comment, join_through: Binding
   end
 
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:body, :no, :source_id])
+    |> cast(attrs, [:id, :body, :no, :source_id, :chapter_no])
     |> cast_assoc(:translations)
     |> validate_required([:no, :body])
   end

@@ -1,5 +1,4 @@
     <.header>
-
         <div class="text-3xl">
             <%= @page_title %>
         </div>
@@ -8,12 +7,13 @@
     <.table
     id="sources"
     rows={@streams.sources}
-    row_click={fn {_id, source} -> JS.navigate(~p"/explore/#{source.title}/") end}
+    row_click={fn {_id, source} -> JS.push("navigate_to_source", value: %{target: ~p"/explore/#{source.title}/"}) end}
     >
     <:col :let={{_id, source}} label="">
         <div class="font-dn text-2xl">
-            <%= source.title %>
+            <%= to_title_case(source.title) %>
         </div>
     </:col>
     </.table>
 
+    <span :if={@streams.sources |> Enum.count() < 10} class="block h-96"/>

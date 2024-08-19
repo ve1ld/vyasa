@@ -1,16 +1,14 @@
 
 <.header >
     <div class="font-dn text-4xl">
-        <%= @title%>
+        <%= to_title_case(@source.title)%>
     </div>
 </.header>
-
-
 
 <.table
 id="chapters"
 rows={@streams.chapters}
-row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@title}/#{chap.no}") end}
+row_click={fn {_id, chap} -> JS.push("navigate_to_chapter", value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"}) end}
 >
     <:col :let={{_id, chap}} label="Chapter">
         <div class="font-dn text-lg">
@@ -29,3 +27,5 @@ row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@title}/#{chap.no}") end}
 </.table>
 
 <.back navigate={~p"/explore/"}>Back to All Sources</.back>
+
+<span :if={@streams.chapters |> Enum.count() < 10} class="block h-96"/>

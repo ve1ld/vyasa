@@ -1,0 +1,3 @@
+[submodule "vyasa_blog/themes/PaperMod"]
+	path = vyasa_blog/themes/PaperMod
+	url = https://github.com/adityatelange/hugo-PaperMod

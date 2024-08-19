@@ -63,6 +63,7 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port
     ],
+    check_origin: ["https://vyasa.tv", "https://www.vyasa.tv", "https://vyasa.fly.dev"],
     secret_key_base: secret_key_base
 
   # ## SSL Support
@@ -115,6 +116,6 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
   #
-  else
-    Vyasa.Parser.Env.load_file('.env')
+else
+  Vyasa.Parser.Env.load_file(".env")
 end

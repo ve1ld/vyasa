@@ -27,6 +27,9 @@ defmodule VyasaWeb do
       import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import Admin Routes
+      import LiveAdmin.Router
     end
   end
 
@@ -105,7 +108,8 @@ defmodule VyasaWeb do
       # Core UI components and translation
       import VyasaWeb.CoreComponents
       import VyasaWeb.Gettext
-
+      #String Formating for Display
+      import Utils.String, only: [to_title_case: 1]
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 

@@ -1,43 +1,47 @@
 defmodule VyasaWeb.SourceLive.Show do
   use VyasaWeb, :live_view
   alias Vyasa.Written
-  alias Vyasa.Written.{Source}
+  alias Vyasa.Written.{Chapter}
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = stream_configure(socket, :chapters, dom_id: &("Chapter-#{&1.no}"))
+    socket = stream_configure(socket, :chapters, dom_id: &"Chapter-#{&1.no}")
     {:ok, socket}
   end
 
   @impl true
   def handle_params(%{"source_title" => source_title}, _, socket) do
-    %Source{
-      id: id,
-      verses: verses,
-      chapters: chapters,
-      title: title
-    } = Written.get_source_by_title(source_title)
-
+    [%Chapter{source: src} | _] = chapters = Written.get_chapters_by_src(source_title)
 
     {
       :noreply,
       socket
-      |> assign(:id, id)
-      |> assign(:title, title)
-      |> assign(:page_title, title)
-      |> stream(:verses, verses)
+      |> assign(:source, src)
+      |> assign(:page_title, to_title_case(src.title))
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
       |> assign_meta()
     }
-
   end
 
-  defp assign_meta(socket) do
+  @impl true
+  def handle_event("navigate_to_chapter", %{"target" => target} = _payload, socket) do
+    IO.inspect(target, label: "TRACE: navigate_to_chapter:")
+
+    {
+      :noreply,
+      socket
+      |> push_navigate(to: target)
+      # |> push_patch(to: target)
+    }
+  end
+
+  defp assign_meta(%{assigns: %{source: src}} = socket) do
     assign(socket, :meta, %{
-      title: socket.assigns.title,
-      description: "Explore the #{socket.assigns.title}",
+      title: to_title_case(src.title),
+      description: "Explore the #{to_title_case(src.title)}",
       type: "website",
-      url: url(socket, ~p"/explore/#{socket.assigns.title}")
+      image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: src})}"),
+      url: url(socket, ~p"/explore/#{src.title}")
     })
   end
 

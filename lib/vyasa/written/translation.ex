@@ -36,7 +36,16 @@ defmodule Vyasa.Written.Translation do
 
 
   @doc false
+  def changeset(translation, %{"type" => type} = attrs) do
+    # %{translation | type: type, verse_id: verse_id, source_id: s_id, chap_no: } # <== DON'T DO THIS. this will create extra associations to chap, but in this fn we only want verse-assocs
+    translation
+    |> cast(attrs, [:lang, :type, :verse_id, :chapter_no, :source_id])
+    |> typed_target_switch(type)
+    |> validate_required([:lang])
+  end
+
   def gen_changeset(translation, attrs, %Verse{id: verse_id, __meta__: %{source: type}, source_id: s_id}) do
+    # %{translation | type: type, verse_id: verse_id, source_id: s_id, chap_no: } # <== DON'T DO THIS. this will create extra associations to chap, but in this fn we only want verse-assocs
     %{translation | type: type, verse_id: verse_id, source_id: s_id}
     |> cast(attrs, [:lang])
     |> typed_target_switch(type)

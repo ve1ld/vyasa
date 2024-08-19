@@ -4,16 +4,28 @@ import {
   TriggerYouTubeFunction,
 } from "./youtube_player.js";
 import MiniPlayer from "./mini_player.js";
+import MediaBridge from "./media_bridge.js";
 import AudioPlayer from "./audio_player.js";
 import ProgressBar from "./progress_bar.js";
+import Floater from "./floater.js";
+import ApplyModal from "./apply_modal.js";
+import MargiNote from "./marginote.js";
+import HoveRune from "./hoverune.js";
+import Scrolling from "./scrolling.js";
 
-
-let Hooks = {};
-Hooks.ShareQuoteButton = ShareQuoteButton;
-Hooks.RenderYouTubePlayer = RenderYouTubePlayer;
-Hooks.TriggerYouTubeFunction = TriggerYouTubeFunction;
-Hooks.MiniPlayer = MiniPlayer;
-Hooks.AudioPlayer = AudioPlayer;
-Hooks.ProgressBar = ProgressBar;
+let Hooks = {
+  ShareQuoteButton,
+  RenderYouTubePlayer,
+  TriggerYouTubeFunction,
+  MiniPlayer,
+  MediaBridge,
+  AudioPlayer,
+  ProgressBar,
+  Floater,
+  ApplyModal,
+  MargiNote,
+  HoveRune,
+  Scrolling,
+};
 
 export default Hooks;

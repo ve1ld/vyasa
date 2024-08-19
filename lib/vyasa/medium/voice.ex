@@ -13,19 +13,33 @@ defmodule Vyasa.Medium.Voice do
     field :file_path, :string, virtual: true
 
     embeds_one :meta, VoiceMetadata do
-      field(:artist, {:array, :string})
+      field(:artists, {:array, :string})
+      field(:album, :string)
+      field(:artwork, {:array, {:map, :string}})
     end
 
-    has_many :events, Event, references: :id, foreign_key: :voice_id, preload_order: [asc: :origin]
+    has_one :video, Video, references: :id, foreign_key: :voice_id
+
+    has_many :events, Event,
+      references: :id,
+      foreign_key: :voice_id,
+      preload_order: [asc: :origin]
+
     belongs_to :track, Track, references: :id, foreign_key: :track_id
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
-    has_one :video, Video, references: :id, foreign_key: :voice_id
     belongs_to :source, Source, references: :id, foreign_key: :source_id, type: :binary_id
 
     timestamps(type: :utc_datetime)
-   end
+  end
 
   @doc false
+
+  def gen_changeset(voice, %{"id" => id} = attrs) when is_binary(id) do
+    voice
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
+    |> cast_embed(:meta, with: &meta_changeset/2)
+    |> file_upload()
+  end
 
   def gen_changeset(voice, attrs) do
     %{voice | id: Ecto.UUID.generate()}
@@ -36,20 +50,23 @@ defmodule Vyasa.Medium.Voice do
 
   def changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:title, :duration, :lang, :file_path, :chapter_no, :source_id])
+    |> cast(attrs, [:id, :title, :duration, :lang, :file_path, :chapter_no, :source_id])
     |> cast_embed(:meta, with: &meta_changeset/2)
+    |> cast_assoc(:video)
+    |> cast_assoc(:events)
   end
 
   def meta_changeset(voice, attrs) do
     voice
-    |> cast(attrs, [:artist])
+    |> cast(attrs, [:artists])
   end
 
   def file_upload(%Ecto.Changeset{changes: %{file_path: _} = changes} = ec) do
-    ext_path = apply_changes(ec)
-    |> Vyasa.Medium.Writer.run()
-    |> then(&elem(&1, 1).key)
-    |> Vyasa.Medium.Store.get!()
+    ext_path =
+      apply_changes(ec)
+      |> Vyasa.Medium.Writer.run()
+      |> then(&elem(&1, 1).key)
+      |> Vyasa.Medium.Store.get!()
 
     %{ec | changes: %{changes | file_path: ext_path}}
   end

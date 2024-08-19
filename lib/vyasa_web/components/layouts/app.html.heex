@@ -1,8 +1,8 @@
-<header class="px-4 sm:px-6 lg:px-8">
+<header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
       <a href="/" class="">
-        <img src={~p"/images/logo.svg"} width="36" class="mix-blend-normal"/>
+        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal"/>
       </a>
       <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
         v<%= Application.spec(:vyasa, :vsn) %>
@@ -17,11 +17,12 @@
       </a>
     </div>
   </div>
-  <%= live_render(@socket, VyasaWeb.MediaLive.Player, id: "MediaPlayer", session: @session, sticky: true) %>
 </header>
-<main class="px-4 py-20 sm:px-6 lg:px-8">
+<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-2xl">
     <.flash_group flash={@flash} />
-    <%= @inner_content %>
   </div>
+  <!-- DM manages the core layouts -->
+  <%= live_render(@socket, VyasaWeb.DisplayManager.DisplayManager, id: "DisplayManager", session: @session, sticky: true) %>
+    <%= @inner_content %>
 </main>

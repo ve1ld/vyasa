@@ -30,7 +30,6 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
        - pgadmin:/var/lib/pgadmin
-
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     networks:

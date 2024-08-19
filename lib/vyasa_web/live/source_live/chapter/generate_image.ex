@@ -2,7 +2,7 @@ defmodule VyasaWeb.SourceLive.ImageGenerator do
   @moduledoc """
   Contains logic for creating images, initially for opengraph purposes mainly.
   """
-  @fallback_text "Gita -- The Song Celestial"
+  @fallback_text "Vyasa Project - Indic wisdom distilled into words"
   @col_width 20
   alias VyasaWeb.SourceLive.ImageGenerator
   alias Vix.Vips.Operation
@@ -29,7 +29,7 @@ defmodule VyasaWeb.SourceLive.ImageGenerator do
     target_url
   end
 
-  defp generate_svg(content) do
+  def generate_svg(content) do
     svg_text_nodes =
       content
       |> ImageGenerator.wrap_text(@col_width)
@@ -73,8 +73,6 @@ defmodule VyasaWeb.SourceLive.ImageGenerator do
     Manually wraps a text to width of size @col_width.
   """
   def wrap_text(text, col_length \\ @col_width) do
-
-
     words = String.split(text, " ")
 
     Enum.reduce(words, [], fn word, acc_lines ->
