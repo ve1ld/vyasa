@@ -35,6 +35,15 @@ end
 R.recompile()
 ```
 
+```elixir
+Vyasa.Release.rollback(Vyasa.Repo, 0)
+```
+
+```elixir
+# 20241515170225
+Vyasa.Release.migrate()
+```
+
 #### inits the non-event structs
 
 ```elixir
@@ -110,4 +119,8 @@ File.ls!(target_media_folder)
   %{"id" => hd(String.split(x, ".mp3")), "file_path" => target_media_folder <> "/" <> x}
 end)
 |> Enum.map(fn v -> Vyasa.Medium.Voice.gen_changeset(%Medium.Voice{}, v) end)
+```
+
+```elixir
+Vyasa.Repo.all(Vyasa.Medium.Video)
 ```

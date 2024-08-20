@@ -1,38 +1,44 @@
 defmodule VyasaWeb.AudioPlayer do
-    use VyasaWeb, :live_component
+  @moduledoc """
+  This is the concrete AudioPlayer module that interfaces with the html5 audio player.
+  User-generated events will get piped directly to the MediaBridge which will notify the AudioPlayer when there are updates to make.
+  Any interfacing with the html5 player shall happen from this module (e.g. dispatching an evnent for the client-side AudioPlayer Hook).
+  """
+  use VyasaWeb, :live_component
 
-    def mount(_, _, socket) do
-      socket
-      |> assign(playback: nil)
-    end
+  alias Vyasa.Medium.{Playback}
 
-    @impl true
-    def render(assigns) do
-      ~H"""
-      <div id="audio-player" phx-hook="AudioPlayer">
-        <audio></audio>
-      </div>
-      """
-    end
-
-    @impl true
-    def update(%{
-          event: "media_bridge:update_audio_player" = event,
-          playback: playback,
-             } = _assigns, socket) do
-      IO.inspect("handle update case in audio_player.ex with event = #{event}", label: "checkpoint")
-
-      {
-        :ok, socket
-        |> assign(playback: playback)
-      }
-    end
-
-    @impl true
-    def update(assigns, socket) do
-      IO.inspect(assigns, label: "what")
-      {:ok, socket
-      |> assign(playback: nil)
-      }
-    end
+  def mount(_, _, socket) do
+    socket
+    |> assign(playback: nil)
   end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div id="audio-player" phx-hook="AudioPlayer">
+      <audio></audio>
+    </div>
+    """
+  end
+
+  @impl true
+  def update(
+        %{
+          event: "media_bridge:notify_audio_player" = _event,
+          playback: %Playback{} = playback
+        } = _assigns,
+        socket
+      ) do
+    {:ok,
+     socket
+     |> assign(playback: playback)}
+  end
+
+  @impl true
+  def update(_assigns, socket) do
+    {:ok,
+     socket
+     |> assign(playback: nil)}
+  end
+end

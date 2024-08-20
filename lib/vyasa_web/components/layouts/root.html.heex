@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" class="[scrollbar-gutter:stable]">
-  <head>
+  <head
+    id="root-container"
+    phx-hook="Scrolling"
+  >
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
@@ -8,13 +11,10 @@
       <%= assigns[:page_title] || "Vyasa" %>
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.5.3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.5.4"></script>
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}></script>
     <.meta_tags contents={assigns[:meta]} />
   </head>
   <body class="bg-white antialiased">
-      <%= @inner_content %>
+    <%= @inner_content %>
   </body>
 </html>

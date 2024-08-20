@@ -5,12 +5,10 @@
     </div>
 </.header>
 
-
-
 <.table
 id="chapters"
 rows={@streams.chapters}
-row_click={fn {_id, chap} -> JS.navigate(~p"/explore/#{@source.title}/#{chap.no}") end}
+row_click={fn {_id, chap} -> JS.push("navigate_to_chapter", value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"}) end}
 >
     <:col :let={{_id, chap}} label="Chapter">
         <div class="font-dn text-lg">

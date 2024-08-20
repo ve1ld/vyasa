@@ -13,31 +13,42 @@
             </div>
         </:subtitle>
     </.header>
-
-    <.verse_display id={dom_id} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses}>
-        <:item
+  <div id="verses" phx-update="stream" phx-hook="HoveRune">
+    <.verse_matrix id={dom_id} verse={verse} :for={{dom_id, %Written.Verse{} = verse} <- @streams.verses} marks={@marks}>
+        <:edge
             title={"#{verse.chapter_no}.#{verse.no}"}
-            verse_id={verse.id}
-        >
-            <p class="font-dn text-lg sm:text-xl">
-                <%= verse.body |> String.split("।।") |> List.first()  %>
-            </p>
-        </:item>
-        <:item title={"Transliteration"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
-                <%= hd(verse.translations).target.body_translit  %>
-            </p>
-        </:item>
-        <:item title={"Transliteration Meaning"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-m">
-                <%=  hd(verse.translations).target.body_translit_meant  %>
-            </p>
-        </:item>
-        <:item title={"Translation"}>
-        <p :if={Enum.any?(verse.translations)} class="font-dn text-lg">
-                <%=  hd(verse.translations).target.body %>
-            </p>
-        </:item>
-    </.verse_display>
+            field={[:body]}
+            verseup={:big}/>
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body_translit_meant]}
+            verseup={:mid}/>
+
+        <:edge
+            node={hd(verse.translations)}
+            field={[:target, :body]}
+            verseup={:mid}/>
+    </.verse_matrix>
+  </div>
     <.back navigate={~p"/explore/#{@src.title}"}>Back to <%= to_title_case(@src.title)%> Chapters</.back>
+</div>
+
+<div id="hoverune"  phx-update="ignore" class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white/80 rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out">
+  <button phx-click="markQuote" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+    <.icon
+        name="hero-link-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"/>
+  </button>
+
+  <button class="text-gray-600 hover:text-red-600 focus:outline-none">
+    <.icon
+        name="hero-bookmark-mini"
+        class="w-5 h-5 hover:text-black hover:cursor-pointer"/>
+  </button>
+
 </div>
