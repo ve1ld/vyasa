@@ -10,7 +10,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias Vyasa.Sangh.{Comment, Mark}
-  alias Utils.Struct
 
   @supported_modes UserMode.supported_modes()
   @default_lang "en"
@@ -60,7 +59,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     IO.inspect(:show_sources, label: "TRACE: apply action DM action show_sources:")
     # IO.inspect(params, label: "TRACE: apply action DM params:")
 
-    # TODO: make this into a live component
     socket
     |> stream(:sources, Written.list_sources())
     |> assign(:content_action, :show_sources)
@@ -74,7 +72,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     })
   end
 
-  # TODO: change navigate -> patch on the html side
   defp apply_action(
          %Socket{} = socket,
          :show_chapters,
@@ -196,144 +193,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     socket
   end
 
-  # ---- CHECKPOINT: all the sangha stuff goes here ----
-
-  # enum.split() from @verse binding to mark
-  def verse_matrix(assigns) do
-    assigns = assigns
-
-    ~H"""
-    <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
-      <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt :if={Map.has_key?(elem, :title)} class="w-1/12 flex-none text-zinc-500">
-            <button
-              phx-click={JS.push("clickVerseToSeek", value: %{verse_id: @verse.id})}
-              class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-            >
-              <div class="font-dn text-xl sm:text-2xl mb-4">
-                <%= elem.title %>
-              </div>
-            </button>
-          </dt>
-          <div class="relative">
-            <dd
-              verse_id={@verse.id}
-              node={Map.get(elem, :node, @verse).__struct__}
-              node_id={Map.get(elem, :node, @verse).id}
-              field={elem.field |> Enum.join("::")}
-              class={"text-zinc-700 #{verse_class(elem.verseup)}"}
-            >
-              <%= Struct.get_in(Map.get(elem, :node, @verse), elem.field) %>
-            </dd>
-            <div
-              :if={@verse.binding}
-              class={[
-                "block mt-4 text-sm text-gray-700 font-serif leading-relaxed
-              lg:absolute lg:top-0 lg:right-0 md:mt-0
-              lg:float-right lg:clear-right lg:-mr-[60%] lg:w-[50%] lg:text-[0.9rem]
-              opacity-70 transition-opacity duration-300 ease-in-out
-              hover:opacity-100",
-                (@verse.binding.node_id == Map.get(elem, :node, @verse).id &&
-                   @verse.binding.field_key == elem.field && "") || "hidden"
-              ]}
-            >
-              <.comment_binding comments={@verse.comments} />
-              <!-- for study https://ctan.math.illinois.edu/macros/latex/contrib/tkz/pgfornament/doc/ornaments.pdf-->
-              <span class="text-primaryAccent flex items-center justify-center">
-                ☙ ——— ›– ❊ –‹ ——— ❧
-              </span>
-              <.drafting marks={@marks} quote={@verse.binding.window && @verse.binding.window.quote} />
-            </div>
-          </div>
-        </div>
-      </dl>
-    </div>
-    """
-  end
-
-  # font by lang here
-  defp verse_class(:big),
-    do: "font-dn text-lg sm:text-xl"
-
-  defp verse_class(:mid),
-    do: "font-dn text-m"
-
-  def comment_binding(assigns) do
-    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
-
-    ~H"""
-    <span
-      :for={comment <- @comments}
-      class="block
-                 before:content-['╰'] before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-    >
-      <%= comment.body %> - <b><%= comment.signature %></b>
-    </span>
-    """
-  end
-
-  attr :quote, :string, default: nil
-  attr :marks, :list, default: []
-
-  def drafting(assigns) do
-    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
-
-    ~H"""
-    <div :for={mark <- @marks} :if={mark.state == :live}>
-      <span
-        :if={!is_nil(mark.binding.window) && mark.binding.window.quote !== ""}
-        class="block
-                 pl-1
-                 ml-5
-                 mb-2
-                 border-l-4 border-primaryAccent
-                 before:mr-5 before:text-gray-500"
-      >
-        <%= mark.binding.window.quote %>
-      </span>
-      <span
-        :if={is_binary(mark.body)}
-        class="block
-                 before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-      >
-        <%= mark.body %> - <b><%= "Self" %></b>
-      </span>
-    </div>
-
-    <span
-      :if={!is_nil(@quote) && @quote !== ""}
-      class="block
-                 pl-1
-                 ml-5
-                 mb-2
-                 border-l-4 border-gray-300
-                 before:mr-5 before:text-gray-500"
-    >
-      <%= @quote %>
-    </span>
-
-    <div class="relative">
-      <.form for={%{}} phx-submit="createMark">
-        <input
-          name="body"
-          class="block w-full focus:outline-none rounded-lg border border-gray-300 bg-transparent p-2 pl-5 pr-12 text-sm text-gray-800"
-          placeholder="Write here..."
-        />
-      </.form>
-      <div class="absolute inset-y-0 right-2 flex items-center">
-        <button class="flex items-center rounded-full bg-gray-200 p-1.5">
-          <.icon name="hero-sun-mini" class="w-3 h-3 hover:text-primaryAccent hover:cursor-pointer" />
-        </button>
-      </div>
-    </div>
-    """
-  end
-
   @impl true
   def handle_event(
         "change_mode",
@@ -347,10 +206,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
      socket
      |> change_mode(current_mode, target_mode)}
   end
-
-  # CHECKPOINT: event handlers related to hoverrune and stuff
-  #
-  #
 
   @impl true
   @doc """
@@ -486,7 +341,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-
     case Medium.get_voice(src_id, c_no, @default_voice_lang) do
       %Voice{} = v ->
         Vyasa.PubSub.publish(
@@ -495,10 +349,9 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           sess_id
         )
 
-        _ -> nil
+      _ ->
+        nil
     end
-
-
 
     {:noreply, socket}
   end

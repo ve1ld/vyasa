@@ -13,21 +13,19 @@ defmodule VyasaWeb.Content.Verses do
     }
   end
 
-  # TODO: navigate() -> patch() on links...
   @impl true
   def render(assigns) do
     ~H"""
     <div>
       <div id="chapter-index-container">
-        <.header class="p-4 pb-0" >
-
-        <div class={["text-4xl mb-4", "font-" <> @src.script]} >
+        <.header class="p-4 pb-0">
+          <div class={["text-4xl mb-4", "font-" <> @src.script]}>
             <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
           </div>
           <div class="font-dn text-2xl mb-4">
             Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>
           </div>
-          
+
           <:subtitle>
             <div id="chapter-preamble" class="font-dn text-sm sm:text-lg">
               <%= @selected_transl.target.body %>
@@ -44,7 +42,11 @@ defmodule VyasaWeb.Content.Verses do
             verse={verse}
             marks={@marks}
           >
-            <:edge title={"#{verse.chapter_no}.#{verse.no}"} field={[:body]} verseup={{:big, @src.script}} />
+            <:edge
+              title={"#{verse.chapter_no}.#{verse.no}"}
+              field={[:body]}
+              verseup={{:big, @src.script}}
+            />
             <:edge node={hd(verse.translations)} field={[:target, :body_translit]} verseup={:mid} />
 
             <:edge
