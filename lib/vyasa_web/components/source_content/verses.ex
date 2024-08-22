@@ -17,7 +17,11 @@ defmodule VyasaWeb.Content.Verses do
   def render(assigns) do
     ~H"""
     <div>
-      <div id="chapter-index-container">
+      <div
+        id="chapter-index-container"
+        phx-hook="BrowserNavInterceptor"
+        data-nav-target={~p"/explore/#{@src.title}"}
+      >
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>
             <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
@@ -232,6 +236,20 @@ defmodule VyasaWeb.Content.Verses do
     {:noreply,
      socket
      |> push_patch(to: target)
+     |> push_event("scroll-to-top", %{})}
+  end
+
+  @impl true
+  def handle_event("BrowserNavInterceptor:nav", %{"nav_target" => nav_target}, socket) do
+    dbg()
+
+    # {:noreply,
+    #  socket
+    #  |> push_patch(to: nav_target)}
+
+    {:noreply,
+     socket
+     |> push_patch(to: nav_target)
      |> push_event("scroll-to-top", %{})}
   end
 end

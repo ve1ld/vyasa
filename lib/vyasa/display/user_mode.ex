@@ -23,6 +23,7 @@ defmodule Vyasa.Display.UserMode do
   ]
 
   # defines static aspects of different modes:
+  # TODO: define mode-specific hoverrune functions here
   @defs %{
     "read" => %{
       mode: "read",
