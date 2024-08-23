@@ -43,11 +43,6 @@ defmodule VyasaWeb.Router do
       live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
       # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
     end
-
-    live_admin "/admin" do
-      admin_resource("/verses", VyasaWeb.Admin.Written.Verse)
-      admin_resource("/events", VyasaWeb.Admin.Medium.Event)
-    end
   end
 
   # Other scopes may use custom stacks.

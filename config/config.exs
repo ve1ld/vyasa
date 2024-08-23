@@ -38,8 +38,6 @@ config :ex_aws,
   region: "ap-southeast-1",
   http_client: Vyasa.Medium.Ext.S3Client
 
-config :live_admin, ecto_repo: Vyasa.Repo
-
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
