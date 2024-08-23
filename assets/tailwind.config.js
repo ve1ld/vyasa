@@ -11,6 +11,7 @@ module.exports = {
     "../lib/vyasa_web.ex",
     "../lib/vyasa/display/user_mode.ex",
     "../lib/vyasa_web/**/*.*ex",
+    "../deps/backpex/**/*.*ex",
   ],
   theme: {
     extend: {

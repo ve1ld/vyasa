@@ -69,7 +69,8 @@ defmodule Vyasa.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+      {:backpex, "~> 0.6.0"}
     ]
   end
 

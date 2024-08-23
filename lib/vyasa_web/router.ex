@@ -1,5 +1,6 @@
 defmodule VyasaWeb.Router do
   use VyasaWeb, :router
+  import Backpex.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -13,6 +14,10 @@ defmodule VyasaWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  pipeline :admin do
+    plug :put_root_layout, html: {VyasaWeb.Layouts, :admin_root}
   end
 
   scope "/", VyasaWeb do
@@ -42,6 +47,16 @@ defmodule VyasaWeb.Router do
       live "/explore/:source_title/", DisplayManager.DisplayLive, :show_chapters
       live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
       # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
+    end
+  end
+
+  scope "/admin", VyasaWeb do
+    pipe_through [:browser, :admin]
+
+    backpex_routes()
+
+    live_session :default, on_mount: Backpex.InitAssigns do
+      live_resources("/sources", AdminLive.Source)
     end
   end
 
