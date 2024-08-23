@@ -46,6 +46,7 @@ defmodule VyasaWeb do
         layouts: [html: VyasaWeb.Layouts]
 
       import Plug.Conn
+      use Gettext, backend: VyasaWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -64,7 +65,6 @@ defmodule VyasaWeb do
       use Phoenix.LiveView, @opts
 
       unquote(html_helpers())
-
     end
   end
 
@@ -76,8 +76,6 @@ defmodule VyasaWeb do
       unquote(html_helpers())
     end
   end
-
-
 
   def live_component do
     quote do
@@ -106,8 +104,8 @@ defmodule VyasaWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import VyasaWeb.CoreComponents
-      use Gettext, backend: Vyasa.Gettext
-      #String Formating for Display
+      use Gettext, backend: VyasaWeb.Gettext
+      # String Formating for Display
       import Utils.String, only: [to_title_case: 1]
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
@@ -126,7 +124,6 @@ defmodule VyasaWeb do
     end
   end
 
-
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
@@ -137,5 +134,4 @@ defmodule VyasaWeb do
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end
-
- end
+end
