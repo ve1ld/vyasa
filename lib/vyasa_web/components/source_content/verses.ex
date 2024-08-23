@@ -17,11 +17,7 @@ defmodule VyasaWeb.Content.Verses do
   def render(assigns) do
     ~H"""
     <div>
-      <div
-        id="chapter-index-container"
-        phx-hook="BrowserNavInterceptor"
-        data-nav-target={~p"/explore/#{@src.title}"}
-      >
+      <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>
             <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
