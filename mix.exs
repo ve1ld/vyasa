@@ -67,11 +67,20 @@ defmodule Vyasa.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.5"},
-      {:live_admin, github: "ks0m1c/live_admin", tag: "895fbaa"},
+      {:live_admin, live_admin_dep()},
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
       {:timex, "~> 3.0"}
     ]
+  end
+
+
+  defp live_admin_dep() do
+    if path = System.get_env("LA_PATH") do
+      [path: path]
+    else
+      [github: "ks0m1c/live_admin", tag: "8201e03"]
+    end
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

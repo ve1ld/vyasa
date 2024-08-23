@@ -46,7 +46,6 @@ defmodule VyasaWeb do
         layouts: [html: VyasaWeb.Layouts]
 
       import Plug.Conn
-      import VyasaWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -107,7 +106,7 @@ defmodule VyasaWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import VyasaWeb.CoreComponents
-      import VyasaWeb.Gettext
+      use Gettext, backend: Vyasa.Gettext
       #String Formating for Display
       import Utils.String, only: [to_title_case: 1]
       # Shortcut for generating JS commands
