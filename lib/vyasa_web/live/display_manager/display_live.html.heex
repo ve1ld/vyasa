@@ -25,6 +25,12 @@
             <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
         </div>
 
+    <.live_component
+        module={VyasaWeb.HoveRune}
+        id={"hoverune"}
+        quick_action_buttons={@mode.quick_action_buttons}
+    />
+
     <!-- CONTENT DISPLAY: -->
     <div
     id="content-display"

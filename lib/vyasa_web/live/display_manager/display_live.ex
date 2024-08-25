@@ -123,6 +123,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       |> stream(:verses, verses)
       |> assign(
         :kv_verses,
+        # creates a map of verse_id_to_verses
         Enum.into(
           verses,
           %{},
@@ -258,11 +259,11 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   # already in mark in drafting state, remember to late bind binding => with a fn()
   def handle_event(
         "bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{"binding" => bind_target_payload = %{"verse_id" => verse_id}},
         %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
       ) do
     # binding here blocks the stream from appending to quote
-    bind = Draft.bind_node(bind)
+    bind = Draft.bind_node(bind_target_payload)
 
     {:noreply,
      socket
@@ -323,8 +324,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_event("BrowserNavInterceptor:nav", %{"nav_target" => nav_target}, socket) do
-    dbg()
-
     {:noreply,
      socket
      |> push_patch(to: nav_target)}

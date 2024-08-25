@@ -62,23 +62,6 @@ defmodule VyasaWeb.Content.Verses do
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
       </div>
-
-      <div
-        id="hoverune"
-        phx-update="ignore"
-        class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white/80 rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out"
-      >
-        <button phx-click="markQuote" class="text-gray-600 hover:text-blue-600 focus:outline-none">
-          <.icon
-            name="hero-link-mini"
-            class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"
-          />
-        </button>
-
-        <button class="text-gray-600 hover:text-red-600 focus:outline-none">
-          <.icon name="hero-bookmark-mini" class="w-5 h-5 hover:text-black hover:cursor-pointer" />
-        </button>
-      </div>
     </div>
     """
   end

@@ -9,32 +9,46 @@ defmodule Vyasa.Draft do
   alias Vyasa.Sangh
   alias Vyasa.Repo
 
-
-
-  def bind_node(%{"selection" => ""} = node) do
+  # Inits the binding for an empty selection
+  def bind_node(%{"selection" => ""} = node = _bind_target_payload) do
     bind_node(node, %Binding{})
   end
 
-  def bind_node(%{"selection" => selection} = node) do
+  # Shifts the selection within the bind target payload to the %Binding{} struct, and continues with the binding.
+  def bind_node(%{"selection" => selection} = node = _bind_target_payload) do
     bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection}})
   end
 
-  def bind_node(%{"field" => field} = node, bind) do
-    bind_node(Map.delete(node, "field"), %{bind | field_key: String.split(field, "::") |> Enum.map(&(String.to_existing_atom(&1)))})
+  # Uses the "field" attribute in the bind_target
+  # When the binding target is defined by a "field" attribute, it sets the field_key for the %Binding{} struct struct.
+  def bind_node(%{"field" => field} = node = _bind_target_payload, bind) do
+    bind_node(Map.delete(node, "field"), %{
+      bind
+      | field_key: String.split(field, "::") |> Enum.map(&String.to_existing_atom(&1))
+    })
   end
 
-  def bind_node(%{"node" => node, "node_id" => node_id}, %Binding{} = bind) do
-    n = node
-    |> String.to_existing_atom()
-    |> struct()
-    |> Binding.field_lookup()
+  @doc """
+  Finally, updates the %Binding{} struct's node_id and returns a map with the binding, the node_id and the  with the id and the
+  id as keyed by the node_field_name.
+  """
+  def bind_node(
+        %{"node" => node, "node_id" => node_id} = _binding_target_payload,
+        %Binding{} = bind
+      ) do
+    node_field_name =
+      node
+      |> String.to_existing_atom()
+      |> struct()
+      |> Binding.field_lookup()
 
-    %{bind | n  => node_id, :node_id => node_id}
+    %{bind | node_field_name => node_id, :node_id => node_id}
   end
 
-  def create_comment([%Mark{} | _]= marks) do
+  def create_comment([%Mark{} | _] = marks) do
     Sangh.create_comment(%{marks: marks})
   end
+
   @doc """
   Returns the list of marks.
 
