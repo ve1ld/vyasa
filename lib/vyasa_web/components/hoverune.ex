@@ -8,7 +8,7 @@ defmodule VyasaWeb.HoveRune do
   """
   use VyasaWeb, :live_component
 
-  attr :quick_action_buttons, :list_of, type: :atom, default: []
+  attr :quick_action_buttons, :list, default: []
   @impl true
   def render(assigns) do
     ~H"""
