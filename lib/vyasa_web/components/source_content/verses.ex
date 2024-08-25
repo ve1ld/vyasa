@@ -86,8 +86,6 @@ defmodule VyasaWeb.Content.Verses do
   # ---- CHECKPOINT: all the sangha stuff goes here ----
   # enum.split() from @verse binding to mark
   def verse_matrix(assigns) do
-    assigns = assigns
-
     ~H"""
     <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
@@ -116,8 +114,6 @@ defmodule VyasaWeb.Content.Verses do
               :if={@verse.binding}
               class={[
                 "block mt-4 text-sm text-gray-700 font-serif leading-relaxed
-              lg:absolute lg:top-0 lg:right-0 md:mt-0
-              lg:float-right lg:clear-right lg:-mr-[60%] lg:w-[50%] lg:text-[0.9rem]
               opacity-70 transition-opacity duration-300 ease-in-out
               hover:opacity-100",
                 (@verse.binding.node_id == Map.get(elem, :node, @verse).id &&
@@ -146,6 +142,8 @@ defmodule VyasaWeb.Content.Verses do
     do: "font-dn text-m"
 
   def comment_binding(assigns) do
+    # QQ: this elem_id isn't being used explicitly anywhere, was there a purpose for it & can it be removed?
+    # TODO: verify if this custom id assigns can be removed
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
 
     ~H"""

@@ -5,8 +5,6 @@ defmodule VyasaWeb.DisplayManager.Components.Drafting do
   attr :marks, :list, default: []
 
   def render(assigns) do
-    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
-
     ~H"""
     <div :for={mark <- @marks} :if={mark.state == :live}>
       <span
