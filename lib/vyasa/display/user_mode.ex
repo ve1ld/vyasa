@@ -20,11 +20,13 @@ defmodule Vyasa.Display.UserMode do
     :mode_icon_name,
     :action_bar_component,
     :control_panel_component,
-    :quick_action_buttons,
-    :control_panel_modes
+    :quick_actions,
+    :control_panel_modes,
+    :mode_actions
   ]
 
-  @buttons [:mark_quote, :bookmark]
+  @quick_actions [:mark_quote, :bookmark]
+  @mode_actions [:mark_quote, :bookmark]
 
   # defines static aspects of different modes:
   # TODO: define mode-specific hoverrune functions here
@@ -34,8 +36,9 @@ defmodule Vyasa.Display.UserMode do
       mode_icon_name: "hero-book-open",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
-      quick_action_buttons: @buttons,
-      control_panel_modes: ["draft"]
+      quick_actions: @quick_actions,
+      control_panel_modes: ["draft"],
+      mode_actions: @mode_actions
     },
     "draft" => %{
       mode: "draft",
@@ -44,8 +47,9 @@ defmodule Vyasa.Display.UserMode do
       # TODO: to test swaps of action bar component
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
-      quick_action_buttons: @buttons,
-      control_panel_modes: ["read"]
+      quick_actions: @quick_actions,
+      control_panel_modes: ["read"],
+      mode_actions: @mode_actions
     }
   }
 

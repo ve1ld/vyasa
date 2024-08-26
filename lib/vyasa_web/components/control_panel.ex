@@ -7,7 +7,10 @@ defmodule VyasaWeb.ControlPanel do
   use VyasaWeb, :html
   alias Phoenix.LiveView.Socket
   alias Vyasa.Display.UserMode
+  # alias VyasaWeb.Display.UserMode.Components
+
   import VyasaWeb.Display.UserMode.Components
+  alias VyasaWeb.HoveRune
 
   def mount(_, _, socket) do
     socket
@@ -15,6 +18,7 @@ defmodule VyasaWeb.ControlPanel do
 
   attr :mode, UserMode, required: true
   @impl true
+  # TODO: add set of render functions specific to the rendering of action buttons
   def render(assigns) do
     ~H"""
     <div class="fixed top-15 right-5 z-10 justify-end">
@@ -32,6 +36,12 @@ defmodule VyasaWeb.ControlPanel do
           <.control_panel_mode_button
             current_mode={@mode}
             target_mode={UserMode.get_mode(other_mode)}
+          />
+        <% end %>
+        <%= for action <- @mode.mode_actions do %>
+          <.hover_rune_quick_action
+            action_event={HoveRune.get_quick_action_click_event(action)}
+            action_icon_name={HoveRune.get_quick_action_icon_name(action)}
           />
         <% end %>
       </div>

@@ -2,48 +2,19 @@ defmodule VyasaWeb.Display.UserMode.Components do
   use VyasaWeb, :html
   alias Vyasa.Display.UserMode
 
-  def render_hoverune_button(:mark_quote, assigns) do
+  attr :action_event, :string, required: true
+  attr :action_icon_name, :string, required: true
+
+  def hover_rune_quick_action(assigns) do
     ~H"""
-    <button phx-click="markQuote" class="text-gray-600 hover:text-blue-600 focus:outline-none">
-      <.icon
-        name="hero-link-mini"
-        class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"
-      />
+    <button phx-click={@action_event} class="text-gray-600 hover:text-blue-600 focus:outline-none">
+      <%= if @action_icon_name do %>
+        <.icon
+          name={@action_icon_name}
+          class="w-5 h-5 hover:text-black hover:cursor-pointer hover:text-primaryAccent"
+        />
+      <% end %>
     </button>
-    """
-  end
-
-  def render_hoverune_button(:bookmark, assigns) do
-    ~H"""
-    <button class="text-gray-600 hover:text-red-600 focus:outline-none">
-      <.icon name="hero-bookmark-mini" class="w-5 h-5 hover:text-black hover:cursor-pointer" />
-    </button>
-    """
-  end
-
-  def render_hoverune_button(_fallback_id, assigns) do
-    ~H"""
-    <div></div>
-    """
-  end
-
-  def render_current_mode_button(
-        %{
-          mode: %UserMode{}
-        } = assigns
-      ) do
-    ~H"""
-    <div>
-      <%= @mode.mode_icon_name %>
-      <.button
-        id="toggleButton"
-        class="bg-blue-500 text-white p-2 rounded-full focus:outline-none"
-        phx-click={JS.push("toggle_show_control_panel")}
-        phx-target={@myself}
-      >
-        <.icon name={@mode.mode_icon_name} />
-      </.button>
-    </div>
     """
   end
 

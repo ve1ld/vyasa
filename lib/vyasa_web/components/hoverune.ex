@@ -7,21 +7,39 @@ defmodule VyasaWeb.HoveRune do
   and we shall render those buttons using approate rendering functions defined elsewhere.
   """
   use VyasaWeb, :live_component
-  alias VyasaWeb.Display.UserMode.Components
+  # alias VyasaWeb.Display.UserMode.Components
+  import VyasaWeb.Display.UserMode.Components
 
-  attr :quick_action_buttons, :list, default: []
+  attr :quick_actions, :list, default: []
   @impl true
   def render(assigns) do
     ~H"""
     <div
       id="hoverune"
-      phx-update="ignore"
-      class="absolute hidden top-0 left-0 max-w-max group-hover:flex items-center space-x-2 bg-white/80 rounded-lg shadow-lg px-4 py-2 border border-gray-200 transition-all duration-300 ease-in-out"
+      class="z-10 absolute hidden top-0 left-0 max-w-max group-hover:flex items-center bg-white/90 rounded-lg shadow-lg border border-gray-200 transition-all duration-300 ease-in-out p-1"
     >
-      <div :for={button_id <- @quick_action_buttons}>
-        <%= Components.render_hoverune_button(button_id, %{}) %>
-      </div>
+      <%= for action <- @quick_actions do %>
+        <.hover_rune_quick_action
+          action_event={get_quick_action_click_event(action)}
+          action_icon_name={get_quick_action_icon_name(action)}
+        />
+      <% end %>
     </div>
     """
+  end
+
+  def get_quick_action_click_event(action) when is_atom(action) do
+    case action do
+      :mark_quote -> "markQuote"
+      _ -> ""
+    end
+  end
+
+  def get_quick_action_icon_name(action) when is_atom(action) do
+    case action do
+      :bookmark -> "hero-bookmark-mini"
+      :mark_quote -> "hero-link-mini"
+      _ -> nil
+    end
   end
 end
