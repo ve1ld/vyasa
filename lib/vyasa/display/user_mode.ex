@@ -23,7 +23,10 @@ defmodule Vyasa.Display.UserMode do
     :quick_actions,
     :control_panel_modes,
     :mode_actions,
-    :show_media_bridge_default?
+    :show_media_bridge_default?,
+    :action_bar_nav_event_prefix,
+    :action_bar_actions,
+    :action_bar_info_types
   ]
 
   # THESE ARE EXAMPLE quick actions and mode actions for now
@@ -47,7 +50,10 @@ defmodule Vyasa.Display.UserMode do
       quick_actions: @quick_actions,
       control_panel_modes: ["draft"],
       mode_actions: @mode_actions,
-      show_media_bridge_default?: true
+      show_media_bridge_default?: true,
+      action_bar_nav_event_prefix: "quick_mark_nav",
+      action_bar_actions: [],
+      action_bar_info_types: []
     },
     "draft" => %{
       mode: "draft",
@@ -59,7 +65,10 @@ defmodule Vyasa.Display.UserMode do
       quick_actions: @quick_actions,
       control_panel_modes: ["read"],
       mode_actions: @mode_actions,
-      show_media_bridge_default?: false
+      show_media_bridge_default?: false,
+      action_bar_nav_event_prefix: "quick_mark_nav",
+      action_bar_actions: [],
+      action_bar_info_types: []
     }
   }
 
