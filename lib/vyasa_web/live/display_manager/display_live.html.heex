@@ -71,9 +71,8 @@
 
 
     <!-- Bottom Action Bar -->
-    <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
+    <div id="media-bridge-container" class={["fixed inset-x-0 bottom-0 z-10", not @mode.show_media_bridge_default? && "hidden"]}>
         <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", session: @session, sticky: true) %>
     </div>
-
     </div>
 </main>
