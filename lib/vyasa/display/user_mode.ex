@@ -25,7 +25,13 @@ defmodule Vyasa.Display.UserMode do
     :mode_actions
   ]
 
+  # THESE ARE EXAMPLE quick actions and mode actions for now
+
+  # we use quick_actions to define what quick actions are supported
+  # by the hoverrune
   @quick_actions [:mark_quote, :bookmark]
+  # we use mode_actions to define what specific actions are supported
+  # under this mode.
   @mode_actions [:mark_quote, :bookmark]
 
   # defines static aspects of different modes:

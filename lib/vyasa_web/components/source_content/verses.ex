@@ -95,6 +95,7 @@ defmodule VyasaWeb.Content.Verses do
             </dd>
             <div
               :if={@verse.binding}
+              id="quick-draft-container"
               class={[
                 "block mt-4 text-sm text-gray-700 font-serif leading-relaxed
               opacity-70 transition-opacity duration-300 ease-in-out
