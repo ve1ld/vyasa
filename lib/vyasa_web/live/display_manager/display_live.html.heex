@@ -1,5 +1,5 @@
+<div class="flex flex-col min-h-screen">
 <header :if={@device_type != :mobile} id="topbar" phx-hook="Scrolling" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
-    <%= @device_type %>
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
       <a href="/" class="">
@@ -20,7 +20,7 @@
   </div>
 </header>
 
-<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
+<main id="main-content" class="bg-primaryBackground px-4 py-4 sm:px-6 lg:px-8">
     <div>
         <div id="control-panel-container">
             <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
@@ -77,3 +77,5 @@
     </div>
     </div>
 </main>
+
+</div>
