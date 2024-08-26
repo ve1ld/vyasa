@@ -187,12 +187,18 @@ defmodule VyasaWeb.Content.Verses do
       <%= @quote %>
     </span>
 
-    <div class="relative">
+    <div id="mark-form-container" class="relative">
       <.form for={%{}} phx-submit="createMark">
         <input
           name="body"
           class="block w-full focus:outline-none rounded-lg border border-gray-300 bg-transparent p-2 pl-5 pr-12 text-sm text-gray-800"
           placeholder="Write here..."
+          phx-focus={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
+          }
+          phx-blur={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+          }
         />
       </.form>
       <div class="absolute inset-y-0 right-2 flex items-center">

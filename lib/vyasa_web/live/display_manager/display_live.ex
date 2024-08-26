@@ -20,7 +20,9 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   @impl true
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
-    %UserMode{} = mode = UserMode.get_initial_mode()
+    %UserMode{
+      show_media_bridge_default?: show_media_bridge_default?
+    } = mode = UserMode.get_initial_mode()
 
     IO.inspect(socket.assigns.device_type, label: "TRACE device:type:")
 
@@ -30,7 +32,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       # to allow passing to children live-views
       # TODO: figure out if this is important
       |> assign(stored_session: sess)
-      |> assign(mode: mode),
+      |> assign(mode: mode)
+      |> assign(show_media_bridge?: show_media_bridge_default?),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
   end
@@ -287,6 +290,21 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_event(
+        "verses::focus_toggle_on_quick_mark_drafting",
+        %{"is_focusing?" => is_focusing?} = _payload,
+        %Socket{
+          assigns: %{
+            device_type: device_type
+          }
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(show_media_bridge?: should_show_media_bridge(device_type, is_focusing?))}
+  end
+
+  @impl true
+  def handle_event(
         "bindHoveRune",
         %{"binding" => bind = %{"verse_id" => verse_id}},
         %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
@@ -323,14 +341,31 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   def handle_event(
         "createMark",
         %{"body" => body},
-        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks], device_type: device_type}} =
+          socket
       ) do
-    {:noreply, socket |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])}
+    {:noreply,
+     socket
+     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))}
   end
 
   @impl true
-  def handle_event("createMark", _event, socket) do
-    {:noreply, socket}
+  def handle_event(
+        "createMark",
+        _event,
+        %Socket{
+          assigns: %{
+            device_type: device_type
+          }
+        } =
+          socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))
+    }
   end
 
   def handle_event(event, message, socket) do
@@ -401,5 +436,18 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   def maybe_config_stream(%Socket{} = socket, _, _) do
     socket
+  end
+
+  defp should_show_media_bridge(device_type, is_focusing?)
+       when is_atom(device_type) and is_boolean(is_focusing?) do
+    case {device_type, is_focusing?} do
+      {:mobile, true} -> false
+      {:mobile, false} -> true
+      {_, _} -> true
+    end
+  end
+
+  defp should_show_media_bridge(_, _) do
+    true
   end
 end
