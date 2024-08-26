@@ -18,6 +18,9 @@ module.exports = {
         dn: ['"Gotu"', "sans-serif"],
         tl: ['"Vyas", "sans-serif"'],
       },
+      fontSize: {
+        xs: "0.65rem",
+      },
       colors: {
         primary: "var(--color-primary)",
         primaryAccent: "var(--color-primary-accent)",
