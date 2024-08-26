@@ -120,14 +120,6 @@ ProgressBar = {
     seekTimeBridge.dispatch(this, seekTimePayload, "#media-player-container");
     return;
   },
-  setProgressBarWidth(progressStyleWidth, selector = "#player-progress") {
-    const progressBarNode = document.querySelector(selector);
-    console.assert(
-      !!progressBarNode,
-      "progress bar node must always be present in the dom.",
-    );
-    progressBarNode.style.width = progressStyleWidth;
-  },
   startDrag(e) {
     this.isDragging = true;
     this.updateProgress(e);

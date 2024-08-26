@@ -14,6 +14,8 @@ defmodule VyasaWeb.Content.Verses do
   end
 
   @impl true
+  # FIXME: there's a duplication of ids so we get this error on the client side:
+  # Multiple IDs detected: quick-draft-container. Ensure unique element ids.
   def render(assigns) do
     ~H"""
     <div>

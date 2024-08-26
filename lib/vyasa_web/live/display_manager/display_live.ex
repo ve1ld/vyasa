@@ -3,6 +3,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   Testing out nested live_views
   """
   use VyasaWeb, :live_view
+  on_mount VyasaWeb.Hook.UserAgentHook
+
   alias Vyasa.Display.UserMode
   alias VyasaWeb.OgImageController
   alias Phoenix.LiveView.Socket
@@ -19,6 +21,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
     %UserMode{} = mode = UserMode.get_initial_mode()
+
+    IO.inspect(socket.assigns.device_type, label: "TRACE device:type:")
 
     {
       :ok,

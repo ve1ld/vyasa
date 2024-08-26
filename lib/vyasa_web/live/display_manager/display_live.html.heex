@@ -1,4 +1,5 @@
-<header id="topbar" phx-hook="Scrolling" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
+<header :if={@device_type != :mobile} id="topbar" phx-hook="Scrolling" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
+    <%= @device_type %>
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
       <a href="/" class="">

@@ -70,7 +70,8 @@ defmodule Vyasa.MixProject do
       {:live_admin, live_admin_dep()},
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+      {:ua_parser, "~> 1.9"}
     ]
   end
 
