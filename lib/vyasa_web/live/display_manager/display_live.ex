@@ -291,6 +291,21 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   @impl true
   def handle_event(
         "verses::focus_toggle_on_quick_mark_drafting",
+        %{"key" => "Enter"} = _payload,
+        %Socket{
+          assigns: %{
+            device_type: device_type
+          }
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(show_media_bridge?: should_show_media_bridge(device_type, false))}
+  end
+
+  @impl true
+  def handle_event(
+        "verses::focus_toggle_on_quick_mark_drafting",
         %{"is_focusing?" => is_focusing?} = _payload,
         %Socket{
           assigns: %{

@@ -199,6 +199,10 @@ defmodule VyasaWeb.Content.Verses do
           phx-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
           }
+          phx-window-blur={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+          }
+          phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
         />
       </.form>
       <div class="absolute inset-y-0 right-2 flex items-center">
