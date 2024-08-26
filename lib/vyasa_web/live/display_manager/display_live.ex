@@ -329,13 +329,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("BrowserNavInterceptor:nav", %{"nav_target" => nav_target}, socket) do
-    {:noreply,
-     socket
-     |> push_patch(to: nav_target)}
-  end
-
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}

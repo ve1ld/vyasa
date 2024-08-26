@@ -215,18 +215,4 @@ defmodule VyasaWeb.Content.Verses do
      |> push_patch(to: target)
      |> push_event("scroll-to-top", %{})}
   end
-
-  @impl true
-  def handle_event("BrowserNavInterceptor:nav", %{"nav_target" => nav_target}, socket) do
-    dbg()
-
-    # {:noreply,
-    #  socket
-    #  |> push_patch(to: nav_target)}
-
-    {:noreply,
-     socket
-     |> push_patch(to: nav_target)
-     |> push_event("scroll-to-top", %{})}
-  end
 end

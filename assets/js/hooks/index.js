@@ -12,7 +12,6 @@ import ApplyModal from "./apply_modal.js";
 import MargiNote from "./marginote.js";
 import HoveRune from "./hoverune.js";
 import Scrolling from "./scrolling.js";
-import BrowserNavInterceptor from "./browser_nav_interceptor.js";
 
 let Hooks = {
   ShareQuoteButton,
@@ -27,7 +26,6 @@ let Hooks = {
   MargiNote,
   HoveRune,
   Scrolling,
-  BrowserNavInterceptor,
 };
 
 export default Hooks;
