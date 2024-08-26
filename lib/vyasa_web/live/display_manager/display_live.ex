@@ -172,8 +172,15 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   defp change_mode(socket, curr, target)
        when is_binary(curr) and is_binary(target) and target in @supported_modes do
-    socket
-    |> assign(mode: UserMode.get_mode(target))
+    case curr == target do
+      # prevents unnecessary switches
+      true ->
+        socket
+
+      false ->
+        socket
+        |> assign(mode: UserMode.get_mode(target))
+    end
   end
 
   defp change_mode(socket, _, _) do

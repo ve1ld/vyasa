@@ -4,26 +4,22 @@ defmodule VyasaWeb.ControlPanel do
   usage-modes and carry out actions related to a specific mode.
   """
   use VyasaWeb, :live_component
+  use VyasaWeb, :html
   alias Phoenix.LiveView.Socket
+  alias Vyasa.Display.UserMode
+  import VyasaWeb.Display.UserMode.Components
 
   def mount(_, _, socket) do
     socket
   end
 
+  attr :mode, UserMode, required: true
   @impl true
   def render(assigns) do
     ~H"""
     <div class="fixed top-15 right-5 z-10 justify-end">
       <!-- SVG Icon Button -->
-      <%= @mode.mode %>
-      <.button
-        id="toggleButton"
-        class="bg-blue-500 text-white p-2 rounded-full focus:outline-none"
-        phx-click={JS.push("toggle_show_control_panel")}
-        phx-target={@myself}
-      >
-        <.icon name={@mode.mode_icon_name} />
-      </.button>
+      <.control_panel_mode_indicator mode={@mode} myself={@myself} />
       <div
         id="buttonGroup"
         class={
@@ -32,18 +28,12 @@ defmodule VyasaWeb.ControlPanel do
             else: "flex flex-col mt-2 space-y-2 hidden"
         }
       >
-        <.button
-          phx-click={JS.push("change_mode", value: %{current_mode: @mode.mode, target_mode: "read"})}
-          class="bg-green-500 text-white px-4 py-2 rounded-md focus:outline-none"
-        >
-          Change to Read
-        </.button>
-        <.button
-          phx-click={JS.push("change_mode", value: %{current_mode: @mode.mode, target_mode: "draft"})}
-          class="bg-red-500 text-white px-4 py-2 rounded-md focus:outline-none"
-        >
-          Change to Draft
-        </.button>
+        <%= for other_mode <- @mode.control_panel_modes do %>
+          <.control_panel_mode_button
+            current_mode={@mode}
+            target_mode={UserMode.get_mode(other_mode)}
+          />
+        <% end %>
       </div>
     </div>
     """

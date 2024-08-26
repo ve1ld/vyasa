@@ -20,7 +20,8 @@ defmodule Vyasa.Display.UserMode do
     :mode_icon_name,
     :action_bar_component,
     :control_panel_component,
-    :quick_action_buttons
+    :quick_action_buttons,
+    :control_panel_modes
   ]
 
   @buttons [:mark_quote, :bookmark]
@@ -33,7 +34,8 @@ defmodule Vyasa.Display.UserMode do
       mode_icon_name: "hero-book-open",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
-      quick_action_buttons: @buttons
+      quick_action_buttons: @buttons,
+      control_panel_modes: ["draft"]
     },
     "draft" => %{
       mode: "draft",
@@ -41,9 +43,9 @@ defmodule Vyasa.Display.UserMode do
       # TODO: add drafting form for this
       # TODO: to test swaps of action bar component
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
-      # action_bar_component: nil,
       control_panel_component: VyasaWeb.ControlPanel,
-      quick_action_buttons: @buttons
+      quick_action_buttons: @buttons,
+      control_panel_modes: ["read"]
     }
   }
 

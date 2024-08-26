@@ -449,7 +449,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   def progress_bar(assigns) do
     assigns = assign_new(assigns, :value, fn -> assigns[:min] || 0 end)
-    IO.inspect(assigns, label: "progress hopefully we make some progress")
 
     ~H"""
     <div
