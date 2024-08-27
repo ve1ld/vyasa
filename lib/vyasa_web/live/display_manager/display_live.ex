@@ -383,24 +383,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event(
-        "bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
-      ) do
-    bind = Draft.bind_node(bind)
-
-    {:noreply,
-     socket
-     |> stream_insert(
-       :verses,
-       %{verses[verse_id] | binding: bind}
-     )
-     |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
-     ])}
-  end
 
   @impl true
   def handle_event(
