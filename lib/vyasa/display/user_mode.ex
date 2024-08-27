@@ -24,7 +24,6 @@ defmodule Vyasa.Display.UserMode do
     :control_panel_modes,
     :mode_actions,
     :show_media_bridge_default?,
-    :action_bar_nav_event_prefix,
     :action_bar_actions,
     :action_bar_info_types
   ]
@@ -51,9 +50,9 @@ defmodule Vyasa.Display.UserMode do
       control_panel_modes: ["draft"],
       mode_actions: @mode_actions,
       show_media_bridge_default?: true,
-      action_bar_nav_event_prefix: "quick_mark_nav",
-      action_bar_actions: [],
-      action_bar_info_types: []
+      # NOTE: so when it's used, the event name will end up being
+      # "quick_mark_nav-dec"  ==> moves backwawrd in the order of the list
+      action_bar_actions: [:nav_back, :nav_fwd]
     },
     "draft" => %{
       mode: "draft",
@@ -66,9 +65,7 @@ defmodule Vyasa.Display.UserMode do
       control_panel_modes: ["read"],
       mode_actions: @mode_actions,
       show_media_bridge_default?: false,
-      action_bar_nav_event_prefix: "quick_mark_nav",
-      action_bar_actions: [],
-      action_bar_info_types: []
+      action_bar_actions: [:nav_back, :nav_fwd]
     }
   }
 

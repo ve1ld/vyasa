@@ -26,7 +26,7 @@
 <div id="media-player-container" phx-hook="MediaBridge" class="sticky top-0" >
   <!-- player -->
   <div id="media-player" class="w-full" role="region" aria-label="Player">
-    <div id="action-process-display-container">
+    <div id="media-process-display-container">
       <div class="bg-white dark:bg-brandDark opacity-85 hover:opacity-100 backdrop-blur-lg p-4">
         <div class="flex justify-between items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5 px-2 sm:px-4">
           <div id="playback-info" class="w-1/6 pr-1 sm:pr-2 min-w-0 flex-col space-y-0.5">
@@ -58,11 +58,15 @@
         </div>
       </div>
     </div>
-    <div id="action-controls-container"
+    <div id="media-controls-container"
          class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight
              px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center">
       <div class="flex items-center space-x-4 sm:space-x-6 lg:space-x-8">
-        <button phx-click="navigate_left" class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
+        <button
+          id="media-bridge-left-nav"
+          phx-hook="ButtonClickRelayer"
+          data-target-relay-id="action-bar-action-button-nav_back"
+          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
           <.icon name="hero-arrow-left-circle" />
         </button>
 
@@ -83,7 +87,11 @@
           class="text-2xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-105"
         />
 
-        <button phx-click="navigate_right" class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
+        <button
+          id="media-bridge-right-nav"
+          phx-hook="ButtonClickRelayer"
+          data-target-relay-id="action-bar-action-button-nav_fwd"
+          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
           <.icon name="hero-arrow-right-circle" />
         </button>
       </div>
