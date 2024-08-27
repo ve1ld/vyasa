@@ -96,14 +96,12 @@ defmodule VyasaWeb.Content.Verses do
               <%= Struct.get_in(Map.get(elem, :node, @verse), elem.field) %>
             </dd>
             <div
-              :if={@verse.binding}
+              :if={eq_verse_binding(@verse, elem)}
               id="quick-draft-container"
               class={[
                 "block mt-4 text-sm text-gray-700 font-serif leading-relaxed
               opacity-70 transition-opacity duration-300 ease-in-out
-              hover:opacity-100",
-                (@verse.binding.node_id == Map.get(elem, :node, @verse).id &&
-                   @verse.binding.field_key == elem.field && "") || "hidden"
+              hover:opacity-100"
               ]}
             >
               <.comment_binding comments={@verse.comments} />
@@ -126,6 +124,9 @@ defmodule VyasaWeb.Content.Verses do
 
   defp verse_class(:mid),
     do: "font-dn text-m"
+
+  defp eq_verse_binding(verse, elem), do: verse.binding && (verse.binding.node_id == Map.get(elem, :node, verse).id &&
+                   verse.binding.field_key == elem.field)
 
   def comment_binding(assigns) do
     # QQ: this elem_id isn't being used explicitly anywhere, was there a purpose for it & can it be removed?
@@ -150,9 +151,9 @@ defmodule VyasaWeb.Content.Verses do
 
   def drafting(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
-
+    IO.inspect(assigns, label: "state")
     ~H"""
-    <div :for={mark <- @marks} :if={mark.state == :live}>
+    <div :for={mark <- @marks |> Enum.reverse()} :if={mark.state == :live}>
       <span
         :if={!is_nil(mark.binding.window) && mark.binding.window.quote !== ""}
         class="block

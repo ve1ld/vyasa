@@ -10,7 +10,7 @@ defmodule Vyasa.Written.Verse do
   schema "verses" do
     field :no, :integer
     field :body, :string
-    field :binding, :any, virtual: true
+    field :binding, :map, virtual: true
 
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no

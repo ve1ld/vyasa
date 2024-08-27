@@ -258,17 +258,14 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       when is_binary(curr_verse_id) and verse_id != curr_verse_id do
     # binding here blocks the stream from appending to quote
     bind = Draft.bind_node(bind)
+    bound_verses = verses
+       |> then(&put_in(&1[verse_id].binding, bind))
+       |> then(&put_in(&1[curr_verse_id].binding, nil))
 
     {:noreply,
      socket
-     |> stream_insert(
-       :verses,
-       %{verses[curr_verse_id] | binding: nil}
-     )
-     |> stream_insert(
-       :verses,
-       %{verses[verse_id] | binding: bind}
-     )
+     |> mutate_verses(curr_verse_id, bound_verses)
+     |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
   end
 
@@ -280,14 +277,29 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       ) do
     # binding here blocks the stream from appending to quote
     bind = Draft.bind_node(bind_target_payload)
+    bound_verses = put_in(verses[verse_id].binding, bind)
 
     {:noreply,
      socket
-     |> stream_insert(
-       :verses,
-       %{verses[verse_id] | binding: bind}
-     )
+     |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  end
+
+  @impl true
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+      ) do
+    bind = Draft.bind_node(bind)
+    bound_verses = put_in(verses[verse_id].binding, bind)
+
+    {:noreply,
+     socket
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(:marks, [
+       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+     ])}
   end
 
   @impl true
@@ -322,6 +334,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_event(
+
         "read" <> "::" <> event = _nav_event,
         _,
         %Socket{
@@ -370,24 +383,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event(
-        "bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
-      ) do
-    bind = Draft.bind_node(bind)
-
-    {:noreply,
-     socket
-     |> stream_insert(
-       :verses,
-       %{verses[verse_id] | binding: bind}
-     )
-     |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
-     ])}
-  end
 
   @impl true
   def handle_event(
@@ -395,7 +390,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         _,
         %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
       ) do
-    IO.inspect(marks)
+
     {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
   end
 
@@ -408,12 +403,33 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   def handle_event(
         "createMark",
         %{"body" => body},
-        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks], device_type: device_type}} =
-          socket
+        %{assigns: %{kv_verses: verses,
+                     marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks],
+                     device_type: device_type}} = socket
       ) do
     {:noreply,
      socket
      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> stream_insert(
+       :verses, %{verses[v_id] | binding: binding}
+     )
+     |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))}
+  end
+
+  # when user remains on the the same binding
+  def handle_event(
+        "createMark",
+        %{"body" => body},
+        %{assigns: %{kv_verses: verses,
+                     marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks,
+                     device_type: device_type}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> stream_insert(
+       :verses, %{verses[v_id] | binding: binding}
+     )
      |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))}
   end
 
@@ -428,6 +444,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         } =
           socket
       ) do
+
     {
       :noreply,
       socket
@@ -503,6 +520,18 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   def maybe_config_stream(%Socket{} = socket, _, _) do
     socket
+  end
+
+
+  #Helper function for updating verse state across both stream and the k_v map
+
+  defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
+    socket
+    |> stream_insert(
+       :verses,
+     mutated_verses[target_verse_id]
+     )
+    |> assign(:kv_verses, mutated_verses)
   end
 
   defp should_show_media_bridge(device_type, is_focusing?)

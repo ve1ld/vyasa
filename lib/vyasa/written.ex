@@ -331,7 +331,7 @@ defmodule Vyasa.Written do
   # Sanskrit
   defp lang2script(%Source{lang: "sa"} = s), do: %{s | script: "dn"}
   # Awadhi
-  defp lang2script(%Source{lang: "awadi"} = s), do: %{s | script: "dn"}
+  defp lang2script(%Source{lang: "awa"} = s), do: %{s | script: "dn"}
   # Tamil
   defp lang2script(%Source{lang: "ta"} = s), do: %{s | script: "ta"}
 
