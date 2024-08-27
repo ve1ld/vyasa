@@ -21,10 +21,9 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
     %UserMode{
+      # TEMP
       show_media_bridge_default?: show_media_bridge_default?
     } = mode = UserMode.get_initial_mode()
-
-    IO.inspect(socket.assigns.device_type, label: "TRACE device:type:")
 
     {
       :ok,
@@ -33,7 +32,10 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       # TODO: figure out if this is important
       |> assign(stored_session: sess)
       |> assign(mode: mode)
+      |> assign(show_action_bar?: true)
       |> assign(show_media_bridge?: show_media_bridge_default?),
+      # temp
+      # |> assign(show_media_bridge?: true),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
   end
@@ -316,6 +318,56 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply,
      socket
      |> assign(show_media_bridge?: should_show_media_bridge(device_type, is_focusing?))}
+  end
+
+  @impl true
+  def handle_event(
+        "read" <> "::" <> event = _nav_event,
+        _,
+        %Socket{
+          assigns: %{
+            mode: %UserMode{
+              mode: mode_name
+            }
+          }
+        } = socket
+      ) do
+    IO.inspect(
+      %{
+        "event" => event,
+        "mode" => mode_name
+      },
+      label: "TRACE: TODO handle nav_event @ action-bar region"
+    )
+
+    # TODO: implement nav_event handlers from action bar
+    # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "draft" <> "::" <> event = _nav_event,
+        _,
+        %Socket{
+          assigns: %{
+            mode: %UserMode{
+              mode: mode_name
+            }
+          }
+        } = socket
+      ) do
+    IO.inspect(
+      %{
+        "event" => event,
+        "mode" => mode_name
+      },
+      label: "TRACE: TODO handle nav_event @ action-bar region"
+    )
+
+    # TODO: implement nav_event handlers from action bar
+    # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
+    {:noreply, socket}
   end
 
   @impl true
