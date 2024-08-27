@@ -96,8 +96,7 @@ defmodule VyasaWeb.Content.Verses do
               <%= Struct.get_in(Map.get(elem, :node, @verse), elem.field) %>
             </dd>
             <div
-              :if={@verse.binding && (@verse.binding.node_id == Map.get(elem, :node, @verse).id &&
-                   @verse.binding.field_key == elem.field && "")}
+              :if={eq_verse_binding(@verse, elem)}
               id="quick-draft-container"
               class={[
                 "block mt-4 text-sm text-gray-700 font-serif leading-relaxed
@@ -125,6 +124,9 @@ defmodule VyasaWeb.Content.Verses do
 
   defp verse_class(:mid),
     do: "font-dn text-m"
+
+  defp eq_verse_binding(verse, elem), do: verse.binding && (verse.binding.node_id == Map.get(elem, :node, verse).id &&
+                   verse.binding.field_key == elem.field)
 
   def comment_binding(assigns) do
     # QQ: this elem_id isn't being used explicitly anywhere, was there a purpose for it & can it be removed?

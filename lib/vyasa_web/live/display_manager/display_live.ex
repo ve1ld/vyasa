@@ -522,6 +522,9 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     socket
   end
 
+
+  #Helper function for updating verse state across both stream and the k_v map
+
   defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
     socket
     |> stream_insert(
