@@ -5,6 +5,22 @@ defmodule VyasaWeb.Display.UserMode.Components do
   attr :action_event, :string, required: true
   attr :action_icon_name, :string, required: true
 
+  def control_panel_mode_action(assigns) do
+    ~H"""
+    <button
+      phx-click={@action_event}
+      class="bg-white/20 hover:bg-white/30 text-white rounded-full focus:outline-none transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center w-10 h-10 p-1 backdrop-blur-md border border-white/10"
+    >
+      <%= if @action_icon_name do %>
+        <.icon
+          name={@action_icon_name}
+          class="w-5 h-5 text-gray-500 hover:text-primaryAccent transition-colors duration-200 stroke-current stroke-2"
+        />
+      <% end %>
+    </button>
+    """
+  end
+
   def hover_rune_quick_action(assigns) do
     ~H"""
     <button phx-click={@action_event} class="text-gray-600 hover:text-blue-600 focus:outline-none">
@@ -45,7 +61,7 @@ defmodule VyasaWeb.Display.UserMode.Components do
   """
   def control_panel_mode_button(assigns) do
     ~H"""
-    <.button
+    <button
       phx-click={
         JS.push("change_mode",
           value: %{
@@ -54,10 +70,13 @@ defmodule VyasaWeb.Display.UserMode.Components do
           }
         )
       }
-      class="bg-green-500 text-white px-4 py-2 rounded-md focus:outline-none"
+      class="bg-white/20 hover:bg-white/30 text-white rounded-full focus:outline-none transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center w-10 h-10 p-1 backdrop-blur-md border border-white/10"
     >
-      <.icon name={@target_mode.mode_icon_name} />
-    </.button>
+      <.icon
+        name={@target_mode.mode_icon_name}
+        class="w-5 h-5 text-gray-500 hover:text-primaryAccent transition-colors duration-200 stroke-current stroke-2"
+      />
+    </button>
     """
   end
 
@@ -70,14 +89,17 @@ defmodule VyasaWeb.Display.UserMode.Components do
   """
   def control_panel_mode_indicator(assigns) do
     ~H"""
-    <.button
+    <button
       id="control-panel-indicator"
-      class="bg-blue-500 text-white p-2 rounded-full focus:outline-none"
+      class="bg-white/30 hover:bg-white/40 text-white rounded-full focus:outline-none transition-all duration-300 backdrop-blur-lg shadow-lg active:scale-95 flex items-center justify-center w-11 h-11 p-1 border border-white/20"
       phx-click={JS.push("toggle_show_control_panel")}
       phx-target={@myself}
     >
-      <.icon name={@mode.mode_icon_name} />
-    </.button>
+      <.icon
+        name={@mode.mode_icon_name}
+        class="w-5 h-5 text-gray-500 hover:text-primaryAccent transition-colors duration-200 stroke-current stroke-2"
+      />
+    </button>
     """
   end
 end
