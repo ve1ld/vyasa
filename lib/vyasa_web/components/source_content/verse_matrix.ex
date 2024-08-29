@@ -6,7 +6,10 @@ defmodule VyasaWeb.Content.VerseMatrix do
 
   def mount(socket) do
     # TODO: add UI state vars here
-    {:ok, socket |> assign(:show_current_marks?, false)}
+    {:ok,
+     socket
+     |> assign(:show_current_marks?, false)
+     |> assign(:form_type, :mark)}
   end
 
   def update(%{verse: verse, marks: marks} = assigns, socket) do
@@ -49,6 +52,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
               show_current_marks?={@show_current_marks?}
               marks={@marks}
               quote={@verse.binding.window && @verse.binding.window.quote}
+              form_type={@form_type}
               myself={@myself}
             />
           </div>
@@ -89,6 +93,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
   attr :show_current_marks?, :boolean, default: false
+  attr :form_type, :atom, required: true
   attr :myself, :any
 
   def quick_draft_container(assigns) do
@@ -100,8 +105,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.current_quote quote={@quote} />
-      <.quick_draft_form />
+      <.unified_quote_and_form quote={@quote} form_type={@form_type} myself={@myself} />
       <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
       <.bound_comments comments={@comments} />
     </div>
@@ -121,6 +125,19 @@ defmodule VyasaWeb.Content.VerseMatrix do
     >
       <%= comment.body %> - <b><%= comment.signature %></b>
     </span>
+    """
+  end
+
+  attr :quote, :string, required: true
+  attr :form_type, :atom, required: true
+  attr :myself, :any, required: true
+
+  def unified_quote_and_form(assigns) do
+    ~H"""
+    <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
+      <.current_quote quote={@quote} form_type={@form_type} />
+      <.quick_draft_form quote={@quote} form_type={@form_type} myself={@myself} />
+    </div>
     """
   end
 
@@ -179,68 +196,87 @@ defmodule VyasaWeb.Content.VerseMatrix do
     """
   end
 
-  attr :quote, :string, default: nil
+  attr :quote, :string, required: true
+  attr :form_type, :atom, required: true
 
   def current_quote(assigns) do
     ~H"""
     <%= if !is_nil(@quote) && @quote !== "" do %>
-      <div class="mb-4">
-        <div class="flex items-center mb-2">
-          <.icon name="hero-chat-bubble-left-ellipsis" class="w-5 h-5 mr-2 text-primary" />
-          <span class="text-sm font-medium text-secondary">
-            Current selection
+      <div class="p-2 border-b border-brand">
+        <div class="flex items-center mb-1">
+          <.icon
+            name={
+              if @form_type == :mark,
+                do: "hero-bookmark-solid",
+                else: "hero-chat-bubble-left-ellipsis-solid"
+            }
+            class="w-4 h-4 text-brand mr-2"
+          />
+          <span class="text-xs text-secondary">
+            Current <%= if @form_type == :mark, do: "mark", else: "comment" %>'s selection
           </span>
         </div>
-        <div class="border-l border-dun pl-2">
-          <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-dun">
-            <span class="block text-sm italic text-secondary">
-              "<%= @quote %>"
-            </span>
-          </div>
+        <div class="text-sm italic text-secondary">
+          "<%= @quote %>"
         </div>
       </div>
     <% end %>
     """
   end
 
+  attr :form_type, :atom, required: true
+  attr :myself, :any, required: true
+  attr :quote, :string, default: nil
+
   def quick_draft_form(assigns) do
     ~H"""
-    <div class="mb-4">
-      <div class="flex items-center mb-2">
-        <.icon name="hero-pencil-square" class="w-5 h-5 mr-2 text-primary" />
-        <span class="text-sm font-medium text-secondary">
-          Add a new mark
-        </span>
-      </div>
-      <div class="border-l border-dun pl-2">
-        <div
-          id="mark-form-container"
-          class="relative mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-dun"
+    <div class="p-2">
+      <.form
+        for={%{}}
+        phx-submit={(@form_type == :mark && "createMark") || "createComment"}
+        class="flex items-center"
+      >
+        <input
+          name="body"
+          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
+          placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "comment"} here..."}
+          phx-focus={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
+          }
+          phx-blur={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+          }
+          phx-window-blur={
+            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+          }
+          phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
+        />
+        <button
+          type="submit"
+          class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
         >
-          <.form for={%{}} phx-submit="createMark">
-            <input
-              name="body"
-              class="block w-full focus:outline-none rounded-lg border-none bg-transparent p-1 text-sm text-text placeholder-gray-600"
-              placeholder="Type your mark here..."
-              phx-focus={
-                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
-              }
-              phx-blur={
-                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
-              }
-              phx-window-blur={
-                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
-              }
-              phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
-            />
-          </.form>
-          <div class="absolute inset-y-0 right-2 flex items-center">
-            <button class="flex items-center rounded-full p-1.5 hover:bg-brand-dark transition-colors duration-200">
-              <.icon name="hero-paper-airplane" class="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </div>
-      </div>
+          <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
+        </button>
+        <button
+          type="button"
+          phx-click={
+            JS.push("change_form_type",
+              value: %{type: if(@form_type == :mark, do: "comment", else: "mark")}
+            )
+          }
+          phx-target={@myself}
+          class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
+        >
+          <.icon
+            name={
+              if @form_type == :mark,
+                do: "hero-chat-bubble-left-ellipsis-solid",
+                else: "hero-bookmark-solid"
+            }
+            class="w-4 h-4"
+          />
+        </button>
+      </.form>
     </div>
     """
   end
@@ -272,13 +308,12 @@ defmodule VyasaWeb.Content.VerseMatrix do
             } = _assigns
         } = socket
       ) do
-    # {:noreply, update(socket, :show_current_marks?, !show_current_marks?)}
-
     {:noreply, update(socket, :show_current_marks?, &(!&1))}
   end
 
-  def handle_event("toggle_show_current_marks", %{"value" => _}, socket) do
-    {:noreply, update(socket, :show_current_marks?, &(!&1))}
+  def handle_event("change_form_type", %{"type" => type}, socket) do
+    new_form_type = String.to_existing_atom(type)
+    {:noreply, assign(socket, :form_type, new_form_type)}
   end
 
   def handle_event(
