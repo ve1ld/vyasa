@@ -1,10 +1,12 @@
 defmodule VyasaWeb.Content.VerseMatrix do
   use VyasaWeb, :live_component
+  alias Phoenix.LiveView.Socket
+
   alias Utils.Struct
 
   def mount(socket) do
     # TODO: add UI state vars here
-    {:ok, assign(socket, foo: false)}
+    {:ok, socket |> assign(:show_current_marks?, false)}
   end
 
   def update(%{verse: verse, marks: marks} = assigns, socket) do
@@ -44,8 +46,10 @@ defmodule VyasaWeb.Content.VerseMatrix do
             <.quick_draft_container
               :if={is_elem_bound_to_verse(@verse, elem)}
               comments={@verse.comments}
+              show_current_marks?={@show_current_marks?}
               marks={@marks}
               quote={@verse.binding.window && @verse.binding.window.quote}
+              myself={@myself}
             />
           </div>
         </div>
@@ -84,19 +88,22 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :comments, :list, default: []
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
+  attr :show_current_marks?, :boolean, default: false
+  attr :myself, :any
 
   def quick_draft_container(assigns) do
     assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
+    # TODO: i want a "current_comment"
 
     ~H"""
     <div
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.bound_comments comments={@comments} />
-      <.current_marks marks={@marks} />
       <.current_quote quote={@quote} />
       <.quick_draft_form />
+      <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
+      <.bound_comments comments={@comments} />
     </div>
     """
   end
@@ -117,31 +124,57 @@ defmodule VyasaWeb.Content.VerseMatrix do
     """
   end
 
+  # FIXME @ks0m1c qq: for current_marks below: when marks are in draft state, you'll help have a default container for it right
+  # i need the invariant to be true: every mark has an associated container it is in, regardless of the state of the mark (draft or live or not)
+  # yeah all marks are stored in this stack
+  # if the stack becomes a list of lists
+  # it is possible to have a single elemented list mark
+  # so should be g
+
   attr :marks, :list, default: []
+  attr :show_current_marks?, :boolean, default: true
+  attr :myself, :any
 
   def current_marks(assigns) do
     ~H"""
-    <div :for={mark <- @marks |> Enum.reverse()} :if={mark.state == :live}>
-      <span
-        :if={!is_nil(mark.binding.window) && mark.binding.window.quote !== ""}
-        class="block
-                 pl-1
-                 ml-5
-                 mb-2
-                 border-l-4 border-primaryAccent
-                 before:mr-5 before:text-gray-500"
+    <div class="mb-4">
+      <button
+        phx-click={JS.push("toggle_show_current_marks", value: %{value: ""})}
+        phx-target={@myself}
+        class="w-full flex items-center justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm hover:bg-brand-light hover:text-white transition-colors duration-200"
       >
-        <%= mark.binding.window.quote %>
-      </span>
-      <span
-        :if={is_binary(mark.body)}
-        class="block
-                 before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-      >
-        <%= mark.body %> - <b><%= "Self" %></b>
-      </span>
+        <div class="flex items-center">
+          <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
+          <span class="text-sm font-medium text-brand-dark">
+            <%= "#{Enum.count(@marks)} personal #{ngettext("mark", "marks", Enum.count(@marks))}" %>
+          </span>
+        </div>
+        <.icon
+          name={if @show_current_marks?, do: "hero-chevron-up", else: "hero-chevron-down"}
+          class="w-5 h-5 text-brand-dark"
+        />
+      </button>
+
+      <div class={if @show_current_marks?, do: "mt-2", else: "hidden"}>
+        <div class="border-l border-brand-light pl-2">
+          <%= for mark <- @marks |> Enum.reverse() do %>
+            <%= if mark.state == :live do %>
+              <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-brand">
+                <%= if !is_nil(mark.binding.window) && mark.binding.window.quote !== "" do %>
+                  <span class="block mb-1 text-sm italic text-secondary">
+                    "<%= mark.binding.window.quote %>"
+                  </span>
+                <% end %>
+                <%= if is_binary(mark.body) do %>
+                  <span class="block text-sm text-text">
+                    <%= mark.body %> - <b class="text-brand-accent"><%= "Self" %></b>
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
     </div>
     """
   end
@@ -150,44 +183,63 @@ defmodule VyasaWeb.Content.VerseMatrix do
 
   def current_quote(assigns) do
     ~H"""
-    <span
-      :if={!is_nil(@quote) && @quote !== ""}
-      class="block
-                 pl-1
-                 ml-5
-                 mb-2
-                 border-l-4 border-gray-300
-                 before:mr-5 before:text-gray-500"
-    >
-      <%= @quote %>
-    </span>
+    <%= if !is_nil(@quote) && @quote !== "" do %>
+      <div class="mb-4">
+        <div class="flex items-center mb-2">
+          <.icon name="hero-chat-bubble-left-ellipsis" class="w-5 h-5 mr-2 text-primary" />
+          <span class="text-sm font-medium text-secondary">
+            Current selection
+          </span>
+        </div>
+        <div class="border-l border-dun pl-2">
+          <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-dun">
+            <span class="block text-sm italic text-secondary">
+              "<%= @quote %>"
+            </span>
+          </div>
+        </div>
+      </div>
+    <% end %>
     """
   end
 
   def quick_draft_form(assigns) do
     ~H"""
-    <div id="mark-form-container" class="relative">
-      <.form for={%{}} phx-submit="createMark">
-        <input
-          name="body"
-          class="block w-full focus:outline-none rounded-lg border border-gray-300 bg-transparent p-2 pl-5 pr-12 text-sm text-gray-800"
-          placeholder="Write here..."
-          phx-focus={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
-          }
-          phx-blur={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
-          }
-          phx-window-blur={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
-          }
-          phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
-        />
-      </.form>
-      <div class="absolute inset-y-0 right-2 flex items-center">
-        <button class="flex items-center rounded-full bg-gray-200 p-1.5">
-          <.icon name="hero-sun-mini" class="w-3 h-3 hover:text-primaryAccent hover:cursor-pointer" />
-        </button>
+    <div class="mb-4">
+      <div class="flex items-center mb-2">
+        <.icon name="hero-pencil-square" class="w-5 h-5 mr-2 text-primary" />
+        <span class="text-sm font-medium text-secondary">
+          Add a new mark
+        </span>
+      </div>
+      <div class="border-l border-dun pl-2">
+        <div
+          id="mark-form-container"
+          class="relative mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-dun"
+        >
+          <.form for={%{}} phx-submit="createMark">
+            <input
+              name="body"
+              class="block w-full focus:outline-none rounded-lg border-none bg-transparent p-1 text-sm text-text placeholder-gray-600"
+              placeholder="Type your mark here..."
+              phx-focus={
+                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
+              }
+              phx-blur={
+                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+              }
+              phx-window-blur={
+                JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+              }
+              phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
+            />
+          </.form>
+          <div class="absolute inset-y-0 right-2 flex items-center">
+            <button class="flex items-center rounded-full p-1.5 hover:bg-brand-dark transition-colors duration-200">
+              <.icon name="hero-paper-airplane" class="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     """
@@ -208,5 +260,34 @@ defmodule VyasaWeb.Content.VerseMatrix do
     verse.binding &&
       (verse.binding.node_id == Map.get(edge_elem, :node, verse).id &&
          verse.binding.field_key == edge_elem.field)
+  end
+
+  def handle_event(
+        "toggle_show_current_marks",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              show_current_marks?: _show_current_marks?
+            } = _assigns
+        } = socket
+      ) do
+    # {:noreply, update(socket, :show_current_marks?, !show_current_marks?)}
+
+    {:noreply, update(socket, :show_current_marks?, &(!&1))}
+  end
+
+  def handle_event("toggle_show_current_marks", %{"value" => _}, socket) do
+    {:noreply, update(socket, :show_current_marks?, &(!&1))}
+  end
+
+  def handle_event(
+        _,
+        _,
+        %Socket{} = socket
+      ) do
+    IO.puts("WARNING: verse_matrix pokemon for handle_event")
+
+    {:noreply, socket}
   end
 end
