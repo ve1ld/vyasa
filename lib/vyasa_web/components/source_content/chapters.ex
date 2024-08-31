@@ -40,7 +40,7 @@ defmodule VyasaWeb.Content.Chapters do
           </div>
         </:col>
         <:col :let={{_id, chap}} label="Description">
-          <div class="font-dn text-md">
+          <div class={"font-#{@source.script} text-md"}>
             <%= chap.title %>
           </div>
           <div class="font-dn text-md">

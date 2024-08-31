@@ -312,8 +312,10 @@ hr {
     <div class="wrap">
     <div class="bg">
       <div class="loading">
-       <span class="title">Tradition is the handing down of Fire </span>
-        <span class="text"><%= assigns[:reason] && @reason.message || "not the worship of Ashes" %></span>
+       <span class="title font-dn">वेदव्यास</span>
+       <span class="title"><br />Tradition is the handing down of Fire </span>
+         <span class="text font-ta">வியாசர்</span>
+        <span class="text"><br /><%= assigns[:reason] && @reason.message || "not the worship of Ashes" %></span>
       </div>
     </div>
   </div>
@@ -331,7 +333,7 @@ hr {
      <image xlink:href="/images/logo.svg" width="100" height="88"/>    
     </svg>
     <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
-      Vyasa
+      <span class="title">Vyasa</span>
       <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
         v<%= Application.spec(:vyasa, :vsn) %>
       </small>
