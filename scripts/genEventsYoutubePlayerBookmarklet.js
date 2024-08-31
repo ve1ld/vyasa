@@ -1,6 +1,6 @@
 javascript:(function() {
     const timestamps = [];
-    const durations = []
+    const durations = [];
     const overlay = createOverlay();
     document.body.appendChild(overlay);
 
@@ -15,7 +15,7 @@ javascript:(function() {
             backgroundColor: 'rgba(255,0,0,0.66)',
             padding: '10px',
             zIndex: '1000',
-        }
+        };
         for (const prop in overlayStyle) {
             overlay.style[prop] = overlayStyle[prop];
         }
@@ -32,18 +32,16 @@ javascript:(function() {
         } else if (event.key === '+') {
             endTimestamp();
         }
-
     }
 
     function captureTimestamp() {
         const currentTime = getCurrentTime();
         if (typeof(currentTime) === "number") {
             const len = timestamps.length;
-            const PrevDurationEmpty = (len > 0) && (durations[len -1] == null);
+            const PrevDurationEmpty = (len > 0) && (durations[len - 1] == null);
             timestamps.push(currentTime);
             if (PrevDurationEmpty) {
-                // set prev duration
-                durations[len -1] = currentTime - timestamps[len -1]
+                durations[len - 1] = currentTime - timestamps[len - 1];
             }
             updateOverlay();
         }
@@ -51,11 +49,9 @@ javascript:(function() {
 
     function endTimestamp() {
         const currentTime = getCurrentTime();
-        console.log(currentTime)
         if (typeof(currentTime) === "number") {
-            // find closest on the left time is >
             const closestIndex = findClosestLeftTimestampIndex(currentTime);
-            durations[closestIndex] =  currentTime - timestamps[closestIndex];
+            durations[closestIndex] = currentTime - timestamps[closestIndex];
             updateOverlay();
         }
     }
@@ -64,36 +60,53 @@ javascript:(function() {
         const currentTime = getCurrentTime();
         if (typeof(currentTime) === "number") {
             const closestIndex = findClosestTimestampIndex(currentTime);
-            const prevTime = timestamps[closestIndex]
+            const prevTime = timestamps[closestIndex];
             timestamps.splice(closestIndex, 1);
-            durations[closestIndex] = null
-            if ( closestIndex > 0 && prevTime == (timestamps[closestIndex -1] + durations[closestIndex -1])){
-                durations[closestIndex -1] = null}
-            console.log(durations)
-
+            durations[closestIndex] = null;
+            if (closestIndex > 0 && prevTime == (timestamps[closestIndex - 1] + durations[closestIndex - 1])) {
+                durations[closestIndex - 1] = null;
+            }
             updateOverlay();
         }
     }
 
     function removeNearestDuration() {
         const currentTime = getCurrentTime();
-        console.log(currentTime)
         if (currentTime !== null) {
-            // find closest on the left time is >
             const closestIndex = findClosestLeftTimestampIndex(currentTime);
-            durations[closestIndex] = null
+            durations[closestIndex] = null;
             updateOverlay();
         }
     }
 
     function getCurrentTime() {
-        const player = document.getElementById('movie_player');
-        return player ? player.getCurrentTime()*1000 : null;
+        const player = getMediaPlayer();
+        return player ? player.currentTime * 1000 : null;
     }
 
     function getTotalTime() {
-        const player = document.getElementById('movie_player');
-        return player ? player.getDuration()*1000 : null;
+        const player = getMediaPlayer();
+        return player ? player.duration * 1000 : null;
+    }
+
+    function getMediaPlayer() {
+        // Check for YouTube player first
+        const youtubePlayer = document.getElementById('movie_player');
+        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+            return {
+                currentTime: youtubePlayer.getCurrentTime(),
+                duration: youtubePlayer.getDuration(),
+                seekTo: (time) => youtubePlayer.seekTo(time)
+            };
+        }
+
+        // Check for HTML5 audio or video player
+        const htmlPlayer = document.querySelector('audio, video');
+        if (htmlPlayer) {
+            return htmlPlayer;
+        }
+
+        return null;
     }
 
     function findClosestTimestampIndex(currentTime) {
@@ -102,7 +115,6 @@ javascript:(function() {
         }, 0);
     }
 
-    // diff of curr < diff of prev and curr < currentTime
     function findClosestLeftTimestampIndex(currentTime) {
         return timestamps.reduce((prev, curr, index, array) => {
             return ((Math.abs(curr - currentTime) <= Math.abs(array[prev] - currentTime)) && (curr <= currentTime) ? index : prev);
@@ -124,11 +136,17 @@ javascript:(function() {
     function createTimestampLink(time, index) {
         const link = document.createElement('a');
         link.href = '#';
-        link.style.color = 'yellow'
+        link.style.color = 'yellow';
         link.textContent = `Event ${index + 1}: ${formatTime(time)} - ${formatTime(time + durations[index])} `;
         link.onclick = () => {
-            const player = document.getElementById('movie_player');
-            if (player) player.seekTo(time/1000);
+            const player = getMediaPlayer();
+            if (player) {
+                if (typeof player.seekTo === 'function') {
+                    player.seekTo(time / 1000);
+                } else {
+                    player.currentTime = time / 1000;
+                }
+            }
             return false;
         };
         return link;
@@ -136,7 +154,10 @@ javascript:(function() {
 
     function createCopyButton() {
         const EventZip = timestamps.reduce((eventls, curr, i) => {
-            eventls[i] = {origin: curr, duration: duration[i] || timestamps[i+1] && (timestamps[i+1] - curr) || (getTotalTime() - curr)};
+            eventls[i] = {
+                origin: curr,
+                duration: durations[i] || (timestamps[i + 1] && (timestamps[i + 1] - curr)) || (getTotalTime() - curr)
+            };
             return eventls;
         }, {});
         const copyButton = document.createElement('button');
@@ -151,8 +172,7 @@ javascript:(function() {
     function formatTime(ms) {
         const minutes = Math.floor(ms / 60000);
         const remainingSeconds = ms % 60000;
-        console.log(remainingSeconds)
-        return `${minutes}:${remainingSeconds < 10000 ? '0' : ''}${String(remainingSeconds).substring(0,4) }`;
+        return `${minutes}:${remainingSeconds < 10000 ? '0' : ''}${String(remainingSeconds).substring(0, 4)}`;
     }
 
     function copyToClipboard(text) {
