@@ -1,6 +1,12 @@
 javascript:(function() {
     const timestamps = [];
     const durations = [];
+    let keyBindings = {
+        captureTimestamp: '=',
+        endTimestamp: '+',
+        removeNearestDuration: '-',
+        removeNearestTimestamp: 'Backspace'
+    };
     const overlay = createOverlay();
     document.body.appendChild(overlay);
 
@@ -12,9 +18,13 @@ javascript:(function() {
             position: 'fixed',
             top: '50px',
             right: '0',
-            backgroundColor: 'rgba(255,0,0,0.66)',
+            backgroundColor: 'rgba(0,0,0,0.8)',
             padding: '10px',
             zIndex: '1000',
+            color: 'white',
+            fontFamily: 'Arial, sans-serif',
+            maxWidth: '300px',
+            borderRadius: '5px'
         };
         for (const prop in overlayStyle) {
             overlay.style[prop] = overlayStyle[prop];
@@ -23,14 +33,17 @@ javascript:(function() {
     }
 
     function handleKeyPress(event) {
-        if (event.key === '=') {
-            captureTimestamp();
-        } else if (event.key === '-') {
-            removeNearestDuration();
-        } else if (event.key === 'Backspace') {
-            removeNearestTimestamp();
-        } else if (event.key === '+') {
-            endTimestamp();
+        for (const action in keyBindings) {
+            if (event.key === keyBindings[action]) {
+                event.preventDefault();
+                switch(action) {
+                    case 'captureTimestamp': captureTimestamp(); break;
+                    case 'endTimestamp': endTimestamp(); break;
+                    case 'removeNearestDuration': removeNearestDuration(); break;
+                    case 'removeNearestTimestamp': removeNearestTimestamp(); break;
+                }
+                break;
+            }
         }
     }
 
@@ -90,7 +103,6 @@ javascript:(function() {
     }
 
     function getMediaPlayer() {
-        // Check for YouTube player first
         const youtubePlayer = document.getElementById('movie_player');
         if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
             return {
@@ -100,7 +112,6 @@ javascript:(function() {
             };
         }
 
-        // Check for HTML5 audio or video player
         const htmlPlayer = document.querySelector('audio, video');
         if (htmlPlayer) {
             return htmlPlayer;
@@ -122,7 +133,18 @@ javascript:(function() {
     }
 
     function updateOverlay() {
-        overlay.innerHTML = '';
+        overlay.innerHTML = '<h3 style="margin-top:0;">Event Fragmenter</h3>';
+
+        // Add legend and key binding buttons
+        const legendDiv = document.createElement('div');
+        legendDiv.style.marginBottom = '10px';
+        for (const action in keyBindings) {
+            const button = createActionButton(action);
+            legendDiv.appendChild(button);
+        }
+        overlay.appendChild(legendDiv);
+
+        // Add timestamps
         timestamps.forEach((time, index) => {
             const link = createTimestampLink(time, index);
             overlay.appendChild(link);
@@ -131,6 +153,21 @@ javascript:(function() {
 
         const copyButton = createCopyButton();
         overlay.appendChild(copyButton);
+    }
+
+    function createActionButton(action) {
+        const button = document.createElement('button');
+        button.textContent = `${action} (${keyBindings[action]})`;
+        button.style.margin = '2px';
+        button.style.padding = '5px';
+        button.onclick = () => {
+            const newKey = prompt(`Enter new key for ${action}:`, keyBindings[action]);
+            if (newKey && newKey.length === 1) {
+                keyBindings[action] = newKey;
+                updateOverlay();
+            }
+        };
+        return button;
     }
 
     function createTimestampLink(time, index) {
@@ -162,6 +199,7 @@ javascript:(function() {
         }, {});
         const copyButton = document.createElement('button');
         copyButton.textContent = 'Copy Events';
+        copyButton.style.marginTop = '10px';
         copyButton.onclick = () => {
             const jsonTimestamps = JSON.stringify(EventZip);
             copyToClipboard(jsonTimestamps);
@@ -193,4 +231,6 @@ javascript:(function() {
             });
         }
     }
+
+    updateOverlay();
 })();
