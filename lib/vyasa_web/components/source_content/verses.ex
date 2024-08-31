@@ -22,7 +22,7 @@ defmodule VyasaWeb.Content.Verses do
       <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>
-            <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
+            <%= @selected_transl.target.title_translit %> | <%= @chap.title %>
           </div>
           <div class="font-dn text-2xl mb-4">
             Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>

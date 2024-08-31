@@ -12,7 +12,7 @@ defmodule Vyasa.Written.Translation do
     embeds_one :target, Target, on_replace: :delete do
       # for chapter
       field(:title, :string)
-      field(:translit_title, :string)
+      field(:title_translit, :string)
       # for chapter/verse
       field(:body, :string)
       field(:body_meant, :string)
@@ -37,6 +37,7 @@ defmodule Vyasa.Written.Translation do
 
   @doc false
   def changeset(translation, %{"type" => type} = attrs) do
+    IO.inspect(translation)
     # %{translation | type: type, verse_id: verse_id, source_id: s_id, chap_no: } # <== DON'T DO THIS. this will create extra associations to chap, but in this fn we only want verse-assocs
     translation
     |> cast(attrs, [:lang, :type, :verse_id, :chapter_no, :source_id])
@@ -84,7 +85,7 @@ defmodule Vyasa.Written.Translation do
 
   def chapter_changeset(structure, attrs) do
     structure
-    |> cast(attrs, [:title, :translit_title, :body, :body_translit])
+    |> cast(attrs, [:title, :title_translit, :body, :body_translit])
   end
 
   def verse_changeset(structure, attrs) do

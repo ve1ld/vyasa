@@ -36,7 +36,7 @@ defmodule VyasaWeb.Content.Chapters do
       >
         <:col :let={{_id, chap}} label="Chapter">
           <div class="font-dn text-lg">
-            <%= chap.no %>. <%= hd(chap.translations).target.translit_title %>
+            <%= chap.no %>. <%= hd(chap.translations).target.title_translit %>
           </div>
         </:col>
         <:col :let={{_id, chap}} label="Description">

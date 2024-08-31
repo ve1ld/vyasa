@@ -60,7 +60,7 @@ defmodule VyasaWeb.OgImageController do
         chapter: %{
           no: c_no,
           title: c_title,
-          translations: [%{target: %{translit_title: t_title}} | _]
+          translations: [%{target: %{title_translit: t_title}} | _]
         },
         source: %{title: title}
       }) do

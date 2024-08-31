@@ -22,7 +22,7 @@ defmodule Vyasa.Written.Chapter do
   @doc false
   def changeset(text, attrs) do
     text
-    |> cast(attrs, [:body, :no, :title, :parent_no])
+    |> cast(attrs, [:body, :no, :title, :parent_no, :source_id])
     |> cast_assoc(:verses)
     |> cast_assoc(:translations)
     |> cast_assoc(:voices)

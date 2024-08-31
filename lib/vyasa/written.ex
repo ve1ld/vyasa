@@ -142,6 +142,22 @@ defmodule Vyasa.Written do
     |> Repo.all()
   end
 
+  def list_chapters_by_source(sid, lang) when is_uuid?(sid) do
+    from(c in Chapter,
+      where: c.source_id == ^sid,
+      join: ts in assoc(c, :translations),
+      on: ts.source_id == ^sid and ts.lang == ^lang)
+      |> select_merge([c, t], %{
+      c | translations: [t]
+    })
+    |> Repo.all()
+  end
+
+  def list_chapters_by_source(source_title, lang) do
+    %Source{id: id} = _src = get_source_by_title(source_title)
+    list_chapters_by_source(id, lang)
+  end
+
   def get_chapter(no, source_title) do
     from(c in Chapter,
       where: c.no == ^no,
