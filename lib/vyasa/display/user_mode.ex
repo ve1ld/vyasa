@@ -12,18 +12,18 @@ defmodule Vyasa.Display.UserMode do
   2. Drafting
   3. Discussion(?)
   """
-  alias Vyasa.Display.UserMode
+  alias Vyasa.Display.{UserMode, UiState}
 
   @derive Jason.Encoder
   defstruct [
     :mode,
+    :default_ui_state,
     :mode_icon_name,
     :action_bar_component,
     :control_panel_component,
     :quick_actions,
     :control_panel_modes,
     :mode_actions,
-    :show_media_bridge_default?,
     :action_bar_actions,
     :action_bar_info_types
   ]
@@ -49,7 +49,7 @@ defmodule Vyasa.Display.UserMode do
       quick_actions: @quick_actions,
       control_panel_modes: ["draft"],
       mode_actions: @mode_actions,
-      show_media_bridge_default?: true,
+      default_ui_state: %UiState{show_media_bridge?: true, show_action_bar?: true},
       # NOTE: so when it's used, the event name will end up being
       # "quick_mark_nav-dec"  ==> moves backwawrd in the order of the list
       action_bar_actions: [:nav_back, :nav_fwd]
@@ -64,7 +64,7 @@ defmodule Vyasa.Display.UserMode do
       quick_actions: @quick_actions,
       control_panel_modes: ["read"],
       mode_actions: @mode_actions,
-      show_media_bridge_default?: false,
+      default_ui_state: %UiState{show_media_bridge?: true, show_action_bar?: true},
       action_bar_actions: [:nav_back, :nav_fwd]
     }
   }

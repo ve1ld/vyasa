@@ -88,7 +88,7 @@
                             <% end %>
             </div>
 
-            <div id="action-bar-container" class={["fixed inset-x-0 bottom-0 z-10", not @show_action_bar? && "hidden"]}>
+            <div id="action-bar-container" class={["fixed inset-x-0 bottom-0 z-10", not @ui_state.show_action_bar? && "hidden"]}>
                 <.live_component
                     module={VyasaWeb.ActionBar}
                     id={"action-bar"}
@@ -98,7 +98,7 @@
 
 
             <!-- Bottom Action Bar -->
-            <div id="media-bridge-container" class={["fixed inset-x-0 bottom-0 z-10", not @show_media_bridge? && "hidden"]}>
+            <div id="media-bridge-container" class={["fixed inset-x-0 bottom-0 z-10", not @ui_state.show_media_bridge? && "hidden"]}>
                 <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", session: @session, sticky: true) %>
             </div>
         </div>
