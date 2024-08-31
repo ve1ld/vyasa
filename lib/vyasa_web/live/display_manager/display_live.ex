@@ -20,7 +20,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def mount(_params, sess, socket) do
-    # encoded_config = Jason.encode!(@default_player_config)
     %UserMode{
       default_ui_state: %UiState{} = initial_ui_state
     } = mode = UserMode.get_initial_mode()
@@ -29,7 +28,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       :ok,
       socket
       # to allow passing to children live-views
-      # TODO: figure out if this is important
       |> assign(stored_session: sess)
       |> assign(mode: mode)
       |> assign(ui_state: initial_ui_state),
@@ -307,19 +305,16 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         %{"key" => "Enter"} = _payload,
         %Socket{
           assigns: %{
-            device_type: device_type,
-            ui_state: ui_state
+            device_type: _device_type,
+            ui_state: _ui_state
           }
         } = socket
       ) do
-    {:noreply,
-     socket
-     |> assign(
-       ui_state: %UiState{
-         ui_state
-         | show_media_bridge?: should_show_media_bridge(device_type, false)
-       }
-     )}
+    {
+      :noreply,
+      socket
+      |> UiState.update_media_bridge_visibility(false)
+    }
   end
 
   @impl true
@@ -328,41 +323,30 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         %{"is_focusing?" => is_focusing?} = _payload,
         %Socket{
           assigns: %{
-            device_type: device_type,
-            ui_state: ui_state
+            device_type: _device_type,
+            ui_state: _ui_state
           }
         } = socket
       ) do
-    {:noreply,
-     socket
-     |> assign(
-       ui_state: %UiState{
-         ui_state
-         | show_media_bridge?: should_show_media_bridge(device_type, is_focusing?)
-       }
-     )}
+    {
+      :noreply,
+      socket
+      |> UiState.update_media_bridge_visibility(is_focusing?)
+    }
   end
 
   @impl true
   def handle_event(
-        "read" <> "::" <> event = _nav_event,
+        "read" <> "::" <> _event = _nav_event,
         _,
         %Socket{
           assigns: %{
             mode: %UserMode{
-              mode: mode_name
+              mode: _mode_name
             }
           }
         } = socket
       ) do
-    IO.inspect(
-      %{
-        "event" => event,
-        "mode" => mode_name
-      },
-      label: "TRACE: TODO handle nav_event @ action-bar region"
-    )
-
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
     {:noreply, socket}
@@ -415,22 +399,21 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           assigns: %{
             kv_verses: verses,
             marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks],
-            device_type: device_type,
-            ui_state: ui_state
+            device_type: _device_type,
+            ui_state: _ui_state
           }
         } = socket
       ) do
-    {:noreply,
-     socket
-     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )
-     |> assign(:ui_state, %UiState{
-       ui_state
-       | show_media_bridge?: should_show_media_bridge(device_type, false)
-     })}
+    {
+      :noreply,
+      socket
+      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> stream_insert(
+        :verses,
+        %{verses[v_id] | binding: binding}
+      )
+      |> UiState.update_media_bridge_visibility(false)
+    }
   end
 
   # when user remains on the the same binding
@@ -441,8 +424,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           assigns: %{
             kv_verses: verses,
             marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks,
-            device_type: device_type,
-            ui_state: ui_state
+            device_type: _device_type,
+            ui_state: _ui_state
           }
         } = socket
       ) do
@@ -453,11 +436,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
        :verses,
        %{verses[v_id] | binding: binding}
      )
-     |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))
-     |> assign(:ui_state, %UiState{
-       ui_state
-       | show_media_bridge?: should_show_media_bridge(device_type, false)
-     })}
+     |> UiState.update_media_bridge_visibility(false)}
   end
 
   @impl true
@@ -466,8 +445,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         _event,
         %Socket{
           assigns: %{
-            device_type: device_type,
-            ui_state: ui_state
+            device_type: _device_type,
+            ui_state: _ui_state
           }
         } =
           socket
@@ -475,10 +454,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {
       :noreply,
       socket
-      |> assign(:ui_state, %UiState{
-        ui_state
-        | show_media_bridge?: should_show_media_bridge(device_type, false)
-      })
+      |> UiState.update_media_bridge_visibility(false)
     }
   end
 
@@ -561,18 +537,5 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       mutated_verses[target_verse_id]
     )
     |> assign(:kv_verses, mutated_verses)
-  end
-
-  defp should_show_media_bridge(device_type, is_focusing?)
-       when is_atom(device_type) and is_boolean(is_focusing?) do
-    case {device_type, is_focusing?} do
-      {:mobile, true} -> false
-      {:mobile, false} -> true
-      {_, _} -> true
-    end
-  end
-
-  defp should_show_media_bridge(_, _) do
-    true
   end
 end
