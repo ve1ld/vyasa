@@ -60,34 +60,33 @@ defmodule VyasaWeb.OgImageController do
         chapter: %{
           no: c_no,
           title: c_title,
-          translations: [%{target: %{title_translit: t_title}} | _]
+          translations: [%{lang: lang, target: %{title_translit: t_title}} | _]
         },
         source: %{title: title}
       }) do
-    "#{Recase.to_title(title)} Chapter #{c_no}\n\
+    %{text: "#{Recase.to_title(title)} Chapter #{c_no}\n\
     #{c_title}\n
     #{t_title}
-    "
+    ",
+     lang: lang
+    }
   end
 
-  def template(%Binding{chapter: %{no: c_no, title: c_title}, source: %{title: title}}) do
-    "#{Recase.to_title(title)} Chapter #{c_no}\n\
+  def template(%Binding{chapter: %{no: c_no, title: c_title}, source: %{title: title, lang: lang}}) do
+    %{text: "#{Recase.to_title(title)} Chapter #{c_no}\n\
     #{c_title} \n
-    "
+    ",
+     lang: lang
+    }
   end
 
-  def template(%Binding{source: %{title: title}}) do
-    "#{Recase.to_title(title)}"
-  end
+  def template(%Binding{source: %{title: title, lang: lang}}), do: %{text: "#{Recase.to_title(title)}", lang: lang}
 
   def template(_) do
     @fallback_text
   end
 
-  def create(filename, content \\ @fallback_text) when is_binary(content) do
-    IO.inspect(filename)
-    IO.inspect(content)
-
+  def create(filename, content) when is_map(content) do
     content
     |> create_thumbnail()
     |> Image.write!(encode_url(filename))
@@ -97,11 +96,11 @@ defmodule VyasaWeb.OgImageController do
   @doc """
   Returns a thumbnail with simple text overlaid onto the logo with gradient & project stamp.
   """
-  def create_thumbnail(text) when is_binary(text) do
+  def create_thumbnail(%{text: text, lang: lang}) when is_binary(text) do
     # overall config
     dims = "1200x630"
     # caption config
-    font = "Gotu"
+    font = lang
     font_weight = 800
     caption_width = 800
     caption_height = 400

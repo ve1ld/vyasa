@@ -74,8 +74,8 @@ defmodule VyasaWeb.Content.Verses do
     ~H"""
     <div class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt :if={Map.has_key?(elem, :title)} class="w-1/12 flex-none text-zinc-500">
+        <div :for={elem <- @edge} class="flex gap-4 py-4 text-base leading-6 sm:gap-8">
+          <dt :if={Map.has_key?(elem, :title)} class="w-1/12 text-lg flex-none text-zinc-500">
             <button
               phx-click={JS.push("clickVerseToSeek", value: %{verse_id: @verse.id})}
               class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
@@ -120,10 +120,10 @@ defmodule VyasaWeb.Content.Verses do
 
   # font by lang here
   defp verse_class({:big, script}),
-    do: "font-#{script} text-lg sm:text-xl"
+    do: "font-#{script} text-2xl lg:text-3xl"
 
   defp verse_class(:mid),
-    do: "font-dn text-m"
+    do: "font-dn text-base lg:text-lg"
 
   defp eq_verse_binding(verse, elem), do: verse.binding && (verse.binding.node_id == Map.get(elem, :node, verse).id &&
                    verse.binding.field_key == elem.field)

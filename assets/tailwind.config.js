@@ -24,7 +24,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        dn: ['"Gotu"', "sans-serif"],
+        dn: ['"Karm"', "sans-serif"],
         ta: ['"Vyas", "sans-serif"'],
       },
       fontSize: {
