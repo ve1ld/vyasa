@@ -16,23 +16,27 @@ The key steps for data migration are:
 #### Defines the location of the json dump file that we are using
 
 ```elixir
-mypath = "#{File.cwd!()}/wow.json"
+mypath =
+  "#{File.cwd!()}/data/Elixir.Vyasa.Written.Source"
+  |> File.ls!()
+  |> Enum.sort(:desc)
+  |> List.first()
 ```
 
 ```elixir
 # A module to support re-compilation from within a livebook cell. Call it from anywhere.
-defmodule R do
-  def recompile() do
-    Mix.Task.reenable("app.start")
-    Mix.Task.reenable("compile")
-    Mix.Task.reenable("compile.all")
-    compilers = Mix.compilers()
-    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
-    Mix.Task.run("compile.all")
-  end
-end
+# defmodule R do
+#   def recompile() do
+#     Mix.Task.reenable("app.start")
+#     Mix.Task.reenable("compile")
+#     Mix.Task.reenable("compile.all")
+#     compilers = Mix.compilers()
+#     Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+#     Mix.Task.run("compile.all")
+#   end
+# end
 
-R.recompile()
+# R.recompile()
 ```
 
 ```elixir
@@ -49,7 +53,7 @@ Vyasa.Release.migrate()
 #### inits the non-event structs
 
 ```elixir
-Path.expand(mypath, "data")
+Path.expand(mypath, "#{File.cwd!()}/data/Elixir.Vyasa.Written.Source")
 |> Vyasa.Corpus.Migrator.Restore.read()
 |> Vyasa.Corpus.Migrator.Restore.run()
 ```
