@@ -27,7 +27,6 @@ defmodule VyasaWeb.Content.Verses do
           <div class="font-dn text-2xl mb-4">
             Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>
           </div>
-          
           <:subtitle>
             <div id="chapter-preamble" class="font-dn text-sm sm:text-lg">
               <%= @selected_transl.target.body %>

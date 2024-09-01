@@ -486,7 +486,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-
+      
     case Medium.get_voice(src_id, c_no, @default_voice_lang) do
       %Voice{} = v ->
         Vyasa.PubSub.publish(
@@ -497,8 +497,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
         _ -> nil
     end
-
-
 
     {:noreply, socket}
   end
