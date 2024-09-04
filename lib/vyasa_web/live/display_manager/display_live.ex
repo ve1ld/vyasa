@@ -354,7 +354,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_event(
-        "draft" <> "::" <> event = _nav_event,
+        "discuss" <> "::" <> event = _nav_event,
         _,
         %Socket{
           assigns: %{

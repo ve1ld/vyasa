@@ -1,16 +1,16 @@
 defmodule Vyasa.Display.UserMode do
   @moduledoc """
   The UserMode struct is a way of representing user-modes and
-  is intended to be used as a container.
+  is intended to be used as a config.
 
   Typically,
   1. they shall contain component-definitions that get passed as "args" for the DM layout
   2. they may contain callback functions that get triggerred on a particular button activity
+  3. they may contain some atoms that are used to define event names that happen when clicking corresponding buttons associated to these atoms.
 
-  Modes:
-  1. Reading
-  2. Drafting
-  3. Discussion(?)
+  Current modes:
+  1. read
+  3. discuss
   """
   alias Vyasa.Display.{UserMode, UiState}
 
@@ -47,18 +47,16 @@ defmodule Vyasa.Display.UserMode do
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
       quick_actions: @quick_actions,
-      control_panel_modes: ["draft"],
+      control_panel_modes: ["discuss"],
       mode_actions: @mode_actions,
       default_ui_state: %UiState{show_media_bridge?: true, show_action_bar?: true},
       # NOTE: so when it's used, the event name will end up being
       # "quick_mark_nav-dec"  ==> moves backwawrd in the order of the list
       action_bar_actions: [:nav_back, :nav_fwd]
     },
-    "draft" => %{
-      mode: "draft",
-      mode_icon_name: "hero-pencil-square",
-      # TODO: add drafting form for this
-      # TODO: to test swaps of action bar component
+    "discuss" => %{
+      mode: "discuss",
+      mode_icon_name: "hero-chat-bubble-left-right",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
       quick_actions: @quick_actions,
