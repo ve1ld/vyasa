@@ -6,6 +6,7 @@ defmodule Vyasa.Corpus.Migrator.Restore do
 
   def run(source) do
     source
+    |> read()
     |> Enum.map(fn x ->
       t =
         x["translations"]
@@ -18,24 +19,24 @@ defmodule Vyasa.Corpus.Migrator.Restore do
       %{
         x
         | "chapters" =>
-          Enum.map(x["chapters"], fn %{"no" => no} = c ->
-            c
-            |> Map.put("translations", t[{"chapters", no}])
-            |> Map.put(
-              "voices",
-            (is_list(v[no]) && v[no] |> Enum.map(fn %{"id" => _} = v -> v end)) || []
-            )
-          end),
-        "verses" =>
-          Enum.map(x["verses"], fn %{"id" => id} = v ->
-            v |> Map.put("translations", t[{"verses", id}])
-          end)
+            Enum.map(x["chapters"], fn %{"no" => no} = c ->
+              c
+              |> Map.put("translations", t[{"chapters", no}])
+              |> Map.put(
+                "voices",
+                (is_list(v[no]) && v[no] |> Enum.map(fn %{"id" => _} = v -> v end)) || []
+              )
+            end),
+          "verses" =>
+            Enum.map(x["verses"], fn %{"id" => id} = v ->
+              v |> Map.put("translations", t[{"verses", id}])
+            end)
       }
     end)
     |> Enum.map(
       &(%Vyasa.Written.Source{}
-      |> Vyasa.Written.Source.gen_changeset(&1)
-      |> Vyasa.Repo.insert!())
+        |> Vyasa.Written.Source.gen_changeset(&1)
+        |> Vyasa.Repo.insert!())
     )
 
     # events are dependent on both verse and voice
