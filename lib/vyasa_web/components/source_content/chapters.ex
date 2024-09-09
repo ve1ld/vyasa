@@ -61,6 +61,7 @@ defmodule VyasaWeb.Content.Chapters do
   #   IO.inspect(payload)
   #   {:noreply, socket}
   # end
+  # TODO: consider if it's possible to shift this to the reading_content livecomponent
   @impl true
   def handle_event("navigate_to_chapter", %{"target" => target} = _payload, socket) do
     IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")

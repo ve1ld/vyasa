@@ -65,7 +65,12 @@ defmodule VyasaWeb.Content.VerseMatrix do
   def verse_title_button(assigns) do
     ~H"""
     <button
-      phx-click={JS.push("clickVerseToSeek", value: %{verse_id: @verse_id})}
+      phx-click={
+        JS.push("clickVerseToSeek",
+          target: "#reading-content",
+          value: %{verse_id: @verse_id}
+        )
+      }
       class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
     >
       <div class="font-dn text-xl sm:text-2xl mb-4">
