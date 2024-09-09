@@ -36,7 +36,7 @@ defmodule VyasaWeb.Content.Verses do
         <.back patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
-        <div id="verses" phx-update="stream" phx-hook="HoveRune">
+        <div id="verses" phx-update="stream" phx-hook="HoveRune" data-parent-id="reading-content">
           <.live_component
             :for={{dom_id, %Verse{} = verse} <- @verses}
             id={dom_id}

@@ -8,7 +8,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   @default_lang "en"
   @default_voice_lang "sa"
   alias Vyasa.Display.{UserMode}
-  alias Vyasa.{Written}
+  alias Vyasa.{Written, Draft}
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
@@ -256,6 +256,66 @@ defmodule VyasaWeb.Content.ReadingContent do
   end
 
   @impl true
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
+          }
+        } = socket
+      )
+      when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind)
+
+    bound_verses =
+      verses
+      |> then(&put_in(&1[verse_id].binding, bind))
+      |> then(&put_in(&1[curr_verse_id].binding, nil))
+
+    {:noreply,
+     socket
+     |> mutate_verses(curr_verse_id, bound_verses)
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  end
+
+  # already in mark in drafting state, remember to late bind binding => with a fn()
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind_target_payload = %{"verse_id" => verse_id}},
+        %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+      ) do
+    # binding here blocks the stream from appending to quote
+    bind = Draft.bind_node(bind_target_payload)
+    bound_verses = put_in(verses[verse_id].binding, bind)
+
+    {:noreply,
+     socket
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  end
+
+  @impl true
+  def handle_event(
+        "bindHoveRune",
+        %{"binding" => bind = %{"verse_id" => verse_id}},
+        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+      ) do
+    bind = Draft.bind_node(bind)
+    bound_verses = put_in(verses[verse_id].binding, bind)
+
+    {:noreply,
+     socket
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(:marks, [
+       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+     ])}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div id="reading-content">
@@ -308,13 +368,13 @@ defmodule VyasaWeb.Content.ReadingContent do
     """
   end
 
-  # # Helper function for updating verse state across both stream and the k_v map
-  # defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
-  #   socket
-  #   |> stream_insert(
-  #     :verses,
-  #     mutated_verses[target_verse_id]
-  #   )
-  #   |> assign(:kv_verses, mutated_verses)
-  # end
+  # Helper function for updating verse state across both stream and the k_v map
+  defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
+    socket
+    |> stream_insert(
+      :verses,
+      mutated_verses[target_verse_id]
+    )
+    |> assign(:kv_verses, mutated_verses)
+  end
 end
