@@ -12,7 +12,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   # alias Vyasa.{Draft}
   # alias Vyasa.Medium.{Voice}
   # alias Vyasa.Written.{Chapter}
-  alias Vyasa.Sangh.{Mark}
+  # alias Vyasa.Sangh.{Mark}
   alias VyasaWeb.Content.ReadingContent
 
   @supported_modes UserMode.supported_modes()
@@ -383,86 +383,86 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event(
-        "markQuote",
-        _,
-        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
-      ) do
-    {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
-  end
+  # @impl true
+  # def handle_event(
+  #       "markQuote",
+  #       _,
+  #       %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+  #     ) do
+  #   {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
+  # end
 
-  @impl true
-  def handle_event("markQuote", _, socket) do
-    {:noreply, socket}
-  end
+  # @impl true
+  # def handle_event("markQuote", _, socket) do
+  #   {:noreply, socket}
+  # end
 
-  @impl true
-  def handle_event(
-        "createMark",
-        %{"body" => body},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks],
-            device_type: _device_type,
-            ui_state: _ui_state
-          }
-        } = socket
-      ) do
-    {
-      :noreply,
-      socket
-      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-      |> stream_insert(
-        :verses,
-        %{verses[v_id] | binding: binding}
-      )
-      |> UiState.update_media_bridge_visibility(false)
-    }
-  end
+  # @impl true
+  # def handle_event(
+  #       "createMark",
+  #       %{"body" => body},
+  #       %{
+  #         assigns: %{
+  #           kv_verses: verses,
+  #           marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks],
+  #           device_type: _device_type,
+  #           ui_state: _ui_state
+  #         }
+  #       } = socket
+  #     ) do
+  #   {
+  #     :noreply,
+  #     socket
+  #     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+  #     |> stream_insert(
+  #       :verses,
+  #       %{verses[v_id] | binding: binding}
+  #     )
+  #     |> UiState.update_media_bridge_visibility(false)
+  #   }
+  # end
 
-  # when user remains on the the same binding
-  def handle_event(
-        "createMark",
-        %{"body" => body},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks,
-            device_type: _device_type,
-            ui_state: _ui_state
-          }
-        } = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )
-     |> UiState.update_media_bridge_visibility(false)}
-  end
+  # # when user remains on the the same binding
+  # def handle_event(
+  #       "createMark",
+  #       %{"body" => body},
+  #       %{
+  #         assigns: %{
+  #           kv_verses: verses,
+  #           marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks,
+  #           device_type: _device_type,
+  #           ui_state: _ui_state
+  #         }
+  #       } = socket
+  #     ) do
+  #   {:noreply,
+  #    socket
+  #    |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+  #    |> stream_insert(
+  #      :verses,
+  #      %{verses[v_id] | binding: binding}
+  #    )
+  #    |> UiState.update_media_bridge_visibility(false)}
+  # end
 
-  @impl true
-  def handle_event(
-        "createMark",
-        _event,
-        %Socket{
-          assigns: %{
-            device_type: _device_type,
-            ui_state: _ui_state
-          }
-        } =
-          socket
-      ) do
-    {
-      :noreply,
-      socket
-      |> UiState.update_media_bridge_visibility(false)
-    }
-  end
+  # @impl true
+  # def handle_event(
+  #       "createMark",
+  #       _event,
+  #       %Socket{
+  #         assigns: %{
+  #           device_type: _device_type,
+  #           ui_state: _ui_state
+  #         }
+  #       } =
+  #         socket
+  #     ) do
+  #   {
+  #     :noreply,
+  #     socket
+  #     |> UiState.update_media_bridge_visibility(false)
+  #   }
+  # end
 
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")

@@ -23,7 +23,11 @@ defmodule VyasaWeb.Display.UserMode.Components do
 
   def hover_rune_quick_action(assigns) do
     ~H"""
-    <button phx-click={@action_event} class="text-gray-600 hover:text-blue-600 focus:outline-none">
+    <button
+      phx-click={@action_event}
+      phx-target={@action_target}
+      class="text-gray-600 hover:text-blue-600 focus:outline-none"
+    >
       <%= if @action_icon_name do %>
         <.icon
           name={@action_icon_name}

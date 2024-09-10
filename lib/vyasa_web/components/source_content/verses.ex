@@ -5,6 +5,7 @@ defmodule VyasaWeb.Content.Verses do
 
   @impl true
   def update(params, socket) do
+    # TODO: assign the parent target
     {
       :ok,
       socket

@@ -321,7 +321,6 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{"key" => "Enter"} = _payload,
         %Socket{} = socket
       ) do
-    dbg()
     send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
 
     {
@@ -339,6 +338,93 @@ defmodule VyasaWeb.Content.ReadingContent do
       ) do
     send(self(), {:change_ui, "update_media_bridge_visibility", [is_focusing?]})
 
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "verses::focus_toggle_on_quick_mark_drafting",
+        _payload,
+        %Socket{} = socket
+      ) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "createMark",
+        %{"body" => body},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks]
+          }
+        } = socket
+      ) do
+    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+
+    {
+      :noreply,
+      socket
+      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> stream_insert(
+        :verses,
+        %{verses[v_id] | binding: binding}
+      )
+      # |> UiState.update_media_bridge_visibility(false)
+    }
+  end
+
+  # when user remains on the the same binding
+  def handle_event(
+        "createMark",
+        %{"body" => body},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks
+          }
+        } = socket
+      ) do
+    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+
+    {:noreply,
+     socket
+     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> stream_insert(
+       :verses,
+       %{verses[v_id] | binding: binding}
+     )}
+
+    # |> UiState.update_media_bridge_visibility(false)}
+  end
+
+  @impl true
+  def handle_event(
+        "createMark",
+        _event,
+        %Socket{} = socket
+      ) do
+    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+
+    {
+      :noreply,
+      socket
+      # |> UiState.update_media_bridge_visibility(false)
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "markQuote",
+        _,
+        %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+      ) do
+    {:noreply, socket |> assign(:marks, [%{d_mark | state: :live} | marks])}
+  end
+
+  @impl true
+  def handle_event("markQuote", _, socket) do
     {:noreply, socket}
   end
 

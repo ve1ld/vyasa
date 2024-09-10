@@ -239,6 +239,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
       <.form
         for={%{}}
         phx-submit={(@form_type == :mark && "createMark") || "createComment"}
+        phx-target="#reading-content"
         class="flex items-center"
       >
         <input
