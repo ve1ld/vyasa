@@ -316,6 +316,33 @@ defmodule VyasaWeb.Content.ReadingContent do
   end
 
   @impl true
+  def handle_event(
+        "verses::focus_toggle_on_quick_mark_drafting",
+        %{"key" => "Enter"} = _payload,
+        %Socket{} = socket
+      ) do
+    dbg()
+    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+
+    {
+      :noreply,
+      socket
+      # |> UiState.update_media_bridge_visibility(false)
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "verses::focus_toggle_on_quick_mark_drafting",
+        %{"is_focusing?" => is_focusing?} = _payload,
+        %Socket{} = socket
+      ) do
+    send(self(), {:change_ui, "update_media_bridge_visibility", [is_focusing?]})
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div id="reading-content">

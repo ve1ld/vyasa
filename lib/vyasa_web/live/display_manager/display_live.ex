@@ -9,7 +9,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   # alias VyasaWeb.OgImageController
   alias Phoenix.LiveView.Socket
-  alias Vyasa.{Draft}
+  # alias Vyasa.{Draft}
   # alias Vyasa.Medium.{Voice}
   # alias Vyasa.Written.{Chapter}
   alias Vyasa.Sangh.{Mark}
@@ -245,101 +245,101 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   #   {:noreply, socket}
   # end
 
-  @impl true
-  def handle_event(
-        "bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
-          }
-        } = socket
-      )
-      when is_binary(curr_verse_id) and verse_id != curr_verse_id do
-    # binding here blocks the stream from appending to quote
-    bind = Draft.bind_node(bind)
+  # @impl true
+  # def handle_event(
+  #       "bindHoveRune",
+  #       %{"binding" => bind = %{"verse_id" => verse_id}},
+  #       %{
+  #         assigns: %{
+  #           kv_verses: verses,
+  #           marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
+  #         }
+  #       } = socket
+  #     )
+  #     when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+  #   # binding here blocks the stream from appending to quote
+  #   bind = Draft.bind_node(bind)
 
-    bound_verses =
-      verses
-      |> then(&put_in(&1[verse_id].binding, bind))
-      |> then(&put_in(&1[curr_verse_id].binding, nil))
+  #   bound_verses =
+  #     verses
+  #     |> then(&put_in(&1[verse_id].binding, bind))
+  #     |> then(&put_in(&1[curr_verse_id].binding, nil))
 
-    {:noreply,
-     socket
-     |> mutate_verses(curr_verse_id, bound_verses)
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
-  end
+  #   {:noreply,
+  #    socket
+  #    |> mutate_verses(curr_verse_id, bound_verses)
+  #    |> mutate_verses(verse_id, bound_verses)
+  #    |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  # end
 
-  # already in mark in drafting state, remember to late bind binding => with a fn()
-  def handle_event(
-        "bindHoveRune",
-        %{"binding" => bind_target_payload = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
-      ) do
-    # binding here blocks the stream from appending to quote
-    bind = Draft.bind_node(bind_target_payload)
-    bound_verses = put_in(verses[verse_id].binding, bind)
+  # # already in mark in drafting state, remember to late bind binding => with a fn()
+  # def handle_event(
+  #       "bindHoveRune",
+  #       %{"binding" => bind_target_payload = %{"verse_id" => verse_id}},
+  #       %{assigns: %{kv_verses: verses, marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
+  #     ) do
+  #   # binding here blocks the stream from appending to quote
+  #   bind = Draft.bind_node(bind_target_payload)
+  #   bound_verses = put_in(verses[verse_id].binding, bind)
 
-    {:noreply,
-     socket
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
-  end
+  #   {:noreply,
+  #    socket
+  #    |> mutate_verses(verse_id, bound_verses)
+  #    |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+  # end
 
-  @impl true
-  def handle_event(
-        "bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
-      ) do
-    bind = Draft.bind_node(bind)
-    bound_verses = put_in(verses[verse_id].binding, bind)
+  # @impl true
+  # def handle_event(
+  #       "bindHoveRune",
+  #       %{"binding" => bind = %{"verse_id" => verse_id}},
+  #       %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+  #     ) do
+  #   bind = Draft.bind_node(bind)
+  #   bound_verses = put_in(verses[verse_id].binding, bind)
 
-    {:noreply,
-     socket
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
-     ])}
-  end
+  #   {:noreply,
+  #    socket
+  #    |> mutate_verses(verse_id, bound_verses)
+  #    |> assign(:marks, [
+  #      %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+  #    ])}
+  # end
 
-  @impl true
-  def handle_event(
-        "verses::focus_toggle_on_quick_mark_drafting",
-        %{"key" => "Enter"} = _payload,
-        %Socket{
-          assigns: %{
-            device_type: _device_type,
-            ui_state: _ui_state
-          }
-        } = socket
-      ) do
-    {
-      :noreply,
-      socket
-      |> UiState.update_media_bridge_visibility(false)
-    }
-  end
+  # @impl true
+  # def handle_event(
+  #       "verses::focus_toggle_on_quick_mark_drafting",
+  #       %{"key" => "Enter"} = _payload,
+  #       %Socket{
+  #         assigns: %{
+  #           device_type: _device_type,
+  #           ui_state: _ui_state
+  #         }
+  #       } = socket
+  #     ) do
+  #   {
+  #     :noreply,
+  #     socket
+  #     |> UiState.update_media_bridge_visibility(false)
+  #   }
+  # end
 
-  @impl true
-  def handle_event(
-        "verses::focus_toggle_on_quick_mark_drafting",
-        %{"is_focusing?" => is_focusing?} = _payload,
-        %Socket{
-          assigns: %{
-            device_type: _device_type,
-            ui_state: _ui_state
-          }
-        } = socket
-      ) do
-    {
-      :noreply,
-      socket
-      |> UiState.update_media_bridge_visibility(is_focusing?)
-    }
-  end
+  # @impl true
+  # def handle_event(
+  #       "verses::focus_toggle_on_quick_mark_drafting",
+  #       %{"is_focusing?" => is_focusing?} = _payload,
+  #       %Socket{
+  #         assigns: %{
+  #           device_type: _device_type,
+  #           ui_state: _ui_state
+  #         }
+  #       } = socket
+  #     ) do
+  #   {
+  #     :noreply,
+  #     socket
+  #     |> UiState.update_media_bridge_visibility(is_focusing?)
+  #   }
+  # end
 
   @impl true
   def handle_event(
@@ -555,6 +555,20 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   end
 
   @impl true
+  def handle_info({:change_ui, function_name, args}, socket)
+      when is_binary(function_name) and is_list(args) do
+    with :ok <- validate_function_name(function_name, UiState) do
+      func = String.to_existing_atom(function_name)
+      updated_socket = apply(UiState, func, [socket | args])
+      {:noreply, updated_socket}
+    else
+      {:error, reason} ->
+        IO.puts("Error: #{reason}")
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_info(msg, socket) do
     IO.inspect(msg, label: "[fallback clause] unexpected message in DisplayManager")
     {:noreply, socket}
@@ -587,12 +601,31 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   # end
 
   # Helper function for updating verse state across both stream and the k_v map
-  defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
-    socket
-    |> stream_insert(
-      :verses,
-      mutated_verses[target_verse_id]
-    )
-    |> assign(:kv_verses, mutated_verses)
+  # defp mutate_verses(%Socket{} = socket, target_verse_id, mutated_verses) do
+  #   socket
+  #   |> stream_insert(
+  #     :verses,
+  #     mutated_verses[target_verse_id]
+  #   )
+  #   |> assign(:kv_verses, mutated_verses)
+  # end
+
+  # TODO: when it's time, add in the optional default value, left it out to avoid the warning message
+  # defp validate_function_name(function_name, module \\ __MODULE__)
+  defp validate_function_name(function_name, module)
+       when is_binary(function_name) do
+    if function_name in get_function_names(module) do
+      :ok
+    else
+      {:error, "Function #{function_name} does not exist."}
+    end
+  end
+
+  # TODO: add the optional module when it's time
+  # defp get_function_names(mod \\ __MODULE__) do
+  defp get_function_names(mod) do
+    mod.__info__(:functions)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.map(&Atom.to_string/1)
   end
 end

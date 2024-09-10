@@ -246,13 +246,22 @@ defmodule VyasaWeb.Content.VerseMatrix do
           class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "comment"} here..."}
           phx-focus={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: true})
+            JS.push("verses::focus_toggle_on_quick_mark_drafting",
+              target: "#reading-content",
+              value: %{is_focusing?: true}
+            )
           }
           phx-blur={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+            JS.push("verses::focus_toggle_on_quick_mark_drafting",
+              target: "#reading-content",
+              value: %{is_focusing?: false}
+            )
           }
           phx-window-blur={
-            JS.push("verses::focus_toggle_on_quick_mark_drafting", value: %{is_focusing?: false})
+            JS.push("verses::focus_toggle_on_quick_mark_drafting",
+              target: "#reading-content",
+              value: %{is_focusing?: false}
+            )
           }
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
         />
