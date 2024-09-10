@@ -71,7 +71,6 @@ defmodule VyasaWeb.Content.ReadingContent do
 
   defp apply_action(%Socket{} = socket, :show_sources, _params) do
     IO.inspect(:show_sources, label: "TRACE: apply action DM action show_sources:")
-    # IO.inspect(params, label: "TRACE: apply action DM params:")
 
     socket
     |> stream(:sources, Written.list_sources())
@@ -326,7 +325,6 @@ defmodule VyasaWeb.Content.ReadingContent do
     {
       :noreply,
       socket
-      # |> UiState.update_media_bridge_visibility(false)
     }
   end
 
@@ -371,7 +369,6 @@ defmodule VyasaWeb.Content.ReadingContent do
         :verses,
         %{verses[v_id] | binding: binding}
       )
-      # |> UiState.update_media_bridge_visibility(false)
     }
   end
 
@@ -395,8 +392,6 @@ defmodule VyasaWeb.Content.ReadingContent do
        :verses,
        %{verses[v_id] | binding: binding}
      )}
-
-    # |> UiState.update_media_bridge_visibility(false)}
   end
 
   @impl true
@@ -410,7 +405,6 @@ defmodule VyasaWeb.Content.ReadingContent do
     {
       :noreply,
       socket
-      # |> UiState.update_media_bridge_visibility(false)
     }
   end
 
