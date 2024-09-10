@@ -22,7 +22,7 @@ defmodule VyasaWeb.HoveRune do
         <.hover_rune_quick_action
           action_event={get_quick_action_click_event(action)}
           action_icon_name={get_quick_action_icon_name(action)}
-          action_target={@user_mode.mode_context_component_selector}
+          action_target={"#" <> @user_mode.mode_context_component_selector}
         />
       <% end %>
     </div>
