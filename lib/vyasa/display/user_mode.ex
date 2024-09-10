@@ -42,8 +42,6 @@ defmodule Vyasa.Display.UserMode do
   @mode_actions [:mark_quote, :bookmark]
 
   # defines static aspects of different modes:
-  # TODO: define mode-specific hoverrune functions here
-  # TODO: for the liveview for media bridge, just do a soft disappear
   @defs %{
     "read" => %{
       mode: "read",
