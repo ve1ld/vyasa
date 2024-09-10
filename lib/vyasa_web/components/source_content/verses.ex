@@ -41,7 +41,7 @@ defmodule VyasaWeb.Content.Verses do
           id="verses"
           phx-update="stream"
           phx-hook="HoveRune"
-          data-parent-id={@user_mode.mode_context_component_selector}
+          data-event-target={@user_mode.mode_context_component_selector}
         >
           <.live_component
             :for={{dom_id, %Verse{} = verse} <- @verses}

@@ -58,7 +58,7 @@ const forgeBinding = (el, attrs) =>
 export default HoveRune = {
   mounted() {
     const t = this.el;
-    this.parentId = this.el?.dataset?.parentId;
+    this.eventTarget = this.el?.dataset?.eventTarget;
     console.log("CHECK HOVERUNE", {
       dset: this.el.dataset,
     });
@@ -86,12 +86,12 @@ export default HoveRune = {
           binding["selection"] = getSelectText;
 
           console.log("CHECK HOVERUNE", {
-            parent: this.parentId,
-            target: `#${this.parentId}`,
+            eventTarget: this.eventTarget,
+            target: `#${this.eventTarget}`,
             payload: { binding: binding },
           });
           // TODO: rename to targetId
-          this.pushEventTo(`#${this.parentId}`, "bindHoveRune", {
+          this.pushEventTo(`#${this.eventTarget}`, "bindHoveRune", {
             binding: binding,
           });
 
