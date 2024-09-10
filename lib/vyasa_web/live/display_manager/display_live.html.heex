@@ -51,8 +51,8 @@
             />
 
             <.live_component
-                module={VyasaWeb.Content.ReadingContent}
-                id={"reading-content"}
+                module={@mode.mode_context_component}
+                id={@mode.mode_context_component_selector}
                 user_mode={@mode}
                 url_params={@url_params}
                 live_action={@live_action}

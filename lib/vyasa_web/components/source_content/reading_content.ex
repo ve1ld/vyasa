@@ -22,7 +22,8 @@ defmodule VyasaWeb.Content.ReadingContent do
           user_mode: %UserMode{} = user_mode,
           url_params: url_params,
           live_action: live_action,
-          session: session
+          session: session,
+          id: id
         } =
           params,
         socket
@@ -32,6 +33,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     {
       :ok,
       socket
+      |> assign(id: id)
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       |> apply_action(live_action, url_params)
@@ -425,7 +427,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id="reading-content">
+    <div id={@id}>
       Hello world, i'm the ReadingContent <br />
       <.button phx-click="foo" phx-target={@myself}>
         FOO
