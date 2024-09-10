@@ -429,6 +429,8 @@ defmodule VyasaWeb.Content.ReadingContent do
     ~H"""
     <div id={@id}>
       Hello world, i'm the ReadingContent <br />
+      <%= @user_mode.mode_context_component %>
+      <%= @user_mode.mode_context_component_selector %>
       <.button phx-click="foo" phx-target={@myself}>
         FOO
       </.button>
@@ -446,6 +448,7 @@ defmodule VyasaWeb.Content.ReadingContent do
             module={VyasaWeb.Content.Sources}
             id="content-sources"
             sources={@streams.sources}
+            user_mode={@user_mode}
           />
         <% end %>
 
@@ -455,6 +458,7 @@ defmodule VyasaWeb.Content.ReadingContent do
             id="content-chapters"
             source={@source}
             chapters={@streams.chapters}
+            user_mode={@user_mode}
           />
         <% end %>
 
@@ -470,6 +474,7 @@ defmodule VyasaWeb.Content.ReadingContent do
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
+            user_mode={@user_mode}
           />
         <% end %>
       </div>

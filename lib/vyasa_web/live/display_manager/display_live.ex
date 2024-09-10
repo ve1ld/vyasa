@@ -6,7 +6,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   on_mount VyasaWeb.Hook.UserAgentHook
   alias Vyasa.Display.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
-  alias VyasaWeb.Content.ReadingContent
   @supported_modes UserMode.supported_modes()
 
   @impl true
@@ -143,12 +142,15 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         {_, :media_handshake, :init} = _msg,
         %{
           assigns: %{
-            session: %{"id" => sess_id}
+            session: %{"id" => sess_id},
+            mode: %UserMode{
+              mode_context_component: component,
+              mode_context_component_selector: selector
+            }
           }
         } = socket
       ) do
-    # TODO: currently, this is hardcoded to "ReadingContent". At the end of this refactor, we shall
-    send_update(ReadingContent, id: "reading-content", sess_id: sess_id)
+    send_update(component, id: selector, sess_id: sess_id)
     {:noreply, socket}
   end
 

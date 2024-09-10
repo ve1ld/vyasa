@@ -12,12 +12,13 @@ defmodule VyasaWeb.Content.VerseMatrix do
      |> assign(:form_type, :mark)}
   end
 
-  def update(%{verse: verse, marks: marks} = assigns, socket) do
+  def update(%{verse: verse, marks: marks, event_target: event_target} = assigns, socket) do
     socket =
       socket
       |> assign(assigns)
       |> assign(:verse, verse)
       |> assign(:marks, marks)
+      |> assign(:event_target, event_target)
 
     {:ok, socket}
   end
@@ -35,7 +36,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt :if={Map.has_key?(elem, :title)} class="w-1/12 flex-none text-zinc-500">
-            <.verse_title_button verse_id={@verse.id} title={elem.title} />
+            <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
           <div class="relative">
             <.verse_content
@@ -54,6 +55,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
               myself={@myself}
+              event_target={@event_target}
             />
           </div>
         </div>
@@ -67,7 +69,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
     <button
       phx-click={
         JS.push("clickVerseToSeek",
-          target: "#reading-content",
+          target: "#" <> @event_target,
           value: %{verse_id: @verse_id}
         )
       }
@@ -95,6 +97,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
   end
 
   attr :comments, :list, default: []
+  attr :event_target, :string, required: true
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
   attr :show_current_marks?, :boolean, default: false
@@ -110,7 +113,12 @@ defmodule VyasaWeb.Content.VerseMatrix do
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.unified_quote_and_form quote={@quote} form_type={@form_type} myself={@myself} />
+      <.unified_quote_and_form
+        event_target={@event_target}
+        quote={@quote}
+        form_type={@form_type}
+        myself={@myself}
+      />
       <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
       <.bound_comments comments={@comments} />
     </div>
@@ -134,6 +142,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
   end
 
   attr :quote, :string, required: true
+  attr :event_target, :string, required: true
   attr :form_type, :atom, required: true
   attr :myself, :any, required: true
 
@@ -141,7 +150,12 @@ defmodule VyasaWeb.Content.VerseMatrix do
     ~H"""
     <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
       <.current_quote quote={@quote} form_type={@form_type} />
-      <.quick_draft_form quote={@quote} form_type={@form_type} myself={@myself} />
+      <.quick_draft_form
+        event_target={@event_target}
+        quote={@quote}
+        form_type={@form_type}
+        myself={@myself}
+      />
     </div>
     """
   end
@@ -230,6 +244,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
   end
 
   attr :form_type, :atom, required: true
+  attr :event_target, :string, required: true
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
@@ -239,7 +254,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
       <.form
         for={%{}}
         phx-submit={(@form_type == :mark && "createMark") || "createComment"}
-        phx-target="#reading-content"
+        phx-target={"#" <> @event_target}
         class="flex items-center"
       >
         <input
@@ -248,23 +263,24 @@ defmodule VyasaWeb.Content.VerseMatrix do
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "comment"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#reading-content",
+              target: "#" <> @event_target,
               value: %{is_focusing?: true}
             )
           }
           phx-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#reading-content",
+              target: "#" <> @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-window-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#reading-content",
+              target: "#" <> @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
+          phx-target={"#" <> @event_target}
         />
         <button
           type="submit"

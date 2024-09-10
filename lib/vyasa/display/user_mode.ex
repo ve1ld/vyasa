@@ -15,6 +15,7 @@ defmodule Vyasa.Display.UserMode do
   alias Vyasa.Display.{UserMode, UiState}
 
   @component_slots [:action_bar_component, :control_panel_component, :mode_context_component]
+  @default_slot_selector ""
 
   @derive Jason.Encoder
   defstruct [
@@ -26,7 +27,10 @@ defmodule Vyasa.Display.UserMode do
               :mode_actions,
               :action_bar_actions,
               :action_bar_info_types
-            ] ++ Enum.map(@component_slots, &{&1, nil})
+            ] ++
+              Enum.flat_map(@component_slots, fn slot ->
+                [{slot, nil}, {:"#{slot}_selector", @default_slot_selector}]
+              end)
 
   # THESE ARE EXAMPLE quick actions and mode actions for now
 
@@ -121,15 +125,23 @@ defmodule Vyasa.Display.UserMode do
       }
   """
   def maybe_hydrate_component_selectors(%UserMode{} = mode) do
-    mode
-    |> Map.from_struct()
-    |> Enum.reduce(mode, fn
-      {key, module}, acc when key in @component_slots and is_atom(module) ->
-        selector = Utils.String.module_to_selector(module)
-        Map.put(acc, :"#{key}_selector", selector)
+    Enum.reduce(@component_slots, mode, fn slot, acc ->
+      slot_selector_key = String.to_atom("#{slot}_selector")
+      IO.inspect(slot_selector_key, label: "CHECK slot_selector_key")
 
-      {key, value}, acc ->
-        Map.put(acc, key, value)
+      case Map.get(acc, slot_selector_key) do
+        @default_slot_selector ->
+          selector = Utils.String.module_to_selector(Map.get(acc, slot))
+
+          IO.inspect("selector: #{selector}, slot selector_key: #{slot_selector_key}",
+            label: "CHECK slot_selector_key"
+          )
+
+          Map.put(acc, slot_selector_key, selector)
+
+        _existing_value ->
+          acc
+      end
     end)
   end
 end

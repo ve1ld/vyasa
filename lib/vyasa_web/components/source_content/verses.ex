@@ -37,13 +37,19 @@ defmodule VyasaWeb.Content.Verses do
         <.back patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
-        <div id="verses" phx-update="stream" phx-hook="HoveRune" data-parent-id="reading-content">
+        <div
+          id="verses"
+          phx-update="stream"
+          phx-hook="HoveRune"
+          data-parent-id={@user_mode.mode_context_component_selector}
+        >
           <.live_component
             :for={{dom_id, %Verse{} = verse} <- @verses}
             id={dom_id}
             module={VyasaWeb.Content.VerseMatrix}
             verse={verse}
             marks={@marks}
+            event_target={@user_mode.mode_context_component_selector}
             edge={[
               %{
                 title: "#{verse.chapter_no}.#{verse.no}",
