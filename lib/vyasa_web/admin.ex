@@ -4,21 +4,22 @@ end
 
 defmodule VyasaWeb.Admin.Medium.Event do
   use LiveAdmin.Resource, schema: Vyasa.Medium.Event,
+    hidden_fields: [:fragments],
     immutable_fields: [:source_id],
-    actions: [:silence, :next, :prev],
+    actions: [:next, :prev],
     render_with: :render_field
 
 
 
   def render_field(record, field, session) do
-    VyasaWeb.Admin.Renderer.render_field(record, field, session)
+    VyasaWeb.Admin.Render.event(record, field, session)
   end
 
 
-  def silence(%{voice: _v} = e, _sess) do
-    e = %{e | voice: nil}
-    {:ok, e}
-  end
+  # def silence(%{voice: _v} = e, _sess) do
+  #   e = %{e | voice: nil}
+  #   {:ok, e}
+  # end
 
   def next(%{voice: _v} = e, _sess) do
     {:ok, Vyasa.Medium.get_event_by_order!(e, 1)}
@@ -30,10 +31,10 @@ defmodule VyasaWeb.Admin.Medium.Event do
 end
 
 
-defmodule VyasaWeb.Admin.Renderer do
+defmodule VyasaWeb.Admin.Render do
   use Phoenix.Component
 
-  def render_field(%{origin: o, voice: %Vyasa.Medium.Voice{} = v} = assigns, :phase, _session) do
+  def event(%{origin: o, voice: %Vyasa.Medium.Voice{} = v} = assigns, :phase, _session) do
     assigns = %{assigns | origin: floor(o/1000), voice: Vyasa.Medium.Store.hydrate(v)}
   ~H"""
   <%= @phase %>
@@ -43,7 +44,7 @@ defmodule VyasaWeb.Admin.Renderer do
   """
   end
 
-  def render_field(%{verse: %Vyasa.Written.Verse{} = v} = assigns, :verse_id, _session) do
+  def event(%{verse: %Vyasa.Written.Verse{} = v} = assigns, :verse_id, _session) do
     assigns = %{assigns | verse: v |> Vyasa.Repo.preload(:translations)}
     ~H"""
   <div class="flex items-center justify-center">
@@ -56,7 +57,7 @@ defmodule VyasaWeb.Admin.Renderer do
   end
 
 
-  def render_field(record, field, _session) do
+  def event(record, field, _session) do
     IO.inspect(field)
     record
     |> Map.fetch!(field)
