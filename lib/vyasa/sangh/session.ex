@@ -4,6 +4,7 @@ defmodule Vyasa.Sangh.Session do
 
  alias Vyasa.Sangh.{Comment}
 
+  @derive {Jason.Encoder, only: [:id]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "sessions" do
 
@@ -16,6 +17,5 @@ defmodule Vyasa.Sangh.Session do
   def changeset(session, attrs) do
     session
     |> cast(attrs, [:id])
-    |> validate_required([:id])
   end
 end

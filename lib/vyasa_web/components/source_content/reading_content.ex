@@ -13,7 +13,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh.{Comment, Mark}
+  alias Vyasa.Sangh.{Mark}
   alias VyasaWeb.OgImageController
 
   @impl true
@@ -43,7 +43,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   @impl true
   # received updates from parent liveview when a handshake is init, does a pub for the voice to use
   def update(
-        %{id: "reading-content", sess_id: sess_id} = _props,
+        %{id: "reading-content"} = _props,
         %{
           assigns: %{
             session: %{id: sess_id},
@@ -127,27 +127,16 @@ defmodule VyasaWeb.Content.ReadingContent do
 
 
       socket
+      |> assign(
+        :kv_verses,
+        # creates a map of verse_id_to_verses
+        Enum.into(verses, %{},&({&1.id, &1})
+      ))
+      |> assign(:marks, [%Mark{state: :draft, order: 0}])
       |> sync_session()
       |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
-      |> assign(
-        :kv_verses,
-        # creates a map of verse_id_to_verses
-        Enum.into(
-          verses,
-          %{},
-          &{&1.id,
-           %{
-             &1
-             | comments: [
-                 %Comment{signature: "Pope", body: "Achilles’ wrath, to Greece the direful spring
-              Of woes unnumber’d, heavenly goddess, sing"}
-               ]
-           }}
-        )
-      )
-      |> assign(:marks, [%Mark{state: :draft, order: 0}])
       # DEPRECATED
       # RENAME?
       |> assign(:src, source)
@@ -209,12 +198,10 @@ defmodule VyasaWeb.Content.ReadingContent do
   defp sync_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket) when is_binary(sess_id) do
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
-    IO.inspect(sess_id <> " sync la")
     socket
   end
 
   defp sync_session(socket) do
-    IO.inspect(socket, label: "not ready to init sync of session from within ReadingContent")
     socket
   end
 
@@ -421,6 +408,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     ~H"""
     <div id={@id}>
       Hello world, i'm the ReadingContent <br />
+     Session:  <%= @session && @session.name %> <br />
       <%= @user_mode.mode_context_component %>
       <%= @user_mode.mode_context_component_selector %>
       <.button phx-click="foo" phx-target={@myself}>

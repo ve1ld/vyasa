@@ -37,10 +37,19 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{name: name} = sess}} = socket) when is_binary(name) do
+  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: _s_id}} = sess}} = socket) when is_binary(name) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
+  end
+
+  defp sync_session(%{assigns: %{session: %Session{name: name} = sess}} = socket) when is_binary(name) do
+    # initialises sangh if uninitiated (didnt init at Vyasa.Session)
+    {:ok, sangh} = Vyasa.Sangh.create_session()
+    sangh_sess = %{sess | sangh: sangh}
+    socket
+    |> assign(session: sangh_sess)
+    |> push_event("initSession", sangh_sess)
   end
 
   defp sync_session(socket) do
@@ -149,7 +158,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         {_, :media_handshake, :init} = _msg,
         %{
           assigns: %{
-            session: %VyasaWeb.Session{id: sess_id},
             mode: %UserMode{
               mode_context_component: component,
               mode_context_component_selector: selector
@@ -157,8 +165,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-    IO.inspect(sess_id, label: "media handshake")
-    send_update(component, id: selector, sess_id: sess_id)
+
+    send_update(component, id: selector)
     {:noreply, socket}
   end
 

@@ -6,7 +6,6 @@ defmodule Vyasa.Draft do
   import Ecto.Query, warn: false
   alias Vyasa.Adapters.Binding
   alias Vyasa.Sangh.Mark
-  alias Vyasa.Sangh
   alias Vyasa.Repo
 
   # Inits the binding for an empty selection
@@ -43,10 +42,6 @@ defmodule Vyasa.Draft do
       |> Binding.field_lookup()
 
     %{bind | node_field_name => node_id, :node_id => node_id}
-  end
-
-  def create_comment([%Mark{} | _] = marks) do
-    Sangh.create_comment(%{marks: marks})
   end
 
   @doc """

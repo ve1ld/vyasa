@@ -27,7 +27,7 @@ defmodule Vyasa.Sangh.Mark do
 
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:body, :order, :status, :comment_id, :binding_id])
+    |> cast(attrs, [:body, :order, :state, :comment_id, :binding_id])
   end
 
   def update_mark(%Mark{} = draft_mark, opts \\ []) do

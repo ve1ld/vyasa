@@ -358,7 +358,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         true -> nil
       end
 
-    IO.inspect("voice acked")
 
     is_new_voice = id !== prev_id
 

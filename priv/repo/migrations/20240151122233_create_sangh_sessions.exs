@@ -13,15 +13,18 @@ defmodule Vyasa.Repo.Migrations.CreateSanghSessions do
 
     create table(:comments, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :body, :text, null: false
+      add :body, :text
       add :active, :boolean, default: false
       add :path, :ltree
       add :signature, :string
       add :session_id, references(:sessions, column: :id, type: :uuid)
       add :parent_id, references(:comments, column: :id, type: :uuid)
+      add :traits, :jsonb
 
       timestamps(type: :utc_datetime_usec)
     end
+
+    execute("CREATE INDEX comments_traits_index ON comments USING GIN(traits jsonb_path_ops)", "DROP INDEX comments_traits_index")
 
 
     create table(:bindings, primary_key: false) do
@@ -41,4 +44,5 @@ defmodule Vyasa.Repo.Migrations.CreateSanghSessions do
     create index(:bindings, [:chapter_no, :source_id])
 
   end
+
  end

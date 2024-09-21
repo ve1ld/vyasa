@@ -41,6 +41,7 @@ defmodule Vyasa.Corpus.Migrator.Restore do
 
     # events are dependent on both verse and voice
     source
+    |> read()
     |> Enum.map(fn x ->
       # &1["translations"]
       x["events"]

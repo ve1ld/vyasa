@@ -54,7 +54,6 @@ Vyasa.Release.migrate()
 
 ```elixir
 Path.expand(mypath, "#{File.cwd!()}/data/Elixir.Vyasa.Written.Source")
-|> Vyasa.Corpus.Migrator.Restore.read()
 |> Vyasa.Corpus.Migrator.Restore.run()
 ```
 
@@ -93,10 +92,12 @@ end)
 ```elixir
 # can test if events are seeded correctly here:
 voice_id = "b1db78be-0bdf-443c-afdf-3221bac38758"
-loaded_voice = Vyasa.Repo.get(Vyasa.Medium.Voice, voice_id)
-|> Vyasa.Medium.get_voices!()
-|> List.first()
-|> Vyasa.Medium.Store.hydrate()
+
+loaded_voice =
+  Vyasa.Repo.get(Vyasa.Medium.Voice, voice_id)
+  |> Vyasa.Medium.get_voices!()
+  |> List.first()
+  |> Vyasa.Medium.Store.hydrate()
 
 loaded_voice.events
 ```
