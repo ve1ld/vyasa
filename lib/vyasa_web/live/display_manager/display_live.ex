@@ -38,13 +38,13 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: _sangh_id}} = sess}} = socket) when is_binary(name) do
+  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: _sangh_id}} = sess}} = socket) when is_binary(id) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
   end
 
-  defp sync_session(%{assigns: %{session: %Session{name: name} = sess}} = socket) when is_binary(name) do
+  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket) when is_binary(id) do
     # initialises sangh if uninitiated (didnt init at Vyasa.Session)
     {:ok, sangh} = Sangh.create_session()
     sangh_sess = %{sess | sangh: sangh}

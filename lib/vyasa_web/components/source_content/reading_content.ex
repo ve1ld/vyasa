@@ -474,10 +474,14 @@ defmodule VyasaWeb.Content.ReadingContent do
 
   # Helper function that syncs and mutates draft table
   defp mutate_draft_table(%{assigns: %{draft_table: %Vyasa.Sangh.Comment{} = dt, marks: marks}} = socket) do
-    IO.inspect(dt, label: "DROFT")
     {:ok, com} = Vyasa.Sangh.update_comment(dt, %{marks: marks})
     socket
     |> assign(:draft_table, com)
+  end
+
+  # when session hasnt been initialised
+  defp mutate_draft_table(socket) do
+    socket
   end
   # currently naive hd lookup can be filter based on active toggle,
   # tree like comments can be used to store nested collapsible topics (personal mark collection e.g.)
