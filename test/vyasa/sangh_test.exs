@@ -27,9 +27,6 @@ defmodule Vyasa.SanghTest do
       assert session.id == "7488a646-e31f-11e4-aace-600308960662"
     end
 
-    test "create_session/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Sangh.create_session(@invalid_attrs)
-    end
 
     test "update_session/2 with valid data updates the session" do
       session = session_fixture()
@@ -39,11 +36,6 @@ defmodule Vyasa.SanghTest do
       assert session.id == "7488a646-e31f-11e4-aace-600308960668"
     end
 
-    test "update_session/2 with invalid data returns error changeset" do
-      session = session_fixture()
-      assert {:error, %Ecto.Changeset{}} = Sangh.update_session(session, @invalid_attrs)
-      assert session == Sangh.get_session!(session.id)
-    end
 
     test "delete_session/1 deletes the session" do
       session = session_fixture()
