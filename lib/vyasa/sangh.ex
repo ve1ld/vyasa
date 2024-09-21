@@ -135,7 +135,14 @@ defmodule Vyasa.Sangh do
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
 
-
+  def get_comments_by_session(id, %{traits: traits}) do
+    from(c in Comment,
+      where: c.session_id == ^id and fragment("? @> ?", c.traits, ^traits),
+      preload: [marks: [:binding]]
+    )
+    |> order_by(asc: :inserted_at)
+    |> Repo.all()
+  end
 
   def get_comments_by_session(id) do
     query = Comment

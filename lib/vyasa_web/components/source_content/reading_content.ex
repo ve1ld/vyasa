@@ -41,7 +41,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   end
 
   @impl true
-  # received updates from parent liveview when a handshake is init, does a pub for the voice to use
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
         %{id: "reading-content"} = _props,
         %{
@@ -199,6 +199,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
     socket
+    |> sync_draft_table()
   end
 
   defp sync_session(socket) do
@@ -346,6 +347,7 @@ defmodule VyasaWeb.Content.ReadingContent do
       :noreply,
       socket
       |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> mutate_draft_table()
       |> stream_insert(
         :verses,
         %{verses[v_id] | binding: binding}
@@ -369,6 +371,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     {:noreply,
      socket
      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> mutate_draft_table()
      |> stream_insert(
        :verses,
        %{verses[v_id] | binding: binding}
@@ -383,10 +386,7 @@ defmodule VyasaWeb.Content.ReadingContent do
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
-    {
-      :noreply,
-      socket
-    }
+    {:noreply, socket}
   end
 
   @impl true
@@ -408,7 +408,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     ~H"""
     <div id={@id}>
       Hello world, i'm the ReadingContent <br />
-     Session:  <%= @session && @session.name %> <br />
+     Session:  <%= @session && @session.name %> Sangh:  <%= @session && @session.sangh && @session.sangh.id %> <br />
       <%= @user_mode.mode_context_component %>
       <%= @user_mode.mode_context_component_selector %>
       <.button phx-click="foo" phx-target={@myself}>
@@ -470,5 +470,37 @@ defmodule VyasaWeb.Content.ReadingContent do
       mutated_verses[target_verse_id]
     )
     |> assign(:kv_verses, mutated_verses)
+  end
+
+  # Helper function that syncs and mutates draft table
+  defp mutate_draft_table(%{assigns: %{draft_table: %Vyasa.Sangh.Comment{} = dt, marks: marks}} = socket) do
+    IO.inspect(dt, label: "DROFT")
+    {:ok, com} = Vyasa.Sangh.update_comment(dt, %{marks: marks})
+    socket
+    |> assign(:draft_table, com)
+  end
+  # currently naive hd lookup can be filter based on active toggle,
+  # tree like comments can be used to store nested collapsible topics (personal mark collection e.g.)
+  # currently marks merged in and swapped out probably can be singular data structure
+  # if sangh_id is active open drafting table
+  defp sync_draft_table(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
+    case Vyasa.Sangh.get_comments_by_session(sangh_id, %{traits: ["draft"]}) do
+      [%Vyasa.Sangh.Comment{marks: [ _ | _] = marks} = dt | _ ]  ->
+        IO.inspect(marks, label: "is this triggering")
+        socket
+        |> assign(draft_table: dt)
+        |> assign(marks: marks)
+      [%Vyasa.Sangh.Comment{} = dt | _ ]  ->
+        socket
+        |> assign(draft_table: dt)
+      _ ->
+        {:ok, com} = Vyasa.Sangh.create_comment(%{id: Ecto.UUID.generate(), session_id: sangh_id, traits: ["draft"]})
+        socket
+        |> assign(draft_table: com)
+      end
+  end
+
+  defp sync_draft_table(%{assigns: %{session: _}} = socket) do
+    socket
   end
 end

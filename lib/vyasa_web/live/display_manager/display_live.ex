@@ -7,6 +7,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   alias Vyasa.Display.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
+  alias Vyasa.Sangh
   @supported_modes UserMode.supported_modes()
 
   @mod_registry %{"UiState" => UiState}
@@ -37,7 +38,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: _s_id}} = sess}} = socket) when is_binary(name) do
+  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: _sangh_id}} = sess}} = socket) when is_binary(name) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
@@ -45,7 +46,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   defp sync_session(%{assigns: %{session: %Session{name: name} = sess}} = socket) when is_binary(name) do
     # initialises sangh if uninitiated (didnt init at Vyasa.Session)
-    {:ok, sangh} = Vyasa.Sangh.create_session()
+    {:ok, sangh} = Sangh.create_session()
     sangh_sess = %{sess | sangh: sangh}
     socket
     |> assign(session: sangh_sess)

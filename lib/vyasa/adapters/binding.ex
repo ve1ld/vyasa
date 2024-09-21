@@ -13,7 +13,7 @@ defmodule Vyasa.Adapters.Binding do
   schema "bindings" do
     field :w_type, Ecto.Enum, values: [:quote, :timestamp, :null]
 
-    field :field_key, {:array, :string}
+    field :field_key, {:array, :any}
 
     field :node_id, :string, virtual: true
 
