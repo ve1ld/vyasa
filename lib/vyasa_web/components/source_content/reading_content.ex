@@ -46,7 +46,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{id: "reading-content", sess_id: sess_id} = _props,
         %{
           assigns: %{
-            session: %{"id" => sess_id},
+            session: %{id: sess_id},
             chap: %Chapter{no: c_no, source_id: src_id}
           }
         } = socket
@@ -117,21 +117,14 @@ defmodule VyasaWeb.Content.ReadingContent do
   defp apply_action(
          %Socket{} = socket,
          :show_verses,
-         %{"source_title" => source_title, "chap_no" => chap_no} = params
+         %{"source_title" => source_title, "chap_no" => chap_no}
        ) do
-    IO.inspect(:show_verses, label: "TRACE: apply action DM action show_verses:")
-    IO.inspect(params, label: "TRACE: apply action DM params:")
-    IO.inspect(source_title, label: "TRACE: apply action DM params source_title:")
-    IO.inspect(chap_no, label: "TRACE: apply action DM params chap_no:")
 
     with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
          %{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap <-
            Written.get_chapter(chap_no, sid, @default_lang) do
       fmted_title = to_title_case(source.title)
 
-      IO.inspect(fmted_title, label: "TRACE: am i WITH it?")
-
-      IO.inspect("sid: #{sid} title: #{source_title}", label: "SEE ME:")
 
       socket
       |> sync_session()
@@ -213,11 +206,10 @@ defmodule VyasaWeb.Content.ReadingContent do
     socket
   end
 
-  defp sync_session(%Socket{assigns: %{session: %{"id" => sess_id}}} = socket) do
-    # dbg()
+  defp sync_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket) when is_binary(sess_id) do
+    Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
-    # send(self(), :sync_session)
-    send(self(), %{"cmd" => :sub_to_topic, "topic" => "written:session:" <> sess_id})
+    IO.inspect(sess_id <> " sync la")
     socket
   end
 
@@ -249,7 +241,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   def handle_event(
         "clickVerseToSeek",
         %{"verse_id" => verse_id} = _payload,
-        %{assigns: %{session: %{"id" => sess_id}}} = socket
+        %{assigns: %{session: %{id: sess_id}}} = socket
       ) do
     IO.inspect("handle_event::clickVerseToSeek media:session:#{sess_id}", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
@@ -322,7 +314,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{"key" => "Enter"} = _payload,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {
       :noreply,
@@ -336,7 +328,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{"is_focusing?" => is_focusing?} = _payload,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [is_focusing?]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [is_focusing?]})
 
     {:noreply, socket}
   end
@@ -361,7 +353,7 @@ defmodule VyasaWeb.Content.ReadingContent do
           }
         } = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {
       :noreply,
@@ -385,7 +377,7 @@ defmodule VyasaWeb.Content.ReadingContent do
           }
         } = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {:noreply,
      socket
@@ -402,7 +394,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         _event,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {
       :noreply,

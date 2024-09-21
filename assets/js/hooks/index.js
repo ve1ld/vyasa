@@ -13,6 +13,7 @@ import MargiNote from "./marginote.js";
 import HoveRune from "./hoverune.js";
 import Scrolling from "./scrolling.js";
 import ButtonClickRelayer from "./button_click_relayer.js";
+import SessionBox from "./session_box.js";
 
 let Hooks = {
   ShareQuoteButton,
@@ -28,6 +29,7 @@ let Hooks = {
   HoveRune,
   Scrolling,
   ButtonClickRelayer,
+  SessionBox,
 };
 
 export default Hooks;

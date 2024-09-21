@@ -38,6 +38,38 @@
         </div>
     </header>
 
+  <div
+      :if={@session.active}
+      id="sessionbox"
+      class="absolute p-2 mr-4 w-1/4 top-20 right-10 font-mono text-xs rounded text-brand "
+      phx-hook="SessionBox"
+    >
+      <div :if={!@session.name}>
+        <form class="flex items-center" id="name" phx-submit="name">
+          <span class="flex-1 transition-opacity duration-700 animate-pulse block">your name:</span>
+          <input
+            value={@session.name}
+            name="name"
+            type="text"
+            class="flex-grow text-xs bg-transparent   border-none outline-none caret-current focus:border-1 focus:ring-0"
+            autoFocus
+          />
+        </form>
+        <span class="text-primaryAccent flex items-center justify-left">
+                ☙ –‹›––– ❊ –––‹›– ❧
+        </span>
+      </div>
+    <!-- --
+    live session ongoing
+      ---->
+      <div :if={@session.name} class="absolute right-5 animate-ping rounded-full rounded-2xl bg-brand opacity-75">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-primaryAccent"></span>
+        </span>
+      </div>
+    </div>
+
     <main id="main-content" class="bg-primaryBackground px-4 py-4 sm:px-6 lg:px-8">
         <div>
             <div id="control-panel-container">
@@ -71,7 +103,7 @@
 
             <!-- Bottom Action Bar -->
             <div id="media-bridge-container" class={["fixed inset-x-0 bottom-0 z-10", not @ui_state.show_media_bridge? && "hidden"]}>
-                <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", session: @session, sticky: true) %>
+                <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", sticky: true) %>
             </div>
         </div>
     </main>

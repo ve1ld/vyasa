@@ -6,6 +6,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   1. stores a general playback state. This shall be agnostic to the players that rely on this playback state for synchronising their own playback states.
   2. It shall contain the common playback buttons because these buttons will be controlling all the supported players simultaneously. In so doing, playback state and actions are kept only in the media_bridge
   3. TODO: handle the sync between A/V players
+
+  1) remove handshake protocol (just simple assign to socket)
+  2) a client side component
+  3) event fragment navigation a push event from client side that calls navigation stream
+  4) remove heartbeat from server side
   """
   use VyasaWeb, :live_view
   alias Phoenix.LiveView.Socket
@@ -46,17 +51,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
        |> sync_session(), layout: false}
   end
 
-  defp sync_session(%{assigns: %{session: %{"id" => id} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %VyasaWeb.Session{id: id}}} = socket) when is_binary(id) do
     IO.inspect(
       "MediaBridge::sync_session  sub to media:session:#{id} pub to written:session:#{id}",
       label: "SEE ME"
     )
 
     Vyasa.PubSub.subscribe("media:session:" <> id)
+
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
 
     socket
-    |> push_event("initSession", sess |> Map.take(["id"]))
   end
 
   defp sync_session(socket) do
@@ -353,6 +358,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         true -> nil
       end
 
+    IO.inspect("voice acked")
+
     is_new_voice = id !== prev_id
 
     cond do
@@ -373,13 +380,14 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   """
   def handle_info(
         {_, :written_handshake, :init} = _msg,
-        %{assigns: %{session: %{"id" => id}}} = socket
+        %{assigns: %{session: %{id: id}}} = socket
       ) do
     # QQ: TODO figure out if te id payload to the message is still necessary ?
     # NOTE: this is temporary, we will be shifting the way media-handshake works because
     # of a refactor of how media bridge is supposed to be a nested liveview / slottable entity
     # use this comment to track what needs to be done.
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
+    IO.inspect("written handhsaker")
     {:noreply, socket}
   end
 
