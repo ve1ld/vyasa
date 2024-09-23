@@ -486,13 +486,17 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-    %Voice{} = chosen_voice = Medium.get_voice(src_id, c_no, @default_voice_lang)
+      
+    case Medium.get_voice(src_id, c_no, @default_voice_lang) do
+      %Voice{} = v ->
+        Vyasa.PubSub.publish(
+          v,
+          :voice_ack,
+          sess_id
+        )
 
-    Vyasa.PubSub.publish(
-      chosen_voice,
-      :voice_ack,
-      sess_id
-    )
+        _ -> nil
+    end
 
     {:noreply, socket}
   end

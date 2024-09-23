@@ -19,14 +19,14 @@ defmodule VyasaWeb.Content.Verses do
     ~H"""
     <div>
       <div id="chapter-index-container">
-        <.header class="p-4 pb-0">
-          <div class="font-dn text-4xl mb-4">
+        <.header class="p-4 pb-0" >
+
+        <div class={["text-4xl mb-4", "font-" <> @src.script]} >
             <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
           </div>
           <div class="font-dn text-2xl mb-4">
             Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>
           </div>
-
           <:subtitle>
             <div id="chapter-preamble" class="font-dn text-sm sm:text-lg">
               <%= @selected_transl.target.body %>
@@ -43,7 +43,7 @@ defmodule VyasaWeb.Content.Verses do
             verse={verse}
             marks={@marks}
           >
-            <:edge title={"#{verse.chapter_no}.#{verse.no}"} field={[:body]} verseup={:big} />
+            <:edge title={"#{verse.chapter_no}.#{verse.no}"} field={[:body]} verseup={{:big, @src.script}} />
             <:edge node={hd(verse.translations)} field={[:target, :body_translit]} verseup={:mid} />
 
             <:edge
@@ -136,8 +136,8 @@ defmodule VyasaWeb.Content.Verses do
   end
 
   # font by lang here
-  defp verse_class(:big),
-    do: "font-dn text-lg sm:text-xl"
+  defp verse_class({:big, script}),
+    do: "font-#{script} text-lg sm:text-xl"
 
   defp verse_class(:mid),
     do: "font-dn text-m"

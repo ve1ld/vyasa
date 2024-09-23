@@ -36,7 +36,9 @@ R.recompile()
 ```
 
 ```elixir
-Vyasa.Release.rollback(Vyasa.Repo, 0)
+# Vyasa.Release.rollback(Vyasa.Repo, 0)
+
+Ecto.Migrator.run(Vyasa.Repo, :down, all: true)
 ```
 
 ```elixir
@@ -49,44 +51,7 @@ Vyasa.Release.migrate()
 ```elixir
 Path.expand(mypath, "data")
 |> Vyasa.Corpus.Migrator.Restore.read()
-# |> Vyasa.Written.create_source()
-|> Enum.map(fn x ->
-  # &1["translations"]
-  e =
-    x["events"]
-    |> Enum.group_by(fn map -> map["voice_id"] end)
-
-  t =
-    x["translations"]
-    |> Enum.group_by(fn m -> {m["type"], m["verse_id"] || m["chapter_no"]} end)
-
-  v =
-    x["voices"]
-    |> Enum.group_by(fn m -> m["chapter_no"] end)
-
-  # Map.keys(x)
-  %{
-    x
-    | "chapters" =>
-        Enum.map(x["chapters"], fn %{"no" => no} = c ->
-          c
-          |> Map.put("translations", t[{"chapters", no}])
-          |> Map.put(
-            "voices",
-            (is_list(v[no]) && v[no] |> Enum.map(fn %{"id" => id} = v -> v end)) || []
-          )
-        end),
-      "verses" =>
-        Enum.map(x["verses"], fn %{"id" => id} = v ->
-          v |> Map.put("translations", t[{"verses", id}])
-        end)
-  }
-end)
-|> Enum.map(
-  &(%Vyasa.Written.Source{}
-    |> Vyasa.Written.Source.gen_changeset(&1)
-    |> Vyasa.Repo.insert!())
-)
+|> Vyasa.Corpus.Migrator.Restore.run()
 ```
 
 #### Migrates the events
