@@ -7,7 +7,6 @@ defmodule VyasaWeb.ModeLive.Mediator do
   and any mode-specific actions shall be deferred to the modules that are slotted in (and defined statically at the user_mode module).
   """
   use VyasaWeb, :live_view
-  on_mount VyasaWeb.Hook.UserAgentHook
   alias VyasaWeb.ModeLive.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session

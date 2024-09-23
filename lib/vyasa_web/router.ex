@@ -23,7 +23,7 @@ defmodule VyasaWeb.Router do
     get "/", PageController, :home
 
     live_session :gen_sangh_session,
-      on_mount: [{VyasaWeb.Session, :sangh}] do
+      on_mount: [{VyasaWeb.Session, :sangh}, {VyasaWeb.Hook.UserAgent, :default}] do
       live "/explore/", ModeLive.Mediator, :show_sources
       live "/explore/:source_title/", ModeLive.Mediator, :show_chapters
       live "/explore/:source_title/:chap_no", ModeLive.Mediator, :show_verses

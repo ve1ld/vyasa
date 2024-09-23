@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Hook.UserAgentHook do
+defmodule VyasaWeb.Hook.UserAgent do
   import Phoenix.Component
 
   def on_mount(:default, _params, _session, socket) do

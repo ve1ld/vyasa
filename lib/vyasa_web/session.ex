@@ -1,4 +1,9 @@
 defmodule VyasaWeb.Session do
+  @moduledoc """
+  Refers to the user-session.
+
+  Not to be confused with Sangh Sessions.
+  """
   import Phoenix.Component, only: [assign: 2]
   import Phoenix.LiveView, only: [get_connect_params: 1]
 
