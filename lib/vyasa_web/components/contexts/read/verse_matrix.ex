@@ -5,7 +5,6 @@ defmodule VyasaWeb.Content.VerseMatrix do
   alias Utils.Struct
 
   def mount(socket) do
-    # TODO: add UI state vars here
     {:ok,
      socket
      |> assign(:show_current_marks?, false)

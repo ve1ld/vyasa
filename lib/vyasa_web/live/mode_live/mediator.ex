@@ -156,7 +156,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   @impl true
   @doc """
-  TODO: update this doc
+  TODO: update this doc after handling handshakes better
   Handles the custom message that corresponds to the :media_handshake event with the :init
   message, regardless of the module that dispatched the message.
 
