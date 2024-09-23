@@ -19,16 +19,40 @@ defmodule Vyasa.Display.UserMode do
     :mode,
     :mode_icon_name,
     :action_bar_component,
-    :control_panel_component
+    :control_panel_component,
+    :quick_actions,
+    :control_panel_modes,
+    :mode_actions,
+    :show_media_bridge_default?,
+    :action_bar_actions,
+    :action_bar_info_types
   ]
 
+  # THESE ARE EXAMPLE quick actions and mode actions for now
+
+  # we use quick_actions to define what quick actions are supported
+  # by the hoverrune
+  @quick_actions [:mark_quote, :bookmark]
+  # we use mode_actions to define what specific actions are supported
+  # under this mode.
+  @mode_actions [:mark_quote, :bookmark]
+
   # defines static aspects of different modes:
+  # TODO: define mode-specific hoverrune functions here
+  # TODO: for the liveview for media bridge, just do a soft disappear
   @defs %{
     "read" => %{
       mode: "read",
       mode_icon_name: "hero-book-open",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
-      control_panel_component: VyasaWeb.ControlPanel
+      control_panel_component: VyasaWeb.ControlPanel,
+      quick_actions: @quick_actions,
+      control_panel_modes: ["draft"],
+      mode_actions: @mode_actions,
+      show_media_bridge_default?: true,
+      # NOTE: so when it's used, the event name will end up being
+      # "quick_mark_nav-dec"  ==> moves backwawrd in the order of the list
+      action_bar_actions: [:nav_back, :nav_fwd]
     },
     "draft" => %{
       mode: "draft",
@@ -36,8 +60,12 @@ defmodule Vyasa.Display.UserMode do
       # TODO: add drafting form for this
       # TODO: to test swaps of action bar component
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
-      # action_bar_component: nil,
-      control_panel_component: VyasaWeb.ControlPanel
+      control_panel_component: VyasaWeb.ControlPanel,
+      quick_actions: @quick_actions,
+      control_panel_modes: ["read"],
+      mode_actions: @mode_actions,
+      show_media_bridge_default?: false,
+      action_bar_actions: [:nav_back, :nav_fwd]
     }
   }
 

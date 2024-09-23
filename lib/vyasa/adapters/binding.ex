@@ -23,6 +23,8 @@ defmodule Vyasa.Adapters.Binding do
     belongs_to :translation, Translation, foreign_key: :translation_id, type: :binary_id
     belongs_to :comment, Comment, foreign_key: :comment_id, type: :binary_id
 
+    # window is essentially because bindings might only refer to a subset of a node
+    # either by timestamping of events or through line no and character range
     embeds_one :window, Window, on_replace: :delete do
       field(:line_number, :integer)
       field(:start, :integer)
@@ -39,26 +41,29 @@ defmodule Vyasa.Adapters.Binding do
     |> cast(attrs, [:verse_id, :voice_id, :source_id])
   end
 
-
   def windowing_changeset(%__MODULE__{} = binding, attrs) do
     binding
     |> cast(attrs, [:w_type, :verse_id, :chapter_no, :source_id])
     |> typed_window_switch(attrs)
-    |> Map.put(:repo_opts, [on_conflict: {:replace_all_except, [:id]}, conflict_target: :id])
+    |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
   end
 
+  # when type changes
+  def typed_window_switch(changeset, %{w_type: type}),
+    do: typed_window_switch(changeset, %{"w_type" => type})
 
-  #when type changes
-  def typed_window_switch(changeset, %{w_type: type}), do: typed_window_switch(changeset, %{"w_type" => type})
   def typed_window_switch(changeset, %{"w_type" => type}) do
-    window_changeset = case type do
-                            "quote" ->
-                              &quote_changeset(&1, &2)
-                            "timestamp" ->
-                              &timestamp_changeset(&1, &2)
-                            _ ->
-                              &null_changeset(&1, &2)
-                          end
+    window_changeset =
+      case type do
+        "quote" ->
+          &quote_changeset(&1, &2)
+
+        "timestamp" ->
+          &timestamp_changeset(&1, &2)
+
+        _ ->
+          &null_changeset(&1, &2)
+      end
 
     cast_embed(changeset, :window, with: window_changeset)
   end
@@ -81,7 +86,6 @@ defmodule Vyasa.Adapters.Binding do
     structure
     |> cast(attrs, [])
   end
-
 
   def cast(attrs) do
     %__MODULE__{}

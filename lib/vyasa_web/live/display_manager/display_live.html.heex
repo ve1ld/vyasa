@@ -1,75 +1,107 @@
-<header id="topbar" phx-hook="Scrolling" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4">
-      <a href="/" class="">
-        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal"/>
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v<%= Application.spec(:vyasa, :vsn) %>
-      </p>
-    </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <a
-        href="https://github.com/ve1ld/vyasa"
-        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
-      >
-       <span aria-hidden="true">~</span>/vyasa
-      </a>
-    </div>
-  </div>
-</header>
+<style>
+ .media-bridge-container {
+     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+     opacity: 1;
+     transform: translateY(0);
+ }
 
-<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
-    <div>
-        <div id="control-panel-container">
-            <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
-        </div>
-
-    <!-- CONTENT DISPLAY: -->
-    <div
-    id="content-display"
-    class="mx-auto max-w-2xl pb-16"
+ .media-bridge-container.hidden {
+     opacity: 0;
+     transform: translateY(100%);
+     pointer-events: none;
+ }
+</style>
+<div class="flex flex-col min-h-screen">
+    <header id="topbar" phx-hook="Scrolling"
+            class={[
+                "bg-zinc-50/75 backdrop-blur px-4 sm:px-6 lg:px-8 z-10",
+                @device_type != :mobile && "sticky top-0"
+                ]}
     >
-        <%= if @content_action == :show_sources do%>
-            <.live_component
-            module={VyasaWeb.Content.Sources}
-            id={"content-sources"}
-            sources={@streams.sources}
-            />
-        <% end %>
-
-        <%= if @content_action == :show_chapters do%>
-            <.live_component
-                module={VyasaWeb.Content.Chapters}
-                id={"content-chapters"}
-                source={@source}
-                chapters={@streams.chapters}
-            />
-        <% end %>
-
-        <%= if @content_action == :show_verses do%>
-            <.live_component
-                module={VyasaWeb.Content.Verses}
-                id={"content-verses"}
-                src={@src}
-                verses={@streams.verses}
-                chap={@chap}
-                kv_verses={@kv_verses}
-                marks={@marks}
-                lang={@lang}
-                selected_transl={@selected_transl}
-                page_title={@page_title}
-            />
-        <% end %>
-    </div>
-
-
-    <!-- Bottom Action Bar -->
-    <%= if @mode.action_bar_component do %>
-        <div id="action-bar" class="fixed inset-x-0 bottom-0 z-10">
-            <%= live_render(@socket, @mode.action_bar_component, id: "ActionBar", session: @session, sticky: true) %>
+        <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+            <div class="flex items-center gap-4">
+                <a href="/" class="">
+                    <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal"/>
+                </a>
+                <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
+                    v<%= Application.spec(:vyasa, :vsn) %>
+                </p>
+            </div>
+            <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+                <a
+                    href="https://github.com/ve1ld/vyasa"
+                    class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+                >
+                    <span aria-hidden="true">~</span>/vyasa
+                </a>
+            </div>
         </div>
-    <% end %>
+    </header>
 
-    </div>
-</main>
+    <main id="main-content" class="bg-primaryBackground px-4 py-4 sm:px-6 lg:px-8">
+        <div>
+            <div id="control-panel-container">
+                <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
+            </div>
+
+            <.live_component
+                module={VyasaWeb.HoveRune}
+                id={"hoverune"}
+                quick_actions={@mode.quick_actions}
+            />
+
+            <!-- CONTENT DISPLAY: -->
+            <div
+                id="content-display"
+                class="mx-auto max-w-2xl pb-16"
+            >
+                <%= if @content_action == :show_sources do%>
+                    <.live_component
+                    module={VyasaWeb.Content.Sources}
+                    id={"content-sources"}
+                    sources={@streams.sources}
+                    />
+                    <% end %>
+
+                    <%= if @content_action == :show_chapters do%>
+                        <.live_component
+                        module={VyasaWeb.Content.Chapters}
+                        id={"content-chapters"}
+                        source={@source}
+                        chapters={@streams.chapters}
+                        />
+                        <% end %>
+
+                        <%= if @content_action == :show_verses do%>
+                            <.live_component
+                            module={VyasaWeb.Content.Verses}
+                            id={"content-verses"}
+                            src={@src}
+                            verses={@streams.verses}
+                            chap={@chap}
+                            kv_verses={@kv_verses}
+                            marks={@marks}
+                            lang={@lang}
+                            selected_transl={@selected_transl}
+                            page_title={@page_title}
+                            />
+                            <% end %>
+            </div>
+
+            <div id="action-bar-container" class={["fixed inset-x-0 bottom-0 z-10", not @show_action_bar? && "hidden"]}>
+                <.live_component
+                    module={VyasaWeb.ActionBar}
+                    id={"action-bar"}
+                    mode={@mode}
+                />
+            </div>
+
+
+            <!-- Bottom Action Bar -->
+            <div id="media-bridge-container" class={["fixed inset-x-0 bottom-0 z-10", not @show_media_bridge? && "hidden"]}>
+                <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", session: @session, sticky: true) %>
+            </div>
+        </div>
+    </main>
+
+</div>

@@ -47,7 +47,7 @@ defmodule Vyasa.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.5", only: :dev},
-      {:phoenix_live_view, "~> 0.20.17"},
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
@@ -67,11 +67,21 @@ defmodule Vyasa.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.5"},
-      {:live_admin, "~> 0.12"},
+      {:live_admin, live_admin_dep()},
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+      {:ua_parser, "~> 1.9"}
     ]
+  end
+
+
+  defp live_admin_dep() do
+    if path = System.get_env("LA_PATH") do
+      [path: path]
+    else
+      [github: "ks0m1c/live_admin", ref: "8201e03"]
+    end
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

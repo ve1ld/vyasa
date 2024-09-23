@@ -337,5 +337,4 @@ defmodule Vyasa.Written do
 
   # fallthrough to devanagari
   defp lang2script(%Source{} = s), do: %{s | script: "dn"}
-
 end

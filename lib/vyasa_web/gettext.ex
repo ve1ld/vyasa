@@ -20,5 +20,5 @@ defmodule VyasaWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :vyasa
+  use Gettext.Backend, otp_app: :vyasa
 end

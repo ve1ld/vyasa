@@ -446,15 +446,18 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   attr :max, :integer, default: 100
   # elapsed time (in milliseconds)
   attr :value, :integer
+  attr :class, :string, default: ""
 
   def progress_bar(assigns) do
     assigns = assign_new(assigns, :value, fn -> assigns[:min] || 0 end)
-    IO.inspect(assigns, label: "progress hopefully we make some progress")
 
     ~H"""
     <div
       id={"#{@id}-container"}
-      class="bg-gray-200 flex-auto dark:bg-black rounded-full overflow-hidden justify-self-stretch"
+      class={[
+        "relative bg-gray-200 dark:bg-black h-2 rounded-full overflow-visible cursor-pointer group",
+        @class
+      ]}
       phx-update="ignore"
       phx-hook="ProgressBar"
       data-value={@value}
@@ -462,10 +465,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     >
       <div
         id={@id}
-        class="bg-brand dark:bg-brandAccentLight h-1.5 w-0"
+        class="absolute top-0 left-0 h-full bg-brand dark:bg-brandAccentLight rounded-full transition-all duration-100 ease-out"
+        style="width: 0%;"
         data-min={@min}
         data-max={@max}
         data-val={@value}
+      >
+      </div>
+      <div
+        id={"#{@id}-scrubber"}
+        class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-brand dark:border-brandAccentLight rounded-full shadow-md transition-all duration-100 ease-out opacity-0 group-hover:opacity-100"
+        style="left: 0%;"
       >
       </div>
     </div>
@@ -475,12 +485,13 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   attr :playback, Playback, required: false
   attr :isReady, :boolean, required: false, default: false
   attr :isPlaying, :boolean, required: true
+  attr :class, :string, default: ""
 
   def play_pause_button(assigns) do
     ~H"""
     <button
       type="button"
-      class="mx-auto scale-75"
+      class={["mx-auto scale-75", @class]}
       phx-click={JS.push("play_pause")}
       phx-target="#media-player"
       aria-label={

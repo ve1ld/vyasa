@@ -14,9 +14,21 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        ripple: "ripple 0.6s linear",
+      },
+      keyframes: {
+        ripple: {
+          "0%": { transform: "scale(0)", opacity: "0.5" },
+          "100%": { transform: "scale(4)", opacity: "0" },
+        },
+      },
       fontFamily: {
         dn: ['"Gotu"', "sans-serif"],
         tl: ['"Vyas", "sans-serif"'],
+      },
+      fontSize: {
+        xs: "0.65rem",
       },
       colors: {
         primary: "var(--color-primary)",

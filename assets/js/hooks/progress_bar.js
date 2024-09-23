@@ -6,10 +6,24 @@ import { seekTimeBridge, heartbeatBridge } from "./mediaEventBridges";
 
 ProgressBar = {
   mounted() {
+    const progressSelectorPrefix = this.el.id.replace("-container", "");
+    this.progressBar = this.el.querySelector(`#${progressSelectorPrefix}`);
+    this.scrubber = this.el.querySelector(
+      `#${progressSelectorPrefix}-scrubber`,
+    );
+    this.isDragging = false;
+
     this.el.addEventListener("click", (e) => {
       e.preventDefault();
       this.handleProgressBarClick(e);
     });
+    this.el.addEventListener("mousedown", (e) => this.startDrag(e));
+    document.addEventListener("mousemove", (e) => this.drag(e));
+    document.addEventListener("mouseup", () => this.endDrag());
+    this.el.addEventListener("mousemove", (e) =>
+      this.updateScrubberPosition(e),
+    );
+    this.el.addEventListener("mouseleave", () => this.hideScrubber());
 
     const heartbeatDeregisterer = heartbeatBridge.sub((payload) =>
       this.handleHeartbeat(payload),
@@ -106,13 +120,62 @@ ProgressBar = {
     seekTimeBridge.dispatch(this, seekTimePayload, "#media-player-container");
     return;
   },
-  setProgressBarWidth(progressStyleWidth, selector = "#player-progress") {
-    const progressBarNode = document.querySelector(selector);
-    console.assert(
-      !!progressBarNode,
-      "progress bar node must always be present in the dom.",
-    );
-    progressBarNode.style.width = progressStyleWidth;
+  startDrag(e) {
+    this.isDragging = true;
+    this.updateProgress(e);
+    this.showScrubber();
+  },
+
+  drag(e) {
+    if (this.isDragging) {
+      this.updateProgress(e);
+    }
+  },
+
+  endDrag() {
+    if (this.isDragging) {
+      this.isDragging = false;
+      // Dispatch the final position
+      const seekTimePayload = {
+        seekToMs: this.calculatePositionMs(this.progressBar.style.width),
+        originator: "ProgressBar",
+      };
+      seekTimeBridge.dispatch(this, seekTimePayload, "#media-player-container");
+    }
+  },
+  updateProgress(e) {
+    const rect = this.el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    const percentage = Math.max(0, Math.min(1, x / width));
+    this.setProgressBarWidth(`${percentage * 100}%`);
+    this.updateScrubberPosition(e);
+  },
+
+  updateScrubberPosition(e) {
+    const rect = this.el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    this.scrubber.style.left = `${percentage * 100}%`;
+  },
+
+  showScrubber() {
+    this.scrubber.style.opacity = "1";
+  },
+
+  hideScrubber() {
+    if (!this.isDragging) {
+      this.scrubber.style.opacity = "0";
+    }
+  },
+
+  calculatePositionMs(widthPercentage) {
+    const percentage = parseFloat(widthPercentage) / 100;
+    return Math.round(percentage * this.el.dataset.max);
+  },
+  setProgressBarWidth(progressStyleWidth) {
+    this.progressBar.style.width = progressStyleWidth;
+    this.scrubber.style.left = progressStyleWidth;
   },
 };
 

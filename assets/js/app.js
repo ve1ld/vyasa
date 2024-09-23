@@ -21,22 +21,24 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
-import  Hooks  from "./hooks";
+import Hooks from "./hooks";
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute(
-  "content",
-);
+let csrfToken = document
+  .querySelector("meta[name='csrf-token']")
+  .getAttribute("content");
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: { _csrf_token: csrfToken,
-            locale: Intl.NumberFormat().resolvedOptions().locale,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            timezone_offset: -new Date().getTimezoneOffset(),
-            session: JSON.parse(localStorage.getItem("session")) || {active: true}
-          },
+
+  params: {
+    _csrf_token: csrfToken,
+    locale: Intl.NumberFormat().resolvedOptions().locale,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone_offset: -new Date().getTimezoneOffset(),
+    session: JSON.parse(localStorage.getItem("session")) || { active: true },
+  },
+
   hooks: Hooks,
 });
-
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
@@ -44,12 +46,11 @@ window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
 // Stream our server logs directly to our browser’s console
-window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
-    // enable server log streaming to client.
-    // disable with reloader.disableServerLogs()
-   reloader.enableServerLogs()
-
-})
+window.addEventListener("phx:live_reload:attached", ({ detail: reloader }) => {
+  // enable server log streaming to client.
+  // disable with reloader.disableServerLogs()
+  reloader.enableServerLogs();
+});
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
