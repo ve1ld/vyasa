@@ -1,10 +1,10 @@
 defmodule Vyasa.Sangh.Comment do
   @moduledoc """
   Not your traditional comments, waypoints and containers for marks
-  so that they can be referred to and moved around
+  so that they can be referred to and moved around according to their context
 
   Can create a trail of marks and tied to session
-  Can seperate marks into collapsible categories
+  Can seperate marks into bundle collapsible categories
 
   Sangh session Ids is SOT on shared and individual context
   """
@@ -16,7 +16,7 @@ defmodule Vyasa.Sangh.Comment do
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "comments" do
     field :body, :string
-    field :active, :boolean, default: true #active in drafting table
+    field :active, :boolean, default: true #active in draft reflector
     field :path,  Ltree
     field :signature, :string
     field :traits, {:array, :string}, default: []

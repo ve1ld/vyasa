@@ -199,7 +199,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
     socket
-    |> sync_draft_table()
+    |> sync_draft_reflector()
   end
 
   defp sync_session(socket) do
@@ -347,7 +347,7 @@ defmodule VyasaWeb.Content.ReadingContent do
       :noreply,
       socket
       |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-      |> mutate_draft_table()
+      |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
         %{verses[v_id] | binding: binding}
@@ -371,7 +371,7 @@ defmodule VyasaWeb.Content.ReadingContent do
     {:noreply,
      socket
      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-     |> mutate_draft_table()
+     |> mutate_draft_reflector()
      |> stream_insert(
        :verses,
        %{verses[v_id] | binding: binding}
@@ -472,39 +472,44 @@ defmodule VyasaWeb.Content.ReadingContent do
     |> assign(:kv_verses, mutated_verses)
   end
 
-  # Helper function that syncs and mutates draft table
-  defp mutate_draft_table(%{assigns: %{draft_table: %Vyasa.Sangh.Comment{} = dt, marks: marks}} = socket) do
+  # Helper function that syncs and mutates Draft Reflector
+
+  # Helper function that syncs and mutates Draft Reflector
+  defp mutate_draft_reflector(%{assigns: %{draft_reflector: %Vyasa.Sangh.Comment{} = dt, marks: marks}} = socket) do
+
     {:ok, com} = Vyasa.Sangh.update_comment(dt, %{marks: marks})
     socket
-    |> assign(:draft_table, com)
+    |> assign(:draft_reflector, com)
   end
 
   # when session hasnt been initialised
-  defp mutate_draft_table(socket) do
+  defp mutate_draft_reflector(socket) do
     socket
+
   end
   # currently naive hd lookup can be filter based on active toggle,
   # tree like comments can be used to store nested collapsible topics (personal mark collection e.g.)
   # currently marks merged in and swapped out probably can be singular data structure
-  # if sangh_id is active open drafting table
-  defp sync_draft_table(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
+  # managing of lifecycle of marks
+  # if sangh_id is active open
+  defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_comments_by_session(sangh_id, %{traits: ["draft"]}) do
       [%Vyasa.Sangh.Comment{marks: [ _ | _] = marks} = dt | _ ]  ->
         IO.inspect(marks, label: "is this triggering")
         socket
-        |> assign(draft_table: dt)
+        |> assign(draft_reflector: dt)
         |> assign(marks: marks)
       [%Vyasa.Sangh.Comment{} = dt | _ ]  ->
         socket
-        |> assign(draft_table: dt)
+        |> assign(draft_reflector: dt)
       _ ->
         {:ok, com} = Vyasa.Sangh.create_comment(%{id: Ecto.UUID.generate(), session_id: sangh_id, traits: ["draft"]})
         socket
-        |> assign(draft_table: com)
+        |> assign(draft_reflector: com)
       end
   end
 
-  defp sync_draft_table(%{assigns: %{session: _}} = socket) do
+  defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
   end
 end
