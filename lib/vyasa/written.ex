@@ -153,7 +153,7 @@ defmodule Vyasa.Written do
     |> Repo.all()
   end
 
-  def list_chapters_by_source(source_title, lang) do
+  def list_chapters_by_source(source_title, lang) when is_binary(source_title) do
     %Source{id: id} = _src = get_source_by_title(source_title)
     list_chapters_by_source(id, lang)
   end
