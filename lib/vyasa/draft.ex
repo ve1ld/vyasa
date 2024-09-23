@@ -1,12 +1,12 @@
 defmodule Vyasa.Draft do
   @moduledoc """
   The Drafting Context for all your marking and binding needs
+  User-generated artefacts like marks and sheafs that are around the written context are interacted with via this Draft context.
   """
 
   import Ecto.Query, warn: false
   alias Vyasa.Adapters.Binding
   alias Vyasa.Sangh.Mark
-  alias Vyasa.Sangh
   alias Vyasa.Repo
 
   # Inits the binding for an empty selection
@@ -43,10 +43,6 @@ defmodule Vyasa.Draft do
       |> Binding.field_lookup()
 
     %{bind | node_field_name => node_id, :node_id => node_id}
-  end
-
-  def create_comment([%Mark{} | _] = marks) do
-    Sangh.create_comment(%{marks: marks})
   end
 
   @doc """

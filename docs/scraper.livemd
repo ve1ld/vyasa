@@ -23,12 +23,480 @@
 #   end
 # end
 
-R.recompile()
+# R.recompile()
 ```
 
 ```elixir
 # {:ok, src} = Vyasa.Written.create_source(%{title: "rama"})
 # Vyasa.Medium.Writer.init(%)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## SAAVN
+
+```elixir
+link =
+  "https://saavn.dev/api/albums?link=https://www.jiosaavn.com/album/thiruvasagam-vol-1-to-6/M2txfVKHMQ0_"
+
+p =
+  Finch.build(:get, link)
+  |> Finch.request!(Vyasa.Finch)
+```
+
+```elixir
+defmodule Vyasa.Stream do
+  def stream([{_url, _path} | _] = data) do
+    Task.async_stream(
+      data,
+      fn {url, path} ->
+        download(url, path)
+      end,
+      timeout: :infinity
+    )
+  end
+
+  def download(url, file_path) do
+    IO.puts("Starting to process #{inspect(file_path)}...........")
+
+    # Open a file to which binary chunks will be appended to.
+    # this process is reset in case of redirection
+    file_pid = File.open!(file_path, [:write, :binary])
+
+    unless is_pid(file_pid), do: raise("File creation problem on disk")
+
+    # the HTTP stream request
+    Finch.build(:get, url)
+    |> Finch.stream_while(Vyasa.Finch, nil, fn
+      # we put the status in the "acc" to handle redirections
+      {:status, status}, _acc ->
+        {:cont, status}
+
+      # - when we receive 302, we put the "location" header in the "acc"
+      # - when we receive a 200, we put the "content-length" and the file name in the "acc",
+      {:headers, headers}, acc ->
+        handle_headers(headers, acc)
+
+      # when we receive the "location" tuple, we recurse
+      # otherwise, we write the chunk into the file and print out the current progress.
+      {:data, data}, acc ->
+        handle_data(data, acc, file_path, file_pid)
+    end)
+
+    case File.close(file_pid) do
+      :ok ->
+        {:halt, {file_path, :done}}
+
+      {:error, _reason} ->
+        {:halt, :error}
+    end
+  end
+
+  def handle_headers(headers, status) when status in [301, 302, 303, 307, 308] do
+    IO.puts("REDIR: #{status}")
+
+    {:cont, Enum.find(headers, &(elem(&1, 0) == "location"))}
+  end
+
+  def handle_headers(headers, 200) do
+    {"content-length", size} =
+      Enum.find(headers, &(elem(&1, 0) == "content-length"))
+
+    case size do
+      nil ->
+        {:cont, {0, 0}}
+
+      size ->
+        {:cont, {0, String.to_integer(size)}}
+    end
+  end
+
+  def handle_headers(_, status) do
+    dbg(status)
+    {:halt, :bad_status}
+  end
+
+  def handle_data(_data, {"location", location}, file_path, file_pid) do
+    if Process.alive?(file_pid), do: :ok = File.close(file_pid)
+
+    # recursion
+    download(location, file_path)
+  end
+
+  def handle_data(data, {processed, size}, file_path, file_pid) do
+    case IO.binwrite(file_pid, data) do
+      :ok ->
+        processed =
+          if is_integer(size) and size > 0 do
+            (processed + byte_size(data))
+            |> tap(fn processed ->
+              IO.inspect(Float.round(processed * 100 / size, 1),
+                label: "Processed #{inspect(file_path)} %: "
+              )
+            end)
+          else
+            processed + byte_size(data)
+          end
+
+        {:cont, {processed, size}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+end
+```
+
+```elixir
+path = "#{File.cwd!()}/media/thiruvasagam/"
+Application.ensure_all_started(:inets)
+
+data =
+  p
+  |> Map.get(:body)
+  |> Jason.decode!()
+  |> Map.get("data")
+  |> Map.get("songs")
+  # |> List.first()
+  |> Enum.map(fn %{"downloadUrl" => urls, "name" => name} ->
+    url = urls |> Enum.reverse() |> hd() |> Map.get("url")
+    {url, path <> name}
+  end)
+  # |> Task.async_stream((fn {url, name} ->
+  #   Vyasa.Stream.download(url, path <> name)
+  # end), timeout: :infinity)
+  |> Vyasa.Stream.stream()
+  |> Stream.run()
+```
+
+## GUPOPE
+
+```elixir
+link = "https://www.projectmadurai.org/pm_etexts/utf8/pmuni0094.html"
+
+p =
+  Finch.build(:get, link)
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+  |> Floki.parse_document!()
+  |> Floki.find("body")
+  |> tap(&IO.inspect(&1, limit: :infinity))
+```
+
+```elixir
+# [{"body", [], body , something}] =p
+b = p |> List.first()
+
+{"body", [], body} = b
+
+ts =
+  body
+  |> Enum.reduce({-1, %{}, []}, fn
+    # Clear window and start new chapter
+    {"h3", _, chapter}, {curr, acc, win} when is_list(chapter) ->
+      IO.inspect(win, label: "remaining window")
+      {curr + 1, Map.put(acc, curr + 1, %{chapter: List.last(chapter), verse: []}), []}
+
+    {"h3", _, chapter}, {curr, acc, win} ->
+      IO.inspect(win, label: "remaining window")
+      {curr + 1, Map.put(acc, curr + 1, %{chapter: chapter}), []}
+
+    # New value in topic, add appropriate topic_map to topic_maps in accumulator
+    {"center", [], [{"h3", [], list}]}, acc ->
+      acc
+
+    {_, _, _}, acc ->
+      # other translations not today 
+      acc
+
+    line, {curr, acc, win} ->
+      IO.inspect(line, label: "caught")
+
+      newin =
+        case Regex.run(~r/\s*(\(?\d+\)?)\s*$/, line) do
+          [_, verse_number] ->
+            verse_number = String.replace(verse_number, "(", "") |> String.replace(")", "")
+            verse_number = String.trim(verse_number)
+
+            f_l =
+              line
+              |> String.replace(~r/\s*\(?\d+\)?\s*/, "")
+              |> String.trim()
+
+            # Allocate the verse to the corresponding number
+            [{String.to_integer(verse_number), f_l} | win]
+
+          _ ->
+            # If no verse number, just accumulate the line
+            [{nil, line} | win]
+        end
+
+      {curr, acc, newin}
+  end)
+```
+
+```elixir
+{last, map, win} = ts
+
+{count, _, v} =
+  [:END | win]
+  |> Enum.reverse()
+  |> Enum.reduce({0, [], %{}}, fn
+    {verse_number, text}, {curr, rem, acc} when is_number(verse_number) ->
+      {_, verses} =
+        rem
+        |> Enum.reverse()
+        |> Enum.reduce_while({verse_number, acc}, fn
+          x, {count, acc} when count > curr ->
+            case Regex.match?(~r/^[A-Z\s'!@#$%^&*()_+={}\[\]:;"'<>,.?\/\\-]+$/, x) do
+              false ->
+                {:cont,
+                 {count - 1, Map.update(acc, count - 1, x, fn existing -> [x | existing] end)}}
+
+              _ ->
+                {:cont, {count, acc}}
+            end
+
+          x, {_, acc} ->
+            {:halt, acc}
+        end)
+
+      {verse_number, [],
+       Map.update(verses, verse_number, text, fn existing -> [text | existing] end)}
+
+    {nil, text}, {curr, rem, acc} when length(rem) > 4 ->
+      {curr, [text | rem |> Enum.reverse() |> tl() |> Enum.reverse()], acc}
+
+    {nil, text}, {curr, rem, acc} ->
+      {curr, [text | rem], acc}
+
+    :END, {curr, rem, acc} ->
+      {_, terminal} =
+        rem
+        |> Enum.reverse()
+        |> Enum.reduce({curr, acc}, fn x, {count, acc} ->
+          {count + 1, Map.update(acc, count + 1, x, fn existing -> [x | existing] end)}
+        end)
+
+      {curr, [], terminal}
+  end)
+
+v
+
+# |> Enum.map(fn {verse_number, texts} ->
+#       {verse_number, Enum.reverse(texts)}
+#     end)
+```
+
+## Thiruvaasagam
+
+```elixir
+url = "https://www.sivaya.org/"
+# fetch from root frame
+path = "thiruvaasagam_complete.php"
+doc = "?lang=english"
+
+col =
+  Finch.build(:get, url <> path <> doc)
+  |> Finch.request!(Vyasa.Finch)
+  |> Map.get(:body)
+  |> Floki.parse_document!()
+  |> Floki.find("body")
+  |> tap(&IO.inspect(&1, limit: :infinity))
+```
+
+```elixir
+defmodule ThiruvaasagamScraper do
+  @base_url "https://www.sivaya.org/thiruvaasagam_complete.php"
+
+  def scrape(lang) do
+    {:ok, html} =
+      Finch.build(:get, @base_url <> "?lang=" <> lang)
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+      |> Floki.parse_document()
+
+    chapters = extract_chapters(html, lang)
+    %{chapters: chapters}
+  end
+
+  def extract_chapters(html, lang) do
+    html
+    |> Floki.find("a[href^='thirumurai_song.php?&pathigam_no=8.']")
+    |> Enum.map(&extract_chapter(&1, lang))
+  end
+
+  defp extract_chapter(chapter_link, lang) do
+    href = Floki.attribute(chapter_link, "href")
+
+    chapter_number =
+      href
+      |> List.first()
+      |> extract_chapter_number()
+
+    chapter_title = Floki.text(chapter_link)
+    # verses = extract_verses(chapter_number, lang)
+
+    %{
+      number: chapter_number,
+      title: chapter_title,
+      url: href
+      # verses: verses
+    }
+  end
+
+  defp extract_chapter_number(href) do
+    Regex.run(~r/pathigam_no=8\.(\d+)/, href)
+    |> List.last()
+    |> String.to_integer()
+  end
+
+  def extract_verses(chapter_number, lang) when is_number(chapter_number) do
+    chapter_url =
+      "thirumurai_song.php?&pathigam_no=8.#{chapter_number}&lang=" <> lang
+
+    extract_verses(chapter_url)
+  end
+
+  def extract_verses(chapter_url) when is_binary(chapter_url) do
+    {:ok, chapter_html} =
+      Finch.build(:get, "https://www.sivaya.org/" <> chapter_url)
+      |> Finch.request!(Vyasa.Finch)
+      |> Map.get(:body)
+      |> Floki.parse_document()
+
+    chapter_html
+    |> Floki.find("table td")
+    |> extract_verse_texts()
+  end
+
+  defp extract_verse_texts(td) do
+    td
+    |> Enum.reduce([], fn
+      {"td", [],
+       [
+         {"a", [{"id", _}], []},
+         links,
+         _
+       ]} = td,
+      acc ->
+        [links | acc]
+
+      _, acc ->
+        acc
+    end)
+    |> Enum.reverse()
+    |> Enum.map(
+      &(Floki.text(&1)
+        |> String.split("\n\n")
+        |> Enum.reject(fn
+          "" -> true
+          _ -> false
+        end))
+    )
+    |> List.flatten()
+  end
+end
+```
+
+```elixir
+e_v = ThiruvaasagamScraper.extract_verses(101, "english")
+
+t_v = ThiruvaasagamScraper.extract_verses(101, "tamil")
+```
+
+```elixir
+# %Vyasa.Written.Source{
+#     title: "Thiruvasagam",
+#     verses: (for i <- 0..length(t_v) do
+#     %Vyasa.Written.Verse{no: i, body: Enum.at(t_v, i), translations: (for i <- 0..length(e_v) do
+#     %Vyasa.Written.Translation{lang: "en", body: Enum.at(t_v, i)}
+#     end)}
+#     end)
+
+#   }
+
+# %Vyasa.Written.Source{}
+#   |> Vyasa.Written.Source.gen_changeset(%{title: "Thiruvasagam", chapters: })
+chapters_e = ThiruvaasagamScraper.scrape("english")
+chapters_t = ThiruvaasagamScraper.scrape("tamil")
+```
+
+```elixir
+%{id: sid} =
+  source =
+  %Vyasa.Written.Source{}
+  |> Vyasa.Written.Source.gen_changeset(%{title: "thiruvasagam", lang: "ta"})
+  |> Vyasa.Repo.insert!()
+
+c_t =
+  chapters_t[:chapters]
+  |> Enum.reduce(
+    [],
+    fn
+      %{number: no, title: title, url: [url]}, [%{number: curr_no, url: curr_url} = curr | acc]
+      when no == curr_no + 100 ->
+        [Map.put(curr, :url, [url | curr_url]) | acc]
+
+      %{number: no, title: title, url: url}, acc ->
+        [
+          %{
+            no: no - 100,
+            title:
+              String.split(title, "-")
+              |> List.first()
+              |> String.split("   ")
+              |> List.last()
+              |> String.trim(),
+            url: url,
+            source_id: sid
+          }
+          | acc
+        ]
+    end
+  )
+  |> Enum.map(fn %{url: url} = c ->
+    Map.put(
+      c,
+      :verses,
+      url
+      |> Enum.map(fn u ->
+        ThiruvaasagamScraper.extract_verses(u)
+      end)
+      |> List.flatten()
+      |> Enum.reduce({1, []}, fn x, {count, verses} ->
+        {count + 1, [%{no: count, body: x, source_id: sid} | verses]}
+      end)
+      |> elem(1)
+    )
+  end)
+```
+
+```elixir
+
+```
+
+```elixir
+chapters =
+  c_t
+  |> Enum.uniq(& &1.no)
+  |> Enum.map(fn c ->
+    %Vyasa.Written.Chapter{source_id: sid}
+    |> Vyasa.Written.Chapter.changeset(c)
+    |> Vyasa.Repo.insert!()
+  end)
+```
+
+```elixir
+Vyasa.Written.get_source!("219f1767-6018-45af-9567-0a3fe52671af")
+```
+
+```elixir
+ThiruvaasagamScraper.extract_verses("thirumurai_song.php?&pathigam_no=8.101&lang=tamil")
+```
+
+```elixir
+t_v = ThiruvaasagamScraper.extract_verses(101, "hindi")
 ```
 
 ```elixir

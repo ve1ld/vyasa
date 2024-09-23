@@ -1,4 +1,8 @@
 defmodule Vyasa.Medium.Writer do
+  @moduledoc """
+  This module helps wraps all the writing responsibilities and allows us to treat the writing as a black-box.
+  Essentially, this handles the writing to minio/aws (any s3-compatible store) without the user of this module's functions caring how or why.
+  """
   @behaviour Phoenix.LiveView.UploadWriter
 
   alias Vyasa.Medium.Store
@@ -6,19 +10,29 @@ defmodule Vyasa.Medium.Writer do
   @impl true
   def init(struct) do
     {local_path, ext_path} = Store.path(struct)
+
     with {:ok, file} <- File.open(local_path, [:binary, :write]),
-           %{bucket: bucket} = config <- Store.s3_config(),
-           s3_op <- ExAws.S3.initiate_multipart_upload(bucket, ext_path) do
-      {:ok, %{file: file, path: local_path, key: ext_path, chunk: 1, s3_op: s3_op, s3_config: ExAws.Config.new(:s3, config)}}
+         %{bucket: bucket} = config <- Store.s3_config(),
+         s3_op <- ExAws.S3.initiate_multipart_upload(bucket, ext_path) do
+      {:ok,
+       %{
+         file: file,
+         path: local_path,
+         key: ext_path,
+         chunk: 1,
+         s3_op: s3_op,
+         s3_config: ExAws.Config.new(:s3, config)
+       }}
     end
   end
 
   def run(struct) do
     {local_path, ext_path} = Store.path(struct)
+
     with fs <- ExAws.S3.Upload.stream_file(local_path),
          %{bucket: bucket} = cfg <- Store.s3_config(),
-           req <- ExAws.S3.upload(fs, bucket, ext_path),
-         {:ok, %{status_code: 200, body: body}}  <- ExAws.request(req, config: cfg) do
+         req <- ExAws.S3.upload(fs, bucket, ext_path),
+         {:ok, %{status_code: 200, body: body}} <- ExAws.request(req, config: cfg) do
       {:ok, body}
     else
       {:err, err} -> {:err, err}
@@ -35,18 +49,25 @@ defmodule Vyasa.Medium.Writer do
     case IO.binwrite(state.file, data) do
       :ok ->
         part = ExAws.S3.Upload.upload_chunk!({data, state.chunk}, state.s3_op, state.s3_config)
-        {:ok, %{state | chunk: state.chunk+1, parts: [part | state.parts]}}
-      {:error, reason} -> {:error, reason, state}
+        {:ok, %{state | chunk: state.chunk + 1, parts: [part | state.parts]}}
+
+      {:error, reason} ->
+        {:error, reason, state}
     end
   end
 
   @impl true
   def close(state, _reason) do
-    case {File.close(state.file), ExAws.S3.Upload.complete(state.parts, state.s3_op, state.s3_config)} do
+    case {File.close(state.file),
+          ExAws.S3.Upload.complete(state.parts, state.s3_op, state.s3_config)} do
       {:ok, {:ok, _}} ->
         {:ok, state}
-      {{:error, reason}, _} -> {:error, reason}
-      {_,{:error, reason}} -> {:error, reason}
+
+      {{:error, reason}, _} ->
+        {:error, reason}
+
+      {_, {:error, reason}} ->
+        {:error, reason}
     end
   end
 end

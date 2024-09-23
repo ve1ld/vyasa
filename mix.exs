@@ -47,7 +47,8 @@ defmodule Vyasa.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.5", only: :dev},
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
+      {:phoenix_live_view,
+       github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
@@ -71,10 +72,10 @@ defmodule Vyasa.MixProject do
       {:req, "~> 0.4.0"},
       {:recase, "~> 0.5"},
       {:timex, "~> 3.0"},
-      {:ua_parser, "~> 1.9"}
+      {:ua_parser, "~> 1.9"},
+      {:inflex, "~> 2.1"}
     ]
   end
-
 
   defp live_admin_dep() do
     if path = System.get_env("LA_PATH") do

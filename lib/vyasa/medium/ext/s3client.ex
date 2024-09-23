@@ -12,7 +12,7 @@ defmodule Vyasa.Medium.Ext.S3Client do
     with {:ok, resp} <-
            Finch.build(method, url, headers, body)
            |> Finch.request(Vyasa.Finch) do
-             IO
+      IO
       {:ok, %{status_code: resp.status, body: resp.body, headers: resp.headers}}
     else
       {:error, reason} ->

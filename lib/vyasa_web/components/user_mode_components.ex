@@ -1,6 +1,7 @@
-defmodule VyasaWeb.Display.UserMode.Components do
+# TODO: rename
+defmodule VyasaWeb.UserMode.Components do
   use VyasaWeb, :html
-  alias Vyasa.Display.UserMode
+  alias VyasaWeb.ModeLive.UserMode
 
   attr :action_event, :string, required: true
   attr :action_icon_name, :string, required: true
@@ -23,7 +24,11 @@ defmodule VyasaWeb.Display.UserMode.Components do
 
   def hover_rune_quick_action(assigns) do
     ~H"""
-    <button phx-click={@action_event} class="text-gray-600 hover:text-blue-600 focus:outline-none">
+    <button
+      phx-click={@action_event}
+      phx-target={@action_target}
+      class="text-gray-600 hover:text-blue-600 focus:outline-none"
+    >
       <%= if @action_icon_name do %>
         <.icon
           name={@action_icon_name}

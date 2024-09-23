@@ -6,6 +6,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   1. stores a general playback state. This shall be agnostic to the players that rely on this playback state for synchronising their own playback states.
   2. It shall contain the common playback buttons because these buttons will be controlling all the supported players simultaneously. In so doing, playback state and actions are kept only in the media_bridge
   3. TODO: handle the sync between A/V players
+
+  1) remove handshake protocol (just simple assign to socket)
+  2) a client side component
+  3) event fragment navigation a push event from client side that calls navigation stream
+  4) remove heartbeat from server side
   """
   use VyasaWeb, :live_view
   alias Phoenix.LiveView.Socket
@@ -29,29 +34,34 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   }
 
+  @play_state %{
+    playback: nil,
+    voice: nil,
+    video: nil,
+    should_show_vid: false,
+    is_follow_mode: true,
+    video_player_config: Jason.encode!(@default_player_config)
+  }
+
   @impl true
   def mount(_params, _sess, socket) do
-    encoded_config = Jason.encode!(@default_player_config)
-
-    socket =
-      socket
-      |> assign(playback: nil)
-      |> assign(voice: nil)
-      |> assign(video: nil)
-      |> assign(video_player_config: encoded_config)
-      |> assign(should_show_vid: false)
-      |> assign(is_follow_mode: true)
-      |> sync_session()
-
-    {:ok, socket, layout: false}
+    {:ok,
+     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end)
+     |> sync_session(), layout: false}
   end
 
-  defp sync_session(%{assigns: %{session: %{"id" => id} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %VyasaWeb.Session{id: id}}} = socket)
+       when is_binary(id) do
+    IO.inspect(
+      "MediaBridge::sync_session  sub to media:session:#{id} pub to written:session:#{id}",
+      label: "SEE ME"
+    )
+
     Vyasa.PubSub.subscribe("media:session:" <> id)
+
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
 
     socket
-    |> push_event("initSession", sess |> Map.take(["id"]))
   end
 
   defp sync_session(socket) do
@@ -340,6 +350,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           }
         } = socket
       ) do
+    # FIXME: not sure why navigation and voice_ack has a regression bug now...
     prev_id =
       cond do
         is_nil(prev_voice) -> nil
@@ -367,9 +378,14 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   """
   def handle_info(
         {_, :written_handshake, :init} = _msg,
-        %{assigns: %{session: %{"id" => id}}} = socket
+        %{assigns: %{session: %{id: id}}} = socket
       ) do
+    # QQ: TODO figure out if te id payload to the message is still necessary ?
+    # NOTE: this is temporary, we will be shifting the way media-handshake works because
+    # of a refactor of how media bridge is supposed to be a nested liveview / slottable entity
+    # use this comment to track what needs to be done.
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
+    IO.inspect("written handhsaker")
     {:noreply, socket}
   end
 

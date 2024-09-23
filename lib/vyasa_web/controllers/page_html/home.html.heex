@@ -1,337 +1,339 @@
 <style>
-body, html {
-    height: 100%;
-    margin: 0;
-}
+  body, html {
+      height: 100%;
+      margin: 0;
+  }
 
-@-webkit-keyframes title {
-  0% {
-    opacity: 0;
-    right: 130px;
+  @-webkit-keyframes title {
+    0% {
+      opacity: 0;
+      right: 130px;
+    }
+    48% {
+      opacity: 0;
+      right: 130px;
+    }
+    52% {
+      opacity: 1;
+      right: 30px;
+    }
+    70% {
+      opacity: 1;
+      right: 30px;
+    }
+    100% {
+      opacity: 0;
+      right: 30px;
+    }
   }
-  48% {
-    opacity: 0;
-    right: 130px;
+  @-moz-keyframes title {
+    0% {
+      opacity: 0;
+      right: 130px;
+    }
+    48% {
+      opacity: 0;
+      right: 130px;
+    }
+    52% {
+      opacity: 1;
+      right: 30px;
+    }
+    70% {
+      opacity: 1;
+      right: 30px;
+    }
+    100% {
+      opacity: 0;
+      right: 30px;
+    }
   }
-  52% {
-    opacity: 1;
-    right: 30px;
+  @-webkit-keyframes fade {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
-  70% {
-    opacity: 1;
-    right: 30px;
+  @-moz-keyframes fade {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
-  100% {
-    opacity: 0;
-    right: 30px;
+  @-webkit-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+    5% {
+      opacity: 1;
+    }
+    10% {
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    20% {
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+    40% {
+      opacity: 0;
+      right: -21px;
+    }
+    45% {
+      opacity: 1;
+      right: 80px;
+    }
+    50% {
+      opacity: 0;
+      right: -21px;
+    }
+    51% {
+      right: -21px;
+    }
+    55% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0;
+    }
+    65% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0;
+    }
+    75% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 0;
+    }
+    85% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0;
+      right: -21px;
+    }
+    95% {
+      opacity: 1;
+      right: 80px;
+    }
+    96% {
+      right: -21px;
+    }
+    100% {
+      opacity: 0;
+      right: -21px;
+    }
   }
-}
-@-moz-keyframes title {
-  0% {
-    opacity: 0;
-    right: 130px;
+  @-moz-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+    5% {
+      opacity: 1;
+    }
+    10% {
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    20% {
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+    40% {
+      opacity: 0;
+      right: -21px;
+    }
+    45% {
+      opacity: 1;
+      right: 80px;
+    }
+    50% {
+      opacity: 0;
+      right: -21px;
+    }
+    51% {
+      right: -21px;
+    }
+    55% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0;
+    }
+    65% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0;
+    }
+    75% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 0;
+    }
+    85% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0;
+      right: -21px;
+    }
+    95% {
+      opacity: 1;
+      right: 80px;
+    }
+    96% {
+      right: -21px;
+    }
+    100% {
+      opacity: 0;
+      right: -21px;
+    }
   }
-  48% {
-    opacity: 0;
-    right: 130px;
+  body {
+    font-family: Purista,sans-serif, arial;
+    background: black;
+    color: #eaf7ff;
   }
-  52% {
-    opacity: 1;
-    right: 30px;
-  }
-  70% {
-    opacity: 1;
-    right: 30px;
-  }
-  100% {
-    opacity: 0;
-    right: 30px;
-  }
-}
-@-webkit-keyframes fade {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@-moz-keyframes fade {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@-webkit-keyframes blink {
-  0% {
-    opacity: 0;
-  }
-  5% {
-    opacity: 1;
-  }
-  10% {
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0;
-    right: -21px;
-  }
-  45% {
-    opacity: 1;
-    right: 80px;
-  }
-  50% {
-    opacity: 0;
-    right: -21px;
-  }
-  51% {
-    right: -21px;
-  }
-  55% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0;
-  }
-  65% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0;
-  }
-  75% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 0;
-  }
-  85% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-    right: -21px;
-  }
-  95% {
-    opacity: 1;
-    right: 80px;
-  }
-  96% {
-    right: -21px;
-  }
-  100% {
-    opacity: 0;
-    right: -21px;
-  }
-}
-@-moz-keyframes blink {
-  0% {
-    opacity: 0;
-  }
-  5% {
-    opacity: 1;
-  }
-  10% {
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0;
-    right: -21px;
-  }
-  45% {
-    opacity: 1;
-    right: 80px;
-  }
-  50% {
-    opacity: 0;
-    right: -21px;
-  }
-  51% {
-    right: -21px;
-  }
-  55% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0;
-  }
-  65% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0;
-  }
-  75% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 0;
-  }
-  85% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-    right: -21px;
-  }
-  95% {
-    opacity: 1;
-    right: 80px;
-  }
-  96% {
-    right: -21px;
-  }
-  100% {
-    opacity: 0;
-    right: -21px;
-  }
-}
-body {
-  font-family: Purista,sans-serif, arial;
-  background: black;
-  color: #eaf7ff;
-}
 
-.loading {
-  position: relative;
-  text-align: right;
-  text-shadow: 0 0 6px #bce4ff;
-  height: 20px;
-  width: 150px;
-}
-.loading span {
-  display: block;
-  position: absolute;
-  right: 30px;
-  height: 20px;
-  width: 200px;
-  line-height: 20px;
-}
-.loading span:after {
-  content: "";
-  display: block;
-  position: absolute;
-  top: -2px;
-  right: -21px;
-  height: 20px;
-  width: 16px;
-  background: #eaf7ff;
-  -moz-box-shadow: 0 0 15px #bce4ff;
-  -webkit-box-shadow: 0 0 15px #bce4ff;
-  box-shadow: 0 0 15px #bce4ff;
-  -moz-animation: blink 3.4s infinite;
-  -webkit-animation: blink 3.4s infinite;
-  animation: blink 3.4s infinite;
-}
-.loading span.title {
-  -moz-animation: title 3.4s linear infinite;
-  -webkit-animation: title 3.4s linear infinite;
-  animation: title 3.4s linear infinite;
-}
-.loading span.text {
-  -moz-animation: title 3.4s linear 1.7s infinite;
-  -webkit-animation: title 3.4s linear 1.7s infinite;
-  animation: title 3.4s linear 1.7s infinite;
-  opacity: 0;
-}
-
-.bgimg {
-    background-image: url('/images/vishnu.jpg');
-    height: 100%;
-    background-position: center;
-    background-size: cover;
+  .loading {
     position: relative;
-    color: white;
-    font-family: "futura-pt", sans-serif;
-    font-size: 20px;
-}
-
-.topleft {
-    position: absolute;
-    top: 8px;
-    left: 16px;
+    text-align: right;
     text-shadow: 0 0 6px #bce4ff;
-}
-
-.bottomleft {
+    height: 20px;
+    width: 150px;
+  }
+  .loading span {
+    display: block;
     position: absolute;
-    bottom: 0;
-    left: 16px;
-    text-shadow: 0 0 6px #bce4ff;
-}
-
-.middle {
+    right: 30px;
+    height: 20px;
+    width: 200px;
+    line-height: 20px;
+  }
+  .loading span:after {
+    content: "";
+    display: block;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
+    top: -2px;
+    right: -21px;
+    height: 20px;
+    width: 16px;
+    background: #eaf7ff;
+    -moz-box-shadow: 0 0 15px #bce4ff;
+    -webkit-box-shadow: 0 0 15px #bce4ff;
+    box-shadow: 0 0 15px #bce4ff;
+    -moz-animation: blink 3.4s infinite;
+    -webkit-animation: blink 3.4s infinite;
+    animation: blink 3.4s infinite;
+  }
+  .loading span.title {
+    -moz-animation: title 3.4s linear infinite;
+    -webkit-animation: title 3.4s linear infinite;
+    animation: title 3.4s linear infinite;
+  }
+  .loading span.text {
+    -moz-animation: title 3.4s linear 1.7s infinite;
+    -webkit-animation: title 3.4s linear 1.7s infinite;
+    animation: title 3.4s linear 1.7s infinite;
+    opacity: 0;
+  }
 
-hr {
-    margin: auto;
-    width: 40%;
-}
+  .bgimg {
+      background-image: url('/images/vishnu.jpg');
+      height: 100%;
+      background-position: center;
+      background-size: cover;
+      position: relative;
+      color: white;
+      font-family: "futura-pt", sans-serif;
+      font-size: 20px;
+  }
+
+  .topleft {
+      position: absolute;
+      top: 8px;
+      left: 16px;
+      text-shadow: 0 0 6px #bce4ff;
+  }
+
+  .bottomleft {
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      text-shadow: 0 0 6px #bce4ff;
+  }
+
+  .middle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+  }
+
+  hr {
+      margin: auto;
+      width: 40%;
+  }
 </style>
 <.flash_group flash={@flash} />
 <div class="left-[40rem] fixed inset-y-0 right-0 z-0 hidden lg:block xl:left-[50rem]">
-<div class="bgimg">
-  <div class="middle">
-    <div class="wrap">
-    <div class="bg">
-      <div class="loading">
-       <span class="title">Tradition is the handing down of Fire </span>
-        <span class="text"><%= assigns[:reason] && @reason.message || "not the worship of Ashes" %></span>
+  <div class="bgimg">
+    <div class="middle">
+      <div class="wrap">
+        <div class="bg">
+          <div class="loading">
+            <span class="title font-dn">वेदव्यास</span>
+            <span class="title"><br />Tradition is the handing down of Fire</span>
+            <span class="text font-ta">வியாசர்</span>
+            <span class="text">
+              <br /><%= (assigns[:reason] && @reason.message) || "not the worship of Ashes" %>
+            </span>
+          </div>
+        </div>
       </div>
+      <hr />
+      <p id="demo" style="font-size:30px"></p>
     </div>
+    <div class="bottomleft"></div>
   </div>
-    <hr>
-    <p id="demo" style="font-size:30px"></p>
-  </div>
-  <div class="bottomleft">
-
-  </div>
-</div>
 </div>
 <div class="px-4 py-10 sm:px-6 sm:py-28 lg:px-8 xl:px-28 xl:py-32">
   <div class="mx-auto max-w-xl lg:mx-0">
     <svg viewBox="0 0 71 40" class="h-12" aria-hidden="true">
-     <image xlink:href="/images/logo.svg" width="100" height="88"/>    
+      <image xlink:href="/images/logo.svg" width="100" height="88" />
     </svg>
     <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
-      Vyasa
+      <span class="title">Vyasa</span>
       <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
         v<%= Application.spec(:vyasa, :vsn) %>
       </small>
@@ -364,7 +366,7 @@ hr {
               </svg>
               Read
             </span>
-           </.link>
+          </.link>
           <a
             href="https://github.com/ve1ld/vyasa/"
             class="group relative rounded-2xl px-6 py-4 text-sm font-semibold leading-6 text-zinc-900 sm:py-6"
@@ -384,25 +386,23 @@ hr {
             </span>
           </a>
           <a
-            href={"https://discord.gg/xdANxM6AtR"}
+            href="https://discord.gg/xdANxM6AtR"
             class="group relative rounded-2xl px-6 py-4 text-sm font-semibold leading-6 text-zinc-900 sm:py-6"
           >
             <span class="absolute inset-0 rounded-2xl bg-zinc-50 transition group-hover:bg-zinc-100 sm:group-hover:scale-105">
             </span>
             <span class="relative flex items-center gap-4 sm:flex-col">
-            <svg
+              <svg
                 viewBox="0 0 16 16"
                 aria-hidden="true"
                 class="h-6 w-6 fill-zinc-800 group-hover:fill-zinc-600"
               >
                 <path d="M13.545 2.995c-1.02-.46-2.114-.8-3.257-.994a.05.05 0 0 0-.052.024c-.141.246-.297.567-.406.82a12.377 12.377 0 0 0-3.658 0 8.238 8.238 0 0 0-.412-.82.052.052 0 0 0-.052-.024 13.315 13.315 0 0 0-3.257.994.046.046 0 0 0-.021.018C.356 6.063-.213 9.036.066 11.973c.001.015.01.029.02.038a13.353 13.353 0 0 0 3.996 1.987.052.052 0 0 0 .056-.018c.308-.414.582-.85.818-1.309a.05.05 0 0 0-.028-.069 8.808 8.808 0 0 1-1.248-.585.05.05 0 0 1-.005-.084c.084-.062.168-.126.248-.191a.05.05 0 0 1 .051-.007c2.619 1.176 5.454 1.176 8.041 0a.05.05 0 0 1 .053.006c.08.065.164.13.248.192a.05.05 0 0 1-.004.084c-.399.23-.813.423-1.249.585a.05.05 0 0 0-.027.07c.24.457.514.893.817 1.307a.051.051 0 0 0 .056.019 13.31 13.31 0 0 0 4.001-1.987.05.05 0 0 0 .021-.037c.334-3.396-.559-6.345-2.365-8.96a.04.04 0 0 0-.021-.02Zm-8.198 7.19c-.789 0-1.438-.712-1.438-1.587 0-.874.637-1.586 1.438-1.586.807 0 1.45.718 1.438 1.586 0 .875-.637 1.587-1.438 1.587Zm5.316 0c-.788 0-1.438-.712-1.438-1.587 0-.874.637-1.586 1.438-1.586.807 0 1.45.718 1.438 1.586 0 .875-.63 1.587-1.438 1.587Z" />
               </svg>
-
               Discord
             </span>
           </a>
         </div>
-
       </div>
     </div>
   </div>

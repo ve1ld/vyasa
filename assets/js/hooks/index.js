@@ -8,11 +8,10 @@ import MediaBridge from "./media_bridge.js";
 import AudioPlayer from "./audio_player.js";
 import ProgressBar from "./progress_bar.js";
 import Floater from "./floater.js";
-import ApplyModal from "./apply_modal.js";
-import MargiNote from "./marginote.js";
 import HoveRune from "./hoverune.js";
 import Scrolling from "./scrolling.js";
 import ButtonClickRelayer from "./button_click_relayer.js";
+import SessionBox from "./session_box.js";
 
 let Hooks = {
   ShareQuoteButton,
@@ -23,11 +22,10 @@ let Hooks = {
   AudioPlayer,
   ProgressBar,
   Floater,
-  ApplyModal,
-  MargiNote,
   HoveRune,
   Scrolling,
   ButtonClickRelayer,
+  SessionBox,
 };
 
 export default Hooks;

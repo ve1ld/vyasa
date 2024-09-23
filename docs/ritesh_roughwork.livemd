@@ -18,22 +18,45 @@ end
 ```
 
 ```elixir
-R.recompile()
+voice_id = "b1db78be-0bdf-443c-afdf-3221bac38758"
+loaded_voice = Vyasa.Repo.get(Vyasa.Medium.Voice, voice_id)
+|> Vyasa.Medium.get_voices!()
+|> List.first()
+|> Vyasa.Medium.Store.hydrate()
 
-alias Vyasa.Medium.{Playback, Meta}
+loaded_voice.events
 
-p = Playback.init_playback()
-
-foo = [title: "hello world", artists: ["a", "b"]]
-dbg(foo)
-m = p.meta
-p = %Playback{p | meta: Map.merge(m, foo) |> dbg()}
-
-p
+module = VyasaWeb.Context.Read
+    module
+    |> Atom.to_string()          # Convert the module atom to a string
+    |> String.split(".")        # Split the string by "."
+    |> List.last()              # Take the last element (the actual module name)
+    |> Inflex.underscore()       # Convert from PascalCase to snake_case
+    |> String.replace("_", "-")  # Replace underscores with hyphens to get
 ```
 
 ```elixir
+alias VyasaWeb.ModeLive.{UiState}
 
+mod = UiState
+mod.__info__(:functions)
+    # Get the function names
+    |> Enum.map(&elem(&1, 0))
+    # Convert to strings
+    |> Enum.map(&Atom.to_string/1)
+
+modules = [mod]
+
+  modules
+    |> Enum.flat_map(fn module ->
+      case module.__info__(:functions) do
+        functions when is_list(functions) ->
+          Enum.map(functions, fn {name, _arity} ->
+            "#{module}.#{name}"  # Format as "ModuleName.function_name"
+          end)
+        _ -> []
+      end
+    end)
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
@@ -226,4 +249,4 @@ ext = ".png"
 |> (&(&1 <> ext)).()
 ```
 
-<!-- livebook:{"offset":5799,"stamp":{"token":"XCP.szn6gg1F2nwI6bwLBxIgG9O6ZB88rXDUhTt_tQAW9Ihy64U0F4nR82c2CbbWMEHsfe0lJT_KgfZdw3-x611Y7AxQIPsstcv56KVWIg","version":2}} -->
+<!-- livebook:{"offset":6722,"stamp":{"token":"XCP.54eYP5Sf0Py6qILuLMDvMYoLEBWWfqnzZ7e1agLQSlpjqC1sIebjwu_LzV6GThCheCRzwoFJvvm7P9Y86PFjp3imJfH7ePmBdOWry8wFBoEyJzMjXWUWLHR5BYHu20w6-QY8Xs_wQVAv7cuXSA","version":2}} -->
