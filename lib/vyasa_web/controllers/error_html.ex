@@ -8,7 +8,8 @@ defmodule VyasaWeb.ErrorHTML do
   #   * lib/vyasa_web/controllers/error_html/404.html.heex
   #   * lib/vyasa_web/controllers/error_html/500.html.heex
   #
-  # embed_templates "error_html/*"
+
+  embed_templates "error_html/*"
 
   # The default is to render a plain text page based on
   # the template name. For example, "404.html" becomes
@@ -16,4 +17,12 @@ defmodule VyasaWeb.ErrorHTML do
   def render(template, _assigns) do
     Phoenix.Controller.status_message_from_template(template)
   end
+end
+
+defmodule VyasaWeb.ErrorHTML.FourOThree do
+  defexception [:message, plug_status: 403]
+end
+
+defmodule VyasaWeb.ErrorHTML.FourOFour do
+  defexception [:message, plug_status: 404]
 end

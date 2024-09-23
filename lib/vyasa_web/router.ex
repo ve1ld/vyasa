@@ -3,6 +3,7 @@ defmodule VyasaWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug CORSPlug, origin: ["https://www.youtube.com/iframe_api"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {VyasaWeb.Layouts, :root}
@@ -17,16 +18,21 @@ defmodule VyasaWeb.Router do
   scope "/", VyasaWeb do
     pipe_through :browser
 
+    get "/og/:filename", OgImageController, :show
+
     get "/", PageController, :home
-    live "/gita/", GitaLive.Index, :index
-    live "/gita/:id", GitaLive.Show, :show
-    live "/texts", TextLive.Index, :index
-    live "/texts/new", TextLive.Index, :new
-    live "/texts/:id/edit", TextLive.Index, :edit
 
-    live "/texts/:id", TextLive.Show, :show
-    live "/texts/:id/show/edit", TextLive.Show, :edit
+    live_session :gen_sangh_session,
+      on_mount: [{VyasaWeb.Session, :sangh}, {VyasaWeb.Hook.UserAgent, :default}] do
+      live "/explore/", ModeLive.Mediator, :show_sources
+      live "/explore/:source_title/", ModeLive.Mediator, :show_chapters
+      live "/explore/:source_title/:chap_no", ModeLive.Mediator, :show_verses
+    end
 
+    live_admin "/admin" do
+      admin_resource("/verses", VyasaWeb.Admin.Written.Verse)
+      admin_resource("/events", VyasaWeb.Admin.Medium.Event)
+    end
   end
 
   # Other scopes may use custom stacks.

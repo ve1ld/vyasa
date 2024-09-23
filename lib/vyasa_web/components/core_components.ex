@@ -15,9 +15,9 @@ defmodule VyasaWeb.CoreComponents do
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
   use Phoenix.Component
+  use Gettext, backend: VyasaWeb.Gettext
 
   alias Phoenix.LiveView.JS
-  import VyasaWeb.Gettext
 
   @doc """
   Renders a modal.
@@ -86,6 +86,117 @@ defmodule VyasaWeb.CoreComponents do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:show, :boolean, default: false)
+  attr(:on_cancel, JS, default: %JS{}, doc: "JS cancel action")
+  attr(:on_confirm, JS, default: %JS{}, doc: "JS confirm action")
+  attr(:background, :string, default: "bg-white")
+  attr(:close_button, :boolean, default: true)
+  attr(:main_width, :string, default: "w-full")
+
+  slot(:inner_block, required: true)
+
+  slot(:confirm) do
+    attr(:tone, :atom)
+  end
+
+  slot(:cancel)
+
+  def modal_wrapper(assigns) do
+    ~H"""
+    <div id={@id} phx-mounted={@show && show_modal(@id)} class="relative z-50 hidden w-full mx-auto">
+      <div
+        id={"#{@id}-bg"}
+        class={["fixed inset-0 bg-gray-500 dark:bg-black opacity-90 dark:opacity-80", @background]}
+        aria-hidden="true"
+      />
+      <div
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+        class="w-full fixed inset-0 flex"
+      >
+        <div class="flex w-full absolute lg:inset-0 bottom-0 lg:items-center lg:justify-center">
+          <div class={["w-full lg:py-8 rounded-none lg:rounded-2xl", @main_width]}>
+            <.focus_wrap
+              id={"#{@id}-container"}
+              phx-mounted={@show && show_modal(@id)}
+              phx-window-keydown={hide_modal(@on_cancel, @id)}
+              phx-key="escape"
+              phx-click-away={hide_modal(@on_cancel, @id)}
+              class="hidden relative flex w-full bg-white lg:rounded-3xl lg:shadow-2xl"
+            >
+              <div :if={@close_button} class="absolute top-4 right-4">
+                <button
+                  phx-click={hide_modal(@on_cancel, @id)}
+                  type="button"
+                  class="-m-3 flex-none p-3 opacity-80 hover:opacity-40"
+                  aria-label={gettext("close")}
+                >
+                  <.icon name="hero-x-mark-solid" class="h-5 w-5 text-white" />
+                </button>
+              </div>
+              <div id={"#{@id}-content"}>
+                <div
+                  id={"#{@id}-main"}
+                  class="w-full lg:max-w-2xl lg:items-center lg:justify-center flex"
+                >
+                  <%= render_slot(@inner_block) %>
+                </div>
+                <div
+                  :if={@confirm != [] or @cancel != []}
+                  class="p-4 flex flex-row-reverse items-center gap-5"
+                >
+                  <.button
+                    :for={confirm <- @confirm}
+                    id={"#{@id}-confirm"}
+                    tone={Map.get(confirm, :tone, :primary)}
+                    phx-click={@on_confirm}
+                    phx-disable-with
+                    class="py-2 px-3"
+                  >
+                    <%= render_slot(confirm) %>
+                  </.button>
+                  <.link
+                    :for={cancel <- @cancel}
+                    phx-click={hide_modal(@on_cancel, @id)}
+                    class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+                  >
+                    <%= render_slot(cancel) %>
+                  </.link>
+                </div>
+              </div>
+            </.focus_wrap>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a waiting spinner
+  """
+  def spinner(assigns) do
+    ~H"""
+    <svg
+      class="animate-spin h-10 w-10 text-blue-500"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="orange" stroke-width="4"></circle>
+      <path
+        class="opacity-75"
+        fill="orange"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 6.627 5.373 12 12 12v-4a7.946 7.946 0 01-6-2.709z"
+      >
+      </path>
+    </svg>
     """
   end
 
@@ -220,6 +331,13 @@ defmodule VyasaWeb.CoreComponents do
       <.button phx-click="go" class="ml-2">Send!</.button>
   """
   attr :type, :string, default: nil
+
+  attr(:tone, :atom,
+    default: :primary,
+    values: ~w(primary inline success warning danger)a,
+    doc: "Theme of the button"
+  )
+
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
 
@@ -231,6 +349,7 @@ defmodule VyasaWeb.CoreComponents do
       type={@type}
       class={[
         "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
+        button_class(@tone),
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         @class
       ]}
@@ -240,6 +359,14 @@ defmodule VyasaWeb.CoreComponents do
     </button>
     """
   end
+
+  defp button_class(:primary),
+    do:
+      "focus:outline-none focus:ring-4 font-bold rounded-xl lg:text-base text-sm px-5 py-2.5 text-center bg-[#9747FF] text-[#D1D1D1] hover:bg-purple-700 focus:ring-purple-900 font-poppins"
+
+  defp button_class(:inline),
+    do:
+      "inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none"
 
   @doc """
   Renders an input with label and error messages.
@@ -441,6 +568,102 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a sidenote w action slots for interaction with sidenote
+  """
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+  slot :quote
+  slot :subtitle
+  slot :actions
+
+  def sidenote(assigns) do
+    ~H"""
+    <header class={[@actions == [] && "w-64 bg-white rounded-md shadow-xl p-px", @class]}>
+      <!-- Comment Header -->
+      <div class="text-black">
+        <div class="rounded pt-0 pb-3">
+          <!-- User Info Section -->
+          <div class="flex flex-col pt-2">
+            <div class="flex items-start text-sm leading-5">
+              <div class="flex-grow">
+                <!-- User Profile Section -->
+                <div class="flex items-center pt-1 pr-4 pb-0 pl-3 select-none">
+                  <div class="mr-2">
+                    <div class="w-5 h-5 overflow-hidden">
+                      <!-- User Profile Image -->
+                      <img
+                        src="https://yt3.ggpht.com/3L3vTo8jRmmhs1DPOyriFSxav8BZK87btsSd3taeiwo9a2T5bjzCBKscy1NeFZJbKMlTVKhg=s88-c-k-c0x00ffffff-no-rj"
+                        class="block object-cover w-full h-full rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <!-- User Info -->
+                  <div class="overflow-hidden">
+                    <span class="font-semibold">Anonymous</span>
+                    <div class="inline ml-20 text-xs text-gray-500">Jan 7</div>
+                  </div>
+                </div>
+                <!-- Comment Content Section -->
+                <div class="pt-px pr-4 pb-1 pl-10">
+                  <div :if={@quote != []} class="flex">
+                    <!-- Comment Indicator -->
+                    <div class="pb-px mr-2 w-1 bg-yellow-500 rounded"></div>
+                    <div class="overflow-hidden">
+                      <span class="text-left no-underline">
+                        <%= render_slot(@quote) %>
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Comment Text Section -->
+                  <div class="mt-4 pl-0 max-w-full" spellcheck="true" contenteditable="false">
+                    private posts
+                  </div>
+                </div>
+              </div>
+              <!-- Action Buttons Section -->
+              <div class="flex-shrink-0 ml-2">
+                <!-- Add your buttons here -->
+              </div>
+            </div>
+          </div>
+          <!-- Comment Input Section -->
+          <div class="relative pt-1 pr-3 pl-2">
+            <div class="flex flex-col w-full cursor-pointer">
+              <div class="flex items-center flex-grow">
+                <!-- Comment Input Box -->
+                <div class="flex flex-col self-center w-full text-sm leading-5 rounded cursor-text">
+                  <div
+                    class="max-w-full whitespace-pre-wrap"
+                    spellcheck="true"
+                    contenteditable="true"
+                    placeholder="Reply..."
+                  ></div>
+                  <div class="inline-block items-center absolute bottom-0 right-0 opacity-1">
+                    <!-- Comment Action Buttons Section -->
+                    <div class="flex items-left ">
+                      <button class="inline-block items-center p-0 mr-5 w-5 h-5 rounded pointer-events-auto select-none">
+                        <svg
+                          role="graphics-symbol"
+                          viewBox="0 0 20 20"
+                          class="block flex-shrink-0 w-6 h-6 align-middle"
+                        >
+                          <path d="M9.79883 18.5894C14.6216 18.5894 18.5894 14.6216 18.5894 9.79883C18.5894 4.96777 14.6216 1 9.79053 1C4.95947 1 1 4.96777 1 9.79883C1 14.6216 4.96777 18.5894 9.79883 18.5894ZM9.79883 14.3062C9.20947 14.3062 8.76953 13.9077 8.76953 13.3433V9.69922L8.86914 8.00586L8.25488 8.84424L7.3916 9.81543C7.23389 10.0063 6.98486 10.1143 6.72754 10.1143C6.21289 10.1143 5.84766 9.75732 5.84766 9.25928C5.84766 8.99365 5.92236 8.79443 6.12158 8.58691L8.96045 5.61523C9.19287 5.35791 9.4585 5.2417 9.79883 5.2417C10.1309 5.2417 10.4048 5.36621 10.6372 5.61523L13.4761 8.58691C13.667 8.79443 13.75 8.99365 13.75 9.25928C13.75 9.75732 13.3848 10.1143 12.8618 10.1143C12.6128 10.1143 12.3638 10.0063 12.2061 9.81543L11.3428 8.86914L10.7202 7.99756L10.8281 9.69922V13.3433C10.8281 13.9077 10.3799 14.3062 9.79883 14.3062Z">
+                          </path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    """
+  end
+
   @doc ~S"""
   Renders a table with generic styling.
 
@@ -536,9 +759,12 @@ defmodule VyasaWeb.CoreComponents do
   def list(assigns) do
     ~H"""
     <div class="mt-14">
+      <%= render_slot(@inner_block) %>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500"><%= item.title %></dt>
+          <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500">
+            <%= item.title %>
+          </dt>
           <dd class="text-zinc-700"><%= render_slot(item) %></dd>
         </div>
       </dl>
@@ -553,19 +779,30 @@ defmodule VyasaWeb.CoreComponents do
 
       <.back navigate={~p"/posts"}>Back to posts</.back>
   """
-  attr :navigate, :any, required: true
+  attr :navigate, :any, default: nil
+  attr :patch, :any, default: nil
   slot :inner_block, required: true
 
   def back(assigns) do
     ~H"""
     <div class="mt-16">
-      <.link
-        navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-      >
-        <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-        <%= render_slot(@inner_block) %>
-      </.link>
+      <%= if @patch do %>
+        <.link
+          patch={@patch}
+          class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        >
+          <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
+          <%= render_slot(@inner_block) %>
+        </.link>
+      <% else %>
+        <.link
+          navigate={@navigate}
+          class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        >
+          <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
+          <%= render_slot(@inner_block) %>
+        </.link>
+      <% end %>
     </div>
     """
   end

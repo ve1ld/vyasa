@@ -84,7 +84,8 @@ RUN chown nobody /app
 
 # copies over font files, updates debian runner's font cache:
 RUN echo "...syncing font file(s)"
-COPY ./priv/static/fonts/gotu/* /usr/share/fonts/truetype/
+COPY ./priv/static/fonts/dn/* /usr/share/fonts/truetype/
+COPY ./priv/static/fonts/ta/* /usr/share/fonts/truetype/
 RUN apt-get update && apt-get install -y fontconfig
 RUN fc-cache -f -v
 RUN echo "...[DONE] syncing font file(s)"

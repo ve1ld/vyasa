@@ -7,9 +7,10 @@ defmodule Vyasa.MixProject do
       version: "0.1.0-alpha.1",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-       elixirc_options: [
+      elixirc_options: [
         warnings_as_errors: true
       ],
+      escript: escript(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -26,6 +27,11 @@ defmodule Vyasa.MixProject do
     ]
   end
 
+  # Defining Scripting Env
+  defp escript do
+    [main_module: VyasaCLI]
+  end
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
@@ -35,14 +41,15 @@ defmodule Vyasa.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.10"},
+      {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.3"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.1"},
-      {:floki, ">= 0.30.0", only: :test},
+      {:phoenix_html, "~> 4.0"},
+      {:phoenix_live_reload, "~> 1.5", only: :dev},
+      {:phoenix_live_view,
+       github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
+      {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
@@ -51,10 +58,31 @@ defmodule Vyasa.MixProject do
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
-      {:jason, "~> 1.2"},
+      {:jason, "~> 1.4"},
       {:dns_cluster, "~> 0.1.1"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:ecto_ltree, "~> 0.4.0"},
+      {:image, "~> 0.53"},
+      {:vix, "~> 0.5"},
+      {:kino, "~> 0.13"},
+      {:cors_plug, "~> 3.0"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:live_admin, live_admin_dep()},
+      {:req, "~> 0.4.0"},
+      {:recase, "~> 0.5"},
+      {:timex, "~> 3.0"},
+      {:ua_parser, "~> 1.9"},
+      {:inflex, "~> 2.1"}
     ]
+  end
+
+  defp live_admin_dep() do
+    if path = System.get_env("LA_PATH") do
+      [path: path]
+    else
+      [github: "ks0m1c/live_admin", ref: "8201e03"]
+    end
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
@@ -71,7 +99,11 @@ defmodule Vyasa.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind default", "esbuild default"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify --loader:.ttf=file", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "esbuild default --minify --loader:.ttf=file",
+        "phx.digest"
+      ]
     ]
   end
 end

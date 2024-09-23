@@ -27,6 +27,9 @@ defmodule VyasaWeb do
       import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import Admin Routes
+      import LiveAdmin.Router
     end
   end
 
@@ -43,9 +46,25 @@ defmodule VyasaWeb do
         layouts: [html: VyasaWeb.Layouts]
 
       import Plug.Conn
-      import VyasaWeb.Gettext
+      use Gettext, backend: VyasaWeb.Gettext
 
       unquote(verified_routes())
+    end
+  end
+
+  def live_view(opts) do
+    quote do
+      @opts Keyword.merge(
+              [
+                layout: {VyasaWeb.Layouts, :app},
+                container: {:div, class: "relative h-screen flex overflow-hidden bg-white"}
+              ],
+              unquote(opts)
+            )
+
+      use Phoenix.LiveView, @opts
+
+      unquote(html_helpers())
     end
   end
 
@@ -85,8 +104,9 @@ defmodule VyasaWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import VyasaWeb.CoreComponents
-      import VyasaWeb.Gettext
-
+      use Gettext, backend: VyasaWeb.Gettext
+      # String Formating for Display
+      import Utils.String, only: [to_title_case: 1]
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 
@@ -107,6 +127,10 @@ defmodule VyasaWeb do
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
+  defmacro __using__({which, opts}) when is_atom(which) do
+    apply(__MODULE__, which, [opts])
+  end
+
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end

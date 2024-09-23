@@ -1,3 +1,5 @@
+# TODO: REMOVE THIS
+# DEPRECATED: migration file needs to be updated before removing this
 defmodule Vyasa.Written.Text do
   use Ecto.Schema
   import Ecto.Changeset
