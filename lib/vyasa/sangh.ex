@@ -8,7 +8,6 @@ defmodule Vyasa.Sangh do
   alias Vyasa.Repo
   alias Vyasa.Sangh.Sheaf
 
-
   @doc """
   Returns the list of sheafs within a specific session.
 
@@ -19,9 +18,10 @@ defmodule Vyasa.Sangh do
 
   """
   def list_sheafs_by_session(id) do
-    (from c in Sheaf,
+    from(c in Sheaf,
       where: c.session_id == ^id,
-      select: c)
+      select: c
+    )
     |> Repo.all()
   end
 
@@ -62,75 +62,82 @@ defmodule Vyasa.Sangh do
   def get_sheaf!(id), do: Repo.get!(Sheaf, id)
 
   def get_sheaf(id) do
-    (from c in Sheaf,
+    from(c in Sheaf,
       where: c.id == ^id,
-      limit: 1)
+      limit: 1
+    )
     |> Repo.one()
   end
-
 
   def get_descendents_sheaf(id) do
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.parent_id == ^id,
-      order_by: [desc: c.inserted_at],
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.parent_id == ^id,
+        order_by: [desc: c.inserted_at],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
+
     Repo.all(query)
   end
-
 
   def get_root_sheafs_by_sheaf(id) do
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.sheaf_id == ^id,
-      where: nlevel(c.path) == 1,
-      preload: [:initiator],
-      order_by: [desc: c.inserted_at],
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.sheaf_id == ^id,
+        where: nlevel(c.path) == 1,
+        preload: [:initiator],
+        order_by: [desc: c.inserted_at],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
-
   end
 
   def get_descendents_sheaf(id, page) do
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.parent_id == ^id,
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.parent_id == ^id,
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
-    Repo.Paginated.all(query, [page: page, asc: true])
+    Repo.Paginated.all(query, page: page, asc: true)
   end
 
   def get_root_sheafs_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.session_id == ^id,
-      where: nlevel(c.path) == 1,
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.session_id == ^id,
+        where: nlevel(c.path) == 1,
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
@@ -145,9 +152,10 @@ defmodule Vyasa.Sangh do
   end
 
   def get_sheafs_by_session(id) do
-    query = Sheaf
-    |> where([c], c.session_id == ^id)
-    |> order_by(desc: :inserted_at)
+    query =
+      Sheaf
+      |> where([c], c.session_id == ^id)
+      |> order_by(desc: :inserted_at)
 
     Repo.all(query)
   end
@@ -156,10 +164,10 @@ defmodule Vyasa.Sangh do
     query =
       Sheaf
       |> where([e], e.session_id == ^id)
-    |> select([e], count(e))
+      |> select([e], count(e))
+
     Repo.one(query)
   end
-
 
   # Gets child sheafs 1 level down only
   def get_child_sheafs_by_session(id, path) do
@@ -167,16 +175,18 @@ defmodule Vyasa.Sangh do
 
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.session_id == ^id,
-      where: fragment("? ~ ?", c.path, ^path),
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.session_id == ^id,
+        where: fragment("? ~ ?", c.path, ^path),
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
   end
@@ -186,16 +196,18 @@ defmodule Vyasa.Sangh do
   def get_ancestor_sheafs_by_sheaf(sheaf_id, path) do
     query =
       from c in Sheaf,
-      as: :c,
-      where: c.sheaf_id == ^sheaf_id,
-      where: fragment("? @> ?", c.path, ^path),
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Sheaf,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+        as: :c,
+        where: c.sheaf_id == ^sheaf_id,
+        where: fragment("? @> ?", c.path, ^path),
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
   end
@@ -280,7 +292,6 @@ defmodule Vyasa.Sangh do
   defp sort_sheafs_chrono(sheafs) do
     Enum.sort_by(sheafs, &elem(&1, 1).inserted_at, :desc)
   end
-
 
   alias Vyasa.Sangh.Session
 

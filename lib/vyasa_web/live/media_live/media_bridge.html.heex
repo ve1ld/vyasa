@@ -1,36 +1,38 @@
 <style>
- .tooltip {
-  display: none;
-  width: max-content;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: cyan;
-  color: black;
-  font-weight: bold;
-  padding: 5px;
-  border-radius: 4px;
-  font-size: 90%;
- }
- .container-YouTubePlayerHidden {
+  .tooltip {
    display: none;
- }
- .container-YouTubePlayer {
+   width: max-content;
    position: absolute;
    top: 0;
    left: 0;
- }
+   background: cyan;
+   color: black;
+   font-weight: bold;
+   padding: 5px;
+   border-radius: 4px;
+   font-size: 90%;
+  }
+  .container-YouTubePlayerHidden {
+    display: none;
+  }
+  .container-YouTubePlayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
 </style>
 
-
-<div id="media-player-container" phx-hook="MediaBridge" class="sticky top-0" >
+<div id="media-player-container" phx-hook="MediaBridge" class="sticky top-0">
   <!-- player -->
   <div id="media-player" class="w-full" role="region" aria-label="Player">
     <div id="media-process-display-container">
       <div class="bg-white dark:bg-brandDark opacity-85 hover:opacity-100 backdrop-blur-lg p-4">
         <div class="flex justify-between items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5 px-2 sm:px-4">
           <div id="playback-info" class="w-1/6 pr-1 sm:pr-2 min-w-0 flex-col space-y-0.5">
-            <p :if={@playback} class="text-black dark:text-brandAccentLight text-xs sm:text-sm font-semibold truncate">
+            <p
+              :if={@playback}
+              class="text-black dark:text-brandAccentLight text-xs sm:text-sm font-semibold truncate"
+            >
               <%= @playback.meta.title %>
             </p>
             <p class="text-gray-500 dark:text-brandAccentLight text-xs sm:text-sm font-medium truncate">
@@ -44,7 +46,7 @@
           <.progress_bar
             id="player-progress"
             max={(@voice && @voice.duration) || 100}
-            value={@playback && @playback.elapsed || 0}
+            value={(@playback && @playback.elapsed) || 0}
             class="w-4/6"
           />
           <div
@@ -58,15 +60,18 @@
         </div>
       </div>
     </div>
-    <div id="media-controls-container"
-         class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight
-             px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center">
+    <div
+      id="media-controls-container"
+      class="bg-gray-50 text-black dark:bg-brandExtraDark dark:text-brandAccentLight
+             px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center"
+    >
       <div class="flex items-center space-x-4 sm:space-x-6 lg:space-x-8">
         <button
           id="media-bridge-left-nav"
           phx-hook="ButtonClickRelayer"
           data-target-relay-id="action-bar-action-button-nav_back"
-          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
+          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110"
+        >
           <.icon name="hero-arrow-left-circle" />
         </button>
 
@@ -91,7 +96,8 @@
           id="media-bridge-right-nav"
           phx-hook="ButtonClickRelayer"
           data-target-relay-id="action-bar-action-button-nav_fwd"
-          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110">
+          class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110"
+        >
           <.icon name="hero-arrow-right-circle" />
         </button>
       </div>
@@ -100,7 +106,7 @@
   <!-- /player -->
 
   <!-- VIDEO PLAYER -->
-  <div id="video-player-container" :if={@video}>
+  <div :if={@video} id="video-player-container">
     <.video_player
       video={@video}
       heartbeat={@playback && @playback.elapsed}
@@ -108,5 +114,5 @@
       player_config={@video_player_config}
     />
   </div>
-  <.live_component module={VyasaWeb.AudioPlayer} id={"audio-player"}/>
+  <.live_component module={VyasaWeb.AudioPlayer} id="audio-player" />
 </div>

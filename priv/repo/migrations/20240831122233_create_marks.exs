@@ -2,7 +2,6 @@ defmodule Vyasa.Repo.Migrations.CreateMarks do
   use Ecto.Migration
 
   def change do
-
     create table(:marks, primary_key: false) do
       add :id, :uuid, primary_key: true
       add :body, :string
@@ -18,6 +17,5 @@ defmodule Vyasa.Repo.Migrations.CreateMarks do
 
     create index(:marks, [:sheaf_id])
     create index(:marks, [:binding_id])
-
   end
- end
+end

@@ -27,7 +27,6 @@ defmodule Vyasa.SanghTest do
       assert session.id == "7488a646-e31f-11e4-aace-600308960662"
     end
 
-
     test "update_session/2 with valid data updates the session" do
       session = session_fixture()
       update_attrs = %{id: "7488a646-e31f-11e4-aace-600308960668"}
@@ -35,7 +34,6 @@ defmodule Vyasa.SanghTest do
       assert {:ok, %Session{} = session} = Sangh.update_session(session, update_attrs)
       assert session.id == "7488a646-e31f-11e4-aace-600308960668"
     end
-
 
     test "delete_session/1 deletes the session" do
       session = session_fixture()

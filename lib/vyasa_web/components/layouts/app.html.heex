@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
       <a href="/" class="">
-        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal"/>
+        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal" />
       </a>
       <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
         v<%= Application.spec(:vyasa, :vsn) %>
@@ -13,7 +13,7 @@
         href="https://github.com/ve1ld/vyasa"
         class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
       >
-       <span aria-hidden="true">~</span>/vyasa
+        <span aria-hidden="true">~</span>/vyasa
       </a>
     </div>
   </div>
@@ -23,6 +23,10 @@
     <.flash_group flash={@flash} />
   </div>
   <!-- DM manages the core layouts -->
-  <%= live_render(@socket, VyasaWeb.ModeLive.Mediator, id: "Mediator", session: @session, sticky: true) %>
-    <%= @inner_content %>
+  <%= live_render(@socket, VyasaWeb.ModeLive.Mediator,
+    id: "Mediator",
+    session: @session,
+    sticky: true
+  ) %>
+  <%= @inner_content %>
 </main>

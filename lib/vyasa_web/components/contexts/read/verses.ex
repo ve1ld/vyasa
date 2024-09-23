@@ -70,7 +70,6 @@ defmodule VyasaWeb.Content.Verses do
     """
   end
 
-
   # @impl true
   # def handle_event("reportVideoStatus", payload, socket) do
   #   IO.inspect(payload)

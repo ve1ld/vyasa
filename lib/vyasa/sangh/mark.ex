@@ -1,6 +1,11 @@
 defmodule Vyasa.Sangh.Mark do
   @moduledoc """
-  Interpretation & bounding of binding
+  Interpretation & bounding of binding.
+  We can mark anything that we can create a binding for.
+
+  A mark should be seen as a single interpretation of a binding.
+  example: for text X, verse Y, we can have many marks, each offerring their own interpretation of Y.
+  An analogy for it would be "we left a mark on something...".
   """
 
   use Ecto.Schema

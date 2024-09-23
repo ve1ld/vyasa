@@ -1,6 +1,7 @@
 defmodule Vyasa.Draft do
   @moduledoc """
   The Drafting Context for all your marking and binding needs
+  User-generated artefacts like marks and sheafs that are around the written context are interacted with via this Draft context.
   """
 
   import Ecto.Query, warn: false

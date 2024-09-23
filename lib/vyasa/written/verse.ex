@@ -14,7 +14,6 @@ defmodule Vyasa.Written.Verse do
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_many :translations, Translation
-
   end
 
   @doc false

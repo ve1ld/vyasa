@@ -9,7 +9,7 @@ defmodule Vyasa.Medium.Store do
   @bucket "vyasa"
 
   def path(st) when is_struct(st) do
-    #input and output paths
+    # input and output paths
     {local_path(st), path_constructor(st)}
   end
 
@@ -38,7 +38,7 @@ defmodule Vyasa.Medium.Store do
   end
 
   def hydrate([%Medium.Voice{} | _] = voices) do
-    Enum.map(voices, &(%{&1 | file_path: get!(&1)}))
+    Enum.map(voices, &%{&1 | file_path: get!(&1)})
   end
 
   def hydrate(%Medium.Voice{} = voice) do
@@ -48,7 +48,8 @@ defmodule Vyasa.Medium.Store do
   def hydrate(rt), do: rt
 
   def download(%Medium.Voice{file_path: url} = v) do
-     bin = Finch.build(:get, url)
+    bin =
+      Finch.build(:get, url)
       |> Finch.request!(Vyasa.Finch)
       |> Map.get(:body)
 
@@ -56,7 +57,6 @@ defmodule Vyasa.Medium.Store do
     |> tap(&File.mkdir_p!(Path.dirname(&1)))
     |> File.write!(bin)
   end
-
 
   def s3_config do
     %{
@@ -75,16 +75,19 @@ defmodule Vyasa.Medium.Store do
   defp signer(:headandget, path) do
     ExAws.S3.head_object("orbistertius", path)
     |> ExAws.request!()
+
     ## with 200
     signer(:get, path)
     ## else (pass signer link of fallback image function or nil)
   end
 
-
   defp signer(action, path) do
-    ExAws.Config.new(:s3, s3_config()) |>
-      ExAws.S3.presigned_url(action, @bucket, path,
-        [expires_in: 88888, virtual_host: false, query_params: [{"ContentType", "application/octet-stream"}]])
+    ExAws.Config.new(:s3, s3_config())
+    |> ExAws.S3.presigned_url(action, @bucket, path,
+      expires_in: 88888,
+      virtual_host: false,
+      query_params: [{"ContentType", "application/octet-stream"}]
+    )
   end
 
   defp local_path(%Medium.Voice{file_path: local_path}) do
@@ -92,20 +95,23 @@ defmodule Vyasa.Medium.Store do
   end
 
   defp path_constructor(%Medium.Voice{__meta__: %{source: type}, id: id}) do
-    "#{type}/#{id}.mp3" #default to mp3 ext for now
+    # default to mp3 ext for now
+    "#{type}/#{id}.mp3"
   end
 
-  defp path_constructor(%Medium.Voice{__meta__: %{source: type}, source: %{title: st}, meta: %{artists: [ artist | _]}}) do
+  defp path_constructor(%Medium.Voice{
+         __meta__: %{source: type},
+         source: %{title: st},
+         meta: %{artists: [artist | _]}
+       }) do
     "#{type}#{unless is_nil(st),
-          do: "/#{st}"}#{unless is_nil(artist),
-          do: "/#{artist}"}"
+      do: "/#{st}"}#{unless is_nil(artist),
+      do: "/#{artist}"}"
   end
-
 
   # defp path_suffix(full, prefix) do
   #   base = byte_size(prefix)
   #   <<_::binary-size(base), rest::binary>> = full
   #   rest
   # end
-
 end

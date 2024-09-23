@@ -67,20 +67,17 @@ defmodule VyasaWeb.OgImageController do
     %{text: "#{Recase.to_title(title)} Chapter #{c_no}\n\
     #{c_title}\n
     #{t_title}
-    ",
-     lang: lang
-    }
+    ", lang: lang}
   end
 
   def template(%Binding{chapter: %{no: c_no, title: c_title}, source: %{title: title, lang: lang}}) do
     %{text: "#{Recase.to_title(title)} Chapter #{c_no}\n\
     #{c_title} \n
-    ",
-     lang: lang
-    }
+    ", lang: lang}
   end
 
-  def template(%Binding{source: %{title: title, lang: lang}}), do: %{text: "#{Recase.to_title(title)}", lang: lang}
+  def template(%Binding{source: %{title: title, lang: lang}}),
+    do: %{text: "#{Recase.to_title(title)}", lang: lang}
 
   def template(_) do
     @fallback_text

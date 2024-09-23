@@ -1,0 +1,7 @@
+#+title: Readme
+
+* Purpose
+Adapters are modules that align to the [[https://refactoring.guru/design-patterns/adapter]["Adapter" structural pattern]].
+It's not necessary that they must interface to an external service or anything.
+
+Currently only Binding module satisfies this and it's because it serves as a glue between different structs.
