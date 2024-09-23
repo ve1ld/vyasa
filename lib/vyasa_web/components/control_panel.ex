@@ -18,6 +18,8 @@ defmodule VyasaWeb.ControlPanel do
 
   attr :mode, UserMode, required: true
   @impl true
+  # TODO: as a stop-gap we're using functions from Hoverune, this needs to be changed and
+  # we need a component specific to control panel for the rendering of mode-specific action buttons
   def render(assigns) do
     ~H"""
     <div class="fixed top-15 right-4 z-30 flex flex-col items-end">

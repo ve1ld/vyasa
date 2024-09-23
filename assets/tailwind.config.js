@@ -30,6 +30,9 @@ module.exports = {
       fontSize: {
         xs: "0.65rem",
       },
+      fontSize: {
+        xs: "0.65rem",
+      },
       colors: {
         primary: "var(--color-primary)",
         primaryAccent: "var(--color-primary-accent)",
