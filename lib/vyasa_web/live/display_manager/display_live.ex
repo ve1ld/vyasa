@@ -38,16 +38,21 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: _sangh_id}} = sess}} = socket) when is_binary(id) do
+  defp sync_session(
+         %{assigns: %{session: %Session{id: id, sangh: %{id: _sangh_id}} = sess}} = socket
+       )
+       when is_binary(id) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
   end
 
-  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
+       when is_binary(id) do
     # initialises sangh if uninitiated (didnt init at Vyasa.Session)
     {:ok, sangh} = Sangh.create_session()
     sangh_sess = %{sess | sangh: sangh}
+
     socket
     |> assign(session: sangh_sess)
     |> push_event("initSession", sangh_sess)
@@ -166,15 +171,14 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-
     send_update(component, id: selector)
     {:noreply, socket}
   end
 
   def handle_info({"helm", dest}, socket) do
-      {:noreply, socket
-       |> push_patch([to: dest, replace: true])
-      }
+    {:noreply,
+     socket
+     |> push_patch(to: dest, replace: true)}
   end
 
   @impl true
