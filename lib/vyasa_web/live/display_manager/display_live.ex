@@ -3,6 +3,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   Testing out nested live_views
   """
   use VyasaWeb, :live_view
+
   on_mount VyasaWeb.Hook.UserAgentHook
 
   alias Vyasa.Display.UserMode
@@ -20,6 +21,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   @impl true
   def mount(_params, sess, socket) do
     # encoded_config = Jason.encode!(@default_player_config)
+
     %UserMode{
       # TEMP
       show_media_bridge_default?: show_media_bridge_default?
@@ -36,6 +38,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       |> assign(show_media_bridge?: show_media_bridge_default?),
       # temp
       # |> assign(show_media_bridge?: true),
+
       layout: {VyasaWeb.Layouts, :display_manager}
     }
   end
@@ -67,6 +70,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   defp apply_action(%Socket{} = socket, :show_sources, _params) do
     IO.inspect(:show_sources, label: "TRACE: apply action DM action show_sources:")
     # IO.inspect(params, label: "TRACE: apply action DM params:")
+
 
     socket
     |> stream(:sources, Written.list_sources())
@@ -190,6 +194,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         socket
         |> assign(mode: UserMode.get_mode(target))
     end
+
   end
 
   defp change_mode(socket, _, _) do
@@ -209,6 +214,8 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     IO.inspect(socket, label: "TRACE: NO SYNC OF SESSION!")
     socket
   end
+
+
 
   @impl true
   def handle_event(
@@ -258,6 +265,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       when is_binary(curr_verse_id) and verse_id != curr_verse_id do
     # binding here blocks the stream from appending to quote
     bind = Draft.bind_node(bind)
+
     bound_verses = verses
        |> then(&put_in(&1[verse_id].binding, bind))
        |> then(&put_in(&1[curr_verse_id].binding, nil))
@@ -266,6 +274,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
      socket
      |> mutate_verses(curr_verse_id, bound_verses)
      |> mutate_verses(verse_id, bound_verses)
+
      |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
   end
 
@@ -282,6 +291,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
+
      |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
   end
 
@@ -292,6 +302,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
       ) do
     bind = Draft.bind_node(bind)
+
     bound_verses = put_in(verses[verse_id].binding, bind)
 
     {:noreply,
@@ -386,6 +397,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_event(
+
         "markQuote",
         _,
         %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
@@ -395,6 +407,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   end
 
   @impl true
+
   def handle_event("markQuote", _, socket) do
     {:noreply, socket}
   end
@@ -450,6 +463,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
       socket
       |> assign(:show_media_bridge?, should_show_media_bridge(device_type, false))
     }
+
   end
 
   def handle_event(event, message, socket) do
@@ -475,6 +489,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
+
     case Medium.get_voice(src_id, c_no, @default_voice_lang) do
       %Voice{} = v ->
         Vyasa.PubSub.publish(
@@ -482,9 +497,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           :voice_ack,
           sess_id
         )
-
-      _ ->
-        nil
+        _ -> nil
     end
 
     {:noreply, socket}
@@ -521,7 +534,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   def maybe_config_stream(%Socket{} = socket, _, _) do
     socket
   end
-
 
   #Helper function for updating verse state across both stream and the k_v map
 

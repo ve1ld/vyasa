@@ -28,6 +28,7 @@ let csrfToken = document
   .getAttribute("content");
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
+
   params: {
     _csrf_token: csrfToken,
     locale: Intl.NumberFormat().resolvedOptions().locale,
@@ -35,6 +36,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
     timezone_offset: -new Date().getTimezoneOffset(),
     session: JSON.parse(localStorage.getItem("session")) || { active: true },
   },
+
   hooks: Hooks,
 });
 
