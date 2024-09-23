@@ -66,6 +66,13 @@
       url('/fonts/ta/VyasaTA.ttf') format('ttf');
 }
 
+@font-face {
+ font-family: "Vyas";
+ src: url('/fonts/ta/VyasaTA.woff2') format('woff2'),
+      url('/fonts/ta/VyasaTA.woff') format('woff'),
+      url('/fonts/ta/VyasaTA.ttf') format('ttf');
+}
+
 
 /* This file is for your main   application CSS */
 

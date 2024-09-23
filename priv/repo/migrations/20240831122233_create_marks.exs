@@ -5,10 +5,8 @@ defmodule Vyasa.Repo.Migrations.CreateMarks do
     create table(:marks, primary_key: false) do
       add :id, :uuid, primary_key: true
       add :body, :string
-
       add :state, :string
       add :order, :integer
-
       add :sheaf_id, references(:sheafs, column: :id, type: :uuid, on_delete: :nothing)
       add :binding_id, references(:bindings, column: :id, type: :uuid, on_delete: :nothing)
 
