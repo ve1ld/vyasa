@@ -49,7 +49,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
             />
             <.quick_draft_container
               :if={is_elem_bound_to_verse(@verse, elem)}
-              comments={@verse.comments}
+              sheafs={@verse.sheafs}
               show_current_marks?={@show_current_marks?}
               marks={@marks}
               quote={@verse.binding.window && @verse.binding.window.quote}
@@ -96,7 +96,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
     """
   end
 
-  attr :comments, :list, default: []
+  attr :sheafs, :list, default: []
   attr :event_target, :string, required: true
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
@@ -105,8 +105,8 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :myself, :any
 
   def quick_draft_container(assigns) do
-    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
-    # TODO: i want a "current_comment"
+    assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
+    # TODO: i want a "current_sheaf"
 
     ~H"""
     <div
@@ -120,23 +120,23 @@ defmodule VyasaWeb.Content.VerseMatrix do
         myself={@myself}
       />
       <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
-      <.bound_comments comments={@comments} />
+      <.bound_sheafs sheafs={@sheafs} />
     </div>
     """
   end
 
-  def bound_comments(assigns) do
-    assigns = assigns |> assign(:elem_id, "comment-modal-#{Ecto.UUID.generate()}")
+  def bound_sheafs(assigns) do
+    assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
 
     ~H"""
     <span
-      :for={comment <- @comments}
+      :for={sheaf <- @sheafs}
       class="block
                  before:content-['╰'] before:mr-1 before:text-gray-500
                  lg:before:content-none
                  lg:border-l-0 lg:pl-2"
     >
-      <%= comment.body %> - <b><%= comment.signature %></b>
+      <%= sheaf.body %> - <b><%= sheaf.signature %></b>
     </span>
     """
   end
@@ -232,7 +232,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
             class="w-4 h-4 text-brand mr-2"
           />
           <span class="text-xs text-secondary">
-            Current <%= if @form_type == :mark, do: "mark", else: "comment" %>'s selection
+            Current <%= if @form_type == :mark, do: "mark", else: "sheaf" %>'s selection
           </span>
         </div>
         <div class="text-sm italic text-secondary">
@@ -253,14 +253,14 @@ defmodule VyasaWeb.Content.VerseMatrix do
     <div class="p-2">
       <.form
         for={%{}}
-        phx-submit={(@form_type == :mark && "createMark") || "createComment"}
+        phx-submit={(@form_type == :mark && "createMark") || "createSheaf"}
         phx-target={"#" <> @event_target}
         class="flex items-center"
       >
         <input
           name="body"
           class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
-          placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "comment"} here..."}
+          placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "sheaf"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
               target: "#" <> @event_target,
@@ -292,7 +292,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
           type="button"
           phx-click={
             JS.push("change_form_type",
-              value: %{type: if(@form_type == :mark, do: "comment", else: "mark")}
+              value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
             )
           }
           phx-target={@myself}
@@ -312,7 +312,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
     """
   end
 
-  def comment_mark_separator(assigns) do
+  def sheaf_mark_separator(assigns) do
     ~H"""
     <span class="text-primaryAccent flex items-center justify-center">
       ☙ ——— ›– ❊ –‹ ——— ❧

@@ -487,9 +487,9 @@ defmodule VyasaWeb.Context.Read do
 
   # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Comment{} = dt, marks: marks}} = socket
+         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_comment(dt, %{marks: marks})
+    {:ok, com} = Vyasa.Sangh.update_sheaf(dt, %{marks: marks})
 
     socket
     |> assign(:draft_reflector, com)
@@ -501,26 +501,26 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # currently naive hd lookup can be filter based on active toggle,
-  # tree like comments can be used to store nested collapsible topics (personal mark collection e.g.)
+  # tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
   # currently marks merged in and swapped out probably can be singular data structure
   # managing of lifecycle of marks
   # if sangh_id is active open
   defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
-    case Vyasa.Sangh.get_comments_by_session(sangh_id, %{traits: ["draft"]}) do
-      [%Vyasa.Sangh.Comment{marks: [_ | _] = marks} = dt | _] ->
+    case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
+      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
         IO.inspect(marks, label: "is this triggering")
 
         socket
         |> assign(draft_reflector: dt)
         |> assign(marks: marks)
 
-      [%Vyasa.Sangh.Comment{} = dt | _] ->
+      [%Vyasa.Sangh.Sheaf{} = dt | _] ->
         socket
         |> assign(draft_reflector: dt)
 
       _ ->
         {:ok, com} =
-          Vyasa.Sangh.create_comment(%{
+          Vyasa.Sangh.create_sheaf(%{
             id: Ecto.UUID.generate(),
             session_id: sangh_id,
             traits: ["draft"]

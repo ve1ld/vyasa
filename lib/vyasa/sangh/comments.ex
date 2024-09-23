@@ -1,6 +1,6 @@
-defmodule Vyasa.Sangh.Comment do
+defmodule Vyasa.Sangh.Sheaf do
   @moduledoc """
-  Not your traditional comments, waypoints and containers for marks
+  Not your traditional sheafs, waypoints and containers for marks
   so that they can be referred to and moved around according to their context
 
   Can create a trail of marks and tied to session
@@ -11,10 +11,10 @@ defmodule Vyasa.Sangh.Comment do
   use Ecto.Schema
   import Ecto.Changeset
   alias EctoLtree.LabelTree, as: Ltree
-  alias Vyasa.Sangh.{Comment, Session, Mark}
+  alias Vyasa.Sangh.{Sheaf, Session, Mark}
 
   @primary_key {:id, Ecto.UUID, autogenerate: false}
-  schema "comments" do
+  schema "sheafs" do
     field :body, :string
     field :active, :boolean, default: true #active in draft reflector
     field :path,  Ltree
@@ -23,40 +23,40 @@ defmodule Vyasa.Sangh.Comment do
     field :child_count, :integer, default: 0, virtual: true
 
     belongs_to :session, Session, references: :id, type: Ecto.UUID
-    belongs_to :parent, Comment, references: :id, type: Ecto.UUID
+    belongs_to :parent, Sheaf, references: :id, type: Ecto.UUID
 
-    has_many :marks, Mark, references: :id, foreign_key: :comment_id, on_replace: :delete_if_exists
-    #has_many :bindings, Binding, references: :id, foreign_key: :comment_bind_id, on_replace: :delete_if_exists
+    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists
+    #has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
   end
 
   @doc false
-  def changeset(%Comment{} = comment, %{marks: [%Mark{} | _ ] = marks} = attrs) do
-    comment
+  def changeset(%Sheaf{} = sheaf, %{marks: [%Mark{} | _ ] = marks} = attrs) do
+    sheaf
       |> cast(attrs, [:id, :body, :active, :path, :session_id, :signature, :parent_id, :traits])
       |> put_assoc(:marks, marks, with: &Mark.changeset/2)
       |> validate_required([:id, :session_id])
       |> validate_include_subset(:traits, ["personal", "draft", "publish"])
   end
 
-  def changeset(%Comment{} = comment, attrs) do
-    comment
+  def changeset(%Sheaf{} = sheaf, attrs) do
+    sheaf
       |> cast(attrs, [:id, :body, :active, :path, :session_id, :signature, :parent_id, :traits])
       |> cast_assoc(:marks, with: &Mark.changeset/2)
       |> validate_required([:id, :session_id])
       |> validate_include_subset(:traits, ["personal", "draft", "publish"])
   end
 
-  def mutate_changeset(%Comment{} = comment, %{marks: [%Mark{} | _ ] = marks} = attrs) do
-    comment
+  def mutate_changeset(%Sheaf{} = sheaf, %{marks: [%Mark{} | _ ] = marks} = attrs) do
+    sheaf
     |> Vyasa.Repo.preload([:marks])
     |> cast(attrs, [:id, :body, :active, :signature])
     |> put_assoc(:marks, marks, with: &Mark.changeset/2)
     |> Map.put(:repo_opts, [on_conflict: {:replace_all_except, [:id]}, conflict_target: :id])
   end
 
-  def mutate_changeset(%Comment{} = comment, attrs) do
-    comment
+  def mutate_changeset(%Sheaf{} = sheaf, attrs) do
+    sheaf
     |> cast(attrs, [:id, :body, :active])
     |> Map.put(:repo_opts, [on_conflict: {:replace_all_except, [:id]}, conflict_target: :id])
   end
