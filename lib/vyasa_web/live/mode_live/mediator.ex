@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Mode.ManagerLive do
+defmodule VyasaWeb.ModeLive.Mediator do
   @moduledoc """
   Testing out nested live_views
   """
@@ -197,7 +197,7 @@ defmodule VyasaWeb.Mode.ManagerLive do
 
   @impl true
   def handle_info(msg, socket) do
-    IO.inspect(msg, label: "[fallback clause] unexpected message in ModeManager")
+    IO.inspect(msg, label: "[fallback clause] unexpected message in ModeLive.Mediator")
     {:noreply, socket}
   end
 
