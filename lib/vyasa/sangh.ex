@@ -312,6 +312,7 @@ defmodule Vyasa.Sangh do
 
   """
   def get_session!(id), do: Repo.get!(Session, id)
+  def get_session(id), do: Repo.get(Session, id)
 
   @doc """
   Creates a session.
