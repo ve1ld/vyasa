@@ -38,9 +38,10 @@ defmodule VyasaWeb.Router do
       # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
       # live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
 
-      live "/explore/", DisplayManager.DisplayLive, :show_sources
-      live "/explore/:source_title/", DisplayManager.DisplayLive, :show_chapters
-      live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
+      live "/explore/", Mode.ManagerLive, :show_sources
+      live "/explore/:source_title/", Mode.ManagerLive, :show_chapters
+
+      live "/explore/:source_title/:chap_no", Mode.ManagerLive, :show_verses
       # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
     end
 

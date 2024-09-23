@@ -23,6 +23,6 @@
     <.flash_group flash={@flash} />
   </div>
   <!-- DM manages the core layouts -->
-  <%= live_render(@socket, VyasaWeb.DisplayManager.DisplayLive, id: "DisplayManager", session: @session, sticky: true) %>
+  <%= live_render(@socket, VyasaWeb.Mode.ManagerLive, id: "ModeManager", session: @session, sticky: true) %>
     <%= @inner_content %>
 </main>
