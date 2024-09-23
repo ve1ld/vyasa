@@ -1,10 +1,14 @@
 defmodule VyasaWeb.ModeLive.Mediator do
   @moduledoc """
-  Testing out nested live_views
+  In relation to the behavioural pattern of a Mediator (ref: https://refactoring.guru/design-patterns/mediator),
+  This mediator is intended to restrict what the mode-specific components can do.
+
+  It shall maintain state that is mode-agnostic, such as the current mode, url_params and ui_state
+  and any mode-specific actions shall be deferred to the modules that are slotted in (and defined statically at the user_mode module).
   """
   use VyasaWeb, :live_view
   on_mount VyasaWeb.Hook.UserAgentHook
-  alias Vyasa.Display.{UserMode, UiState}
+  alias VyasaWeb.ModeLive.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh

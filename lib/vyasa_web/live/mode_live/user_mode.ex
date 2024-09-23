@@ -1,4 +1,4 @@
-defmodule Vyasa.Display.UserMode do
+defmodule VyasaWeb.ModeLive.UserMode do
   @moduledoc """
   The UserMode struct is a way of representing user-modes and
   is intended to be used as a config.
@@ -12,7 +12,7 @@ defmodule Vyasa.Display.UserMode do
   1. read
   3. discuss
   """
-  alias Vyasa.Display.{UserMode, UiState}
+  alias VyasaWeb.ModeLive.{UserMode, UiState}
 
   @component_slots [:action_bar_component, :control_panel_component, :mode_context_component]
   @default_slot_selector ""
@@ -115,7 +115,7 @@ defmodule Vyasa.Display.UserMode do
       ...>   control_panel_component: nil,
       ...>   mode_context_component: MyApp.ContextComponent
       ...> }
-      iex> Vyasa.Display.UserMode.maybe_hydrate_component_selectors(mode)
+      iex> VyasaWeb.ModeLive.UserMode.maybe_hydrate_component_selectors(mode)
       %UserMode{
         action_bar_component: MyApp.ActionBar,
         action_bar_component_selector: "action-bar",

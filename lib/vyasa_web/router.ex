@@ -22,27 +22,11 @@ defmodule VyasaWeb.Router do
 
     get "/", PageController, :home
 
-    # live_session :gen_anon_session,
-    #   on_mount: [{VyasaWeb.Session, :anon}] do
-    #   live "/explore/", SourceLive.Index, :index
-    #   live "/explore/:source_title/", SourceLive.Show, :show
-    #   # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-    #   live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-    #   live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
-    # end
-
     live_session :gen_sangh_session,
       on_mount: [{VyasaWeb.Session, :sangh}] do
-      # live "/explore/", SourceLive.Index, :index
-      # live "/explore/:source_title/", SourceLive.Show, :show
-      # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-      # live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
-
       live "/explore/", ModeLive.Mediator, :show_sources
       live "/explore/:source_title/", ModeLive.Mediator, :show_chapters
-
       live "/explore/:source_title/:chap_no", ModeLive.Mediator, :show_verses
-      # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
     end
 
     live_admin "/admin" do

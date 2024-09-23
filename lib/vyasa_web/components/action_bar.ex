@@ -17,8 +17,8 @@ defmodule VyasaWeb.ActionBar do
   <mode> <> "::" <> <action_name>
   """
   use VyasaWeb, :live_component
-  alias Vyasa.Display.UserMode
-  import VyasaWeb.Display.UserMode.Components
+  alias VyasaWeb.ModeLive.UserMode
+  import VyasaWeb.UserMode.Components
 
   attr :mode, UserMode, required: true
   @impl true

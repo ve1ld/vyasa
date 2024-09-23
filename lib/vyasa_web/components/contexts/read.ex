@@ -6,7 +6,7 @@ defmodule VyasaWeb.Context.Read do
 
   @default_lang "en"
   @default_voice_lang "sa"
-  alias Vyasa.Display.{UserMode}
+  alias VyasaWeb.ModeLive.{UserMode}
   alias Vyasa.{Written, Draft}
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
