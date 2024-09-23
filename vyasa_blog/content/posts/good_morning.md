@@ -7,7 +7,7 @@ categories = ["Progress"]
 draft = false
 +++
 
-We're two brothers, on a mission to build bridges across knowledge and between people.
+We're two brothers, on a mission to build 
 
 > &gt; When I was a King and a Mason - a Master proven and skilled
 > I cleared me ground for a Palace such as a King should build.

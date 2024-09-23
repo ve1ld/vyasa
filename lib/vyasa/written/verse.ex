@@ -3,20 +3,17 @@ defmodule Vyasa.Written.Verse do
   import Ecto.Changeset
 
   alias Vyasa.Written.{Source, Chapter, Translation}
-  alias Vyasa.Sangh.{Comment}
-  alias Vyasa.Adapters.Binding
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "verses" do
     field :no, :integer
     field :body, :string
     field :binding, :map, virtual: true
+    field :sheafs, {:array, :map}, virtual: true, default: []
 
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_many :translations, Translation
-
-    many_to_many :comments, Comment, join_through: Binding
   end
 
   @doc false

@@ -1,15 +1,22 @@
-defmodule VyasaWeb.DisplayManager.DisplayLive do
+defmodule VyasaWeb.ModeLive.Mediator do
   @moduledoc """
-  Testing out nested live_views
+  In relation to the behavioural pattern of a Mediator (ref: https://refactoring.guru/design-patterns/mediator),
+  This mediator is intended to restrict what the mode-specific components can do.
+
+  It shall maintain state that is mode-agnostic, such as the current mode, url_params and ui_state
+  and any mode-specific actions shall be deferred to the modules that are slotted in (and defined statically at the user_mode module).
   """
   use VyasaWeb, :live_view
-  on_mount VyasaWeb.Hook.UserAgentHook
-  alias Vyasa.Display.{UserMode, UiState}
+  alias VyasaWeb.ModeLive.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
+  alias VyasaWeb.Session
+  alias Vyasa.Sangh
   @supported_modes UserMode.supported_modes()
 
+  @mod_registry %{"UiState" => UiState}
+
   @impl true
-  def mount(_params, sess, socket) do
+  def mount(_params, _sess, socket) do
     %UserMode{
       default_ui_state: %UiState{} = initial_ui_state
     } = mode = UserMode.get_initial_mode()
@@ -17,7 +24,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {
       :ok,
       socket
-      |> assign(stored_session: sess)
       |> assign(mode: mode)
       |> assign(url_params: nil)
       |> assign(ui_state: initial_ui_state),
@@ -26,29 +32,37 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
   end
 
   @impl true
-  def handle_params(
-        params,
-        url,
-        %Socket{
-          assigns: %{
-            live_action: live_action
-          }
-        } = socket
-      ) do
-    IO.inspect(url, label: "TRACE: handle param url")
-    IO.inspect(live_action, label: "TRACE: handle param live_action")
-
+  def handle_params(params, _url, socket) do
     {
       :noreply,
       socket
       |> assign(url_params: params)
-      # | apply_action(live_action, params)
+      |> sync_session()
     }
   end
 
-  @impl true
-  def handle_params(_params, _url, socket) do
-    {:noreply, socket}
+  defp sync_session(
+         %{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket
+       )
+       when is_binary(id) and is_binary(sangh_id) do
+    # currently needs name prerequisite to save
+    socket
+    |> push_event("initSession", sess)
+  end
+
+  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
+       when is_binary(id) do
+    # initialises sangh if uninitiated (didnt init at Vyasa.Session)
+    {:ok, sangh} = Sangh.create_session()
+    sangh_sess = %{sess | sangh: sangh}
+
+    socket
+    |> assign(session: sangh_sess)
+    |> push_event("initSession", sangh_sess)
+  end
+
+  defp sync_session(socket) do
+    socket
   end
 
   defp change_mode(socket, curr, target)
@@ -66,6 +80,17 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   defp change_mode(socket, _, _) do
     socket
+  end
+
+  def handle_event(
+        "name",
+        %{"name" => name},
+        %{assigns: %{session: sess}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(session: %{sess | name: name})
+     |> sync_session()}
   end
 
   @impl true
@@ -142,7 +167,6 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
         {_, :media_handshake, :init} = _msg,
         %{
           assigns: %{
-            session: %{"id" => sess_id},
             mode: %UserMode{
               mode_context_component: component,
               mode_context_component_selector: selector
@@ -150,26 +174,22 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-    send_update(component, id: selector, sess_id: sess_id)
+    send_update(component, id: selector)
     {:noreply, socket}
   end
 
-  @impl true
-  # this enables the children of DM to allow DM to subscribe to a generic topic.
-  # Thereafter, messages sent through that topic, to the DM can be listened to by the DM and
-  # the DM can pass that message to the appropriate slotted child component.
-  def handle_info(%{"cmd" => :sub_to_topic, "topic" => topic} = _msg, socket) do
-    # dbg()
-    Vyasa.PubSub.subscribe(topic)
-    {:noreply, socket}
+  def handle_info({"helm", dest}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: dest, replace: true)}
   end
 
   @impl true
-  def handle_info({:change_ui, function_name, args}, socket)
+  def handle_info({"mutate_" <> mod, function_name, args}, socket)
       when is_binary(function_name) and is_list(args) do
-    with :ok <- validate_function_name(function_name, UiState) do
+    with :ok <- validate_function_name(function_name, @mod_registry[mod]) do
       func = String.to_existing_atom(function_name)
-      updated_socket = apply(UiState, func, [socket | args])
+      updated_socket = apply(@mod_registry[mod], func, [socket | args])
       {:noreply, updated_socket}
     else
       {:error, reason} ->
@@ -180,7 +200,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_info(msg, socket) do
-    IO.inspect(msg, label: "[fallback clause] unexpected message in DisplayManager")
+    IO.inspect(msg, label: "[fallback clause] unexpected message in ModeLive.Mediator")
     {:noreply, socket}
   end
 

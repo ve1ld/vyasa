@@ -2,7 +2,7 @@ defmodule Vyasa.Corpus.Engine.Fallback do
   @url "https://archive.org/wayback/available?url="
 
   def run(path) do
-    #storage opts
+    # storage opts
     @url
     |> fetch_url(path)
     |> IO.inspect()
@@ -11,13 +11,13 @@ defmodule Vyasa.Corpus.Engine.Fallback do
 
   def fetch_url(url, path \\ "") do
     case Req.get(url <> path, conn_opts()) do
-      {:ok, %{body: %{"archived_snapshots" =>
-                       %{"closest" =>
-                          %{"url" => url}}}}} ->
+      {:ok, %{body: %{"archived_snapshots" => %{"closest" => %{"url" => url}}}}} ->
         {:ok, url}
+
       {:ok, %{body: %{"archived_snapshots" => %{}}}} ->
         IO.inspect("Not Found", label: :fallback_err)
         {:err, :not_found}
+
       {:error, reason} ->
         IO.inspect(reason, label: :fallback_err)
         {:err, :fallback_failed}
@@ -42,5 +42,4 @@ defmodule Vyasa.Corpus.Engine.Fallback do
   end
 
   defp conn_opts(), do: [connect_options: [transport_opts: [cacerts: :public_key.cacerts_get()]]]
-
 end

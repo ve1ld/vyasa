@@ -37,7 +37,8 @@ config :vyasa, VyasaWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "TSFFKfQoGKCAjI5yxwt9DmxwnJg1U7CnuCsxpWjr+DqXs8EavSxtO3l3wk2PquSW",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch --loader:.ttf=file)]},
+    esbuild:
+      {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch --loader:.ttf=file)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
@@ -64,7 +65,7 @@ config :vyasa, VyasaWeb.Endpoint,
 # configured to run both http and https servers on
 # different ports.
 #
-#config :ssl, cacertfile: 'priv/cacerts.pem'
+# config :ssl, cacertfile: 'priv/cacerts.pem'
 
 # Watch static and templates for browser reloading.
 config :vyasa, VyasaWeb.Endpoint,

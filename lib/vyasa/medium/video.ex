@@ -12,7 +12,7 @@ defmodule Vyasa.Medium.Video do
     belongs_to :voice, Voice, references: :id, foreign_key: :voice_id, type: :binary_id
 
     timestamps(type: :utc_datetime)
-   end
+  end
 
   @doc false
   def changeset(video, attrs) do

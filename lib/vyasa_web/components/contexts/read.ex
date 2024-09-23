@@ -1,19 +1,18 @@
-defmodule VyasaWeb.Content.ReadingContent do
+defmodule VyasaWeb.Context.Read do
   @moduledoc """
-  Reading content shall be a slottable component that
-  handles what content to display when in reading mode.
+  The Read Context defines state handling related to the "Read" user mode.
   """
   use VyasaWeb, :live_component
 
   @default_lang "en"
   @default_voice_lang "sa"
-  alias Vyasa.Display.{UserMode}
+  alias VyasaWeb.ModeLive.{UserMode}
   alias Vyasa.{Written, Draft}
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh.{Comment, Mark}
+  alias Vyasa.Sangh.{Mark}
   alias VyasaWeb.OgImageController
 
   @impl true
@@ -28,7 +27,7 @@ defmodule VyasaWeb.Content.ReadingContent do
           params,
         socket
       ) do
-    IO.inspect(params, label: "TRACE: params passed to ReadingContent")
+    IO.inspect(params, label: "TRACE: params passed to ReadContext")
 
     {
       :ok,
@@ -41,12 +40,12 @@ defmodule VyasaWeb.Content.ReadingContent do
   end
 
   @impl true
-  # received updates from parent liveview when a handshake is init, does a pub for the voice to use
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
-        %{id: "reading-content", sess_id: sess_id} = _props,
+        %{id: "read"} = _props,
         %{
           assigns: %{
-            session: %{"id" => sess_id},
+            session: %{id: sess_id},
             chap: %Chapter{no: c_no, source_id: src_id}
           }
         } = socket
@@ -97,64 +96,55 @@ defmodule VyasaWeb.Content.ReadingContent do
     IO.inspect(params, label: "TRACE: apply action DM params:")
     IO.inspect(source_title, label: "TRACE: apply action DM params source_title:")
 
-    [%Chapter{source: src} | _] = chapters = Written.get_chapters_by_src(source_title)
+    with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
+         # when is more than 1 chapter
+         [%Chapter{} | [%Chapter{} | _]] = chapters <-
+           Written.list_chapters_by_source(sid, @default_lang) do
+      socket
+      |> assign(:content_action, :show_chapters)
+      |> assign(:page_title, to_title_case(source.title))
+      |> assign(:source, source)
+      |> assign(:meta, %{
+        title: to_title_case(source.title),
+        description: "Explore the #{to_title_case(source.title)}",
+        type: "website",
+        image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: source})}"),
+        url: url(socket, ~p"/explore/#{source.title}")
+      })
+      |> maybe_stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
+      |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
+    else
+      [%Chapter{} = chapter | _] ->
+        send(self(), {"helm", ~p"/explore/#{source_title}/#{chapter.no}/"})
 
-    socket
-    |> assign(:content_action, :show_chapters)
-    |> assign(:page_title, to_title_case(src.title))
-    |> assign(:source, src)
-    |> assign(:meta, %{
-      title: to_title_case(src.title),
-      description: "Explore the #{to_title_case(src.title)}",
-      type: "website",
-      image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: src})}"),
-      url: url(socket, ~p"/explore/#{src.title}")
-    })
-    |> maybe_stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
-    |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
+        socket
+
+      _ ->
+        raise VyasaWeb.ErrorHTML.FourOFour, message: "No Chapters here yet"
+    end
   end
 
   defp apply_action(
          %Socket{} = socket,
          :show_verses,
-         %{"source_title" => source_title, "chap_no" => chap_no} = params
+         %{"source_title" => source_title, "chap_no" => chap_no}
        ) do
-    IO.inspect(:show_verses, label: "TRACE: apply action DM action show_verses:")
-    IO.inspect(params, label: "TRACE: apply action DM params:")
-    IO.inspect(source_title, label: "TRACE: apply action DM params source_title:")
-    IO.inspect(chap_no, label: "TRACE: apply action DM params chap_no:")
-
     with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
          %{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap <-
            Written.get_chapter(chap_no, sid, @default_lang) do
       fmted_title = to_title_case(source.title)
 
-      IO.inspect(fmted_title, label: "TRACE: am i WITH it?")
-
-      IO.inspect("sid: #{sid} title: #{source_title}", label: "SEE ME:")
-
       socket
+      |> assign(
+        :kv_verses,
+        # creates a map of verse_id_to_verses
+        Enum.into(verses, %{}, &{&1.id, &1})
+      )
+      |> assign(:marks, [%Mark{state: :draft, order: 0}])
       |> sync_session()
       |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
-      |> assign(
-        :kv_verses,
-        # creates a map of verse_id_to_verses
-        Enum.into(
-          verses,
-          %{},
-          &{&1.id,
-           %{
-             &1
-             | comments: [
-                 %Comment{signature: "Pope", body: "Achilles’ wrath, to Greece the direful spring
-              Of woes unnumber’d, heavenly goddess, sing"}
-               ]
-           }}
-        )
-      )
-      |> assign(:marks, [%Mark{state: :draft, order: 0}])
       # DEPRECATED
       # RENAME?
       |> assign(:src, source)
@@ -213,16 +203,16 @@ defmodule VyasaWeb.Content.ReadingContent do
     socket
   end
 
-  defp sync_session(%Socket{assigns: %{session: %{"id" => sess_id}}} = socket) do
-    # dbg()
+  defp sync_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
+       when is_binary(sess_id) do
+    Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
-    # send(self(), :sync_session)
-    send(self(), %{"cmd" => :sub_to_topic, "topic" => "written:session:" <> sess_id})
+
     socket
+    |> sync_draft_reflector()
   end
 
   defp sync_session(socket) do
-    IO.inspect(socket, label: "not ready to init sync of session from within ReadingContent")
     socket
   end
 
@@ -249,7 +239,7 @@ defmodule VyasaWeb.Content.ReadingContent do
   def handle_event(
         "clickVerseToSeek",
         %{"verse_id" => verse_id} = _payload,
-        %{assigns: %{session: %{"id" => sess_id}}} = socket
+        %{assigns: %{session: %{id: sess_id}}} = socket
       ) do
     IO.inspect("handle_event::clickVerseToSeek media:session:#{sess_id}", label: "checkpoint")
     Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
@@ -322,7 +312,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{"key" => "Enter"} = _payload,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {
       :noreply,
@@ -336,7 +326,7 @@ defmodule VyasaWeb.Content.ReadingContent do
         %{"is_focusing?" => is_focusing?} = _payload,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [is_focusing?]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [is_focusing?]})
 
     {:noreply, socket}
   end
@@ -361,12 +351,13 @@ defmodule VyasaWeb.Content.ReadingContent do
           }
         } = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {
       :noreply,
       socket
       |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
         %{verses[v_id] | binding: binding}
@@ -385,11 +376,12 @@ defmodule VyasaWeb.Content.ReadingContent do
           }
         } = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {:noreply,
      socket
      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> mutate_draft_reflector()
      |> stream_insert(
        :verses,
        %{verses[v_id] | binding: binding}
@@ -402,12 +394,9 @@ defmodule VyasaWeb.Content.ReadingContent do
         _event,
         %Socket{} = socket
       ) do
-    send(self(), {:change_ui, "update_media_bridge_visibility", [false]})
+    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
-    {
-      :noreply,
-      socket
-    }
+    {:noreply, socket}
   end
 
   @impl true
@@ -428,7 +417,9 @@ defmodule VyasaWeb.Content.ReadingContent do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      Hello world, i'm the ReadingContent <br />
+      Hello world, i'm the ReadContext <br />
+      Session: <%= @session && @session.name %> Sangh: <%= @session && @session.sangh &&
+        @session.sangh.id %> <br />
       <%= @user_mode.mode_context_component %>
       <%= @user_mode.mode_context_component_selector %>
       <.button phx-click="foo" phx-target={@myself}>
@@ -490,5 +481,57 @@ defmodule VyasaWeb.Content.ReadingContent do
       mutated_verses[target_verse_id]
     )
     |> assign(:kv_verses, mutated_verses)
+  end
+
+  # Helper function that syncs and mutates Draft Reflector
+
+  # Helper function that syncs and mutates Draft Reflector
+  defp mutate_draft_reflector(
+         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
+       ) do
+    {:ok, com} = Vyasa.Sangh.update_sheaf(dt, %{marks: marks})
+
+    socket
+    |> assign(:draft_reflector, com)
+  end
+
+  # when session hasnt been initialised
+  defp mutate_draft_reflector(socket) do
+    socket
+  end
+
+  # currently naive hd lookup can be filter based on active toggle,
+  # tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
+  # currently marks merged in and swapped out probably can be singular data structure
+  # managing of lifecycle of marks
+  # if sangh_id is active open
+  defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
+    case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
+      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
+        IO.inspect(marks, label: "is this triggering")
+
+        socket
+        |> assign(draft_reflector: dt)
+        |> assign(marks: marks)
+
+      [%Vyasa.Sangh.Sheaf{} = dt | _] ->
+        socket
+        |> assign(draft_reflector: dt)
+
+      _ ->
+        {:ok, com} =
+          Vyasa.Sangh.create_sheaf(%{
+            id: Ecto.UUID.generate(),
+            session_id: sangh_id,
+            traits: ["draft"]
+          })
+
+        socket
+        |> assign(draft_reflector: com)
+    end
+  end
+
+  defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
+    socket
   end
 end

@@ -26,7 +26,7 @@ loaded_voice = Vyasa.Repo.get(Vyasa.Medium.Voice, voice_id)
 
 loaded_voice.events
 
-module = VyasaWeb.Content.ReadingContent
+module = VyasaWeb.Context.Read
     module
     |> Atom.to_string()          # Convert the module atom to a string
     |> String.split(".")        # Split the string by "."
@@ -36,7 +36,7 @@ module = VyasaWeb.Content.ReadingContent
 ```
 
 ```elixir
-alias Vyasa.Display.{UiState}
+alias VyasaWeb.ModeLive.{UiState}
 
 mod = UiState
 mod.__info__(:functions)

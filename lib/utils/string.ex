@@ -12,14 +12,14 @@ defmodule Utils.String do
   @doc """
   Converts a module name to an HTML selector format.
 
-  The module name is expected to be in the form of a module atom (e.g., `VyasaWeb.Content.ReadingContent`).
+  The module name is expected to be in the form of a module atom (e.g., `VyasaWeb.Context.Read`).
   The function extracts the last part of the module name and checks if it is in PascalCase.
   If valid, it converts the name to kebab-case format.
 
   ## Examples
 
-      iex> VyasaWeb.Utils.module_to_selector(VyasaWeb.Content.ReadingContent)
-      "reading-content"
+      iex> VyasaWeb.Utils.module_to_selector(VyasaWeb.Context.Read)
+      "read-context"
 
       iex> VyasaWeb.Utils.module_to_selector(VyasaWeb.Content.InvalidName)
       ** (ArgumentError) Last element of the module name must be in PascalCase

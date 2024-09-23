@@ -10,7 +10,8 @@ config :vyasa, VyasaWeb.Endpoint,
   force_ssl: [
     host: nil,
     rewrite_on: [:x_forwarded_port, :x_forwarded_proto],
-    hsts: false]
+    hsts: false
+  ]
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: Vyasa.Finch

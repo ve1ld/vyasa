@@ -6,10 +6,10 @@ defmodule VyasaWeb.ControlPanel do
   use VyasaWeb, :live_component
   use VyasaWeb, :html
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Display.UserMode
+  alias VyasaWeb.ModeLive.UserMode
   # alias VyasaWeb.Display.UserMode.Components
 
-  import VyasaWeb.Display.UserMode.Components
+  import VyasaWeb.UserMode.Components
   alias VyasaWeb.HoveRune
 
   def mount(_, _, socket) do

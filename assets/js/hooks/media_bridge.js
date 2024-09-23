@@ -6,7 +6,7 @@
  *
  * Event-handling is done using custom bridged events as a proxy.
  * */
-import { formatDisplayTime } from "../utils/time_utils.js";
+import { formatDisplayTime } from "../utils/time.js";
 import {
   seekTimeBridge,
   playPauseBridge,
@@ -30,7 +30,6 @@ MediaBridge = {
     this.handleEvent("media_bridge:registerPlayback", (params) =>
       this.registerPlaybackInfo(params),
     );
-    this.handleEvent("initSession", (sess) => this.initSession(sess));
     // pub: external action
     // this callback pubs to others
     this.handleEvent("media_bridge:play_pause", (payload) =>
@@ -52,12 +51,7 @@ MediaBridge = {
       ),
     };
   },
-  /**
-   * Saves current session id
-   * */
-  initSession(sess) {
-    localStorage.setItem("session", JSON.stringify(sess));
-  },
+
   toggleFollowMode() {
     this.isFollowMode = !this.isFollowMode;
   },

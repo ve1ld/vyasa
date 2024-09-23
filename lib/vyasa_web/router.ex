@@ -22,26 +22,11 @@ defmodule VyasaWeb.Router do
 
     get "/", PageController, :home
 
-    # live_session :gen_anon_session,
-    #   on_mount: [{VyasaWeb.Session, :anon}] do
-    #   live "/explore/", SourceLive.Index, :index
-    #   live "/explore/:source_title/", SourceLive.Show, :show
-    #   # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-    #   live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-    #   live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
-    # end
-
     live_session :gen_sangh_session,
-      on_mount: [{VyasaWeb.Session, :sangh}] do
-      # live "/explore/", SourceLive.Index, :index
-      # live "/explore/:source_title/", SourceLive.Show, :show
-      # live "/explore/:source_title/:chap_no", SourceLive.Chapter.Index, :index
-      # live "/explore/:source_title/:chap_no/:verse_no", SourceLive.Chapter.ShowVerse, :show
-
-      live "/explore/", DisplayManager.DisplayLive, :show_sources
-      live "/explore/:source_title/", DisplayManager.DisplayLive, :show_chapters
-      live "/explore/:source_title/:chap_no", DisplayManager.DisplayLive, :show_verses
-      # live "/explore/:source_title/:chap_no/:verse_no", DisplayManager.DisplayLive, :show_verse
+      on_mount: [{VyasaWeb.Session, :sangh}, {VyasaWeb.Hook.UserAgent, :default}] do
+      live "/explore/", ModeLive.Mediator, :show_sources
+      live "/explore/:source_title/", ModeLive.Mediator, :show_chapters
+      live "/explore/:source_title/:chap_no", ModeLive.Mediator, :show_verses
     end
 
     live_admin "/admin" do
