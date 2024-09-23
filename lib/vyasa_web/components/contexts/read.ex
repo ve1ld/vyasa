@@ -417,21 +417,7 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      Hello world, i'm the ReadContext <br />
-      Session: <%= @session && @session.name %> Sangh: <%= @session && @session.sangh &&
-        @session.sangh.id %> <br />
-      <%= @user_mode.mode_context_component %>
-      <%= @user_mode.mode_context_component_selector %>
-      <.button phx-click="foo" phx-target={@myself}>
-        FOO
-      </.button>
-      <br />
-      <%= @user_mode.mode %> mode <br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
+      <.debug_dump session={@session} user_mode={@user_mode} />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
@@ -533,5 +519,26 @@ defmodule VyasaWeb.Context.Read do
 
   defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
+  end
+
+  def debug_dump(assigns) do
+    ~H"""
+    <div
+      :if={Mix.env() == :dev}
+      class="fixed top-0 left-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50"
+    >
+      <h2 class="text-lg font-bold mb-2">Developer Dump</h2>
+      <div class="mb-4">
+        <strong class="text-gray-600">Session:</strong> <%= @session && @session.name %><br />
+        <strong class="text-gray-600">Sangh ID:</strong> <%= @session && @session.sangh &&
+          @session.sangh.id %><br />
+        <strong class="text-gray-600">User Mode:</strong> <%= @user_mode.mode_context_component %> | <%= @user_mode.mode_context_component_selector %> | <%= @user_mode.mode %> mode
+      </div>
+      <div>
+        <h3 class="text-md font-bold mb-2">Parameters:</h3>
+        <pre class="bg-gray-100 p-2 rounded-md whitespace-pre-wrap"><%= inspect(Map.drop(assigns, [:session, :user_mode]), pretty: true) %></pre>
+      </div>
+    </div>
+    """
   end
 end
