@@ -9,12 +9,11 @@ defmodule Vyasa.Written.Verse do
     field :no, :integer
     field :body, :string
     field :binding, :map, virtual: true
-    field :comments, {:array, :map}, virtual: true, default: []
+    field :sheafs, {:array, :map}, virtual: true, default: []
 
     belongs_to :source, Source, type: Ecto.UUID
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     has_many :translations, Translation
-
   end
 
   @doc false

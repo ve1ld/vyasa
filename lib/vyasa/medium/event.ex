@@ -34,6 +34,6 @@ defmodule Vyasa.Medium.Event do
 
   def frag_changeset(frag, attrs) do
     frag
-    |> cast(attrs, [:offset, :duration,:quote])
+    |> cast(attrs, [:offset, :duration, :quote])
   end
 end

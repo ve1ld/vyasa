@@ -1,4 +1,4 @@
-defmodule Vyasa.Display.UiState do
+defmodule VyasaWeb.ModeLive.UiState do
   @moduledoc """
   UiState defines booleans and other UI-related aspects that need to be tracked.
   This shall only be a struct definition. If mediating state transitions becomes complex enough, then we shall
@@ -9,7 +9,7 @@ defmodule Vyasa.Display.UiState do
   2. allow UserModes to be defined with an initial UI state in mind
   """
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Display.UiState
+  alias VyasaWeb.ModeLive.UiState
 
   import Phoenix.Component, only: [assign: 2]
 

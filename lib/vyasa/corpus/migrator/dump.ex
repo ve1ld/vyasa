@@ -4,6 +4,7 @@ defmodule Vyasa.Corpus.Migrator.Dump do
   def table(mod) do
     Code.ensure_loaded?(mod)
     assoc = mod.__schema__(:associations)
+
     mod
     |> Repo.all()
     |> Repo.preload(assoc)
@@ -16,7 +17,7 @@ defmodule Vyasa.Corpus.Migrator.Dump do
   end
 
   def save(mod) do
-    Path.expand("#{mod}/#{System.os_time}.json", "data")
+    Path.expand("#{mod}/#{System.os_time()}.json", "data")
     |> tap(&File.mkdir_p!(Path.dirname(&1)))
     |> File.open!([:write])
     |> IO.binwrite(table(mod))
@@ -36,12 +37,12 @@ defmodule Vyasa.Corpus.Migrator.Dump do
 
   defp process_struct(%{__struct__: struct} = s) do
     associations = struct.__schema__(:associations)
+
     s
     |> Map.from_struct()
     |> Enum.map(&process_field(associations, &1))
-    |> Enum.reject(fn {_k,v} -> is_nil(v) end)
+    |> Enum.reject(fn {_k, v} -> is_nil(v) end)
     |> Enum.into(%{})
-
   end
 
   defp process_field(associations, {k, v}) when is_list(v) and is_struct(hd(v)) do
@@ -73,5 +74,4 @@ defmodule Vyasa.Corpus.Migrator.Dump do
   end
 
   defp process_field(_associations, {k, v}), do: {k, v}
-
 end

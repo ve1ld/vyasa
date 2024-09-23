@@ -1,4 +1,9 @@
 defmodule VyasaWeb.Session do
+  @moduledoc """
+  Refers to the user-session.
+
+  Not to be confused with Sangh Sessions.
+  """
   import Phoenix.Component, only: [assign: 2]
   import Phoenix.LiveView, only: [get_connect_params: 1]
 
@@ -23,25 +28,31 @@ defmodule VyasaWeb.Session do
     {:cont,
      socket
      |> assign(
-     locale: get_connect_params(socket)["locale"] || @default_locale,
-     tz: %{timezone: get_connect_params(socket)["timezone"] || @timezone,
-           timezone_offset: get_connect_params(socket)["timezone_offset"] || @timezone_offset},
-     session: get_connect_params(socket)["session"] |> mutate_session(params)
+       locale: get_connect_params(socket)["locale"] || @default_locale,
+       tz: %{
+         timezone: get_connect_params(socket)["timezone"] || @timezone,
+         timezone_offset: get_connect_params(socket)["timezone_offset"] || @timezone_offset
+       },
+       session: get_connect_params(socket)["session"] |> mutate_session(params)
      )}
   end
 
-  defp mutate_session(%{"id" => id} = sess, %{"s" => s_id}) when is_binary(id) and is_uuid?(s_id)do
-    atomised_sess = for {key, val} <- sess, into: %{} do
-      hydrate_session(key, val)
-    end
-    %{struct(%__MODULE__{}, atomised_sess ) | sangh: Vyasa.Sangh.get_session(s_id)}
+  defp mutate_session(%{"id" => id} = sess, %{"s" => s_id})
+       when is_binary(id) and is_uuid?(s_id) do
+    atomised_sess =
+      for {key, val} <- sess, into: %{} do
+        hydrate_session(key, val)
+      end
+
+    %{struct(%__MODULE__{}, atomised_sess) | sangh: Vyasa.Sangh.get_session(s_id)}
   end
 
   # careful of client and server state race. id here is not SOT
   defp mutate_session(%{"id" => id} = sess, _) when is_binary(id) do
-    atomised_sess = for {key, val} <- sess, into: %{} do
-      hydrate_session(key, val)
-    end
+    atomised_sess =
+      for {key, val} <- sess, into: %{} do
+        hydrate_session(key, val)
+      end
 
     struct(%__MODULE__{}, atomised_sess)
   end
@@ -49,10 +60,9 @@ defmodule VyasaWeb.Session do
   # false first load
   defp mutate_session(_, _), do: %__MODULE__{}
 
-
   defp hydrate_session("sangh", %{"id" => s_id}) do
     {:sangh, Vyasa.Sangh.get_session(s_id)}
   end
 
   defp hydrate_session(key, val), do: {String.to_existing_atom(key), val}
-  end
+end

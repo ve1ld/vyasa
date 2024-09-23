@@ -6,137 +6,144 @@ defmodule Vyasa.Sangh do
   import Ecto.Query, warn: false
   import EctoLtree.Functions, only: [nlevel: 1]
   alias Vyasa.Repo
-  alias Vyasa.Sangh.Comment
-
+  alias Vyasa.Sangh.Sheaf
 
   @doc """
-  Returns the list of comments within a specific session.
+  Returns the list of sheafs within a specific session.
 
   ## Examples
 
-  iex> list_comments_by_session()
-  [%Comment{}, ...]
+  iex> list_sheafs_by_session()
+  [%Sheaf{}, ...]
 
   """
-  def list_comments_by_session(id) do
-    (from c in Comment,
+  def list_sheafs_by_session(id) do
+    from(c in Sheaf,
       where: c.session_id == ^id,
-      select: c)
+      select: c
+    )
     |> Repo.all()
   end
 
   @doc """
-    Creates a comment.
+    Creates a sheaf.
 
     ## Examples
 
-        iex> create_comment(%{field: new_value})
-        {:ok, %Comment{}}
+        iex> create_sheaf(%{field: new_value})
+        {:ok, %Sheaf{}}
 
-        iex> create_comment(%{field: bad_value})
+        iex> create_sheaf(%{field: bad_value})
         {:error, %Ecto.Changeset{}}
 
   """
 
-  def create_comment(attrs \\ %{}) do
-    %Comment{}
-    |> Comment.changeset(attrs)
+  def create_sheaf(attrs \\ %{}) do
+    %Sheaf{}
+    |> Sheaf.changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-    Returns a single comment.
+    Returns a single sheaf.
 
-    Raises `Ecto.NoResultsError` if the Comment does not exist.
+    Raises `Ecto.NoResultsError` if the Sheaf does not exist.
 
     ## Examples
 
-        iex> get_comment!(123)
-        %Comment{}
+        iex> get_sheaf!(123)
+        %Sheaf{}
 
-        iex> get_comment!(456)
+        iex> get_sheaf!(456)
         ** (Ecto.NoResultsError)
 
   """
 
-  def get_comment!(id), do: Repo.get!(Comment, id)
+  def get_sheaf!(id), do: Repo.get!(Sheaf, id)
 
-  def get_comment(id) do
-    (from c in Comment,
+  def get_sheaf(id) do
+    from(c in Sheaf,
       where: c.id == ^id,
-      limit: 1)
+      limit: 1
+    )
     |> Repo.one()
   end
 
-
-  def get_descendents_comment(id) do
+  def get_descendents_sheaf(id) do
     query =
-      from c in Comment,
-      as: :c,
-      where: c.parent_id == ^id,
-      order_by: [desc: c.inserted_at],
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.parent_id == ^id,
+        order_by: [desc: c.inserted_at],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
+
     Repo.all(query)
   end
 
-
-  def get_root_comments_by_comment(id) do
+  def get_root_sheafs_by_sheaf(id) do
     query =
-      from c in Comment,
-      as: :c,
-      where: c.comment_id == ^id,
-      where: nlevel(c.path) == 1,
-      preload: [:initiator],
-      order_by: [desc: c.inserted_at],
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.sheaf_id == ^id,
+        where: nlevel(c.path) == 1,
+        preload: [:initiator],
+        order_by: [desc: c.inserted_at],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
-
   end
 
-  def get_descendents_comment(id, page) do
+  def get_descendents_sheaf(id, page) do
     query =
-      from c in Comment,
-      as: :c,
-      where: c.parent_id == ^id,
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.parent_id == ^id,
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
-    Repo.Paginated.all(query, [page: page, asc: true])
+    Repo.Paginated.all(query, page: page, asc: true)
   end
 
-  def get_root_comments_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
+  def get_root_sheafs_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
     query =
-      from c in Comment,
-      as: :c,
-      where: c.session_id == ^id,
-      where: nlevel(c.path) == 1,
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.session_id == ^id,
+        where: nlevel(c.path) == 1,
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
 
-  def get_comments_by_session(id, %{traits: traits}) do
-    from(c in Comment,
+  def get_sheafs_by_session(id, %{traits: traits}) do
+    from(c in Sheaf,
       where: c.session_id == ^id and fragment("? @> ?", c.traits, ^traits),
       preload: [marks: [:binding]]
     )
@@ -144,143 +151,147 @@ defmodule Vyasa.Sangh do
     |> Repo.all()
   end
 
-  def get_comments_by_session(id) do
-    query = Comment
-    |> where([c], c.session_id == ^id)
-    |> order_by(desc: :inserted_at)
+  def get_sheafs_by_session(id) do
+    query =
+      Sheaf
+      |> where([c], c.session_id == ^id)
+      |> order_by(desc: :inserted_at)
 
     Repo.all(query)
   end
 
-  def get_comment_count_by_session(id) do
+  def get_sheaf_count_by_session(id) do
     query =
-      Comment
+      Sheaf
       |> where([e], e.session_id == ^id)
-    |> select([e], count(e))
+      |> select([e], count(e))
+
     Repo.one(query)
   end
 
-
-  # Gets child comments 1 level down only
-  def get_child_comments_by_session(id, path) do
+  # Gets child sheafs 1 level down only
+  def get_child_sheafs_by_session(id, path) do
     path = path <> ".*{1}"
 
     query =
-      from c in Comment,
-      as: :c,
-      where: c.session_id == ^id,
-      where: fragment("? ~ ?", c.path, ^path),
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.session_id == ^id,
+        where: fragment("? ~ ?", c.path, ^path),
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
   end
 
   # Gets ancestors down up all levels only
-  # TODO: Get root comments together
-  def get_ancestor_comments_by_comment(comment_id, path) do
+  # TODO: Get root sheafs together
+  def get_ancestor_sheafs_by_sheaf(sheaf_id, path) do
     query =
-      from c in Comment,
-      as: :c,
-      where: c.comment_id == ^comment_id,
-      where: fragment("? @> ?", c.path, ^path),
-      preload: [:initiator],
-      inner_lateral_join: sc in subquery(
-        from sc in Comment,
-        where: sc.parent_id == parent_as(:c).id,
-        select: %{count: count()}
-      ), on: true,
-      select_merge: %{child_count: sc.count}
+      from c in Sheaf,
+        as: :c,
+        where: c.sheaf_id == ^sheaf_id,
+        where: fragment("? @> ?", c.path, ^path),
+        preload: [:initiator],
+        inner_lateral_join:
+          sc in subquery(
+            from sc in Sheaf,
+              where: sc.parent_id == parent_as(:c).id,
+              select: %{count: count()}
+          ),
+        on: true,
+        select_merge: %{child_count: sc.count}
 
     Repo.all(query)
   end
 
   #   @doc """
-  #   Updates a comment.
+  #   Updates a sheaf.
 
   #   ## Examples
 
-  #       iex> update_comment(comment, %{field: new_value})
-  #       {:ok, %Comment{}}
+  #       iex> update_sheaf(sheaf, %{field: new_value})
+  #       {:ok, %Sheaf{}}
 
-  #       iex> update_comment(comment, %{field: bad_value})
+  #       iex> update_sheaf(sheaf, %{field: bad_value})
   #       {:error, %Ecto.Changeset{}}
 
   #   """
-  def update_comment(%Comment{} = comment, attrs) do
-    comment
-    |> Comment.mutate_changeset(attrs)
+  def update_sheaf(%Sheaf{} = sheaf, attrs) do
+    sheaf
+    |> Sheaf.mutate_changeset(attrs)
     |> Repo.update()
   end
 
   #   @doc """
-  #   Updates a comment.
+  #   Updates a sheaf.
 
   #   ## Examples
 
-  #       iex> update_comment!(%{field: value})
-  #       %Comment{}
+  #       iex> update_sheaf!(%{field: value})
+  #       %Sheaf{}
 
   #       iex> Need to Catch error state
 
   #   """
 
-  def update_comment!(%Comment{} = comment, attrs) do
-    comment
-    |> Comment.mutate_changeset(attrs)
+  def update_sheaf!(%Sheaf{} = sheaf, attrs) do
+    sheaf
+    |> Sheaf.mutate_changeset(attrs)
     |> Repo.update!()
   end
 
   #   @doc """
-  #   Deletes a comment.
+  #   Deletes a sheaf.
 
   #   ## Examples
 
-  #       iex> delete_comment(comment)
-  #       {:ok, %Comment{}}
+  #       iex> delete_sheaf(sheaf)
+  #       {:ok, %Sheaf{}}
 
-  #       iex> delete_comment(comment)
+  #       iex> delete_sheaf(sheaf)
   #       {:error, %Ecto.Changeset{}}
 
   #   """
-  def delete_comment(%Comment{} = comment) do
-    Repo.delete(comment)
+  def delete_sheaf(%Sheaf{} = sheaf) do
+    Repo.delete(sheaf)
   end
 
   #   @doc """
-  #   Returns an `%Ecto.Changeset{}` for tracking comment changes.
+  #   Returns an `%Ecto.Changeset{}` for tracking sheaf changes.
 
   #   ## Examples
 
-  #       iex> change_comment(comment)
-  #       %Ecto.Changeset{data: %Comment{}}
+  #       iex> change_sheaf(sheaf)
+  #       %Ecto.Changeset{data: %Sheaf{}}
 
   #   """
-  def change_comment(%Comment{} = comment, attrs \\ %{}) do
-    Comment.changeset(comment, attrs)
+  def change_sheaf(%Sheaf{} = sheaf, attrs \\ %{}) do
+    Sheaf.changeset(sheaf, attrs)
   end
 
-  def filter_root_comments_chrono(comments) do
-    comments
+  def filter_root_sheafs_chrono(sheafs) do
+    sheafs
     |> Enum.filter(&match?({{_}, _}, &1))
-    |> sort_comments_chrono()
+    |> sort_sheafs_chrono()
   end
 
-  def filter_child_comments_chrono(comments, comment) do
-    comments
-    |> Enum.filter(fn i -> elem(i, 1).parent_id == elem(comment, 1).id end)
-    |> sort_comments_chrono()
+  def filter_child_sheafs_chrono(sheafs, sheaf) do
+    sheafs
+    |> Enum.filter(fn i -> elem(i, 1).parent_id == elem(sheaf, 1).id end)
+    |> sort_sheafs_chrono()
   end
 
-  defp sort_comments_chrono(comments) do
-    Enum.sort_by(comments, &elem(&1, 1).inserted_at, :desc)
+  defp sort_sheafs_chrono(sheafs) do
+    Enum.sort_by(sheafs, &elem(&1, 1).inserted_at, :desc)
   end
-
 
   alias Vyasa.Sangh.Session
 

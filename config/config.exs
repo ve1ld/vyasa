@@ -31,7 +31,7 @@ config :vyasa, VyasaWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :vyasa, Vyasa.Mailer, adapter: Swoosh.Adapters.Local
 
-#S3 Object Storage Services
+# S3 Object Storage Services
 config :ex_aws,
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
   secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
@@ -47,7 +47,10 @@ config :esbuild,
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => "#{Path.expand("../deps", __DIR__)}:#{Path.expand("../assets/vendor", __DIR__)}"}
+    env: %{
+      "NODE_PATH" =>
+        "#{Path.expand("../deps", __DIR__)}:#{Path.expand("../assets/vendor", __DIR__)}"
+    }
   ]
 
 # Configure tailwind (the version is required)

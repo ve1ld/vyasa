@@ -90,7 +90,6 @@ export default HoveRune = {
             target: `#${this.eventTarget}`,
             payload: { binding: binding },
           });
-          // TODO: rename to targetId
           this.pushEventTo(`#${this.eventTarget}`, "bindHoveRune", {
             binding: binding,
           });

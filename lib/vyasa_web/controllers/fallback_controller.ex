@@ -32,6 +32,6 @@ defmodule VyasaWeb.FallbackController do
     |> put_status(:not_found)
     |> put_resp_content_type("image/svg+xml")
     # path to default logo svg
-   |> send_file(200, :code.priv_dir(:vyasa) |> Path.join("/static/images/logo.svg"))
+    |> send_file(200, :code.priv_dir(:vyasa) |> Path.join("/static/images/logo.svg"))
   end
 end

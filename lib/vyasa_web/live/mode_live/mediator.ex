@@ -1,10 +1,13 @@
-defmodule VyasaWeb.DisplayManager.DisplayLive do
+defmodule VyasaWeb.ModeLive.Mediator do
   @moduledoc """
-  Testing out nested live_views
+  In relation to the behavioural pattern of a Mediator (ref: https://refactoring.guru/design-patterns/mediator),
+  This mediator is intended to restrict what the mode-specific components can do.
+
+  It shall maintain state that is mode-agnostic, such as the current mode, url_params and ui_state
+  and any mode-specific actions shall be deferred to the modules that are slotted in (and defined statically at the user_mode module).
   """
   use VyasaWeb, :live_view
-  on_mount VyasaWeb.Hook.UserAgentHook
-  alias Vyasa.Display.{UserMode, UiState}
+  alias VyasaWeb.ModeLive.{UserMode, UiState}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh
@@ -38,16 +41,21 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket) when is_binary(id) and is_binary(sangh_id) do
+  defp sync_session(
+         %{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket
+       )
+       when is_binary(id) and is_binary(sangh_id) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
   end
 
-  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
+       when is_binary(id) do
     # initialises sangh if uninitiated (didnt init at Vyasa.Session)
     {:ok, sangh} = Sangh.create_session()
     sangh_sess = %{sess | sangh: sangh}
+
     socket
     |> assign(session: sangh_sess)
     |> push_event("initSession", sangh_sess)
@@ -166,15 +174,14 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
           }
         } = socket
       ) do
-
     send_update(component, id: selector)
     {:noreply, socket}
   end
 
   def handle_info({"helm", dest}, socket) do
-      {:noreply, socket
-       |> push_patch([to: dest, replace: true])
-      }
+    {:noreply,
+     socket
+     |> push_patch(to: dest, replace: true)}
   end
 
   @impl true
@@ -193,7 +200,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
 
   @impl true
   def handle_info(msg, socket) do
-    IO.inspect(msg, label: "[fallback clause] unexpected message in DisplayManager")
+    IO.inspect(msg, label: "[fallback clause] unexpected message in ModeLive.Mediator")
     {:noreply, socket}
   end
 

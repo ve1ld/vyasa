@@ -146,9 +146,11 @@ defmodule Vyasa.Written do
     from(c in Chapter,
       where: c.source_id == ^sid,
       join: ts in assoc(c, :translations),
-      on: ts.source_id == ^sid and ts.lang == ^lang)
-      |> select_merge([c, t], %{
-      c | translations: [t]
+      on: ts.source_id == ^sid and ts.lang == ^lang
+    )
+    |> select_merge([c, t], %{
+      c
+      | translations: [t]
     })
     |> Repo.all()
   end

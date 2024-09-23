@@ -1,6 +1,7 @@
-defmodule VyasaWeb.Display.UserMode.Components do
+# TODO: rename
+defmodule VyasaWeb.UserMode.Components do
   use VyasaWeb, :html
-  alias Vyasa.Display.UserMode
+  alias VyasaWeb.ModeLive.UserMode
 
   attr :action_event, :string, required: true
   attr :action_icon_name, :string, required: true

@@ -45,13 +45,13 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @impl true
   def mount(_params, _sess, socket) do
-    {:ok, Enum.reduce(@play_state, socket,
-       fn {key, state}, sock -> assign(sock, key, state)
-       end)
-       |> sync_session(), layout: false}
+    {:ok,
+     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end)
+     |> sync_session(), layout: false}
   end
 
-  defp sync_session(%{assigns: %{session: %VyasaWeb.Session{id: id}}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %VyasaWeb.Session{id: id}}} = socket)
+       when is_binary(id) do
     IO.inspect(
       "MediaBridge::sync_session  sub to media:session:#{id} pub to written:session:#{id}",
       label: "SEE ME"
@@ -357,7 +357,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         %Voice{id: prev_id} = prev_voice -> prev_id
         true -> nil
       end
-
 
     is_new_voice = id !== prev_id
 

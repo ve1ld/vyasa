@@ -6,7 +6,7 @@
  *
  * Event-handling is done using custom bridged events as a proxy.
  * */
-import { formatDisplayTime } from "../utils/time_utils.js";
+import { formatDisplayTime } from "../utils/time.js";
 import {
   seekTimeBridge,
   playPauseBridge,

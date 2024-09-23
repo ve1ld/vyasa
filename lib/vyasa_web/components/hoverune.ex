@@ -7,8 +7,8 @@ defmodule VyasaWeb.HoveRune do
   and we shall render those buttons using approate rendering functions defined elsewhere.
   """
   use VyasaWeb, :live_component
-  alias Vyasa.Display.UserMode
-  import VyasaWeb.Display.UserMode.Components
+  alias VyasaWeb.ModeLive.UserMode
+  import VyasaWeb.UserMode.Components
 
   attr :user_mode, UserMode, required: true
   @impl true
