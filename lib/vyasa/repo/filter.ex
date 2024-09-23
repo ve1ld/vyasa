@@ -10,7 +10,6 @@ defmodule Vyasa.Repo.Filter do
   end
 
   for op <- [:!=, :<, :<=, :==, :>, :>=, :ilike, :in, :like] do
-
     def where(query, {as, field}, unquote(op), value) do
       query
       |> where([{^as, x}], custom_where(x, field, value, unquote(op)))
@@ -21,5 +20,4 @@ defmodule Vyasa.Repo.Filter do
       |> where([o], custom_where(o, field_name, value, unquote(op)))
     end
   end
-
 end

@@ -21,7 +21,7 @@ defmodule VyasaWeb.Content.Verses do
       <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>
-            <%= @selected_transl.target.translit_title %> | <%= @chap.title %>
+            <%= @selected_transl.target.title_translit %> | <%= @chap.title %>
           </div>
           <div class="font-dn text-2xl mb-4">
             Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>
@@ -36,13 +36,19 @@ defmodule VyasaWeb.Content.Verses do
         <.back patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
-        <div id="verses" phx-update="stream" phx-hook="HoveRune">
+        <div
+          id="verses"
+          phx-update="stream"
+          phx-hook="HoveRune"
+          data-event-target={@user_mode.mode_context_component_selector}
+        >
           <.live_component
             :for={{dom_id, %Verse{} = verse} <- @verses}
             id={dom_id}
             module={VyasaWeb.Content.VerseMatrix}
             verse={verse}
             marks={@marks}
+            event_target={@user_mode.mode_context_component_selector}
             edge={[
               %{
                 title: "#{verse.chapter_no}.#{verse.no}",

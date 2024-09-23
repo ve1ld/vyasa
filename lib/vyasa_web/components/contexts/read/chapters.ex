@@ -36,11 +36,11 @@ defmodule VyasaWeb.Content.Chapters do
       >
         <:col :let={{_id, chap}} label="Chapter">
           <div class="font-dn text-lg">
-            <%= chap.no %>. <%= hd(chap.translations).target.translit_title %>
+            <%= chap.no %>. <%= hd(chap.translations).target.title_translit %>
           </div>
         </:col>
         <:col :let={{_id, chap}} label="Description">
-          <div class="font-dn text-md">
+          <div class={"font-#{@source.script} text-md"}>
             <%= chap.title %>
           </div>
           <div class="font-dn text-md">
@@ -61,6 +61,7 @@ defmodule VyasaWeb.Content.Chapters do
   #   IO.inspect(payload)
   #   {:noreply, socket}
   # end
+  # TODO: consider if it's possible to shift this to the read-context livecomponent
   @impl true
   def handle_event("navigate_to_chapter", %{"target" => target} = _payload, socket) do
     IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")

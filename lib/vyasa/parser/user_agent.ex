@@ -1,4 +1,4 @@
-defmodule Vyasa.UserAgentParser do
+defmodule Vyasa.Parser.UserAgent do
   @moduledoc """
   Uses the UA Parser library to determine the device type from a user agent string.
   """

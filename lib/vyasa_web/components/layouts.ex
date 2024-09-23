@@ -18,7 +18,6 @@ defmodule VyasaWeb.Layouts do
     IO.puts("Contents map for meta contents:")
     IO.inspect(contents)
 
-
     contents
     |> Enum.map(&define_name/1)
     |> List.flatten()

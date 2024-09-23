@@ -7,13 +7,13 @@ defmodule Vyasa.Adapters.Binding do
   import Ecto.Changeset
 
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
-  alias Vyasa.Sangh.{Comment}
+  alias Vyasa.Sangh.{Sheaf}
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "bindings" do
     field :w_type, Ecto.Enum, values: [:quote, :timestamp, :null]
 
-    field :field_key, {:array, :string}
+    field :field_key, {:array, :any}
 
     field :node_id, :string, virtual: true
 
@@ -21,7 +21,7 @@ defmodule Vyasa.Adapters.Binding do
     belongs_to :chapter, Chapter, type: :integer, references: :no, foreign_key: :chapter_no
     belongs_to :source, Source, foreign_key: :source_id, type: :binary_id
     belongs_to :translation, Translation, foreign_key: :translation_id, type: :binary_id
-    belongs_to :comment, Comment, foreign_key: :comment_id, type: :binary_id
+    belongs_to :sheaf, Sheaf, foreign_key: :sheaf_id, type: :binary_id
 
     # window is essentially because bindings might only refer to a subset of a node
     # either by timestamping of events or through line no and character range
@@ -110,7 +110,7 @@ defmodule Vyasa.Adapters.Binding do
   def field_lookup(%Chapter{}), do: :chapter_no
   def field_lookup(%Source{}), do: :source_id
   def field_lookup(%Translation{}), do: :translation_id
-  def field_lookup(%Comment{}), do: :comment_id
+  def field_lookup(%Sheaf{}), do: :sheaf_id
 
   def field_lookup(_), do: nil
 end

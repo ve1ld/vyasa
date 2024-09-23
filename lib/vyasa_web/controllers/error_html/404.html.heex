@@ -1,339 +1,339 @@
 <!DOCTYPE html>
 <html>
-<style>
-body, html {
-    height: 100%;
-    margin: 0;
-}
+  <style>
+    body, html {
+        height: 100%;
+        margin: 0;
+    }
 
-@-webkit-keyframes title {
-  0% {
-    opacity: 0;
-    right: 130px;
-  }
-  48% {
-    opacity: 0;
-    right: 130px;
-  }
-  52% {
-    opacity: 1;
-    right: 30px;
-  }
-  70% {
-    opacity: 1;
-    right: 30px;
-  }
-  100% {
-    opacity: 0;
-    right: 30px;
-  }
-}
-@-moz-keyframes title {
-  0% {
-    opacity: 0;
-    right: 130px;
-  }
-  48% {
-    opacity: 0;
-    right: 130px;
-  }
-  52% {
-    opacity: 1;
-    right: 30px;
-  }
-  70% {
-    opacity: 1;
-    right: 30px;
-  }
-  100% {
-    opacity: 0;
-    right: 30px;
-  }
-}
-@-webkit-keyframes fade {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@-moz-keyframes fade {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@-webkit-keyframes blink {
-  0% {
-    opacity: 0;
-  }
-  5% {
-    opacity: 1;
-  }
-  10% {
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0;
-    right: -21px;
-  }
-  45% {
-    opacity: 1;
-    right: 80px;
-  }
-  50% {
-    opacity: 0;
-    right: -21px;
-  }
-  51% {
-    right: -21px;
-  }
-  55% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0;
-  }
-  65% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0;
-  }
-  75% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 0;
-  }
-  85% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-    right: -21px;
-  }
-  95% {
-    opacity: 1;
-    right: 80px;
-  }
-  96% {
-    right: -21px;
-  }
-  100% {
-    opacity: 0;
-    right: -21px;
-  }
-}
-@-moz-keyframes blink {
-  0% {
-    opacity: 0;
-  }
-  5% {
-    opacity: 1;
-  }
-  10% {
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0;
-    right: -21px;
-  }
-  45% {
-    opacity: 1;
-    right: 80px;
-  }
-  50% {
-    opacity: 0;
-    right: -21px;
-  }
-  51% {
-    right: -21px;
-  }
-  55% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0;
-  }
-  65% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0;
-  }
-  75% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 0;
-  }
-  85% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-    right: -21px;
-  }
-  95% {
-    opacity: 1;
-    right: 80px;
-  }
-  96% {
-    right: -21px;
-  }
-  100% {
-    opacity: 0;
-    right: -21px;
-  }
-}
-body {
-  font-family: Purista,sans-serif, arial;
-  background: black;
-  color: #eaf7ff;
-}
+    @-webkit-keyframes title {
+      0% {
+        opacity: 0;
+        right: 130px;
+      }
+      48% {
+        opacity: 0;
+        right: 130px;
+      }
+      52% {
+        opacity: 1;
+        right: 30px;
+      }
+      70% {
+        opacity: 1;
+        right: 30px;
+      }
+      100% {
+        opacity: 0;
+        right: 30px;
+      }
+    }
+    @-moz-keyframes title {
+      0% {
+        opacity: 0;
+        right: 130px;
+      }
+      48% {
+        opacity: 0;
+        right: 130px;
+      }
+      52% {
+        opacity: 1;
+        right: 30px;
+      }
+      70% {
+        opacity: 1;
+        right: 30px;
+      }
+      100% {
+        opacity: 0;
+        right: 30px;
+      }
+    }
+    @-webkit-keyframes fade {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+    @-moz-keyframes fade {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+    @-webkit-keyframes blink {
+      0% {
+        opacity: 0;
+      }
+      5% {
+        opacity: 1;
+      }
+      10% {
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      20% {
+        opacity: 0;
+      }
+      25% {
+        opacity: 1;
+      }
+      30% {
+        opacity: 0;
+      }
+      35% {
+        opacity: 1;
+      }
+      40% {
+        opacity: 0;
+        right: -21px;
+      }
+      45% {
+        opacity: 1;
+        right: 80px;
+      }
+      50% {
+        opacity: 0;
+        right: -21px;
+      }
+      51% {
+        right: -21px;
+      }
+      55% {
+        opacity: 1;
+      }
+      60% {
+        opacity: 0;
+      }
+      65% {
+        opacity: 1;
+      }
+      70% {
+        opacity: 0;
+      }
+      75% {
+        opacity: 1;
+      }
+      80% {
+        opacity: 0;
+      }
+      85% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 0;
+        right: -21px;
+      }
+      95% {
+        opacity: 1;
+        right: 80px;
+      }
+      96% {
+        right: -21px;
+      }
+      100% {
+        opacity: 0;
+        right: -21px;
+      }
+    }
+    @-moz-keyframes blink {
+      0% {
+        opacity: 0;
+      }
+      5% {
+        opacity: 1;
+      }
+      10% {
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      20% {
+        opacity: 0;
+      }
+      25% {
+        opacity: 1;
+      }
+      30% {
+        opacity: 0;
+      }
+      35% {
+        opacity: 1;
+      }
+      40% {
+        opacity: 0;
+        right: -21px;
+      }
+      45% {
+        opacity: 1;
+        right: 80px;
+      }
+      50% {
+        opacity: 0;
+        right: -21px;
+      }
+      51% {
+        right: -21px;
+      }
+      55% {
+        opacity: 1;
+      }
+      60% {
+        opacity: 0;
+      }
+      65% {
+        opacity: 1;
+      }
+      70% {
+        opacity: 0;
+      }
+      75% {
+        opacity: 1;
+      }
+      80% {
+        opacity: 0;
+      }
+      85% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 0;
+        right: -21px;
+      }
+      95% {
+        opacity: 1;
+        right: 80px;
+      }
+      96% {
+        right: -21px;
+      }
+      100% {
+        opacity: 0;
+        right: -21px;
+      }
+    }
+    body {
+      font-family: Purista,sans-serif, arial;
+      background: black;
+      color: #eaf7ff;
+    }
 
-.loading {
-  position: relative;
-  text-align: right;
-  text-shadow: 0 0 6px #bce4ff;
-  height: 20px;
-  width: 150px;
-}
-.loading span {
-  display: block;
-  position: absolute;
-  right: 30px;
-  height: 20px;
-  width: 200px;
-  line-height: 20px;
-}
-.loading span:after {
-  content: "";
-  display: block;
-  position: absolute;
-  top: -2px;
-  right: -21px;
-  height: 20px;
-  width: 16px;
-  background: #eaf7ff;
-  -moz-box-shadow: 0 0 15px #bce4ff;
-  -webkit-box-shadow: 0 0 15px #bce4ff;
-  box-shadow: 0 0 15px #bce4ff;
-  -moz-animation: blink 3.4s infinite;
-  -webkit-animation: blink 3.4s infinite;
-  animation: blink 3.4s infinite;
-}
-.loading span.title {
-  -moz-animation: title 3.4s linear infinite;
-  -webkit-animation: title 3.4s linear infinite;
-  animation: title 3.4s linear infinite;
-}
-.loading span.text {
-  -moz-animation: title 3.4s linear 1.7s infinite;
-  -webkit-animation: title 3.4s linear 1.7s infinite;
-  animation: title 3.4s linear 1.7s infinite;
-  opacity: 0;
-}
+    .loading {
+      position: relative;
+      text-align: right;
+      text-shadow: 0 0 6px #bce4ff;
+      height: 20px;
+      width: 150px;
+    }
+    .loading span {
+      display: block;
+      position: absolute;
+      right: 30px;
+      height: 20px;
+      width: 200px;
+      line-height: 20px;
+    }
+    .loading span:after {
+      content: "";
+      display: block;
+      position: absolute;
+      top: -2px;
+      right: -21px;
+      height: 20px;
+      width: 16px;
+      background: #eaf7ff;
+      -moz-box-shadow: 0 0 15px #bce4ff;
+      -webkit-box-shadow: 0 0 15px #bce4ff;
+      box-shadow: 0 0 15px #bce4ff;
+      -moz-animation: blink 3.4s infinite;
+      -webkit-animation: blink 3.4s infinite;
+      animation: blink 3.4s infinite;
+    }
+    .loading span.title {
+      -moz-animation: title 3.4s linear infinite;
+      -webkit-animation: title 3.4s linear infinite;
+      animation: title 3.4s linear infinite;
+    }
+    .loading span.text {
+      -moz-animation: title 3.4s linear 1.7s infinite;
+      -webkit-animation: title 3.4s linear 1.7s infinite;
+      animation: title 3.4s linear 1.7s infinite;
+      opacity: 0;
+    }
 
-.bgimg {
-    background-image: url('/images/vishnu.jpg');
-    height: 100%;
-    background-position: center;
-    background-size: cover;
-    position: relative;
-    color: white;
-    font-family: "futura-pt", sans-serif;
-    font-size: 30px;
-}
+    .bgimg {
+        background-image: url('/images/vishnu.jpg');
+        height: 100%;
+        background-position: center;
+        background-size: cover;
+        position: relative;
+        color: white;
+        font-family: "futura-pt", sans-serif;
+        font-size: 30px;
+    }
 
-.topleft {
-    position: absolute;
-    top: 8px;
-    left: 16px;
-    text-shadow: 0 0 6px #bce4ff;
-}
+    .topleft {
+        position: absolute;
+        top: 8px;
+        left: 16px;
+        text-shadow: 0 0 6px #bce4ff;
+    }
 
-.bottomleft {
-    position: absolute;
-    bottom: 0;
-    left: 16px;
-    text-shadow: 0 0 6px #bce4ff;
-}
+    .bottomleft {
+        position: absolute;
+        bottom: 0;
+        left: 16px;
+        text-shadow: 0 0 6px #bce4ff;
+    }
 
-.middle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
+    .middle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
 
-hr {
-    margin: auto;
-    width: 40%;
-}
-</style>
-<meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title> 404 - <%= assigns[:reason] && @reason.message || "Not Found" %> </title>
-<link rel="icon" href="/favicon.ico"/>
-<body>
-
-<div class="bgimg">
-  <div class="topleft">
-    <a href="/" style="text-decoration: none; color: white;text-shadow: 0 0 6px #bce4ff;"><%= Application.spec(:vyasa, :description) %></a>
-  </div>
-  <div class="middle">
-    <div class="wrap">
-    <div class="bg">
-      <div class="loading">
-        <span class="title">Error 404 - Not Found</span>
-        <span class="text"><%= assigns[:reason] && @reason.message || "Slipped down the wrong rabbithole" %></span>
+    hr {
+        margin: auto;
+        width: 40%;
+    }
+  </style>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - <%= (assigns[:reason] && @reason.message) || "Not Found" %></title>
+  <link rel="icon" href="/favicon.ico" />
+  <body>
+    <div class="bgimg">
+      <div class="topleft">
+        <a href="/" style="text-decoration: none; color: white;text-shadow: 0 0 6px #bce4ff;">
+          <%= Application.spec(:vyasa, :description) %>
+        </a>
       </div>
+      <div class="middle">
+        <div class="wrap">
+          <div class="bg">
+            <div class="loading">
+              <span class="title">Error 404 - Not Found</span>
+              <span class="text">
+                <%= (assigns[:reason] && @reason.message) || "Slipped down the wrong rabbithole" %>
+              </span>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <p id="demo" style="font-size:30px"></p>
+      </div>
+      <div class="bottomleft"></div>
     </div>
-  </div>
-    <hr>
-    <p id="demo" style="font-size:30px"></p>
-  </div>
-  <div class="bottomleft">
-
-  </div>
-</div>
-
-</body>
+  </body>
 </html>
