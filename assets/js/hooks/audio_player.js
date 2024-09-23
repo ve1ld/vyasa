@@ -25,7 +25,7 @@ let execJS = (selector, attr) => {
     .forEach((el) => liveSocket.execJS(el, el.getAttribute(attr)));
 };
 
-import { formatDisplayTime, nowMs } from "../utils/time_utils.js";
+import { formatDisplayTime, nowMs } from "../utils/time.js";
 
 AudioPlayer = {
   mounted() {

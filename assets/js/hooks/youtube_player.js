@@ -4,7 +4,7 @@
  * */
 import { seekTimeBridge, playPauseBridge } from "./mediaEventBridges";
 
-import { isMobileDevice } from "../utils/uncategorised_utils.js";
+import { isMobileDevice } from "../utils/device.js";
 
 const isYouTubeFnCallable = (dataset) => {
   const { functionName, eventName } = dataset;
