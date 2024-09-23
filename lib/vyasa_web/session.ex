@@ -34,7 +34,7 @@ defmodule VyasaWeb.Session do
     atomised_sess = for {key, val} <- sess, into: %{} do
       hydrate_session(key, val)
     end
-    %{struct(%__MODULE__{}, atomised_sess ) | sangh: Vyasa.Sangh.get_session!(s_id)}
+    %{struct(%__MODULE__{}, atomised_sess ) | sangh: Vyasa.Sangh.get_session(s_id)}
   end
 
   # careful of client and server state race. id here is not SOT
@@ -51,7 +51,7 @@ defmodule VyasaWeb.Session do
 
 
   defp hydrate_session("sangh", %{"id" => s_id}) do
-    {:sangh, Vyasa.Sangh.get_session!(s_id)}
+    {:sangh, Vyasa.Sangh.get_session(s_id)}
   end
 
   defp hydrate_session(key, val), do: {String.to_existing_atom(key), val}

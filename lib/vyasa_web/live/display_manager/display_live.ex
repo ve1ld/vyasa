@@ -38,7 +38,7 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     }
   end
 
-  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: _sangh_id}} = sess}} = socket) when is_binary(id) do
+  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket) when is_binary(id) and is_binary(sangh_id) do
     # currently needs name prerequisite to save
     socket
     |> push_event("initSession", sess)
