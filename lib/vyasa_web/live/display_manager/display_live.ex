@@ -171,6 +171,12 @@ defmodule VyasaWeb.DisplayManager.DisplayLive do
     {:noreply, socket}
   end
 
+  def handle_info({"helm", dest}, socket) do
+      {:noreply, socket
+       |> push_patch([to: dest, replace: true])
+      }
+  end
+
   @impl true
   def handle_info({"mutate_" <> mod, function_name, args}, socket)
       when is_binary(function_name) and is_list(args) do
