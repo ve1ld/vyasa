@@ -12,8 +12,15 @@ CLOSED: [2024-06-19 Wed 00:53]
 We're two brothers, on a mission to build bridges across knowledge and between people.
 
 #+begin_quote
-> When I was a King and a Mason - a Master proven and skilled
+When I was a King and a Mason - a Master proven and skilled
 I cleared me ground for a Palace such as a King should build.
 I decreed and dug down to my levels. Presently under the silt
 I came on the wreck of a Palace such as a King had built.
 #+end_quote
+
+* TODO Why start this Project?
+- outline mission vision and stuff like that
+
+
+* TODO Serendipity and Test Users
+- elaborate on gratefulness for the initial test users
