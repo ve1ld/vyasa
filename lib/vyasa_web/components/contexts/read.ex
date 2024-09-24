@@ -524,7 +524,7 @@ defmodule VyasaWeb.Context.Read do
   def debug_dump(assigns) do
     ~H"""
     <div
-      :if={Mix.env() == :dev}
+      :if={System.get_env("MIX_ENV") !== "prod"}
       class="fixed top-0 left-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50"
     >
       <h2 class="text-lg font-bold mb-2">Developer Dump</h2>
