@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Verses do
+defmodule VyasaWeb.Context.Read.Verses do
   use VyasaWeb, :live_component
 
   alias Vyasa.Written.{Verse}

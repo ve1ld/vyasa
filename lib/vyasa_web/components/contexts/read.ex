@@ -417,12 +417,12 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump session={@session} user_mode={@user_mode} class="top-1/2 left-0" />
+      <.debug_dump sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
           <.live_component
-            module={VyasaWeb.Content.Sources}
+            module={VyasaWeb.Context.Read.Sources}
             id="content-sources"
             sources={@streams.sources}
             user_mode={@user_mode}
@@ -431,7 +431,7 @@ defmodule VyasaWeb.Context.Read do
 
         <%= if @content_action == :show_chapters do %>
           <.live_component
-            module={VyasaWeb.Content.Chapters}
+            module={VyasaWeb.Context.Read.Chapters}
             id="content-chapters"
             source={@source}
             chapters={@streams.chapters}
@@ -441,7 +441,7 @@ defmodule VyasaWeb.Context.Read do
 
         <%= if @content_action == :show_verses do %>
           <.live_component
-            module={VyasaWeb.Content.Verses}
+            module={VyasaWeb.Context.Read.Verses}
             id="content-verses"
             src={@src}
             verses={@streams.verses}
@@ -470,8 +470,6 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # Helper function that syncs and mutates Draft Reflector
-
-  # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
          %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
        ) do
@@ -494,8 +492,6 @@ defmodule VyasaWeb.Context.Read do
   defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
       [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
-        IO.inspect(marks, label: "is this triggering")
-
         socket
         |> assign(draft_reflector: dt)
         |> assign(marks: marks)
