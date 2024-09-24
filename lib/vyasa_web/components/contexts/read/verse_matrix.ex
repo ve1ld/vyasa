@@ -1,8 +1,9 @@
 defmodule VyasaWeb.Context.Read.VerseMatrix do
   use VyasaWeb, :live_component
   alias Phoenix.LiveView.Socket
-
   alias Utils.Struct
+
+  import VyasaWeb.Context.Components
 
   def mount(socket) do
     {:ok,
@@ -105,111 +106,27 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
 
   def quick_draft_container(assigns) do
     assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-    # TODO: i want a "current_sheaf"
 
     ~H"""
     <div
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.unified_quote_and_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-      <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
-      <.bound_sheafs sheafs={@sheafs} />
-    </div>
-    """
-  end
-
-  def bound_sheafs(assigns) do
-    assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-
-    ~H"""
-    <span
-      :for={sheaf <- @sheafs}
-      class="block
-                 before:content-['╰'] before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-    >
-      <%= sheaf.body %> - <b><%= sheaf.signature %></b>
-    </span>
-    """
-  end
-
-  attr :quote, :string, required: true
-  attr :event_target, :string, required: true
-  attr :form_type, :atom, required: true
-  attr :myself, :any, required: true
-
-  def unified_quote_and_form(assigns) do
-    ~H"""
-    <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
-      <.current_quote quote={@quote} form_type={@form_type} />
-      <.quick_draft_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-    </div>
-    """
-  end
-
-  # FIXME @ks0m1c qq: for current_marks below: when marks are in draft state, you'll help have a default container for it right
-  # i need the invariant to be true: every mark has an associated container it is in, regardless of the state of the mark (draft or live or not)
-  # yeah all marks are stored in this stack
-  # if the stack becomes a list of lists
-  # it is possible to have a single elemented list mark
-  # so should be g
-
-  attr :marks, :list, default: []
-  attr :show_current_marks?, :boolean, default: true
-  attr :myself, :any
-
-  def current_marks(assigns) do
-    ~H"""
-    <div class="mb-4">
-      <button
-        phx-click={JS.push("toggle_show_current_marks", value: %{value: ""})}
-        phx-target={@myself}
-        class="w-full flex items-center justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm hover:bg-brand-light hover:text-white transition-colors duration-200"
-      >
-        <div class="flex items-center">
-          <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-sm font-medium text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))} personal #{ngettext("mark", "marks", Enum.count(@marks))}" %>
-          </span>
-        </div>
-        <.icon
-          name={if @show_current_marks?, do: "hero-chevron-up", else: "hero-chevron-down"}
-          class="w-5 h-5 text-brand-dark"
+      <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
+        <.current_quote quote={@quote} form_type={@form_type} />
+        <.quick_draft_form
+          event_target={@event_target}
+          quote={@quote}
+          form_type={@form_type}
+          myself={@myself}
         />
-      </button>
-
-      <div class={if @show_current_marks?, do: "mt-2", else: "hidden"}>
-        <div class="border-l border-brand-light pl-2">
-          <%= for mark <- @marks |> Enum.reverse() do %>
-            <%= if mark.state == :live do %>
-              <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-brand">
-                <%= if !is_nil(mark.binding.window) && mark.binding.window.quote !== "" do %>
-                  <span class="block mb-1 text-sm italic text-secondary">
-                    "<%= mark.binding.window.quote %>"
-                  </span>
-                <% end %>
-                <%= if is_binary(mark.body) do %>
-                  <span class="block text-sm text-text">
-                    <%= mark.body %>
-                  </span>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
       </div>
+      <.collapsible_marks_display
+        myself={@myself}
+        marks={@marks}
+        is_expanded_view?={@show_current_marks?}
+      />
+      <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>
     """
   end
