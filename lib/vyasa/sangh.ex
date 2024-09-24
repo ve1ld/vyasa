@@ -155,6 +155,7 @@ defmodule Vyasa.Sangh do
     query =
       Sheaf
       |> where([c], c.session_id == ^id)
+      |> preload(marks: [:binding])
       |> order_by(desc: :inserted_at)
 
     Repo.all(query)

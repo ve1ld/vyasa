@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.VerseMatrix do
+defmodule VyasaWeb.Context.Read.VerseMatrix do
   use VyasaWeb, :live_component
   alias Phoenix.LiveView.Socket
 
