@@ -8,6 +8,38 @@ defmodule Vyasa.Sangh do
   alias Vyasa.Repo
   alias Vyasa.Sangh.Sheaf
 
+  # TODO: @ks0m1c if a single sheaf has many associated marks and each mark has order with respect to another mark, then
+  # we should float the ability to adjust mark orders in this context module.
+  # "As a user I want to rearrange marks in my sheaf"
+  # Some CRUD Functions needed here:
+  # 1) promote_mark_in_sheaf(sheaf_id, mark_id) ==> swaps rank with previous mark that came along with it
+  # 2) demote_mark_in_sheaf(sheaf_id, mark_id) ==> mirror of number 1
+  # 3) delete_mark_in_sheaf(sheaf_id, mark_id) ==> calls the mark::delete() and adjusts rank order for the remaining marks
+
+  @doc """
+  Promotes a particular mark's rank within a particular sheaf.
+  """
+  # TODO @ks0m1c
+  def promote_mark_in_sheaf(sheaf_id, _mark_id) do
+    {:ok, sheaf_id}
+  end
+
+  @doc """
+  Demotes a particular mark's rank within a particular sheaf.
+  """
+  # TODO @ks0m1c
+  def demote_mark_in_sheaf(sheaf_id, _mark_id) do
+    {:ok, sheaf_id}
+  end
+
+  @doc """
+  Deletes a particular mark within a particular sheaf and adjusts the ranks of the remaining marks to ensure they are in order.
+  """
+  # TODO @ks0m1c
+  def delete_mark_in_sheaf(sheaf_id, _mark_id) do
+    {:ok, sheaf_id}
+  end
+
   @doc """
   Returns the list of sheafs within a specific session.
 

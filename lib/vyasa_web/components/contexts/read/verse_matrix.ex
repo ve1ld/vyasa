@@ -104,6 +104,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :form_type, :atom, required: true
   attr :myself, :any
 
+  # TODO: consider merging this with the sheaf container
+  # TODO: instead of showing all sheafs, this should only be showing currently selected sheaf
   def quick_draft_container(assigns) do
     assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
 
@@ -164,6 +166,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
+  # TODO change from input -> textarea
   def quick_draft_form(assigns) do
     ~H"""
     <div class="p-2">

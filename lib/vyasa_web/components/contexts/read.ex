@@ -209,7 +209,7 @@ defmodule VyasaWeb.Context.Read do
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
 
     socket
-    |> sync_draft_reflector()
+    |> init_draft_reflector()
   end
 
   defp sync_session(socket) do
@@ -417,7 +417,7 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
+      <!-- <.debug_dump sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" /> -->
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
@@ -471,9 +471,9 @@ defmodule VyasaWeb.Context.Read do
 
   # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
+         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf, marks: marks}} = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(dt, %{marks: marks})
+    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: marks})
 
     socket
     |> assign(:draft_reflector, com)
@@ -484,12 +484,15 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # currently naive hd lookup can be filter based on active toggle,
-  # tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
-  # currently marks merged in and swapped out probably can be singular data structure
-  # managing of lifecycle of marks
-  # if sangh_id is active open
-  defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
+  # Allows us to get a reflection of the internal sangh session state and store it within
+  # this component's state.
+  # Currently, we shall do a naive hd lookup on the sheafs within the session.
+  # We could filter the sheaf based on the active flag,
+  # NOTE:
+  # Tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
+  # TODO: @ks0m1c combine the state handling for marks and sheaf by using the marks within the sheaf.
+  # This will work well with the other TODO defined about the CRUD functions needed
+  defp init_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
       [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
         socket
@@ -513,7 +516,7 @@ defmodule VyasaWeb.Context.Read do
     end
   end
 
-  defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
+  defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
   end
 end
