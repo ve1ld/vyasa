@@ -246,7 +246,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   end
 
   def handle_event(
-        "toggle_show_current_marks",
+        "toggle_marks_display_collapsibility",
         %{"value" => _},
         %Socket{
           assigns:

@@ -15,8 +15,11 @@ defmodule VyasaWeb.Context.Discuss do
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh
   alias Vyasa.Sangh.Session, as: SanghSession
+  alias VyasaWeb.Context.Discuss.SheafContainer
+
   # alias Vyasa.Sangh.{Mark}
   # alias VyasaWeb.OgImageController
+  # import VyasaWeb.Context.Components
 
   @impl true
   def update(
@@ -424,11 +427,19 @@ defmodule VyasaWeb.Context.Discuss do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <h1>DISCUSS MODE -- sheafs in this session:</h1>
-      <div :for={sheaf <- @sheafs}>
-        Sheaf: <pre>
+      <div id="content-display" class="mx-auto max-w-2xl pb-16">
+        <h1>DISCUSS MODE -- sheafs in this session:</h1>
+        <div :for={sheaf <- @sheafs}>
+          <.live_component
+            module={SheafContainer}
+            id="sheaf-container"
+            user_mode={@user_mode}
+            sheaf={sheaf}
+          />
+          Sheaf: <pre>
         <%= inspect(sheaf, pretty: true) %>
       </pre>
+        </div>
       </div>
     </div>
     """
