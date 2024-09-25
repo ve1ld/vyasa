@@ -3,9 +3,11 @@ defmodule VyasaWeb.Context.Components do
   Provides core components that shall be used in multiple contexts (e.g. read, discuss).
   """
   use VyasaWeb, :html
+  alias VyasaWeb.Context.Read.EditableMarkDisplay
 
   attr :marks, :list, default: []
   attr :is_expanded_view?, :boolean, default: true
+  attr :is_editable_marks?, :boolean, default: true
   attr :myself, :any
 
   def collapsible_marks_display(assigns) do
@@ -23,13 +25,11 @@ defmodule VyasaWeb.Context.Components do
           />
           <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
           <span class="text-sm font-medium text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))} personal #{ngettext("mark", "marks", Enum.count(@marks))}" %>
+            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}" %>
           </span>
         </button>
         <div class="flex space-x-2">
-          <.icon name="hero-pencil" class="w-5 h-5 text-brand-dark cursor-pointer" />
-          <.icon name="hero-heart" class="w-5 h-5 text-brand-dark cursor-pointer" />
-          <.icon name="hero-share" class="w-5 h-5 text-brand-dark cursor-pointer" />
+          <.icon name="hero-pencil-square" class="w-5 h-5 text-brand-dark cursor-pointer" />
         </div>
       </div>
       <div class={
@@ -37,7 +37,16 @@ defmodule VyasaWeb.Context.Components do
           do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden",
           else: "max-h-0 overflow-hidden"
       }>
-        <.mark_display :for={mark <- @marks |> Enum.reverse()} mark={mark} />
+        <%= if @is_editable_marks? do %>
+          <.live_component
+            :for={mark <- @marks |> Enum.reverse()}
+            module={EditableMarkDisplay}
+            id={"mark-#{mark.id}"}
+            mark={mark}
+          />
+        <% else %>
+          <.mark_display :for={mark <- @marks |> Enum.reverse()} mark={mark} />
+        <% end %>
       </div>
     </div>
     """
