@@ -9,6 +9,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     {:ok,
      socket
      |> assign(:show_current_marks?, false)
+     |> assign(:is_editable_marks?, false)
      |> assign(:form_type, :mark)}
   end
 
@@ -51,6 +52,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
               :if={is_elem_bound_to_verse(@verse, elem)}
               sheafs={@verse.sheafs}
               show_current_marks?={@show_current_marks?}
+              is_editable_marks?={@is_editable_marks?}
               marks={@marks}
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
@@ -101,6 +103,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
   attr :show_current_marks?, :boolean, default: false
+  attr :is_editable_marks?, :boolean, default: false
   attr :form_type, :atom, required: true
   attr :myself, :any
 
@@ -127,6 +130,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         myself={@myself}
         marks={@marks}
         is_expanded_view?={@show_current_marks?}
+        is_editable_marks?={@is_editable_marks?}
       />
       <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>
@@ -259,6 +263,19 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         } = socket
       ) do
     {:noreply, update(socket, :show_current_marks?, &(!&1))}
+  end
+
+  def handle_event(
+        "toggle_is_editable_marks?",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              is_editable_marks?: _is_editable_marks?
+            } = _assigns
+        } = socket
+      ) do
+    {:noreply, update(socket, :is_editable_marks?, &(!&1))}
   end
 
   def handle_event("change_form_type", %{"type" => type}, socket) do

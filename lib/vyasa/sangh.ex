@@ -34,6 +34,7 @@ defmodule Vyasa.Sangh do
 
   @doc """
   Deletes a particular mark within a particular sheaf and adjusts the ranks of the remaining marks to ensure they are in order.
+  NOTE: @ks0m1c QQ: needs some version of authorisation here, in a multi-user sangh, one user shouldn't be able to delete others' marks and sheafs willy-nilly (unless they are admins).
   """
   # TODO @ks0m1c
   def delete_mark_in_sheaf(sheaf_id, _mark_id) do

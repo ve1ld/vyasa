@@ -5,7 +5,8 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
   @impl true
   def update(
         %{
-          mark: %Mark{} = mark
+          mark: %Mark{} = mark,
+          parent: parent
         } =
           params,
         socket
@@ -16,6 +17,7 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
       :ok,
       socket
       |> assign(mark: mark)
+      |> assign(parent: parent)
     }
   end
 
@@ -56,7 +58,7 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
               <.icon name="hero-chevron-down" class="w-4 h-4 text-brand-dark" />
             </button>
           </div>
-          <div id="mark-content-container" class="flex-grow mx-2 pt-1">
+          <div id="mark-content-container" class="flex-grow mx-2 pt-2">
             <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
               <span class="block mb-1 text-sm italic text-secondary">
                 "<%= @mark.binding.window.quote %>"

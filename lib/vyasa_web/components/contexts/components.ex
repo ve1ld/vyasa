@@ -8,7 +8,7 @@ defmodule VyasaWeb.Context.Components do
   attr :marks, :list, default: []
   attr :is_expanded_view?, :boolean, default: true
   attr :is_editable_marks?, :boolean, default: true
-  attr :myself, :any
+  attr :myself, :any, required: true
 
   def collapsible_marks_display(assigns) do
     ~H"""
@@ -17,7 +17,7 @@ defmodule VyasaWeb.Context.Components do
         <button
           phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@myself}
-          class="flex items-center w-full hover:bg-brand-light hover:text-white"
+          class="flex items-center w-full hover:bg-brand-light hover:text-brand"
         >
           <.icon
             name={if @is_expanded_view?, do: "hero-chevron-up", else: "hero-chevron-down"}
@@ -28,9 +28,17 @@ defmodule VyasaWeb.Context.Components do
             <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}" %>
           </span>
         </button>
-        <div class="flex space-x-2">
-          <.icon name="hero-pencil-square" class="w-5 h-5 text-brand-dark cursor-pointer" />
-        </div>
+        <button
+          :if={@is_expanded_view?}
+          class="flex space-x-2"
+          phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
+          phx-target={@myself}
+        >
+          <.icon
+            name="hero-pencil-square"
+            class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
+          />
+        </button>
       </div>
       <div class={
         if @is_expanded_view?,
@@ -43,6 +51,7 @@ defmodule VyasaWeb.Context.Components do
             module={EditableMarkDisplay}
             id={"mark-#{mark.id}"}
             mark={mark}
+            parent={@myself}
           />
         <% else %>
           <.mark_display :for={mark <- @marks |> Enum.reverse()} mark={mark} />
