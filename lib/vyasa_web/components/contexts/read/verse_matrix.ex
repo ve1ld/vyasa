@@ -170,7 +170,6 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
-  # TODO change from input -> textarea
   def quick_draft_form(assigns) do
     ~H"""
     <div class="p-2">
@@ -180,9 +179,12 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         phx-target={"#" <> @event_target}
         class="flex items-center"
       >
-        <input
+        <textarea
           name="body"
-          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
+          rows="1"
+          id="quick-draft-form-textarea"
+          phx-hook="TextareaAutoResize"
+          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "sheaf"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
@@ -205,31 +207,33 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
           phx-target={"#" <> @event_target}
         />
-        <button
-          type="submit"
-          class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
-        >
-          <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
-        </button>
-        <button
-          type="button"
-          phx-click={
-            JS.push("change_form_type",
-              value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
-            )
-          }
-          phx-target={@myself}
-          class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
-        >
-          <.icon
-            name={
-              if @form_type == :mark,
-                do: "hero-chat-bubble-left-ellipsis-solid",
-                else: "hero-bookmark-solid"
+        <div class="flex items-center ml-2">
+          <button
+            type="submit"
+            class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
+          >
+            <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
+          </button>
+          <button
+            type="button"
+            phx-click={
+              JS.push("change_form_type",
+                value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
+              )
             }
-            class="w-4 h-4"
-          />
-        </button>
+            phx-target={@myself}
+            class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
+          >
+            <.icon
+              name={
+                if @form_type == :mark,
+                  do: "hero-chat-bubble-left-ellipsis-solid",
+                  else: "hero-bookmark-solid"
+              }
+              class="w-4 h-4"
+            />
+          </button>
+        </div>
       </.form>
     </div>
     """

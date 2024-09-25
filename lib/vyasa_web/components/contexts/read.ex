@@ -366,6 +366,7 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # when user remains on the the same binding
+  # TODO: prevent empty both (quote, mark body) from being submitted
   def handle_event(
         "createMark",
         %{"body" => body},
