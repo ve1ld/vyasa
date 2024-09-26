@@ -524,7 +524,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       }
     >
       <%= if not @isReady do %>
-        <.icon name="custom-spinner-bars-scale-middle" class="w-6 h-6" />
+        <.icon name="custom-spinner-bars-scale-middle" class="w-10 h-10" />
       <% else %>
         <%= if @isPlaying  do %>
           <svg id="player-pause" width="50" height="50" fill="none">
