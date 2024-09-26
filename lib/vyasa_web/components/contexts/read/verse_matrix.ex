@@ -170,6 +170,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
+  # FIXME 1: the text area will have enter button pressed for new line ==> so the onpress handlers need to change to not trigger wrongly
+  # FIXME 2: I can put multiline inputs in the textarea but the stored string ends up removing the newlines -- why?
   def quick_draft_form(assigns) do
     ~H"""
     <div class="p-2">

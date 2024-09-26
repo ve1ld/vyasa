@@ -834,6 +834,12 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  def icon(%{name: "custom-" <> _} = assigns) do
+    ~H"""
+    <span class={[@name, @class]} />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

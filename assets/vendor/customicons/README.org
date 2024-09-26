@@ -1,0 +1,8 @@
+* Custom SVG Icons
+This follows a similar patterns as how the default hero-icons are vendored-in.
+
+We shall keep all assets as lean as possible, so vendoring svgs when we need is better than adding a whole new icon pack.
+This aims to reduce the build-time and keep bundle-sizes small.
+
+** Useful Resources
+1) [[https://icon-sets.iconify.design][iconify icon sets]] - open source, contains a wide variety of icon packs

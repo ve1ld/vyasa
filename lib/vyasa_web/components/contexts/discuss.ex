@@ -428,6 +428,7 @@ defmodule VyasaWeb.Context.Discuss do
     ~H"""
     <div id={@id}>
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
+        <.icon name="custom-spinner-bars-scale-middle" />
         <h1>DISCUSS MODE -- sheafs in this session:</h1>
         <div :for={sheaf <- @sheafs}>
           <.live_component
