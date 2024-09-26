@@ -418,7 +418,8 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <!-- <.debug_dump sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" /> -->
+
+      <.debug_dump :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env == :dev)} sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
