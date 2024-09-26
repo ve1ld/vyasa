@@ -29,7 +29,7 @@ defmodule Vyasa.Sangh.Sheaf do
     belongs_to :session, Session, references: :id, type: Ecto.UUID
     belongs_to :parent, Sheaf, references: :id, type: Ecto.UUID
 
-    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists
+    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists, preload_order: [desc: :order]
 
     # has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
