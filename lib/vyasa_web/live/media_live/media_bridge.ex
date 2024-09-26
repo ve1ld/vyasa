@@ -225,6 +225,12 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> handle_seek(position_ms, "MediaBridge")
   end
 
+  @impl true
+  def handle_event(_, _, socket) do
+    IO.puts(~c"[handleEvent] fallthrough handle event")
+    {:noreply, socket}
+  end
+
   # when originator is the ProgressBar, then shall only consume and carry out internal actions only
   # i.e. updating of the playback state kept in MediaBridge liveview.
   defp handle_seek(socket, position_ms, "ProgressBar" = _originator) do
@@ -507,6 +513,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     ~H"""
     <button
       type="button"
+      disabled={not @isReady}
       class={["mx-auto scale-75", @class]}
       phx-click={JS.push("play_pause")}
       phx-target="#media-player"

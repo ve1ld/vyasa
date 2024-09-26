@@ -61,25 +61,12 @@
         ☙ –‹›––– ❊ –––‹›– ❧
       </span>
     </div>
-    <!-- --
-    live session ongoing
-      ---->
-    <div
-      :if={@session.name}
-      class="absolute right-5 animate-ping rounded-full rounded-2xl bg-brand opacity-75"
-    >
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75">
-        </span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-primaryAccent"></span>
-      </span>
-    </div>
   </div>
 
   <main id="main-content" class="bg-primaryBackground px-4 py-4 sm:px-6 lg:px-8">
     <div>
       <div id="control-panel-container">
-        <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} />
+        <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} session={@session}/>
       </div>
 
       <.live_component module={VyasaWeb.HoveRune} id="hoverune" user_mode={@mode} />

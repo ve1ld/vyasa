@@ -15,12 +15,27 @@ module.exports = {
   theme: {
     extend: {
       animation: {
-        ripple: "ripple 0.6s linear",
+        ripple: "ripple 1s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+        pulseBorder: "pulseBorder 1.5s ease-in-out infinite",
       },
       keyframes: {
         ripple: {
-          "0%": { transform: "scale(0)", opacity: "0.5" },
+          "0%": { transform: "scale(0)", opacity: "1" },
           "100%": { transform: "scale(4)", opacity: "0" },
+        },
+        pulseBorder: {
+          "0%": {
+            borderColor: "transparent",
+            transform: "scale(1)",
+          },
+          "50%": {
+            borderColor: "var(--color-brand)", // Use your defined brand color
+            transform: "scale(1.05)", // Slightly scale up
+          },
+          "100%": {
+            borderColor: "transparent",
+            transform: "scale(1)",
+          },
         },
       },
       fontFamily: {
