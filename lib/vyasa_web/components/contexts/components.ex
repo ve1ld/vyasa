@@ -10,6 +10,7 @@ defmodule VyasaWeb.Context.Components do
   attr :is_editable_marks?, :boolean, default: true
   attr :myself, :any, required: true
 
+  # FIXME: the UUID generation for marks should ideally not be happening here, we should try to ensure that every mark has an id @ the point of creation, wherever that may be (fresh creation or created at point of insertion into the db)
   def collapsible_marks_display(assigns) do
     ~H"""
     <div class="mb-4">
@@ -49,7 +50,7 @@ defmodule VyasaWeb.Context.Components do
           <.live_component
             :for={mark <- @marks |> Enum.reverse()}
             module={EditableMarkDisplay}
-            id={"mark-#{mark.id}"}
+            id={"mark-#{mark.id || Ecto.UUID.generate()}"}
             mark={mark}
             parent={@myself}
           />

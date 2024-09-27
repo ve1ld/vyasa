@@ -293,16 +293,18 @@ defmodule VyasaWeb.Context.Read do
   def handle_event(
         "bindHoveRune",
         %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+        %{assigns: %{kv_verses: verses, marks: [%Mark{} | _] = marks}} = socket
       ) do
     bind = Draft.bind_node(bind)
     bound_verses = put_in(verses[verse_id].binding, bind)
+
+    IO.inspect(marks)
 
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+       %Mark{state: :draft, verse_id: verse_id, binding: bind} | marks
      ])}
   end
 
@@ -356,7 +358,7 @@ defmodule VyasaWeb.Context.Read do
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -381,7 +383,7 @@ defmodule VyasaWeb.Context.Read do
 
     {:noreply,
      socket
-     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
      |> mutate_draft_reflector()
      |> stream_insert(
        :verses,
@@ -418,7 +420,8 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <!-- <.debug_dump sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" /> -->
+
+      <.debug_dump :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env == :dev)} sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
