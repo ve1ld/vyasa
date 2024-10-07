@@ -15,6 +15,7 @@ defmodule Vyasa.Sangh.Mark do
   alias Vyasa.Adapters.Binding
   alias Utils.Time
 
+  @derive {Jason.Encoder, only: [:id, :verse_id]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "marks" do
     field :body, :string

@@ -402,6 +402,34 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   def handle_event(
+        "deleteMark",
+        %{"mark_id" => mark_id, "verse_id" => v_id} = _payload,
+        %Socket{assigns: %{kv_verses: verses, marks: marks}} = socket
+      ) do
+    new_marks = mark_id |> delete_mark_in_marks(marks)
+
+    socket =
+      socket
+      |> assign(:marks, new_marks)
+      |> mutate_draft_reflector()
+
+    cond do
+      is_nil(v_id) or is_nil(verses[v_id]) ->
+        {:noreply, socket}
+
+      # update the kv_verses map if entry exists:
+      v_id ->
+        {:noreply,
+         socket
+         |> stream_insert(
+           :verses,
+           %{verses[v_id] | binding: nil}
+         )}
+    end
+  end
+
+  @impl true
+  def handle_event(
         "markQuote",
         _,
         %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
@@ -524,5 +552,40 @@ defmodule VyasaWeb.Context.Read do
 
   defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
+  end
+
+  # deletes target mark in non-empty list of marks and updates all the antecedent order values if
+  # they are non-nil and make sense. Ultimately, all the order values are contiguous for the list of
+  # marks that are kept in state.
+  defp delete_mark_in_marks(mark_id, [%Mark{} | _] = marks) do
+    {mark_to_delete, remaining_marks} = marks |> Enum.split_with(fn m -> m.id == mark_id end)
+
+    to_delete_order =
+      case mark_to_delete do
+        [%Mark{order: order}] -> order
+        _ -> nil
+      end
+
+    IO.inspect(to_delete_order, label: "CHECK to delete order:")
+    IO.inspect(Enum.map(remaining_marks, fn m -> m.order end))
+
+    updated_marks =
+      if to_delete_order do
+        Enum.map(remaining_marks, fn m ->
+          if not is_nil(m.order) and m.order > to_delete_order do
+            %Mark{m | order: m.order - 1}
+          else
+            m
+          end
+        end)
+      else
+        remaining_marks
+      end
+
+    updated_marks
+  end
+
+  defp delete_mark_in_marks(_, [] = marks) do
+    marks
   end
 end

@@ -108,8 +108,10 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
             class="h-full flex flex-col ml-2 space-y-2 justify-between"
           >
             <button
-              phx-click="dummy_event"
-              phx-target={@myself}
+              phx-click="deleteMark"
+              phx-target="#content-display"
+              phx-value-mark_id={@mark.id}
+              phx-value-verse_id={@mark.id}
               class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
               aria-label="Delete"
             >
