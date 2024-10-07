@@ -14,7 +14,10 @@ defmodule VyasaWeb.Context.Components do
   def collapsible_marks_display(assigns) do
     ~H"""
     <div class="mb-4">
-      <div class="flex items-center justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200">
+      <div
+        id="collapse-header-container"
+        class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
+      >
         <button
           phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@myself}
@@ -24,28 +27,35 @@ defmodule VyasaWeb.Context.Components do
             name={if @is_expanded_view?, do: "hero-chevron-up", else: "hero-chevron-down"}
             class="w-5 h-5 mr-2 text-brand-dark"
           />
-          <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-sm font-medium text-brand-dark">
+          <span class="text-lg font-small text-brand-dark">
             <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}" %>
           </span>
+          <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
         </button>
         <button
           :if={@is_expanded_view?}
-          class="flex space-x-2"
+          class="flex space-x-2 pr-2"
           phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
           phx-target={@myself}
         >
           <.icon
-            name="hero-pencil-square"
+            name={
+              if @is_editable_marks?,
+                do: "custom-icon-mingcute-save-line",
+                else: "custom-icon-mingcute-edit-4-line"
+            }
             class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
           />
         </button>
       </div>
-      <div class={
-        if @is_expanded_view?,
-          do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden",
-          else: "max-h-0 overflow-hidden"
-      }>
+      <div
+        id="collapsible-content-container"
+        class={
+          if @is_expanded_view?,
+            do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
+            else: "max-h-0 overflow-hidden"
+        }
+      >
         <%= if @is_editable_marks? do %>
           <.live_component
             :for={mark <- @marks |> Enum.reverse()}

@@ -342,6 +342,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
+  @handleable_mark_states [:draft, :live]
   @impl true
   def handle_event(
         "createMark",
@@ -349,16 +350,36 @@ defmodule VyasaWeb.Context.Read do
         %{
           assigns: %{
             kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks]
+            marks:
+              [
+                %Mark{id: hd_id, state: hd_state, verse_id: v_id, binding: binding} = hd_mark
+                | rest_marks
+              ] = all_marks
           }
         } = socket
-      ) do
-    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
+      )
+      when hd_state in @handleable_mark_states do
+    should_overwrite_head? = hd_state == :draft
+    should_gen_id? = not should_overwrite_head? or is_nil(hd_id)
+    committed_marks = if should_overwrite_head?, do: rest_marks, else: all_marks
+
+    new_mark =
+      hd_mark
+      |> Map.merge(%{
+        id:
+          if(should_gen_id?,
+            do: Ecto.UUID.generate(),
+            else: hd_mark.id
+          ),
+        body: body,
+        order: (committed_marks |> Enum.max_by(fn m -> m.order end)).order + 1,
+        state: :live
+      })
 
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
+      |> assign(:marks, [new_mark | committed_marks])
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -367,31 +388,8 @@ defmodule VyasaWeb.Context.Read do
     }
   end
 
-  # when user remains on the the same binding
-  # TODO: prevent empty both (quote, mark body) from being submitted
-  def handle_event(
-        "createMark",
-        %{"body" => body},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks
-          }
-        } = socket
-      ) do
-    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
-
-    {:noreply,
-     socket
-     |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
-     |> mutate_draft_reflector()
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )}
-  end
-
   @impl true
+  # fallback:
   def handle_event(
         "createMark",
         _event,
@@ -420,8 +418,12 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-
-      <.debug_dump :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env == :dev)} sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
+      <.debug_dump
+        :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env() == :dev)}
+        sangh={@session.sangh}
+        user_mode={@user_mode}
+        class="top-1/2 left-0"
+      />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
