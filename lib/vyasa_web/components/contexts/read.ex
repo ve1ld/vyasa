@@ -404,7 +404,9 @@ defmodule VyasaWeb.Context.Read do
   def handle_event(
         "deleteMark",
         %{"mark_id" => mark_id, "verse_id" => v_id} = _payload,
-        %Socket{assigns: %{kv_verses: verses, marks: marks}} = socket
+        %Socket{
+          assigns: %{kv_verses: kv_verses, marks: marks, streams: %{verses: _verses} = _streams}
+        } = socket
       ) do
     new_marks = mark_id |> delete_mark_in_marks(marks)
 
@@ -414,7 +416,8 @@ defmodule VyasaWeb.Context.Read do
       |> mutate_draft_reflector()
 
     cond do
-      is_nil(v_id) or is_nil(verses[v_id]) ->
+      is_nil(v_id) or is_nil(kv_verses[v_id]) ->
+        send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
         {:noreply, socket}
 
       # update the kv_verses map if entry exists:
@@ -423,9 +426,25 @@ defmodule VyasaWeb.Context.Read do
          socket
          |> stream_insert(
            :verses,
-           %{verses[v_id] | binding: nil}
+           %{kv_verses[v_id] | binding: nil}
          )}
     end
+  end
+
+  @impl true
+  def handle_event(
+        "deleteMark",
+        %{"mark_id" => mark_id} = _payload,
+        %Socket{assigns: %{marks: marks, streams: %{verses: _verses} = _streams}} = socket
+      ) do
+    new_marks = mark_id |> delete_mark_in_marks(marks)
+
+    send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+
+    {:noreply,
+     socket
+     |> assign(:marks, new_marks)
+     |> mutate_draft_reflector()}
   end
 
   @impl true

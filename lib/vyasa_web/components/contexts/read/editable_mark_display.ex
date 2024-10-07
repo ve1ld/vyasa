@@ -107,11 +107,12 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
             id={"mark-edit-actions-button-group-" <> @mark.id}
             class="h-full flex flex-col ml-2 space-y-2 justify-between"
           >
+            <.debug_dump mark_id={@mark.id} mark_verse_id={@mark.verse_id} class="relative" />
             <button
               phx-click="deleteMark"
               phx-target="#content-display"
               phx-value-mark_id={@mark.id}
-              phx-value-verse_id={@mark.id}
+              phx-value-verse_id={@mark.verse_id}
               class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
               aria-label="Delete"
             >
