@@ -109,6 +109,7 @@ defmodule VyasaWeb.Context.Read.EditableMarkDisplay do
           >
             <.debug_dump
               mark_id={@mark.id}
+              mark_order={@mark.order}
               mark_state={@mark.state}
               mark_verse_id={@mark.verse_id}
               class="relative"

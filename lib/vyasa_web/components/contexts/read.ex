@@ -412,7 +412,10 @@ defmodule VyasaWeb.Context.Read do
 
     IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
 
-    send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+    send_update(VyasaWeb.Context.Read.Verses,
+      id: "content-verses",
+      marks: new_marks |> Enum.reject(fn m -> m.state == :deleted end)
+    )
 
     socket =
       socket
@@ -443,7 +446,11 @@ defmodule VyasaWeb.Context.Read do
       ) do
     new_marks = mark_id |> delete_mark_in_marks(marks)
     IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
-    send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+
+    send_update(VyasaWeb.Context.Read.Verses,
+      id: "content-verses",
+      marks: new_marks |> Enum.reject(fn m -> m.state == :deleted end)
+    )
 
     {:noreply,
      socket
