@@ -22,7 +22,7 @@ defmodule Vyasa.Sangh.Mark do
     field :order, :integer
 
     # TODO: @ks0m1c these enums need better names or a docstring to explain why they are named like so
-    field :state, Ecto.Enum, values: [:draft, :bookmark, :live]
+    field :state, Ecto.Enum, values: [:draft, :bookmark, :live, :deleted]
     field :verse_id, :string, virtual: true
 
     belongs_to :sheaf, Sheaf, foreign_key: :sheaf_id, type: :binary_id
@@ -36,7 +36,7 @@ defmodule Vyasa.Sangh.Mark do
     |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id])
   end
 
-  def update_mark(%Mark{} = draft_mark, opts \\ []) do
+  def update_mark(%Mark{} = draft_mark, opts \\ %{}) do
     draft_mark
     |> Map.merge(Map.new(opts))
     |> Time.maybe_insert_current_time(:inserted_at)

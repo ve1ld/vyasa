@@ -5,6 +5,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
 
   import VyasaWeb.Context.Components
 
+  @impl true
   def mount(socket) do
     {:ok,
      socket
@@ -13,7 +14,10 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
      |> assign(:form_type, :mark)}
   end
 
+  @impl true
   def update(%{verse: verse, marks: marks, event_target: event_target} = assigns, socket) do
+    IO.inspect("TRIGGER VERSE MATRIX UPDATE")
+
     socket =
       socket
       |> assign(assigns)
@@ -22,6 +26,18 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       |> assign(:event_target, event_target)
 
     {:ok, socket}
+  end
+
+  @impl true
+  def update(params, socket) do
+    IO.inspect("TRIGGER VERSE MATRIX UPDATE")
+    dbg()
+
+    {
+      :ok,
+      socket
+      |> assign(params)
+    }
   end
 
   slot :edge, required: true do
@@ -258,6 +274,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
          verse.binding.field_key == edge_elem.field)
   end
 
+  @impl true
   def handle_event(
         "toggle_marks_display_collapsibility",
         %{"value" => _},
@@ -271,6 +288,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     {:noreply, update(socket, :show_current_marks?, &(!&1))}
   end
 
+  @impl true
   def handle_event(
         "toggle_is_editable_marks?",
         %{"value" => _},
@@ -284,11 +302,13 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     {:noreply, update(socket, :is_editable_marks?, &(!&1))}
   end
 
+  @impl true
   def handle_event("change_form_type", %{"type" => type}, socket) do
     new_form_type = String.to_existing_atom(type)
     {:noreply, assign(socket, :form_type, new_form_type)}
   end
 
+  @impl true
   def handle_event(
         _,
         _,

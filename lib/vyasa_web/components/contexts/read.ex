@@ -410,6 +410,10 @@ defmodule VyasaWeb.Context.Read do
       ) do
     new_marks = mark_id |> delete_mark_in_marks(marks)
 
+    IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
+
+    send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+
     socket =
       socket
       |> assign(:marks, new_marks)
@@ -417,7 +421,7 @@ defmodule VyasaWeb.Context.Read do
 
     cond do
       is_nil(v_id) or is_nil(kv_verses[v_id]) ->
-        send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+        # send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
         {:noreply, socket}
 
       # update the kv_verses map if entry exists:
@@ -438,7 +442,7 @@ defmodule VyasaWeb.Context.Read do
         %Socket{assigns: %{marks: marks, streams: %{verses: _verses} = _streams}} = socket
       ) do
     new_marks = mark_id |> delete_mark_in_marks(marks)
-
+    IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
     send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
 
     {:noreply,
@@ -500,7 +504,7 @@ defmodule VyasaWeb.Context.Read do
             verses={@streams.verses}
             chap={@chap}
             kv_verses={@kv_verses}
-            marks={@marks}
+            marks={@marks |> Enum.reject(fn m -> m.state == :deleted end)}
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
@@ -524,9 +528,25 @@ defmodule VyasaWeb.Context.Read do
 
   # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf, marks: marks}} = socket
+         %{
+           assigns: %{
+             draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf,
+             marks: marks
+           }
+         } = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: marks})
+    sanitised_marks =
+      marks
+      |> Enum.reject(fn mark -> mark.state == :deleted end)
+      |> Enum.with_index()
+      |> Enum.map(fn {mark, index} ->
+        # keeps the descending order
+        %Mark{mark | order: length(marks) - index}
+      end)
+
+    IO.inspect(sanitised_marks, label: "CHECK sanitised marks")
+
+    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: sanitised_marks})
 
     socket
     |> assign(:draft_reflector, com)
@@ -573,35 +593,16 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # deletes target mark in non-empty list of marks and updates all the antecedent order values if
-  # they are non-nil and make sense. Ultimately, all the order values are contiguous for the list of
-  # marks that are kept in state.
+  # amortizes the deletion of a mark by updating its state to :deleted
   defp delete_mark_in_marks(mark_id, [%Mark{} | _] = marks) do
-    {mark_to_delete, remaining_marks} = marks |> Enum.split_with(fn m -> m.id == mark_id end)
-
-    to_delete_order =
-      case mark_to_delete do
-        [%Mark{order: order}] -> order
-        _ -> nil
-      end
-
-    IO.inspect(to_delete_order, label: "CHECK to delete order:")
-    IO.inspect(Enum.map(remaining_marks, fn m -> m.order end))
-
-    updated_marks =
-      if to_delete_order do
-        Enum.map(remaining_marks, fn m ->
-          if not is_nil(m.order) and m.order > to_delete_order do
-            %Mark{m | order: m.order - 1}
-          else
-            m
-          end
-        end)
+    marks
+    |> Enum.map(fn m ->
+      if m.id == mark_id do
+        m |> Mark.update_mark(%{state: :deleted})
       else
-        remaining_marks
+        m
       end
-
-    updated_marks
+    end)
   end
 
   defp delete_mark_in_marks(_, [] = marks) do
