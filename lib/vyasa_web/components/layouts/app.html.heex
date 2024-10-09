@@ -1,4 +1,4 @@
-<header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
+<header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10 w-full">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
       <a href="/" class="">
@@ -18,8 +18,10 @@
     </div>
   </div>
 </header>
-<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
+
+
+<main id={"app-container"} class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8 w-full">
+  <div class="mx-auto max-w-2xl w-full">
     <.flash_group flash={@flash} />
   </div>
   <!-- DM manages the core layouts -->

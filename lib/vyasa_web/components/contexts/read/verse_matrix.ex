@@ -1,17 +1,23 @@
-defmodule VyasaWeb.Content.VerseMatrix do
+defmodule VyasaWeb.Context.Read.VerseMatrix do
   use VyasaWeb, :live_component
   alias Phoenix.LiveView.Socket
-
   alias Utils.Struct
 
+  import VyasaWeb.Context.Components
+
+  @impl true
   def mount(socket) do
     {:ok,
      socket
      |> assign(:show_current_marks?, false)
+     |> assign(:is_editable_marks?, false)
      |> assign(:form_type, :mark)}
   end
 
+  @impl true
   def update(%{verse: verse, marks: marks, event_target: event_target} = assigns, socket) do
+    IO.inspect("TRIGGER VERSE MATRIX UPDATE")
+
     socket =
       socket
       |> assign(assigns)
@@ -20,6 +26,18 @@ defmodule VyasaWeb.Content.VerseMatrix do
       |> assign(:event_target, event_target)
 
     {:ok, socket}
+  end
+
+  @impl true
+  def update(params, socket) do
+    IO.inspect("TRIGGER VERSE MATRIX UPDATE")
+    dbg()
+
+    {
+      :ok,
+      socket
+      |> assign(params)
+    }
   end
 
   slot :edge, required: true do
@@ -50,6 +68,7 @@ defmodule VyasaWeb.Content.VerseMatrix do
               :if={is_elem_bound_to_verse(@verse, elem)}
               sheafs={@verse.sheafs}
               show_current_marks?={@show_current_marks?}
+              is_editable_marks?={@is_editable_marks?}
               marks={@marks}
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
@@ -100,116 +119,36 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
   attr :show_current_marks?, :boolean, default: false
+  attr :is_editable_marks?, :boolean, default: false
   attr :form_type, :atom, required: true
   attr :myself, :any
 
+  # TODO: consider merging this with the sheaf container
+  # TODO: instead of showing all sheafs, this should only be showing currently selected sheaf
   def quick_draft_container(assigns) do
     assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-    # TODO: i want a "current_sheaf"
 
     ~H"""
     <div
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.unified_quote_and_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-      <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
-      <.bound_sheafs sheafs={@sheafs} />
-    </div>
-    """
-  end
-
-  def bound_sheafs(assigns) do
-    assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-
-    ~H"""
-    <span
-      :for={sheaf <- @sheafs}
-      class="block
-                 before:content-['╰'] before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-    >
-      <%= sheaf.body %> - <b><%= sheaf.signature %></b>
-    </span>
-    """
-  end
-
-  attr :quote, :string, required: true
-  attr :event_target, :string, required: true
-  attr :form_type, :atom, required: true
-  attr :myself, :any, required: true
-
-  def unified_quote_and_form(assigns) do
-    ~H"""
-    <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
-      <.current_quote quote={@quote} form_type={@form_type} />
-      <.quick_draft_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-    </div>
-    """
-  end
-
-  # FIXME @ks0m1c qq: for current_marks below: when marks are in draft state, you'll help have a default container for it right
-  # i need the invariant to be true: every mark has an associated container it is in, regardless of the state of the mark (draft or live or not)
-  # yeah all marks are stored in this stack
-  # if the stack becomes a list of lists
-  # it is possible to have a single elemented list mark
-  # so should be g
-
-  attr :marks, :list, default: []
-  attr :show_current_marks?, :boolean, default: true
-  attr :myself, :any
-
-  def current_marks(assigns) do
-    ~H"""
-    <div class="mb-4">
-      <button
-        phx-click={JS.push("toggle_show_current_marks", value: %{value: ""})}
-        phx-target={@myself}
-        class="w-full flex items-center justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm hover:bg-brand-light hover:text-white transition-colors duration-200"
-      >
-        <div class="flex items-center">
-          <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-sm font-medium text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))} personal #{ngettext("mark", "marks", Enum.count(@marks))}" %>
-          </span>
-        </div>
-        <.icon
-          name={if @show_current_marks?, do: "hero-chevron-up", else: "hero-chevron-down"}
-          class="w-5 h-5 text-brand-dark"
+      <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
+        <.current_quote quote={@quote} form_type={@form_type} />
+        <.quick_draft_form
+          event_target={@event_target}
+          quote={@quote}
+          form_type={@form_type}
+          myself={@myself}
         />
-      </button>
-
-      <div class={if @show_current_marks?, do: "mt-2", else: "hidden"}>
-        <div class="border-l border-brand-light pl-2">
-          <%= for mark <- @marks |> Enum.reverse() do %>
-            <%= if mark.state == :live do %>
-              <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-brand">
-                <%= if !is_nil(mark.binding.window) && mark.binding.window.quote !== "" do %>
-                  <span class="block mb-1 text-sm italic text-secondary">
-                    "<%= mark.binding.window.quote %>"
-                  </span>
-                <% end %>
-                <%= if is_binary(mark.body) do %>
-                  <span class="block text-sm text-text">
-                    <%= mark.body %>
-                  </span>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
       </div>
+      <.collapsible_marks_display
+        myself={@myself}
+        marks={@marks}
+        is_expanded_view?={@show_current_marks?}
+        is_editable_marks?={@is_editable_marks?}
+      />
+      <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>
     """
   end
@@ -247,6 +186,8 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
+  # FIXME 1: the text area will have enter button pressed for new line ==> so the onpress handlers need to change to not trigger wrongly
+  # FIXME 2: I can put multiline inputs in the textarea but the stored string ends up removing the newlines -- why?
   def quick_draft_form(assigns) do
     ~H"""
     <div class="p-2">
@@ -256,9 +197,12 @@ defmodule VyasaWeb.Content.VerseMatrix do
         phx-target={"#" <> @event_target}
         class="flex items-center"
       >
-        <input
+        <textarea
           name="body"
-          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
+          rows="1"
+          id="quick-draft-form-textarea"
+          phx-hook="TextareaAutoResize"
+          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "sheaf"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
@@ -281,31 +225,33 @@ defmodule VyasaWeb.Content.VerseMatrix do
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
           phx-target={"#" <> @event_target}
         />
-        <button
-          type="submit"
-          class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
-        >
-          <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
-        </button>
-        <button
-          type="button"
-          phx-click={
-            JS.push("change_form_type",
-              value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
-            )
-          }
-          phx-target={@myself}
-          class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
-        >
-          <.icon
-            name={
-              if @form_type == :mark,
-                do: "hero-chat-bubble-left-ellipsis-solid",
-                else: "hero-bookmark-solid"
+        <div class="flex items-center ml-2">
+          <button
+            type="submit"
+            class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
+          >
+            <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
+          </button>
+          <button
+            type="button"
+            phx-click={
+              JS.push("change_form_type",
+                value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
+              )
             }
-            class="w-4 h-4"
-          />
-        </button>
+            phx-target={@myself}
+            class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
+          >
+            <.icon
+              name={
+                if @form_type == :mark,
+                  do: "hero-chat-bubble-left-ellipsis-solid",
+                  else: "hero-bookmark-solid"
+              }
+              class="w-4 h-4"
+            />
+          </button>
+        </div>
       </.form>
     </div>
     """
@@ -328,8 +274,9 @@ defmodule VyasaWeb.Content.VerseMatrix do
          verse.binding.field_key == edge_elem.field)
   end
 
+  @impl true
   def handle_event(
-        "toggle_show_current_marks",
+        "toggle_marks_display_collapsibility",
         %{"value" => _},
         %Socket{
           assigns:
@@ -341,11 +288,27 @@ defmodule VyasaWeb.Content.VerseMatrix do
     {:noreply, update(socket, :show_current_marks?, &(!&1))}
   end
 
+  @impl true
+  def handle_event(
+        "toggle_is_editable_marks?",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              is_editable_marks?: _is_editable_marks?
+            } = _assigns
+        } = socket
+      ) do
+    {:noreply, update(socket, :is_editable_marks?, &(!&1))}
+  end
+
+  @impl true
   def handle_event("change_form_type", %{"type" => type}, socket) do
     new_form_type = String.to_existing_atom(type)
     {:noreply, assign(socket, :form_type, new_form_type)}
   end
 
+  @impl true
   def handle_event(
         _,
         _,

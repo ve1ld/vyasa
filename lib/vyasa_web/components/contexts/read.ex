@@ -209,7 +209,7 @@ defmodule VyasaWeb.Context.Read do
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
 
     socket
-    |> sync_draft_reflector()
+    |> init_draft_reflector()
   end
 
   defp sync_session(socket) do
@@ -293,16 +293,18 @@ defmodule VyasaWeb.Context.Read do
   def handle_event(
         "bindHoveRune",
         %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+        %{assigns: %{kv_verses: verses, marks: [%Mark{} | _] = marks}} = socket
       ) do
     bind = Draft.bind_node(bind)
     bound_verses = put_in(verses[verse_id].binding, bind)
+
+    IO.inspect(marks)
 
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+       %Mark{state: :draft, verse_id: verse_id, binding: bind} | marks
      ])}
   end
 
@@ -340,6 +342,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
+  @handleable_mark_states [:draft, :live]
   @impl true
   def handle_event(
         "createMark",
@@ -347,16 +350,36 @@ defmodule VyasaWeb.Context.Read do
         %{
           assigns: %{
             kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks]
+            marks:
+              [
+                %Mark{id: hd_id, state: hd_state, verse_id: v_id, binding: binding} = hd_mark
+                | rest_marks
+              ] = all_marks
           }
         } = socket
-      ) do
-    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
+      )
+      when hd_state in @handleable_mark_states do
+    should_overwrite_head? = hd_state == :draft
+    should_gen_id? = not should_overwrite_head? or is_nil(hd_id)
+    committed_marks = if should_overwrite_head?, do: rest_marks, else: all_marks
+
+    new_mark =
+      hd_mark
+      |> Map.merge(%{
+        id:
+          if(should_gen_id?,
+            do: Ecto.UUID.generate(),
+            else: hd_mark.id
+          ),
+        body: body,
+        order: (committed_marks |> Enum.max_by(fn m -> m.order end)).order + 1,
+        state: :live
+      })
 
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> assign(:marks, [new_mark | committed_marks])
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -365,30 +388,8 @@ defmodule VyasaWeb.Context.Read do
     }
   end
 
-  # when user remains on the the same binding
-  def handle_event(
-        "createMark",
-        %{"body" => body},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks
-          }
-        } = socket
-      ) do
-    send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
-
-    {:noreply,
-     socket
-     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
-     |> mutate_draft_reflector()
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )}
-  end
-
   @impl true
+  # fallback:
   def handle_event(
         "createMark",
         _event,
@@ -397,6 +398,64 @@ defmodule VyasaWeb.Context.Read do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "deleteMark",
+        %{"mark_id" => mark_id, "verse_id" => v_id} = _payload,
+        %Socket{
+          assigns: %{kv_verses: kv_verses, marks: marks, streams: %{verses: _verses} = _streams}
+        } = socket
+      ) do
+    new_marks = mark_id |> delete_mark_in_marks(marks)
+
+    IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
+
+    send_update(VyasaWeb.Context.Read.Verses,
+      id: "content-verses",
+      marks: new_marks |> Enum.reject(fn m -> m.state == :deleted end)
+    )
+
+    socket =
+      socket
+      |> assign(:marks, new_marks)
+      |> mutate_draft_reflector()
+
+    cond do
+      is_nil(v_id) or is_nil(kv_verses[v_id]) ->
+        # send_update(VyasaWeb.Context.Read.Verses, id: "content-verses", marks: new_marks)
+        {:noreply, socket}
+
+      # update the kv_verses map if entry exists:
+      v_id ->
+        {:noreply,
+         socket
+         |> stream_insert(
+           :verses,
+           %{kv_verses[v_id] | binding: nil}
+         )}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "deleteMark",
+        %{"mark_id" => mark_id} = _payload,
+        %Socket{assigns: %{marks: marks, streams: %{verses: _verses} = _streams}} = socket
+      ) do
+    new_marks = mark_id |> delete_mark_in_marks(marks)
+    IO.inspect(new_marks |> Enum.filter(fn x -> x.state != :live end), label: "CHECK new marks")
+
+    send_update(VyasaWeb.Context.Read.Verses,
+      id: "content-verses",
+      marks: new_marks |> Enum.reject(fn m -> m.state == :deleted end)
+    )
+
+    {:noreply,
+     socket
+     |> assign(:marks, new_marks)
+     |> mutate_draft_reflector()}
   end
 
   @impl true
@@ -417,12 +476,17 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump session={@session} user_mode={@user_mode} />
+      <.debug_dump
+        :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env() == :dev)}
+        sangh={@session.sangh}
+        user_mode={@user_mode}
+        class="top-1/2 left-0"
+      />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
           <.live_component
-            module={VyasaWeb.Content.Sources}
+            module={VyasaWeb.Context.Read.Sources}
             id="content-sources"
             sources={@streams.sources}
             user_mode={@user_mode}
@@ -431,7 +495,7 @@ defmodule VyasaWeb.Context.Read do
 
         <%= if @content_action == :show_chapters do %>
           <.live_component
-            module={VyasaWeb.Content.Chapters}
+            module={VyasaWeb.Context.Read.Chapters}
             id="content-chapters"
             source={@source}
             chapters={@streams.chapters}
@@ -441,13 +505,13 @@ defmodule VyasaWeb.Context.Read do
 
         <%= if @content_action == :show_verses do %>
           <.live_component
-            module={VyasaWeb.Content.Verses}
+            module={VyasaWeb.Context.Read.Verses}
             id="content-verses"
             src={@src}
             verses={@streams.verses}
             chap={@chap}
             kv_verses={@kv_verses}
-            marks={@marks}
+            marks={@marks |> Enum.reject(fn m -> m.state == :deleted end)}
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
@@ -470,12 +534,26 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # Helper function that syncs and mutates Draft Reflector
-
-  # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
+         %{
+           assigns: %{
+             draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf,
+             marks: marks
+           }
+         } = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(dt, %{marks: marks})
+    sanitised_marks =
+      marks
+      |> Enum.reject(fn mark -> mark.state == :deleted end)
+      |> Enum.with_index()
+      |> Enum.map(fn {mark, index} ->
+        # keeps the descending order
+        %Mark{mark | order: length(marks) - index}
+      end)
+
+    IO.inspect(sanitised_marks, label: "CHECK sanitised marks")
+
+    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: sanitised_marks})
 
     socket
     |> assign(:draft_reflector, com)
@@ -486,16 +564,17 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # currently naive hd lookup can be filter based on active toggle,
-  # tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
-  # currently marks merged in and swapped out probably can be singular data structure
-  # managing of lifecycle of marks
-  # if sangh_id is active open
-  defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
+  # Allows us to get a reflection of the internal sangh session state and store it within
+  # this component's state.
+  # Currently, we shall do a naive hd lookup on the sheafs within the session.
+  # We could filter the sheaf based on the active flag,
+  # NOTE:
+  # Tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
+  # TODO: @ks0m1c combine the state handling for marks and sheaf by using the marks within the sheaf.
+  # This will work well with the other TODO defined about the CRUD functions needed
+  defp init_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
       [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
-        IO.inspect(marks, label: "is this triggering")
-
         socket
         |> assign(draft_reflector: dt)
         |> assign(marks: marks)
@@ -517,28 +596,23 @@ defmodule VyasaWeb.Context.Read do
     end
   end
 
-  defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
+  defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
   end
 
-  def debug_dump(assigns) do
-    ~H"""
-    <div
-      :if={System.get_env("MIX_ENV") !== "prod"}
-      class="fixed top-0 left-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50"
-    >
-      <h2 class="text-lg font-bold mb-2">Developer Dump</h2>
-      <div class="mb-4">
-        <strong class="text-gray-600">Session:</strong> <%= @session && @session.name %><br />
-        <strong class="text-gray-600">Sangh ID:</strong> <%= @session && @session.sangh &&
-          @session.sangh.id %><br />
-        <strong class="text-gray-600">User Mode:</strong> <%= @user_mode.mode_context_component %> | <%= @user_mode.mode_context_component_selector %> | <%= @user_mode.mode %> mode
-      </div>
-      <div>
-        <h3 class="text-md font-bold mb-2">Parameters:</h3>
-        <pre class="bg-gray-100 p-2 rounded-md whitespace-pre-wrap"><%= inspect(Map.drop(assigns, [:session, :user_mode]), pretty: true) %></pre>
-      </div>
-    </div>
-    """
+  # amortizes the deletion of a mark by updating its state to :deleted
+  defp delete_mark_in_marks(mark_id, [%Mark{} | _] = marks) do
+    marks
+    |> Enum.map(fn m ->
+      if m.id == mark_id do
+        m |> Mark.update_mark(%{state: :deleted})
+      else
+        m
+      end
+    end)
+  end
+
+  defp delete_mark_in_marks(_, [] = marks) do
+    marks
   end
 end

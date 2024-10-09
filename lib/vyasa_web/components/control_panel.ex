@@ -17,6 +17,7 @@ defmodule VyasaWeb.ControlPanel do
   end
 
   attr :mode, UserMode, required: true
+  attr :session, :any, required: true
   @impl true
   # TODO: as a stop-gap we're using functions from Hoverune, this needs to be changed and
   # we need a component specific to control panel for the rendering of mode-specific action buttons
@@ -24,7 +25,7 @@ defmodule VyasaWeb.ControlPanel do
     ~H"""
     <div class="fixed top-15 right-4 z-30 flex flex-col items-end">
       <!-- SVG Icon Button -->
-      <.control_panel_mode_indicator mode={@mode} myself={@myself} />
+      <.control_panel_mode_indicator mode={@mode} myself={@myself} session_active?={@session.name} />
       <div
         id="buttonGroup"
         class={[
@@ -78,10 +79,11 @@ defmodule VyasaWeb.ControlPanel do
   end
 
   @impl true
-  def update(%{id: _id, mode: mode} = _assigns, socket) do
+  def update(%{id: _id, mode: mode, session: session} = _assigns, socket) do
     {:ok,
      socket
      |> assign(show_control_panel?: false)
+     |> assign(session: session)
      |> assign(mode: mode)}
   end
 end
