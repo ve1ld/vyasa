@@ -358,7 +358,7 @@ defmodule VyasaWeb.Context.Read do
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
+      |> assign(:marks, [%{d_mark | order: order(marks), body: body, state: :live} | marks])
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -383,7 +383,7 @@ defmodule VyasaWeb.Context.Read do
 
     {:noreply,
      socket
-     |> assign(:marks, [%{d_mark | order: length(marks), body: body, state: :live} | marks])
+     |> assign(:marks, [%{d_mark | order: order(marks), body: body, state: :live} | marks])
      |> mutate_draft_reflector()
      |> stream_insert(
        :verses,
@@ -404,6 +404,31 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   def handle_event(
+        "tombMark",
+        %{"id" => id},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            marks: [%Mark{verse_id: v_id, binding: binding} | _] =  marks
+          }
+        } = socket
+      ) do
+
+    {
+      :noreply,
+      socket
+      |> assign(:marks, marks |> Enum.map(fn %{id: ^id} = m -> %{m | state: :tomb}
+      m -> m end))
+      |> mutate_draft_reflector()
+      |> stream_insert(
+        :verses,
+        %{verses[v_id] | binding: binding}
+      )
+    }
+  end
+
+  @impl true
+  def handle_event(
         "markQuote",
         _,
         %{assigns: %{marks: [%Mark{state: :draft} = d_mark | marks]}} = socket
@@ -420,8 +445,12 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-
-      <.debug_dump :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env == :dev)} sangh={@session.sangh} user_mode={@user_mode} class="top-1/2 left-0" />
+      <.debug_dump
+        :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env() == :dev)}
+        sangh={@session.sangh}
+        user_mode={@user_mode}
+        class="top-1/2 left-0"
+      />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
@@ -477,7 +506,7 @@ defmodule VyasaWeb.Context.Read do
   defp mutate_draft_reflector(
          %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf, marks: marks}} = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: marks})
+    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: marks |> Enum.reject(fn m -> m.state == :tomb end)})
 
     socket
     |> assign(:draft_reflector, com)
@@ -522,5 +551,11 @@ defmodule VyasaWeb.Context.Read do
 
   defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
+  end
+
+  defp order(marks) when is_list(marks) do
+    marks
+    |> Enum.map(&(&1.order))
+    |> Enum.max(&>=/2, fn -> 0 end)
   end
 end

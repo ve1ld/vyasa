@@ -128,6 +128,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       </div>
       <.collapsible_marks_display
         myself={@myself}
+        marks_target={@event_target}
         marks={@marks}
         is_expanded_view?={@show_current_marks?}
         is_editable_marks?={@is_editable_marks?}
@@ -241,6 +242,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     """
   end
 
+  ## these are working on some formatting ui feedbackplays hmm
   def sheaf_mark_separator(assigns) do
     ~H"""
     <span class="text-primaryAccent flex items-center justify-center">
