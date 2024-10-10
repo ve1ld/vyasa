@@ -29,42 +29,56 @@ defmodule Vyasa.Sangh.Sheaf do
     belongs_to :session, Session, references: :id, type: Ecto.UUID
     belongs_to :parent, Sheaf, references: :id, type: Ecto.UUID
 
-    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists
+    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists, preload_order: [desc: :order]
 
     # has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
   end
 
   @doc false
-  def changeset(%Sheaf{} = sheaf, %{marks: [%Mark{} | _] = marks} = attrs) do
-    sheaf
-    |> cast(attrs, [:id, :body, :active, :path, :session_id, :signature, :parent_id, :traits])
-    |> put_assoc(:marks, marks, with: &Mark.changeset/2)
-    |> validate_required([:id, :session_id])
-    |> validate_include_subset(:traits, ["personal", "draft", "publish"])
-  end
-
   def changeset(%Sheaf{} = sheaf, attrs) do
     sheaf
-    |> cast(attrs, [:id, :body, :active, :path, :session_id, :signature, :parent_id, :traits])
-    |> cast_assoc(:marks, with: &Mark.changeset/2)
-    |> validate_required([:id, :session_id])
+    |> cast(attrs, [:id, :body, :active, :session_id, :signature, :traits])
+    |> cast_path(attrs)
+    |> assoc_marks(attrs)
+    |> validate_required([:id, :session_id, :path])
     |> validate_include_subset(:traits, ["personal", "draft", "publish"])
-  end
-
-  def mutate_changeset(%Sheaf{} = sheaf, %{marks: [%Mark{} | _] = marks} = attrs) do
-    sheaf
-    |> Vyasa.Repo.preload([:marks])
-    |> cast(attrs, [:id, :body, :active, :signature])
-    |> put_assoc(:marks, marks, with: &Mark.changeset/2)
-    |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
   end
 
   def mutate_changeset(%Sheaf{} = sheaf, attrs) do
     sheaf
-    |> cast(attrs, [:id, :body, :active])
+    |> Vyasa.Repo.preload([:marks])
+    |> cast(attrs, [:id, :body, :active, :signature])
+    |> assoc_marks(attrs)
     |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
   end
+
+  defp assoc_marks(sheaf, %{marks: [%Mark{} | _] = marks}) do
+    sheaf
+    |> put_assoc(:marks, marks, with: &Mark.changeset/2)
+  end
+
+  defp assoc_marks(sheaf, _attrs) do
+    sheaf
+    |> cast_assoc(:marks, with: &Mark.changeset/2)
+  end
+
+  defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, %{parent: %Sheaf{id: p_sheaf_id, path: lpath}}) do
+    IO.inspect(sheaf_id)
+    IO.inspect(lpath)
+    sheaf
+    |> cast(%{parent_id: p_sheaf_id, path: encode_path(sheaf_id, lpath)}, [:parent_id, :path])
+  end
+
+  defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, _) do
+    sheaf
+    |> cast(%{path: encode_path(sheaf_id)}, [:path])
+  end
+
+  defp cast_path(sheaf , _) do
+    sheaf
+  end
+
 
   defp validate_include_subset(changeset, field, data, opts \\ []) do
     validate_change(changeset, field, {:superset, data}, fn _, value ->
@@ -92,5 +106,38 @@ defmodule Vyasa.Sangh.Sheaf do
           []
       end
     end)
+  end
+
+    #   @doc """
+  #   Encodes lpath with sheaf id and parent_path (in string).
+  #   Parent first then child
+
+  #   ## Examples
+
+  #       iex> encode_lpath("789", %Ltree{})
+  #       123.456.789
+
+  #   """
+  #
+  def encode_path(id, %Ltree{} = parent_ltree) when is_binary(id)  do
+    to_string(parent_ltree) <> "." <> hd(String.split(id, "-"))
+  end
+
+  def encode_path(_, _) do
+    nil
+  end
+
+  #   @doc """
+  #   Encodes lpath with sheaf id.
+
+  #   ## Examples
+
+  #       iex> encode_lpath("123")
+  #       123
+
+  #   """
+  #
+  def encode_path(id) do
+    hd(String.split(id, "-"))
   end
 end

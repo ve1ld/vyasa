@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Verses do
+defmodule VyasaWeb.Context.Read.Verses do
   use VyasaWeb, :live_component
 
   alias Vyasa.Written.{Verse}
@@ -45,7 +45,7 @@ defmodule VyasaWeb.Content.Verses do
           <.live_component
             :for={{dom_id, %Verse{} = verse} <- @verses}
             id={dom_id}
-            module={VyasaWeb.Content.VerseMatrix}
+            module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
             marks={@marks}
             event_target={@user_mode.mode_context_component_selector}

@@ -5,6 +5,7 @@ Wherever there be anything you dost not comprehend, cease to continue writing
 
 -- Vyasa, Adi Parva - Mahabharatam
 #+END_QUOTE
+
 *  What is the _*Vyasa Project*_?
 =TODO=
 
