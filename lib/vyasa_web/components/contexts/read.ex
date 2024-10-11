@@ -465,8 +465,7 @@ defmodule VyasaWeb.Context.Read do
         %{"id" => id},
         %{
           assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{verse_id: v_id, binding: binding} | _] = marks
+            marks: [%Mark{} | _] = marks
           }
         } = socket
       ) do
@@ -482,10 +481,7 @@ defmodule VyasaWeb.Context.Read do
         end)
       )
       |> mutate_draft_reflector()
-      |> stream_insert(
-        :verses,
-        %{verses[v_id] | binding: binding}
-      )
+      |> trigger_dom_refresh()
     }
   end
 
