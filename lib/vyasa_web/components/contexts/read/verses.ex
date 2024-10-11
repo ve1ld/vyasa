@@ -43,8 +43,8 @@ defmodule VyasaWeb.Context.Read.Verses do
           data-event-target={@user_mode.mode_context_component_selector}
         >
           <.live_component
-            :for={{dom_id, %Verse{} = verse} <- @verses}
-            id={dom_id}
+            :for={{_dom_id, %Verse{} = verse} <- @verses}
+            id={"verse-" <>verse.id}
             module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
             marks={@marks}
