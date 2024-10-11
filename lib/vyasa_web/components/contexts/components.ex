@@ -95,7 +95,7 @@ defmodule VyasaWeb.Context.Components do
           >
             <button
               phx-click="dummy_event"
-              phx-target={@myself}
+              phx-target={@marks_target}
               class="p-1 hover:bg-gray-200 rounded"
               aria-label="Up Arrow"
             >
@@ -108,7 +108,7 @@ defmodule VyasaWeb.Context.Components do
             <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
             <button
               phx-click="dummy_event"
-              phx-target={@myself}
+              phx-target={@marks_target}
               class="p-1 hover:bg-gray-200 rounded"
               aria-label="Down Arrow"
             >
@@ -146,8 +146,8 @@ defmodule VyasaWeb.Context.Components do
               <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
             </button>
             <button
-              phx-click="toggle_is_editing_content?"
-              phx-target={@myself}
+              phx-click="dummy_event"
+              phx-target={@marks_target}
               class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
               aria-label="Edit mark body"
             >

@@ -504,6 +504,14 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  def handle_event("dummy_event", _params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.puts("Dummy event triggered")
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>
