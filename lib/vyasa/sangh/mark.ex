@@ -27,12 +27,12 @@ defmodule Vyasa.Sangh.Mark do
     belongs_to :sheaf, Sheaf, foreign_key: :sheaf_id, type: :binary_id
     belongs_to :binding, Binding, foreign_key: :binding_id, type: :binary_id
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id])
+    |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id, :updated_at, :inserted_at])
   end
 
   def update_mark(%Mark{} = draft_mark, opts \\ %{}) do

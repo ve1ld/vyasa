@@ -7,6 +7,7 @@ defmodule VyasaWeb.Context.Read do
   @default_lang "en"
   @default_voice_lang "sa"
   alias VyasaWeb.ModeLive.{UserMode}
+  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias Vyasa.{Written, Draft}
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
@@ -142,6 +143,7 @@ defmodule VyasaWeb.Context.Read do
         Enum.into(verses, %{}, &{&1.id, &1})
       )
       |> assign(:marks, initial_marks)
+      |> assign(:marks_ui, MarksUiState.get_initial_ui_state(initial_marks))
       |> sync_session()
       |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
@@ -215,6 +217,40 @@ defmodule VyasaWeb.Context.Read do
 
   defp sync_session(socket) do
     socket
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_marks_display_collapsibility",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())
+     |> trigger_dom_refresh()}
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_editable_marks?",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())
+     |> trigger_dom_refresh()}
   end
 
   @impl true
@@ -355,9 +391,8 @@ defmodule VyasaWeb.Context.Read do
         %{"body" => body},
         %{
           assigns: %{
-            kv_verses: verses,
             marks: [
-              %Mark{state: :draft, id: mark_id, verse_id: v_id, binding: binding} = draft_mark
+              %Mark{state: :draft, id: mark_id} = draft_mark
               | rest_marks
             ]
           }
@@ -378,10 +413,7 @@ defmodule VyasaWeb.Context.Read do
       socket
       |> assign(:marks, [new_mark | rest_marks])
       |> mutate_draft_reflector()
-      |> stream_insert(
-        :verses,
-        %{verses[v_id] | binding: binding}
-      )
+      |> trigger_dom_refresh()
     }
   end
 
@@ -414,6 +446,7 @@ defmodule VyasaWeb.Context.Read do
      socket
      |> assign(:marks, [new_mark | all_marks])
      |> mutate_draft_reflector()
+     |> trigger_dom_refresh()
      |> stream_insert(
        :verses,
        %{verses[v_id] | binding: binding}
@@ -509,6 +542,7 @@ defmodule VyasaWeb.Context.Read do
             chap={@chap}
             kv_verses={@kv_verses}
             marks={@marks}
+            marks_ui={@marks_ui}
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
@@ -581,6 +615,25 @@ defmodule VyasaWeb.Context.Read do
   end
 
   defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
+    socket
+  end
+
+  defp trigger_dom_refresh(
+         %Socket{
+           assigns: %{
+             kv_verses: verses,
+             marks: [%Mark{verse_id: v_id, binding: binding} | _] = _marks
+           }
+         } = socket
+       ) do
+    socket
+    |> stream_insert(
+      :verses,
+      %{verses[v_id] | binding: binding}
+    )
+  end
+
+  defp trigger_dom_refresh(socket) do
     socket
   end
 end

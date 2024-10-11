@@ -15,13 +15,14 @@ defmodule VyasaWeb.Context.Components do
   def collapsible_marks_display(assigns) do
     ~H"""
     <div class="mb-4">
+      <.debug_dump marks_target={@marks_target} class="relative" marks_ui={@marks_ui} />
       <div
         id="collapse-header-container"
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
           phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
-          phx-target={@myself}
+          phx-target={@marks_target}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
         >
           <.icon
@@ -60,6 +61,7 @@ defmodule VyasaWeb.Context.Components do
         <.mark_display
           :for={mark <- @marks |> Enum.reverse()}
           mark={mark}
+          marks_target={@marks_target}
           mark_ui={
             @marks_ui.mark_id_to_ui
             |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
@@ -74,6 +76,7 @@ defmodule VyasaWeb.Context.Components do
 
   attr :mark, :any, required: true
   attr :mark_ui, :any, required: true
+  attr :marks_target, :any, required: true
   attr :myself, :any
   attr :editable, :boolean
 
@@ -137,7 +140,7 @@ defmodule VyasaWeb.Context.Components do
           >
             <button
               phx-click="tombMark"
-              phx-target={@myself}
+              phx-target={@marks_target}
               phx-value-id={@mark.id}
               title="Delete"
               class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"

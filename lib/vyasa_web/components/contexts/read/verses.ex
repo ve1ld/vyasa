@@ -48,6 +48,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
             marks={@marks}
+            marks_ui={@marks_ui}
             event_target="#content-display"
             edge={[
               %{

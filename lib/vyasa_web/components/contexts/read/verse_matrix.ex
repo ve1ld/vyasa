@@ -14,13 +14,16 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
      |> assign(:form_type, :mark)}
   end
 
-  def update(%{verse: verse, marks: marks, event_target: event_target} = assigns, socket) do
+  def update(
+        %{verse: verse, marks_ui: marks_ui, marks: marks, event_target: event_target} = assigns,
+        socket
+      ) do
     socket =
       socket
       |> assign(assigns)
       |> assign(:verse, verse)
       |> assign(:marks, marks)
-      |> assign(:marks_ui, MarksUiState.get_initial_ui_state(marks))
+      |> assign(:marks_ui, marks_ui)
       |> assign(:event_target, event_target)
 
     {:ok, socket}
@@ -260,36 +263,20 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
          verse.binding.field_key == edge_elem.field)
   end
 
-  def handle_event(
-        "toggle_marks_display_collapsibility",
-        %{"value" => _},
-        %Socket{
-          assigns:
-            %{
-              marks_ui: %MarksUiState{} = ui_state
-            } = _assigns
-        } = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())}
-  end
-
-  def handle_event(
-        "toggle_is_editable_marks?",
-        %{"value" => _},
-        %Socket{
-          assigns:
-            %{
-              marks_ui: %MarksUiState{} = ui_state
-            } = _assigns
-        } = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())}
-  end
-
+  # def handle_event(
+  #       "toggle_is_editable_marks?",
+  #       %{"value" => _},
+  #       %Socket{
+  #         assigns:
+  #           %{
+  #             marks_ui: %MarksUiState{} = ui_state
+  #           } = _assigns
+  #       } = socket
+  #     ) do
+  #   {:noreply,
+  #    socket
+  #    |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())}
+  # end
   def handle_event("change_form_type", %{"type" => type}, socket) do
     new_form_type = String.to_existing_atom(type)
     {:noreply, assign(socket, :form_type, new_form_type)}
