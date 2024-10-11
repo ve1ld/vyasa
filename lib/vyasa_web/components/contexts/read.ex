@@ -424,33 +424,28 @@ defmodule VyasaWeb.Context.Read do
         %{"body" => body},
         %{
           assigns: %{
-            kv_verses: verses,
             marks:
-              [%Mark{state: :live, verse_id: v_id, binding: binding} = sibling_mark | _] =
+              [%Mark{state: :live} = sibling_mark | _] =
                 all_marks
           }
         } = socket
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
-    # uses sibling mark's information to create new mark since the binding will be the same
-    new_mark = %Mark{
+    new_mark =
       sibling_mark
-      | id: Ecto.UUID.generate(),
+      |> Mark.update_mark(%{
+        id: Ecto.UUID.generate(),
         order: Mark.get_next_order(all_marks),
         body: body,
         state: :live
-    }
+      })
 
     {:noreply,
      socket
      |> assign(:marks, [new_mark | all_marks])
      |> mutate_draft_reflector()
-     |> trigger_dom_refresh()
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )}
+     |> trigger_dom_refresh()}
   end
 
   @impl true
@@ -622,6 +617,7 @@ defmodule VyasaWeb.Context.Read do
          %Socket{
            assigns: %{
              kv_verses: verses,
+             streams: %{verses: _current_verses} = _streams,
              marks: [%Mark{verse_id: v_id, binding: binding} | _] = _marks
            }
          } = socket

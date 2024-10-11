@@ -15,7 +15,6 @@ defmodule VyasaWeb.Context.Components do
   def collapsible_marks_display(assigns) do
     ~H"""
     <div class="mb-4">
-      <.debug_dump marks_target={@marks_target} class="relative" marks_ui={@marks_ui} />
       <div
         id="collapse-header-container"
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
@@ -83,13 +82,6 @@ defmodule VyasaWeb.Context.Components do
   def mark_display(assigns) do
     ~H"""
     <div class="border-l border-brand-light pl-2">
-      <.debug_dump
-        mark_id={@mark.id}
-        mark_order={@mark.order}
-        mark_state={@mark.state}
-        mark_last_updated={@mark.updated_at}
-        class="relative"
-      />
       <%= if @mark.state == :live do %>
         <div
           id={"mark-container-" <>
@@ -155,92 +147,6 @@ defmodule VyasaWeb.Context.Components do
               aria-label="Edit mark body"
             >
               <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-            </button>
-          </div>
-        </div>
-      <% end %>
-    </div>
-    """
-  end
-
-  attr :mark, :any, required: true
-  attr :myself, :any
-  attr :editable, :boolean
-
-  def mark_display_(assigns) do
-    ~H"""
-    <div class="border-l border-brand-light pl-2 py-1">
-      <%= if @mark.state == :live do %>
-        <div class="flex items-start space-x-2 group">
-          <div class="flex-grow">
-            <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-              <p class="text-xs italic text-secondary mb-1">
-                <span
-                  phx-click="edit_quote"
-                  phx-value-id={@mark.id}
-                  class="cursor-text hover:bg-brand-light"
-                >
-                  <%= @mark.binding.window.quote %>
-                </span>
-              </p>
-            <% end %>
-            <p class="text-sm text-text">
-              <%= if @editable do %>
-                <textarea
-                  rows="2"
-                  class="w-full bg-transparent border-b border-brand-light focus:outline-none focus:border-brand resize-none"
-                  phx-blur="update_body"
-                  phx-value-id={@mark.id}
-                ><%= @mark.body %></textarea>
-              <% else %>
-                <span
-                  phx-click="edit_body"
-                  phx-value-id={@mark.id}
-                  class="cursor-text hover:bg-brand-light"
-                >
-                  <%= @mark.body %>
-                </span>
-              <% end %>
-            </p>
-          </div>
-          <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              phx-click="edit_mark"
-              phx-value-id={@mark.id}
-              class="text-brand hover:text-brand-dark focus:outline-none"
-              title="Edit"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-            </button>
-            <button
-              phx-click="tombMark"
-              phx-target="#content-display"
-              phx-value-id={@mark.id}
-              class="text-red-500 hover:text-red-700 focus:outline-none"
-              title="Delete"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="size-6"
-              >
-                <path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM20.25 5.507v11.561L5.853 2.671c.15-.043.306-.075.467-.094a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93ZM3.75 21V6.932l14.063 14.063L12 18.088l-7.165 3.583A.75.75 0 0 1 3.75 21Z" />
-              </svg>
             </button>
           </div>
         </div>

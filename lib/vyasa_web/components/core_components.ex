@@ -927,7 +927,9 @@ defmodule VyasaWeb.CoreComponents do
       "fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50 p-4",
       if(Map.has_key?(assigns, :class), do: assigns.class, else: [])
     ]}>
-      <h2 class="text-lg font-bold mb-2">Developer Dump</h2>
+      <h2 class="text-lg font-bold mb-2">
+        <%= Map.get(assigns, :label, "Developer Dump") %>
+      </h2>
       <div>
         <h3 class="text-md font-bold mb-2">Parameters:</h3>
         <pre class="p-2 rounded-md whitespace-pre-wrap">

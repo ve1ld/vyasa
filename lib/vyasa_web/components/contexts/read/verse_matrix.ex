@@ -75,7 +75,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     <button
       phx-click={
         JS.push("clickVerseToSeek",
-          target: "#" <> @event_target,
+          target: @event_target,
           value: %{verse_id: @verse_id}
         )
       }
@@ -194,24 +194,24 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "sheaf"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: true}
             )
           }
           phx-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-window-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
-          phx-target={"#" <> @event_target}
+          phx-target={@event_target}
         />
         <div class="flex items-center ml-2">
           <button
