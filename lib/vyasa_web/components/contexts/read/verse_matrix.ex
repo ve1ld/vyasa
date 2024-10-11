@@ -3,13 +3,14 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   alias Phoenix.LiveView.Socket
   alias Utils.Struct
 
+  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
+
   import VyasaWeb.Context.Components
 
   def mount(socket) do
     {:ok,
      socket
      |> assign(:show_current_marks?, false)
-     |> assign(:is_editable_marks?, false)
      |> assign(:form_type, :mark)}
   end
 
@@ -19,6 +20,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       |> assign(assigns)
       |> assign(:verse, verse)
       |> assign(:marks, marks)
+      |> assign(:marks_ui, MarksUiState.get_initial_ui_state(marks))
       |> assign(:event_target, event_target)
 
     {:ok, socket}
@@ -51,9 +53,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
             <.quick_draft_container
               :if={is_elem_bound_to_verse(@verse, elem)}
               sheafs={@verse.sheafs}
-              show_current_marks?={@show_current_marks?}
-              is_editable_marks?={@is_editable_marks?}
               marks={@marks}
+              marks_ui={@marks_ui}
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
               myself={@myself}
@@ -102,7 +103,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :event_target, :string, required: true
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
-  attr :show_current_marks?, :boolean, default: false
+  attr :marks_ui, MarksUiState, required: true
   attr :is_editable_marks?, :boolean, default: false
   attr :form_type, :atom, required: true
   attr :myself, :any
@@ -130,8 +131,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         myself={@myself}
         marks_target={@event_target}
         marks={@marks}
-        is_expanded_view?={@show_current_marks?}
-        is_editable_marks?={@is_editable_marks?}
+        marks_ui={@marks_ui}
       />
       <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>
@@ -179,7 +179,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       <.form
         for={%{}}
         phx-submit={(@form_type == :mark && "createMark") || "createSheaf"}
-        phx-target={"#" <> @event_target}
+        phx-target={@event_target}
         class="flex items-center"
       >
         <textarea
@@ -266,11 +266,13 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         %Socket{
           assigns:
             %{
-              show_current_marks?: _show_current_marks?
+              marks_ui: %MarksUiState{} = ui_state
             } = _assigns
         } = socket
       ) do
-    {:noreply, update(socket, :show_current_marks?, &(!&1))}
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())}
   end
 
   def handle_event(
@@ -279,11 +281,13 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         %Socket{
           assigns:
             %{
-              is_editable_marks?: _is_editable_marks?
+              marks_ui: %MarksUiState{} = ui_state
             } = _assigns
         } = socket
       ) do
-    {:noreply, update(socket, :is_editable_marks?, &(!&1))}
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())}
   end
 
   def handle_event("change_form_type", %{"type" => type}, socket) do

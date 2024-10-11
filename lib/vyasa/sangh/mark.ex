@@ -32,13 +32,33 @@ defmodule Vyasa.Sangh.Mark do
 
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:body, :order, :state, :sheaf_id, :binding_id])
+    |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id])
   end
 
-  def update_mark(%Mark{} = draft_mark, opts \\ []) do
+  def update_mark(%Mark{} = draft_mark, opts \\ %{}) do
     draft_mark
     |> Map.merge(Map.new(opts))
     |> Time.maybe_insert_current_time(:inserted_at)
     |> Time.update_current_time(:updated_at)
+  end
+
+  def get_draft_mark(marks \\ nil, opts \\ %{}) do
+    %Mark{
+      id: Ecto.UUID.generate(),
+      state: :draft,
+      order: get_next_order(marks)
+    }
+    |> Map.merge(opts)
+  end
+
+  def get_next_order(marks) when is_list(marks) do
+    1 +
+      (marks
+       |> Enum.map(& &1.order)
+       |> Enum.max(&>=/2, fn -> 0 end))
+  end
+
+  def get_next_order(_) do
+    1
   end
 end

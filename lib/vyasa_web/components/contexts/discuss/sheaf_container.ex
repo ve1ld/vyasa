@@ -7,6 +7,7 @@ defmodule VyasaWeb.Context.Discuss.SheafContainer do
   alias VyasaWeb.ModeLive.{UserMode}
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh.Sheaf
+  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   import VyasaWeb.Context.Components
 
   @impl true
@@ -53,9 +54,9 @@ defmodule VyasaWeb.Context.Discuss.SheafContainer do
         <h1>SHEAF CONTAINER</h1>
         <.sheaf_display sheaf={@sheaf} />
         <.collapsible_marks_display
-          is_expanded_view?={@is_expanded_view?}
           myself={@myself}
           marks={@sheaf.marks |> Enum.reverse()}
+          marks_ui={MarksUiState.get_initial_ui_state(@marks)}
         />
         Sheaf: <pre>
         <%= inspect(@sheaf, pretty: true) %>

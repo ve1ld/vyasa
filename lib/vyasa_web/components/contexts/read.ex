@@ -133,6 +133,7 @@ defmodule VyasaWeb.Context.Read do
          %{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap <-
            Written.get_chapter(chap_no, sid, @default_lang) do
       fmted_title = to_title_case(source.title)
+      initial_marks = [Mark.get_draft_mark()]
 
       socket
       |> assign(
@@ -140,7 +141,7 @@ defmodule VyasaWeb.Context.Read do
         # creates a map of verse_id_to_verses
         Enum.into(verses, %{}, &{&1.id, &1})
       )
-      |> assign(:marks, [%Mark{state: :draft, order: 0}])
+      |> assign(:marks, initial_marks)
       |> sync_session()
       |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
@@ -266,11 +267,13 @@ defmodule VyasaWeb.Context.Read do
       |> then(&put_in(&1[verse_id].binding, bind))
       |> then(&put_in(&1[curr_verse_id].binding, nil))
 
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
     {:noreply,
      socket
      |> mutate_verses(curr_verse_id, bound_verses)
      |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+     |> assign(:marks, [updated_draft_mark | marks])}
   end
 
   # already in mark in drafting state, remember to late bind binding => with a fn()
@@ -283,10 +286,12 @@ defmodule VyasaWeb.Context.Read do
     bind = Draft.bind_node(bind_target_payload)
     bound_verses = put_in(verses[verse_id].binding, bind)
 
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+     |> assign(:marks, [updated_draft_mark | marks])}
   end
 
   @impl true
@@ -300,11 +305,13 @@ defmodule VyasaWeb.Context.Read do
 
     IO.inspect(marks)
 
+    new_draft_mark = Mark.get_draft_mark(marks, %{verse_id: verse_id, binding: bind})
+
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [
-       %Mark{state: :draft, verse_id: verse_id, binding: bind} | marks
+       new_draft_mark | marks
      ])}
   end
 
@@ -349,16 +356,27 @@ defmodule VyasaWeb.Context.Read do
         %{
           assigns: %{
             kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks]
+            marks: [
+              %Mark{state: :draft, id: mark_id, verse_id: v_id, binding: binding} = draft_mark
+              | rest_marks
+            ]
           }
         } = socket
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
+    new_mark = %Mark{
+      draft_mark
+      | id: if(not is_nil(mark_id), do: Ecto.UUID.generate(), else: mark_id),
+        order: Mark.get_next_order(rest_marks),
+        body: body,
+        state: :live
+    }
+
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | order: order(marks), body: body, state: :live} | marks])
+      |> assign(:marks, [new_mark | rest_marks])
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -375,15 +393,26 @@ defmodule VyasaWeb.Context.Read do
         %{
           assigns: %{
             kv_verses: verses,
-            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks
+            marks:
+              [%Mark{state: :live, verse_id: v_id, binding: binding} = sibling_mark | _] =
+                all_marks
           }
         } = socket
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
+    # uses sibling mark's information to create new mark since the binding will be the same
+    new_mark = %Mark{
+      sibling_mark
+      | id: Ecto.UUID.generate(),
+        order: Mark.get_next_order(all_marks),
+        body: body,
+        state: :live
+    }
+
     {:noreply,
      socket
-     |> assign(:marks, [%{d_mark | order: order(marks), body: body, state: :live} | marks])
+     |> assign(:marks, [new_mark | all_marks])
      |> mutate_draft_reflector()
      |> stream_insert(
        :verses,
@@ -409,16 +438,21 @@ defmodule VyasaWeb.Context.Read do
         %{
           assigns: %{
             kv_verses: verses,
-            marks: [%Mark{verse_id: v_id, binding: binding} | _] =  marks
+            marks: [%Mark{verse_id: v_id, binding: binding} | _] = marks
           }
         } = socket
       ) do
-
     {
       :noreply,
       socket
-      |> assign(:marks, marks |> Enum.map(fn %{id: ^id} = m -> %{m | state: :tomb}
-      m -> m end))
+      |> assign(
+        :marks,
+        marks
+        |> Enum.map(fn
+          %{id: ^id} = m -> %{m | state: :tomb}
+          m -> m
+        end)
+      )
       |> mutate_draft_reflector()
       |> stream_insert(
         :verses,
@@ -445,12 +479,6 @@ defmodule VyasaWeb.Context.Read do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump
-        :if={quote do: Code.ensure_compiled?(Mix) && unquote(Mix.env() == :dev)}
-        sangh={@session.sangh}
-        user_mode={@user_mode}
-        class="top-1/2 left-0"
-      />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
@@ -506,7 +534,10 @@ defmodule VyasaWeb.Context.Read do
   defp mutate_draft_reflector(
          %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf, marks: marks}} = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: marks |> Enum.reject(fn m -> m.state == :tomb end)})
+    {:ok, com} =
+      Vyasa.Sangh.update_sheaf(curr_sheaf, %{
+        marks: marks |> Enum.reject(fn m -> m.state == :tomb end)
+      })
 
     socket
     |> assign(:draft_reflector, com)
@@ -551,11 +582,5 @@ defmodule VyasaWeb.Context.Read do
 
   defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
     socket
-  end
-
-  defp order(marks) when is_list(marks) do
-    marks
-    |> Enum.map(&(&1.order))
-    |> Enum.max(&>=/2, fn -> 0 end)
   end
 end
