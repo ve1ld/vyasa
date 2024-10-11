@@ -255,6 +255,29 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   def handle_event(
+        "toggle_is_editing_mark_content?",
+        %{"mark_id" => mark_id} = _payload,
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    IO.puts("NICELY")
+
+    {:noreply,
+     socket
+     |> assign(
+       marks_ui:
+         ui_state
+         |> MarksUiState.toggle_is_editing_mark_content(mark_id)
+     )
+     |> trigger_dom_refresh()}
+  end
+
+  @impl true
+  def handle_event(
         "foo",
         _,
         socket
@@ -508,6 +531,15 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  def handle_event(_event_name, _params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.puts("POKEMON READ CONTEXT EVENT HANDLING")
+    # dbg()
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>
@@ -598,6 +630,7 @@ defmodule VyasaWeb.Context.Read do
         socket
         |> assign(draft_reflector: com)
         |> assign(marks: sanitised_marks |> Enum.reverse())
+        |> assign(marks_ui: MarksUiState.get_initial_ui_state(sanitised_marks))
 
       [%Vyasa.Sangh.Sheaf{} = sheaf | _] ->
         socket

@@ -146,8 +146,9 @@ defmodule VyasaWeb.Context.Components do
               <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
             </button>
             <button
-              phx-click="dummy_event"
+              phx-click="toggle_is_editing_mark_content?"
               phx-target={@marks_target}
+              phx-value-mark_id={@mark.id}
               class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
               aria-label="Edit mark body"
             >

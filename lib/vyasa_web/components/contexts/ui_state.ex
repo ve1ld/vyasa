@@ -36,6 +36,8 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
       marks
       |> Enum.map(fn mark -> {mark.id, MarkUiState.get_initial_ui_state()} end)
 
+    # dbg()
+
     %MarksUiState{
       ui_state
       | mark_id_to_ui:
@@ -50,6 +52,28 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
         } = ui_state
       ) do
     %MarksUiState{ui_state | is_editable_marks?: !curr}
+  end
+
+  @doc """
+  Toggles the edit flag for a particular mark.
+  """
+  def toggle_is_editing_mark_content(
+        %MarksUiState{
+          mark_id_to_ui: mark_id_to_ui
+        } = ui_state,
+        mark_id
+      )
+      when is_binary(mark_id) do
+    updated =
+      mark_id_to_ui
+      |> Map.put(
+        mark_id,
+        mark_id_to_ui
+        |> Map.get(mark_id, nil)
+        |> MarkUiState.toggle_is_editing_content()
+      )
+
+    %MarksUiState{ui_state | mark_id_to_ui: updated}
   end
 
   def toggle_is_expanded_view(
