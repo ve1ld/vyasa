@@ -37,7 +37,7 @@ defmodule VyasaWeb.Context.Components do
           :if={@marks_ui.is_expanded_view?}
           class="flex space-x-2 pr-2"
           phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
-          phx-target={@myself}
+          phx-target={@marks_target}
         >
           <.icon
             name={
@@ -66,7 +66,7 @@ defmodule VyasaWeb.Context.Components do
             |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
           }
           myself={@marks_target}
-          editable={@marks_ui.is_editable_marks?}
+          is_editable?={@marks_ui.is_editable_marks?}
         />
       </div>
     </div>
@@ -77,7 +77,7 @@ defmodule VyasaWeb.Context.Components do
   attr :mark_ui, :any, required: true
   attr :marks_target, :any, required: true
   attr :myself, :any
-  attr :editable, :boolean
+  attr :is_editable?, :boolean
 
   def mark_display(assigns) do
     ~H"""
@@ -88,7 +88,11 @@ defmodule VyasaWeb.Context.Components do
           @mark.id}
           class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
         >
-          <div id={"ordering-button-group-"<> @mark.id} class="flex flex-col items-center">
+          <div
+            :if={@is_editable?}
+            id={"ordering-button-group-"<> @mark.id}
+            class="flex flex-col items-center"
+          >
             <button
               phx-click="dummy_event"
               phx-target={@myself}
@@ -127,6 +131,7 @@ defmodule VyasaWeb.Context.Components do
             <% end %>
           </div>
           <div
+            :if={@is_editable?}
             id={"mark-edit-actions-button-group-" <> @mark.id}
             class="h-full flex flex-col ml-2 space-y-2 justify-between"
           >
@@ -162,9 +167,9 @@ defmodule VyasaWeb.Context.Components do
   def mark_body(assigns) do
     ~H"""
     <textarea
-      name="editable-mark-body"
+      name="mark-body"
       disabled={not @mark_ui.is_editing_content?}
-      id={"editable-mark-body-" <> @id}
+      id={"mark-body-" <> @id}
       rows="3"
       phx-hook="TextareaAutoResize"
       class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"

@@ -107,7 +107,6 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
   attr :marks_ui, MarksUiState, required: true
-  attr :is_editable_marks?, :boolean, default: false
   attr :form_type, :atom, required: true
   attr :myself, :any
 
@@ -263,20 +262,6 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
          verse.binding.field_key == edge_elem.field)
   end
 
-  # def handle_event(
-  #       "toggle_is_editable_marks?",
-  #       %{"value" => _},
-  #       %Socket{
-  #         assigns:
-  #           %{
-  #             marks_ui: %MarksUiState{} = ui_state
-  #           } = _assigns
-  #       } = socket
-  #     ) do
-  #   {:noreply,
-  #    socket
-  #    |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())}
-  # end
   def handle_event("change_form_type", %{"type" => type}, socket) do
     new_form_type = String.to_existing_atom(type)
     {:noreply, assign(socket, :form_type, new_form_type)}
