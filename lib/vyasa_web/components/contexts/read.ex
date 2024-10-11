@@ -565,7 +565,7 @@ defmodule VyasaWeb.Context.Read do
        ) do
     {:ok, com} =
       Vyasa.Sangh.update_sheaf(curr_sheaf, %{
-        marks: marks |> Enum.reject(fn m -> m.state == :tomb end)
+        marks: marks |> Mark.sanitise_marks()
       })
 
     socket
@@ -587,14 +587,17 @@ defmodule VyasaWeb.Context.Read do
   # This will work well with the other TODO defined about the CRUD functions needed
   defp init_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
-      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
-        socket
-        |> assign(draft_reflector: dt)
-        |> assign(marks: marks)
+      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
+        sanitised_marks = marks |> Mark.sanitise_marks()
+        {:ok, com} = Vyasa.Sangh.update_sheaf(sheaf, %{marks: sanitised_marks})
 
-      [%Vyasa.Sangh.Sheaf{} = dt | _] ->
         socket
-        |> assign(draft_reflector: dt)
+        |> assign(draft_reflector: com)
+        |> assign(marks: sanitised_marks |> Enum.reverse())
+
+      [%Vyasa.Sangh.Sheaf{} = sheaf | _] ->
+        socket
+        |> assign(draft_reflector: sheaf)
 
       _ ->
         {:ok, com} =

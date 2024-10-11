@@ -61,4 +61,45 @@ defmodule Vyasa.Sangh.Mark do
   def get_next_order(_) do
     1
   end
+
+  @doc """
+  Given a list of marks,
+  Rejects those that are tombstoned then defrags their
+  order values such that the order values are now contiguous.
+  """
+  def sanitise_marks([%Mark{} | _] = marks) do
+    marks
+    |> Enum.reject(fn mark -> mark.state == :tomb end)
+    |> defrag_marks_orders()
+  end
+
+  def sanitise_marks(marks) do
+    marks
+  end
+
+  @doc """
+  Given a list of marks with order values that are potentially fragmented,
+  returns the same list but updates the marks with order values that are
+  part of a contiguous sequence of integers.
+
+  This does NOT update the timestamps of the entry since this is purely intended
+  to make the data-side prettier.
+
+  for example:
+  IN:
+  orders = [1,4,6,7]
+
+  OUT:
+  order = [1,2,3,4]
+  """
+  def defrag_marks_orders([%Mark{} | _] = marks) do
+    marks
+    |> Enum.sort_by(& &1.order)
+    |> Enum.with_index(1)
+    |> Enum.map(fn {mark, index} -> %Mark{mark | order: index} end)
+  end
+
+  def defrag_marks_orders(marks) do
+    marks
+  end
 end
