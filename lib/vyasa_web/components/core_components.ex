@@ -834,6 +834,12 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  def icon(%{name: "custom-" <> _} = assigns) do
+    ~H"""
+    <span class={[@name, @class]} />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
@@ -907,5 +913,30 @@ defmodule VyasaWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  @doc """
+  A generic debug dump component that displays all assigned properties.
+
+  ## Examples
+      <DebugDump assigns={@assigns} class={["custom-class", "another-class"]} />
+  """
+  def debug_dump(assigns) do
+    ~H"""
+    <div class={[
+      "fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50 p-4",
+      if(Map.has_key?(assigns, :class), do: assigns.class, else: [])
+    ]}>
+      <h2 class="text-lg font-bold mb-2">
+        <%= Map.get(assigns, :label, "Developer Dump") %>
+      </h2>
+      <div>
+        <h3 class="text-md font-bold mb-2">Parameters:</h3>
+        <pre class="p-2 rounded-md whitespace-pre-wrap">
+          <%= inspect(assigns, pretty: true) %>
+        </pre>
+      </div>
+    </div>
+    """
   end
 end
