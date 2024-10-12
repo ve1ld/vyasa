@@ -36,8 +36,6 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
       marks
       |> Enum.map(fn mark -> {mark.id, MarkUiState.get_initial_ui_state()} end)
 
-    # dbg()
-
     %MarksUiState{
       ui_state
       | mark_id_to_ui:

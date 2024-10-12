@@ -233,7 +233,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply,
      socket
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())
-     |> trigger_dom_refresh()}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -250,7 +250,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply,
      socket
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())
-     |> trigger_dom_refresh()}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -273,7 +273,7 @@ defmodule VyasaWeb.Context.Read do
          ui_state
          |> MarksUiState.toggle_is_editing_mark_content(mark_id)
      )
-     |> trigger_dom_refresh()}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -297,7 +297,7 @@ defmodule VyasaWeb.Context.Read do
        ui_state
        |> MarksUiState.toggle_is_editing_mark_content(id)
      )
-     |> trigger_dom_refresh()}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -450,7 +450,7 @@ defmodule VyasaWeb.Context.Read do
       socket
       |> assign(:marks, [new_mark | rest_marks])
       |> mutate_draft_reflector()
-      |> trigger_dom_refresh()
+      |> cascade_stream_change()
     }
   end
 
@@ -482,7 +482,7 @@ defmodule VyasaWeb.Context.Read do
      socket
      |> assign(:marks, [new_mark | all_marks])
      |> mutate_draft_reflector()
-     |> trigger_dom_refresh()}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -511,7 +511,7 @@ defmodule VyasaWeb.Context.Read do
       socket
       |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{state: :tomb}))
       |> mutate_draft_reflector()
-      |> trigger_dom_refresh()
+      |> cascade_stream_change()
     }
   end
 
@@ -660,7 +660,7 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  defp trigger_dom_refresh(
+  defp cascade_stream_change(
          %Socket{
            assigns: %{
              kv_verses: verses,
@@ -676,7 +676,7 @@ defmodule VyasaWeb.Context.Read do
     )
   end
 
-  defp trigger_dom_refresh(socket) do
+  defp cascade_stream_change(socket) do
     socket
   end
 end
