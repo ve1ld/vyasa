@@ -290,8 +290,8 @@ defmodule VyasaWeb.Context.Read do
       )
       when is_binary(body) do
 
-    IO.inspect(id, label: "target")
-    neu_mark = put_in(marks, [Access.filter(&match?(%Mark{id: ^id}, &1)), Access.key(:body)], body)
+     {old_mark , neu_mark} = get_and_update_in(marks, [Access.filter(&match?(%Mark{id: ^id}, &1))], &{&1, Map.put(&1, :body, body)})
+    IO.inspect(old_mark, label: "oldmark for you to push down the stairs")
 
     {:noreply,
      socket
