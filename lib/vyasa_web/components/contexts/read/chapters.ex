@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Chapters do
+defmodule VyasaWeb.Context.Read.Chapters do
   use VyasaWeb, :live_component
 
   @impl true

@@ -12,6 +12,7 @@ import HoveRune from "./hoverune.js";
 import Scrolling from "./scrolling.js";
 import ButtonClickRelayer from "./button_click_relayer.js";
 import SessionBox from "./session_box.js";
+import TextareaAutoResize from "./textarea_auto_resize.js";
 
 let Hooks = {
   ShareQuoteButton,
@@ -26,6 +27,7 @@ let Hooks = {
   Scrolling,
   ButtonClickRelayer,
   SessionBox,
+  TextareaAutoResize,
 };
 
 export default Hooks;
