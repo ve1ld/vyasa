@@ -95,7 +95,7 @@ defmodule Vyasa.Sangh.Mark do
   def defrag_marks_orders([%Mark{} | _] = marks) do
     marks
     |> Enum.sort_by(& &1.order)
-    |> Enum.with_index(1)
+    |> Enum.with_index(0)
     |> Enum.map(fn {mark, index} -> %Mark{mark | order: index} end)
   end
 
