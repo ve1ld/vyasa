@@ -416,8 +416,6 @@ defmodule Vyasa.Sangh do
 
   #   """
   def update_sheaf(%Sheaf{} = sheaf, attrs) do
-    IO.inspect(sheaf, label: ">>> UPDATE SHEAF -- SHOULD BE WRITING TO DB NOW")
-
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update()

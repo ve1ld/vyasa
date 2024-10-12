@@ -289,9 +289,13 @@ defmodule VyasaWeb.Context.Read do
         } = socket
       )
       when is_binary(body) do
+
+    IO.inspect(id, label: "target")
+    neu_mark = put_in(marks, [Access.filter(&match?(%Mark{id: ^id}, &1)), Access.key(:body)], body)
+
     {:noreply,
      socket
-     |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{body: body}))
+     |> assign(:marks, neu_mark)
      |> mutate_draft_reflector()
      |> assign(
        :marks_ui,
@@ -612,6 +616,7 @@ defmodule VyasaWeb.Context.Read do
            }
          } = socket
        ) do
+    #IO.inspect(marks, label: "see the mark")
     {:ok, com} =
       Vyasa.Sangh.update_sheaf(curr_sheaf, %{
         marks: marks |> Mark.sanitise_marks()
@@ -634,16 +639,19 @@ defmodule VyasaWeb.Context.Read do
   # Tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
   # TODO: @ks0m1c combine the state handling for marks and sheaf by using the marks within the sheaf.
   # This will work well with the other TODO defined about the CRUD functions needed
+  #
   defp init_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
     case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
       [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
-        sanitised_marks = marks |> Mark.sanitise_marks()
-        {:ok, com} = Vyasa.Sangh.update_sheaf(sheaf, %{marks: sanitised_marks})
+
+        #?? idk why we have this sanitise state haha
+        # sanitised_marks = marks |> Mark.sanitise_marks()
+        # {:ok, com} = Vyasa.Sangh.update_sheaf(sheaf, %{marks: sanitised_marks})
 
         socket
-        |> assign(draft_reflector: com)
-        |> assign(marks: sanitised_marks |> Enum.reverse())
-        |> assign(marks_ui: MarksUiState.get_initial_ui_state(sanitised_marks))
+        |> assign(draft_reflector: sheaf)
+        |> assign(marks: marks |> Enum.reverse())
+        |> assign(marks_ui: MarksUiState.get_initial_ui_state(marks))
 
       [%Vyasa.Sangh.Sheaf{} = sheaf | _] ->
         socket

@@ -33,6 +33,7 @@ defmodule Vyasa.Sangh.Mark do
   def changeset(event, attrs) do
     event
     |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id, :updated_at, :inserted_at])
+    |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
   end
 
   def edit_mark_in_marks([%Mark{} | _] = marks, id, opts \\ %{}) do
@@ -61,9 +62,9 @@ defmodule Vyasa.Sangh.Mark do
 
   def get_next_order(marks) when is_list(marks) do
     1 +
-      (marks
+      ((marks
        |> Enum.map(& &1.order)
-       |> Enum.max(&>=/2, fn -> 0 end))
+       |> Enum.max(&>=/2, fn -> 0 end)) || 0)
   end
 
   def get_next_order(_) do
@@ -77,7 +78,7 @@ defmodule Vyasa.Sangh.Mark do
   """
   def sanitise_marks([%Mark{} | _] = marks) do
     marks
-    |> Enum.reject(fn mark -> mark.state == :tomb end)
+    |> Enum.reject(fn mark -> mark.state == :tomb or mark.state == :draft end)
     |> defrag_marks_orders()
   end
 
