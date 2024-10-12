@@ -35,8 +35,16 @@ defmodule Vyasa.Sangh.Mark do
     |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id, :updated_at, :inserted_at])
   end
 
-  def update_mark(%Mark{} = draft_mark, opts \\ %{}) do
-    draft_mark
+  def edit_mark_in_marks([%Mark{} | _] = marks, id, opts \\ %{}) do
+    marks
+    |> Enum.map(fn
+      %{id: ^id} = m -> m |> update_mark(opts)
+      m -> m
+    end)
+  end
+
+  def update_mark(%Mark{} = mark, opts \\ %{}) do
+    mark
     |> Map.merge(Map.new(opts))
     |> Time.maybe_insert_current_time(:inserted_at)
     |> Time.update_current_time(:updated_at)

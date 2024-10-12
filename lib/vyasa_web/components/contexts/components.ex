@@ -145,15 +145,29 @@ defmodule VyasaWeb.Context.Components do
             >
               <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
             </button>
-            <button
-              phx-click="toggle_is_editing_mark_content?"
-              phx-target={@marks_target}
-              phx-value-mark_id={@mark.id}
-              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-              aria-label="Edit mark body"
-            >
-              <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-            </button>
+            <%= if not @mark_ui.is_editing_content? do %>
+              <button
+                phx-click="toggle_is_editing_mark_content?"
+                phx-target={@marks_target}
+                phx-value-mark_id={@mark.id}
+                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                aria-label="Toggle edit mark body"
+              >
+                <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
+              </button>
+            <% else %>
+              <!-- Alternative content when not editing -->
+              <button
+                phx-click="editMarkContent"
+                phx-target={@marks_target}
+                phx-value-mark_id={@mark.id}
+                phx-value-mark_body={@mark.body}
+                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                aria-label="Edit mark body"
+              >
+                <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
+              </button>
+            <% end %>
           </div>
         </div>
       <% end %>

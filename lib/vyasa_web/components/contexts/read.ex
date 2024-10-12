@@ -278,12 +278,26 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   def handle_event(
-        "foo",
-        _,
-        socket
-      ) do
-    IO.puts("TRACE FOO")
-    {:noreply, socket}
+        "editMarkContent",
+        %{"mark_id" => id, "mark_body" => body} = _payload,
+        %Socket{
+          assigns:
+            %{
+              marks: [%Mark{} | _] = marks,
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      )
+      when is_binary(body) do
+    {:noreply,
+     socket
+     |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{body: body}))
+     |> assign(
+       :marks_ui,
+       ui_state
+       |> MarksUiState.toggle_is_editing_mark_content(id)
+     )
+     |> trigger_dom_refresh()}
   end
 
   @impl true
@@ -495,14 +509,7 @@ defmodule VyasaWeb.Context.Read do
     {
       :noreply,
       socket
-      |> assign(
-        :marks,
-        marks
-        |> Enum.map(fn
-          %{id: ^id} = m -> %{m | state: :tomb}
-          m -> m
-        end)
-      )
+      |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{state: :tomb}))
       |> mutate_draft_reflector()
       |> trigger_dom_refresh()
     }
