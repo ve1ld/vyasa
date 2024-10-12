@@ -292,6 +292,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply,
      socket
      |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{body: body}))
+     |> mutate_draft_reflector()
      |> assign(
        :marks_ui,
        ui_state
@@ -604,7 +605,12 @@ defmodule VyasaWeb.Context.Read do
 
   # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf, marks: marks}} = socket
+         %{
+           assigns: %{
+             draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf,
+             marks: marks
+           }
+         } = socket
        ) do
     {:ok, com} =
       Vyasa.Sangh.update_sheaf(curr_sheaf, %{
