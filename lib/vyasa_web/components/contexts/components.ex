@@ -82,6 +82,12 @@ defmodule VyasaWeb.Context.Components do
   def mark_display(assigns) do
     ~H"""
     <div class="border-l border-brand-light pl-2">
+      <.debug_dump
+        mark_state={@mark.state}
+        mark_id={@mark.id}
+        class="relative"
+        mark_order={@mark.order}
+      />
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
