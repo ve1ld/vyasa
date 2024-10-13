@@ -137,11 +137,10 @@ defmodule VyasaWeb.Context.Read do
 
       socket
       |> assign(:content_action, :show_verses)
-      |> sync_media_session()
       |> init_marks(:show_verses)
+      |> sync_media_session()
       |> assign(
         :kv_verses,
-        # creates a map of verse_id_to_verses
         Enum.into(verses, %{}, &{&1.id, &1})
       )
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
@@ -712,7 +711,11 @@ defmodule VyasaWeb.Context.Read do
 
   def init_marks(%Socket{} = socket, _) do
     IO.puts("INIT_MARKS POKEMON")
+    marks = [Mark.get_draft_mark()]
+
     socket
+    |> assign(marks: marks)
+    |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
   end
 
   defp cascade_stream_change(
