@@ -13,7 +13,7 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh.{Mark}
+  alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
 
   @impl true
@@ -134,22 +134,19 @@ defmodule VyasaWeb.Context.Read do
          %{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap <-
            Written.get_chapter(chap_no, sid, @default_lang) do
       fmted_title = to_title_case(source.title)
-      initial_marks = [Mark.get_draft_mark()]
 
       socket
+      |> assign(:content_action, :show_verses)
+      |> sync_media_session()
+      |> init_marks(:show_verses)
       |> assign(
         :kv_verses,
         # creates a map of verse_id_to_verses
         Enum.into(verses, %{}, &{&1.id, &1})
       )
-      |> assign(:marks, initial_marks)
-      |> assign(:marks_ui, MarksUiState.get_initial_ui_state(initial_marks))
-      |> sync_session()
-      |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
-      # DEPRECATED
-      # RENAME?
+      # DEPRECATED this src may not be needed OR RENAME src to something else??
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
@@ -206,16 +203,16 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  defp sync_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
+  # syncs the media sessions by subscribing and publishing to the relevant channels
+  defp sync_media_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
        when is_binary(sess_id) do
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
 
     socket
-    |> init_draft_reflector()
   end
 
-  defp sync_session(socket) do
+  defp sync_media_session(socket) do
     socket
   end
 
@@ -289,19 +286,26 @@ defmodule VyasaWeb.Context.Read do
         } = socket
       )
       when is_binary(body) do
+    {[old_mark | _] = _old_versions_of_changed, updated_marks} =
+      get_and_update_in(
+        marks,
+        [Access.filter(&match?(%Mark{id: ^id}, &1))],
+        &{&1, Map.put(&1, :body, body)}
+      )
 
-     {old_mark , neu_mark} = get_and_update_in(marks, [Access.filter(&match?(%Mark{id: ^id}, &1))], &{&1, Map.put(&1, :body, body)})
+    old_mark |> Vyasa.Draft.update_mark(%{body: body})
+
     IO.inspect(old_mark, label: "oldmark for you to push down the stairs")
 
     {:noreply,
      socket
-     |> assign(:marks, neu_mark)
-     |> mutate_draft_reflector()
+     |> assign(:marks, updated_marks)
      |> assign(
        :marks_ui,
        ui_state
        |> MarksUiState.toggle_is_editing_mark_content(id)
      )
+     |> mutate_draft_reflector()
      |> cascade_stream_change()}
   end
 
@@ -577,6 +581,14 @@ defmodule VyasaWeb.Context.Read do
         <% end %>
 
         <%= if @content_action == :show_verses do %>
+          <.debug_dump
+            :for={mark <- @marks}
+            label={Atom.to_string(mark.state) <> " Mark " <> Integer.to_string(mark.order) }
+            mark_state={mark.state}
+            mark_id={mark.id}
+            class="relative"
+            mark_order={mark.order}
+          />
           <.live_component
             module={VyasaWeb.Context.Read.Verses}
             id="content-verses"
@@ -616,7 +628,7 @@ defmodule VyasaWeb.Context.Read do
            }
          } = socket
        ) do
-    #IO.inspect(marks, label: "see the mark")
+    # IO.inspect(marks, label: "see the mark")
     {:ok, com} =
       Vyasa.Sangh.update_sheaf(curr_sheaf, %{
         marks: marks |> Mark.sanitise_marks()
@@ -631,46 +643,75 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # Allows us to get a reflection of the internal sangh session state and store it within
-  # this component's state.
-  # Currently, we shall do a naive hd lookup on the sheafs within the session.
-  # We could filter the sheaf based on the active flag,
-  # NOTE:
-  # Tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
-  # TODO: @ks0m1c combine the state handling for marks and sheaf by using the marks within the sheaf.
-  # This will work well with the other TODO defined about the CRUD functions needed
-  #
-  defp init_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
-    case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
-      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
+  @doc """
+  Initialises the following 3 state attributes that we use for managing marks:
 
-        #?? idk why we have this sanitise state haha
-        # sanitised_marks = marks |> Mark.sanitise_marks()
-        # {:ok, com} = Vyasa.Sangh.update_sheaf(sheaf, %{marks: sanitised_marks})
+  1. draft reflector:
+     this is a reflection of the sheaf that we care about during interactions in
+     the read mode.
+  2. marks:
+     the actual marks state, this strictly follows the invariant that the order
+     of marks kept in the socket here will always be in descending order of their
+     order attribute.
+  3. marks_ui:
+     ui state for the marks, this is currently just for the read mode.
+
+  NOTE: during the init of marks, we will be mutating the draft reflector. This
+  keeps the state of the draft marks on the db-side always sanitised.
+  """
+  def init_marks(
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: sangh_id}}
+          }
+        } = socket,
+        :show_verses
+      ) do
+    IO.puts("INIT_MARKS")
+
+    draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
+
+    case draft_sheafs do
+      # handles head sheaf with existing marks:
+      [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
+        IO.puts("CHECKPOINT A")
+
+        marks_with_draft =
+          [marks |> Mark.get_draft_mark() | marks]
+          |> Mark.sanitise_marks()
 
         socket
         |> assign(draft_reflector: sheaf)
-        |> assign(marks: marks |> Enum.reverse())
-        |> assign(marks_ui: MarksUiState.get_initial_ui_state(marks))
+        |> assign(marks: marks_with_draft)
+        |> assign(marks_ui: marks_with_draft |> MarksUiState.get_initial_ui_state())
+        |> mutate_draft_reflector()
 
-      [%Vyasa.Sangh.Sheaf{} = sheaf | _] ->
+      # handles head sheaf without existing marks:
+      [%Sheaf{} = sheaf | _] ->
+        IO.puts("CHECKPOINT B")
+        marks = [Mark.get_draft_mark()]
+
         socket
         |> assign(draft_reflector: sheaf)
+        |> assign(marks: marks)
+        |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
+        |> mutate_draft_reflector()
 
+      # fallback case: when no sheafs exist
       _ ->
-        {:ok, com} =
-          Vyasa.Sangh.create_sheaf(%{
-            id: Ecto.UUID.generate(),
-            session_id: sangh_id,
-            traits: ["draft"]
-          })
+        IO.puts("CHECKPOINT C")
+        marks = [Mark.get_draft_mark()]
 
         socket
-        |> assign(draft_reflector: com)
+        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
+        |> assign(marks: marks)
+        |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
+        |> mutate_draft_reflector()
     end
   end
 
-  defp init_draft_reflector(%{assigns: %{session: _}} = socket) do
+  def init_marks(%Socket{} = socket, _) do
+    IO.puts("INIT_MARKS POKEMON")
     socket
   end
 
