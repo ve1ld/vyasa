@@ -137,6 +137,7 @@ defmodule VyasaWeb.Context.Read do
 
       socket
       |> assign(:content_action, :show_verses)
+      |> init_draft_reflector()
       |> init_marks()
       |> sync_media_session()
       |> assign(
@@ -212,6 +213,39 @@ defmodule VyasaWeb.Context.Read do
   end
 
   defp sync_media_session(socket) do
+    socket
+  end
+
+  @doc """
+  Sets the initial value of the draft reflector.
+  This is the reflection of the sheaf for which marks are currently being gathered for.
+
+  Currently it takes the first draft sheaf in the session.
+
+  This reflector is hot-swappable to other sheafs if there's a need to switch what
+  sheaf to focus on and gather marks for.
+  """
+  def init_draft_reflector(
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: sangh_id}}
+          }
+        } = socket
+      ) do
+    draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
+
+    case draft_sheafs do
+      [%Sheaf{} = sheaf | _] ->
+        socket
+        |> assign(draft_reflector: sheaf)
+
+      _ ->
+        socket
+        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
+    end
+  end
+
+  def init_draft_reflector(socket) do
     socket
   end
 
@@ -662,17 +696,15 @@ defmodule VyasaWeb.Context.Read do
         %Socket{
           assigns: %{
             content_action: :show_verses,
-            session: %{sangh: %{id: sangh_id}}
+            draft_reflector: draft_reflector
           }
         } = socket
       ) do
     IO.puts("INIT_MARKS")
 
-    draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
-
-    case draft_sheafs do
+    case draft_reflector do
       # handles head sheaf with existing marks:
-      [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
+      %Sheaf{marks: [_ | _] = marks} ->
         IO.puts("CHECKPOINT A")
 
         marks_with_draft =
@@ -680,29 +712,16 @@ defmodule VyasaWeb.Context.Read do
           |> Mark.sanitise_marks()
 
         socket
-        |> assign(draft_reflector: sheaf)
         |> assign(marks: marks_with_draft)
         |> assign(marks_ui: marks_with_draft |> MarksUiState.get_initial_ui_state())
         |> mutate_draft_reflector()
 
       # handles head sheaf without existing marks:
-      [%Sheaf{} = sheaf | _] ->
+      %Sheaf{} ->
         IO.puts("CHECKPOINT B")
         marks = [Mark.get_draft_mark()]
 
         socket
-        |> assign(draft_reflector: sheaf)
-        |> assign(marks: marks)
-        |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
-        |> mutate_draft_reflector()
-
-      # fallback case: when no sheafs exist
-      _ ->
-        IO.puts("CHECKPOINT C")
-        marks = [Mark.get_draft_mark()]
-
-        socket
-        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
         |> assign(marks: marks)
         |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
         |> mutate_draft_reflector()
