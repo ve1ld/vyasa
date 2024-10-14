@@ -137,7 +137,7 @@ defmodule VyasaWeb.Context.Read do
 
       socket
       |> assign(:content_action, :show_verses)
-      |> init_marks(:show_verses)
+      |> init_marks()
       |> sync_media_session()
       |> assign(
         :kv_verses,
@@ -661,10 +661,10 @@ defmodule VyasaWeb.Context.Read do
   def init_marks(
         %Socket{
           assigns: %{
+            content_action: :show_verses,
             session: %{sangh: %{id: sangh_id}}
           }
-        } = socket,
-        :show_verses
+        } = socket
       ) do
     IO.puts("INIT_MARKS")
 
@@ -709,7 +709,7 @@ defmodule VyasaWeb.Context.Read do
     end
   end
 
-  def init_marks(%Socket{} = socket, _) do
+  def init_marks(%Socket{} = socket) do
     IO.puts("INIT_MARKS POKEMON")
     marks = [Mark.get_draft_mark()]
 
