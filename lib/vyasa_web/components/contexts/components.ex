@@ -217,4 +217,29 @@ defmodule VyasaWeb.Context.Components do
     </span>
     """
   end
+
+  def sheaf_creator_modal(assigns) do
+    ~H"""
+    <.debug_dump label="Sheaf Creator Dump" show={@marks_ui.show_sheaf_modal?} class="relative" />
+    <.generic_modal_wrapper
+      id="my-modal"
+      show={@marks_ui.show_sheaf_modal?}
+      on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      container_class="rounded-lg shadow-lg overflow-hidden"
+      background_class="bg-gray-800 bg-opacity-75 backdrop-blur-md"
+      dialog_class="rounded-lg shadow-xl p-6 w-3/4 h-3/4 max-w-lg max-h-screen mx-auto my-auto"
+      focus_wrap_class="flex flex-col items-center justify-center h-full"
+      inner_block_container_class="w-full p-4"
+      close_button_icon_class="text-red-500 hover:text-red-700"
+    >
+      <h2 class="text-2xl font-semibold text-gray-800">My Modal Title</h2>
+      <p class="mt-2 text-gray-600">
+        This is a description of what the modal is about. You can provide additional information here.
+      </p>
+      <.debug_dump assigns={assigns} class="mt-4" />
+    </.generic_modal_wrapper>
+    """
+  end
 end

@@ -15,6 +15,7 @@ defmodule VyasaWeb.Context.Read do
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
+  import VyasaWeb.Context.Components
 
   @impl true
   def update(
@@ -224,6 +225,8 @@ defmodule VyasaWeb.Context.Read do
 
   This reflector is hot-swappable to other sheafs if there's a need to switch what
   sheaf to focus on and gather marks for.
+
+  TODO: add other params-based sheaf-setting
   """
   def init_draft_reflector(
         %Socket{
@@ -281,6 +284,37 @@ defmodule VyasaWeb.Context.Read do
      socket
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())
      |> cascade_stream_change()}
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_show_sheaf_modal?",
+        _,
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+      |> cascade_stream_change()
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_show_sheaf_modal?",
+        _,
+        %Socket{} = socket
+      ) do
+    {
+      :noreply,
+      socket
+    }
   end
 
   @impl true
@@ -614,13 +648,11 @@ defmodule VyasaWeb.Context.Read do
         <% end %>
 
         <%= if @content_action == :show_verses do %>
-          <.debug_dump
-            :for={mark <- @marks}
-            label={Atom.to_string(mark.state) <> " Mark " <> Integer.to_string(mark.order) }
-            mark_state={mark.state}
-            mark_id={mark.id}
-            class="relative"
-            mark_order={mark.order}
+          <.debug_dump label="UI State Info" marks_ui={@marks_ui} class="relative w-screen" />
+          <.sheaf_creator_modal
+            id="sheaf-creator"
+            marks_ui={@marks_ui}
+            event_target="content-display"
           />
           <.live_component
             module={VyasaWeb.Context.Read.Verses}
