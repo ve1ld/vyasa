@@ -3,6 +3,7 @@ defmodule VyasaWeb.Context.Components do
   Provides core components that shall be used in multiple contexts (e.g. read, discuss).
   """
   use VyasaWeb, :html
+  alias Vyasa.Sangh.{Sheaf}
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
 
@@ -218,9 +219,31 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  attr :id, :string, required: true
+  attr :marks_ui, MarksUiState, required: true
+  attr :marks, :list, required: true
+
+  attr :active_sheaf, Sheaf,
+    required: false,
+    doc: "Refers to the sheaf that we are currently accumulating marks for.
+      It's named active in line with the original intent of creating that active
+      flag, where we define what the current sheaf is for which we are
+      accumulating marks for."
+
+  attr :reply_to_sheaf, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
+  # TODO: the reply_to should probably just be a binding since we can reply to any binding
+  attr :event_target, :string, required: true
+  # temp:
+  # show={@marks_ui.show_sheaf_modal?}
   def sheaf_creator_modal(assigns) do
     ~H"""
-    <.debug_dump label="Sheaf Creator Dump" show={@marks_ui.show_sheaf_modal?} class="relative" />
+    <.debug_dump
+      label="Sheaf Creator Modal"
+      reply_to_sheaf={@reply_to_sheaf}
+      active_sheaf={@active_sheaf}
+      show={@marks_ui.show_sheaf_modal?}
+      class="relative"
+    />
     <.generic_modal_wrapper
       id="my-modal"
       show={@marks_ui.show_sheaf_modal?}
@@ -229,17 +252,49 @@ defmodule VyasaWeb.Context.Components do
       window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
       container_class="rounded-lg shadow-lg overflow-hidden"
       background_class="bg-gray-800 bg-opacity-75 backdrop-blur-md"
-      dialog_class="rounded-lg shadow-xl p-6 w-3/4 h-3/4 max-w-lg max-h-screen mx-auto my-auto"
+      dialog_class="rounded-lg shadow-xl flex flex-col w-3/4 h-3/4 max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
+      focus_container_class="border border-red-500"
       focus_wrap_class="flex flex-col items-center justify-center h-full"
       inner_block_container_class="w-full p-4"
       close_button_icon_class="text-red-500 hover:text-red-700"
     >
-      <h2 class="text-2xl font-semibold text-gray-800">My Modal Title</h2>
-      <p class="mt-2 text-gray-600">
-        This is a description of what the modal is about. You can provide additional information here.
-      </p>
-      <.debug_dump assigns={assigns} class="mt-4" />
+      <.sheaf_creator
+        id={@id}
+        marks={@marks}
+        marks_ui={@marks_ui}
+        active_sheaf={@active_sheaf}
+        reply_to_sheaf={@reply_to_sheaf}
+      />
     </.generic_modal_wrapper>
+    """
+  end
+
+  def sheaf_creator(assigns) do
+    ~H"""
+    <div id="sheaf-creator-container" class="p-6 m-6">
+      <h2 class="text-2xl font-semibold text-gray-800">
+        Create sheaf
+      </h2>
+      <.replyto_context sheaf={@reply_to_sheaf} />
+      <.current_draft_sheaf sheaf={@active_sheaf} />
+      <!-- TODO: button group for actions -->
+    </div>
+    """
+  end
+
+  def replyto_context(assigns) do
+    ~H"""
+    <div>
+      <.debug_dump label="REPLY TO CONTEXT" sheaf={@sheaf} class="relative" />
+    </div>
+    """
+  end
+
+  def current_draft_sheaf(assigns) do
+    ~H"""
+    <div>
+      <.debug_dump label="ACCUMULATING MARKS FOR" sheaf={@sheaf} class="relative" />
+    </div>
     """
   end
 end

@@ -252,7 +252,7 @@ defmodule VyasaWeb.CoreComponents do
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+          "fixed inset-0 bg-gray-500 dark:bg-black opacity-90 dark:opacity-80 border border-red-500",
           @background_class
         ]}
         aria-hidden="true"
@@ -262,10 +262,10 @@ defmodule VyasaWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         tabindex="0"
-        class={["w-full fixed inset-0 flex", @dialog_class]}
+        class={["w-full fixed inset-0 flex border border-green-500", @dialog_class]}
       >
-        <div class="flex w-full absolute lg:inset-0 bottom-0 lg:items-center lg:justify-center">
-          <div class={["w-full lg:py-8 rounded-none lg:rounded-2xl", @focus_container_class]}>
+        <div class="border border-blue-500 flex h-full w-full absolute lg:inset-0 bottom-0 lg:items-center lg:justify-center">
+          <div class={["w-full h-full rounded-none rounded-2xl", @focus_container_class]}>
             <.focus_wrap
               id={"#{@id}-container"}
               phx-mounted={@show && @on_mount_callback && show_modal(@id)}
@@ -273,7 +273,7 @@ defmodule VyasaWeb.CoreComponents do
               phx-key={@cancel_key}
               phx-click-away={hide_modal(@on_click_away_callback, @id)}
               class={[
-                "hidden relative flex w-full bg-white lg:rounded-3xl lg:shadow-2xl",
+                "hidden relative flex w-full bg-white lg:rounded-3xl lg:shadow-2xl overflow-auto",
                 @focus_wrap_class
               ]}
             >
@@ -1056,7 +1056,7 @@ defmodule VyasaWeb.CoreComponents do
     ~H"""
     <div class={[
       "fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50",
-      assigns.class
+      Map.get(assigns, :class, "")
     ]}>
       <h2 class="text-lg font-bold mb-2">
         <%= Map.get(assigns, :label, "Developer Dump") %>

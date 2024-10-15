@@ -606,6 +606,13 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  # TODO: sheaf crud -- event handler
+  def handle_event("sheaf:create_sheaf", _params, %Socket{} = socket) do
+    IO.puts("sheaf:create_sheaf")
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("dummy_event", _params, socket) do
     # Handle the event here (e.g., log it, update state, etc.)
     IO.puts("Dummy event triggered")
@@ -623,6 +630,8 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  # TODO: UI-polish: prevent the button click for creating sheaf if there's no active sheaf (no reflected sheaf)
+  # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
     <div id={@id}>
@@ -648,12 +657,23 @@ defmodule VyasaWeb.Context.Read do
         <% end %>
 
         <%= if @content_action == :show_verses do %>
-          <.debug_dump label="UI State Info" marks_ui={@marks_ui} class="relative w-screen" />
-          <.sheaf_creator_modal
-            id="sheaf-creator"
-            marks_ui={@marks_ui}
-            event_target="content-display"
-          />
+          <%= if Map.has_key?(assigns, :draft_reflector) do %>
+            <.debug_dump
+              label="UI State Info"
+              reply_to_sheaf={@draft_reflector}
+              active_sheaf={@draft_reflector}
+              marks_ui={@marks_ui}
+              class="relative w-screen"
+            />
+            <.sheaf_creator_modal
+              id="sheaf-creator"
+              marks={@marks}
+              marks_ui={@marks_ui}
+              reply_to_sheaf={@draft_reflector}
+              active_sheaf={@draft_reflector}
+              event_target="content-display"
+            />
+          <% end %>
           <.live_component
             module={VyasaWeb.Context.Read.Verses}
             id="content-verses"
