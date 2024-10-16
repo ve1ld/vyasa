@@ -15,6 +15,7 @@ defmodule VyasaWeb.Context.Components do
   # FIXME: the UUID generation for marks should ideally not be happening here, we should try to ensure that every mark has an id @ the point of creation, wherever that may be (fresh creation or created at point of insertion into the db)
   def collapsible_marks_display(assigns) do
     ~H"""
+    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
     <div class="mb-4">
       <div
         id="collapse-header-container"
@@ -82,13 +83,15 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_display(assigns) do
     ~H"""
+    <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
-      <.debug_dump
+      <!-- <.debug_dump
         mark_state={@mark.state}
         mark_id={@mark.id}
         class="relative"
         mark_order={@mark.order}
       />
+      -->
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
@@ -233,19 +236,11 @@ defmodule VyasaWeb.Context.Components do
   attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
   # TODO: the reply_to should probably just be a binding since we can reply to any binding
   attr :event_target, :string, required: true
-  # temp:
-  # show={@marks_ui.show_sheaf_modal?}
+
   def sheaf_creator_modal(assigns) do
     ~H"""
-    <.debug_dump
-      label="Sheaf Creator Modal"
-      reply_to={@reply_to}
-      active_sheaf={@active_sheaf}
-      show={@marks_ui.show_sheaf_modal?}
-      class="relative"
-    />
     <.generic_modal_wrapper
-      id="my-modal"
+      id="sheaf-creator-modal"
       show={@marks_ui.show_sheaf_modal?}
       on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
       on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
@@ -255,19 +250,20 @@ defmodule VyasaWeb.Context.Components do
       dialog_class="rounded-lg shadow-xl flex flex-col w-3/4 h-3/4 max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
       focus_container_class="border border-red-500"
       focus_wrap_class="flex flex-col items-center justify-center h-full"
-      inner_block_container_class="w-full p-4"
+      inner_block_container_class="w-full p-6"
       close_button_icon_class="text-red-500 hover:text-red-700"
     >
-      <.sheaf_creator
-        id={@id}
-        marks={@marks}
-        marks_ui={@marks_ui}
-        active_sheaf={@active_sheaf}
-        reply_to={@reply_to}
-        action_buttons={[
-          {}
-        ]}
-      />
+      <div class="flex flex-col">
+        <.replyto_context sheaf={@reply_to} />
+        <.sheaf_creator
+          id={@id}
+          marks={@marks}
+          marks_ui={@marks_ui}
+          active_sheaf={@active_sheaf}
+          reply_to={@reply_to}
+          action_buttons={[]}
+        />
+      </div>
     </.generic_modal_wrapper>
     """
   end
@@ -275,8 +271,12 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_creator(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="p-6 m-6">
-      <.replyto_context sheaf={@reply_to} />
-      <.current_draft_sheaf sheaf={@active_sheaf} />
+      <.current_draft_sheaf
+        sheaf={@active_sheaf}
+        event_target="#content-display"
+        marks={@marks}
+        marks_ui={@marks_ui}
+      />
       <!-- TODO: button group for actions -->
       <div>STUB FOR BUTTON GROUPS</div>
     </div>
@@ -285,19 +285,16 @@ defmodule VyasaWeb.Context.Components do
 
   def replyto_context(assigns) do
     ~H"""
-    <div>
-      <div class="m-2 p-2 overflow-auto">
-        <%= if not is_nil(@sheaf) do %>
-          <div class="flex flex-col">
-            <.sheaf_summary label="Responding to" sheaf={@sheaf} action_buttons={[]} />
-          </div>
-        <% else %>
-          <h2 class="text-2xl font-normal text-gray-800">
-            Creating a new thread
-          </h2>
-        <% end %>
-      </div>
-      <.debug_dump label="REPLY TO CONTEXT" sheaf={@sheaf} class="relative" />
+    <div class="m-2 p-2 overflow-auto">
+      <%= if not is_nil(@sheaf) do %>
+        <div class="flex flex-col">
+          <.sheaf_summary label="Responding to" sheaf={@sheaf} action_buttons={[]} />
+        </div>
+      <% else %>
+        <h2 class="text-2xl font-normal text-gray-800">
+          Creating a new thread
+        </h2>
+      <% end %>
     </div>
     """
   end
@@ -324,22 +321,22 @@ defmodule VyasaWeb.Context.Components do
       </h2>
       <!-- Body Display -->
       <div class="mb-2">
-        <p class="text-gray-800">
-          <%= @sheaf.body || "EMPTY BODY" %>
-        </p>
+        <p class="text-gray-800"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
-      <!-- Action Button Group -->
-      <div class="flex space-x-2">
-        <%= for {icon, action} <- @action_buttons do %>
-          <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
-            <.icon name={icon} class="h-5 w-5 mr-1" />
-            <span>Action</span>
-            <!-- Replace with meaningful labels -->
-          </button>
-        <% end %>
+      <!-- Signature and Action Button Group -->
+      <div class="flex justify-between items-center mt-2">
+        <.sheaf_signature_display sheaf={@sheaf} />
+        <!-- Action Button Group -->
+        <div class="flex space-x-2">
+          <%= for {icon, action} <- @action_buttons do %>
+            <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+              <.icon name={icon} class="h-5 w-5 mr-1" />
+              <span>Action</span>
+              <!-- Replace with meaningful labels -->
+            </button>
+          <% end %>
+        </div>
       </div>
-      <!-- Signature Display -->
-      <.sheaf_signature_display sheaf={@sheaf} />
     </div>
     """
   end
@@ -354,27 +351,33 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_signature_display(assigns) do
     ~H"""
-    <div class={["flex mt-2 text-sm text-gray-600", @text_container_class]}>
-      <div class={["mx-1 text-gray-800", @signature_class]}>
+    <div class="flex mt-2 text-sm text-gray-600">
+      <div class="mx-1 text-gray-800">
         <p>- <%= @sheaf.signature %></p>
       </div>
-      <div class={["mx-1 text-gray-800", @time_class]}>
+      <!-- Time Display -->
+      <div class="mx-1 text-gray-800 text-sm italic">
         <%= if is_nil(@sheaf.updated_at) do %>
-          <%= (@sheaf.inserted_at
-               |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
+          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
         <% else %>
-          updated <%= (@sheaf.updated_at
-                       |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
+          <%= (@sheaf.updated_at |> Utils.Formatters.Time.human_friendly_time()).formatted_time %> (edited)
         <% end %>
       </div>
     </div>
     """
   end
 
+  # TODO [SHEAF CRUD] this will contain the form!
   def current_draft_sheaf(assigns) do
     ~H"""
     <div>
       <.debug_dump label="ACCUMULATING MARKS FOR" sheaf={@sheaf} class="relative" />
+      <.collapsible_marks_display
+        myself={nil}
+        marks_target={@event_target}
+        marks={@marks}
+        marks_ui={@marks_ui}
+      />
     </div>
     """
   end

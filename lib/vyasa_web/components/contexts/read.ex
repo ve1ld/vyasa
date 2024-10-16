@@ -261,6 +261,7 @@ defmodule VyasaWeb.Context.Read do
         body:
           "Hey, so this is my sheaf, I have something important to say\n what do you think about it?",
         signature: "Ritesh Kumar",
+        inserted_at: DateTime.add(Utils.Time.get_utc_now(), -10000),
         updated_at: DateTime.add(Utils.Time.get_utc_now(), -9000),
         traits: ["draft"]
       }
