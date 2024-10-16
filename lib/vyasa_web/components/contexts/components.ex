@@ -230,7 +230,7 @@ defmodule VyasaWeb.Context.Components do
       flag, where we define what the current sheaf is for which we are
       accumulating marks for."
 
-  attr :reply_to_sheaf, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
+  attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
   # TODO: the reply_to should probably just be a binding since we can reply to any binding
   attr :event_target, :string, required: true
   # temp:
@@ -239,7 +239,7 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <.debug_dump
       label="Sheaf Creator Modal"
-      reply_to_sheaf={@reply_to_sheaf}
+      reply_to={@reply_to}
       active_sheaf={@active_sheaf}
       show={@marks_ui.show_sheaf_modal?}
       class="relative"
@@ -263,7 +263,10 @@ defmodule VyasaWeb.Context.Components do
         marks={@marks}
         marks_ui={@marks_ui}
         active_sheaf={@active_sheaf}
-        reply_to_sheaf={@reply_to_sheaf}
+        reply_to={@reply_to}
+        action_buttons={[
+          {}
+        ]}
       />
     </.generic_modal_wrapper>
     """
@@ -272,12 +275,10 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_creator(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="p-6 m-6">
-      <h2 class="text-2xl font-semibold text-gray-800">
-        Create sheaf
-      </h2>
-      <.replyto_context sheaf={@reply_to_sheaf} />
+      <.replyto_context sheaf={@reply_to} />
       <.current_draft_sheaf sheaf={@active_sheaf} />
       <!-- TODO: button group for actions -->
+      <div>STUB FOR BUTTON GROUPS</div>
     </div>
     """
   end
@@ -285,7 +286,87 @@ defmodule VyasaWeb.Context.Components do
   def replyto_context(assigns) do
     ~H"""
     <div>
+      <div class="m-2 p-2 overflow-auto">
+        <%= if not is_nil(@sheaf) do %>
+          <div class="flex flex-col">
+            <.sheaf_summary label="Responding to" sheaf={@sheaf} action_buttons={[]} />
+          </div>
+        <% else %>
+          <h2 class="text-2xl font-normal text-gray-800">
+            Creating a new thread
+          </h2>
+        <% end %>
+      </div>
       <.debug_dump label="REPLY TO CONTEXT" sheaf={@sheaf} class="relative" />
+    </div>
+    """
+  end
+
+  @doc """
+  TODO: implement a reddit-top-comment-like UI for this
+  A brief view of a sheaf, showing the contextually relevant information about it.
+  """
+  attr :label, :string,
+    default: nil,
+    doc: "A string to serve as some label text to the sheaf being displayed"
+
+  attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
+  attr :action_buttons, :list, default: [], doc: "List of action button configurations."
+
+  def sheaf_summary(assigns) do
+    ~H"""
+    <div class="border p-4 rounded-lg shadow-md bg-white">
+      <h2
+        :if={@label}
+        class="italic text-lg font-normal text-gray-800 pb-1 mb-1 border-b border-gray-400"
+      >
+        <%= @label %>
+      </h2>
+      <!-- Body Display -->
+      <div class="mb-2">
+        <p class="text-gray-800">
+          <%= @sheaf.body || "EMPTY BODY" %>
+        </p>
+      </div>
+      <!-- Action Button Group -->
+      <div class="flex space-x-2">
+        <%= for {icon, action} <- @action_buttons do %>
+          <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+            <.icon name={icon} class="h-5 w-5 mr-1" />
+            <span>Action</span>
+            <!-- Replace with meaningful labels -->
+          </button>
+        <% end %>
+      </div>
+      <!-- Signature Display -->
+      <.sheaf_signature_display sheaf={@sheaf} />
+    </div>
+    """
+  end
+
+  @doc """
+  Gives information about who, when (created / last updated).
+  """
+  attr :sheaf, Sheaf, required: true
+  attr :text_container_class, :string, default: ""
+  attr :signature_class, :string, default: ""
+  attr :time_class, :string, default: "text-sm italic"
+
+  def sheaf_signature_display(assigns) do
+    ~H"""
+    <div class={["flex mt-2 text-sm text-gray-600", @text_container_class]}>
+      <div class={["mx-1 text-gray-800", @signature_class]}>
+        <p>- <%= @sheaf.signature %></p>
+      </div>
+      <div class={["mx-1 text-gray-800", @time_class]}>
+        <%= if is_nil(@sheaf.updated_at) do %>
+          <%= (@sheaf.inserted_at
+               |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
+        <% else %>
+          updated <%= (@sheaf.updated_at
+                       |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
+        <% end %>
+      </div>
     </div>
     """
   end

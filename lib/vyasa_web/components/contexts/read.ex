@@ -138,6 +138,7 @@ defmodule VyasaWeb.Context.Read do
 
       socket
       |> assign(:content_action, :show_verses)
+      |> init_reply_to_context()
       |> init_draft_reflector()
       |> init_marks()
       |> sync_media_session()
@@ -215,6 +216,60 @@ defmodule VyasaWeb.Context.Read do
 
   defp sync_media_session(socket) do
     socket
+  end
+
+  @doc """
+  When we gather marks, we may have 2 cases for WHY we gather them:
+
+  a) we intend to reply to a particular sheaf
+    => if we create a new sheaf, the reply_to sheaf shall be the parent sheaf of the newly created sheaf
+
+  b) we don't intend to reply to a particular sheaf
+    => the reply_to sheaf is nil
+    => if we create a new sheaf, it's a root sheaf for that session
+
+   When we actually create the sheaf that contains the marks, they may be published as public or private,
+   regardless of whether the intent is a) or b) above.
+
+  [TBD: @ks0m1c]
+  TO VERIFY These are the invariants that will hold true for a single user within a single session:
+  1) at any point in time, there's only one OR zero non-draft sheaf that is active
+  2) at any point in time, there's only one draft sheaf that is active
+
+
+  [TBD: @ks0m1c]
+
+  There are two main ways this reply to context can be set (implicitly):
+  1) because it has been set in another mode (discuss mode) ==> the db is used to mediate this.
+  2) via url params, as permalinked ==> this will take precendence over the db-based determining of reply_to_context
+  """
+  def init_reply_to_context(
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: sangh_id}}
+          }
+        } = socket
+      ) do
+    IO.inspect(sangh_id, label: "TODO Implement init_reply_to_context for sangh id =" <> sangh_id)
+    # TODO implement this
+    socket
+    # STUB:
+    |> assign(
+      reply_to: %Sheaf{
+        id: Ecto.UUID.generate(),
+        session_id: sangh_id,
+        body:
+          "Hey, so this is my sheaf, I have something important to say\n what do you think about it?",
+        signature: "Ritesh Kumar",
+        updated_at: DateTime.add(Utils.Time.get_utc_now(), -9000),
+        traits: ["draft"]
+      }
+    )
+  end
+
+  def init_reply_to_context(%Socket{} = socket) do
+    socket
+    |> assign(reply_to: nil)
   end
 
   @doc """
@@ -669,7 +724,7 @@ defmodule VyasaWeb.Context.Read do
               id="sheaf-creator"
               marks={@marks}
               marks_ui={@marks_ui}
-              reply_to_sheaf={@draft_reflector}
+              reply_to={@reply_to}
               active_sheaf={@draft_reflector}
               event_target="content-display"
             />
