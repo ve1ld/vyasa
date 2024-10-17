@@ -139,6 +139,7 @@ defmodule VyasaWeb.Context.Read do
       socket
       |> assign(:content_action, :show_verses)
       |> init_reply_to_context()
+      # |> gather_marks_from_personal_session()
       |> init_draft_reflector()
       |> init_marks()
       |> sync_media_session()
@@ -241,7 +242,20 @@ defmodule VyasaWeb.Context.Read do
 
   There are two main ways this reply to context can be set (implicitly):
   1) because it has been set in another mode (discuss mode) ==> the db is used to mediate this.
+      => init_reply_to_context() reads from DB
   2) via url params, as permalinked ==> this will take precendence over the db-based determining of reply_to_context
+     --- /http://localhost:4000/<mode>/<binding_type>/id=xxx
+     --- /http://localhost:4000/explore/<slug for chapter>/id=xxx
+     --- /http://localhost:4000/discuss/sheaf/id=xxx
+         ==> discuss mode shows the threads
+     --- /http://localhost:4000/read/sheaf/id=xxx
+         ==> reading mode
+     ==> prioritise urls_params
+
+
+  RENAME: init_context()
+  - initialises the
+  - it's not ALWAYS a replying to
   """
   def init_reply_to_context(
         %Socket{
@@ -251,9 +265,12 @@ defmodule VyasaWeb.Context.Read do
         } = socket
       ) do
     IO.inspect(sangh_id, label: "TODO Implement init_reply_to_context for sangh id =" <> sangh_id)
-    # TODO implement this
-    socket
+    # TODO implement logic in line with the pseudocode:
+    # if url_params contains info about <binding_type>::<id>, then prioritise the sheaf for that binding
+    # else:
+    #  read from the db to get the SOLE non-draft active sheaf for session (and user(?))
     # STUB:
+    socket
     |> assign(
       reply_to: %Sheaf{
         id: Ecto.UUID.generate(),
@@ -663,7 +680,37 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   # TODO: sheaf crud -- event handler
-  def handle_event("sheaf:create_sheaf", _params, %Socket{} = socket) do
+  # Essentially:
+  # 1. the sheaf created may be private or public (regardless how we implement the private public [i.e. A: private notes for person X is in whole separate session that is deemed as private])
+  # 2. the existing draft sheaf that is active will now EVOLVE to become the active non-draft sheaf
+  # 3. (UNSURE OF THIS): will
+  def handle_event(
+        "sheaf:create_sheaf",
+        %{
+          "body" => body,
+          "is_private" => is_private,
+          "signature" => signature
+        } = _params,
+        %Socket{
+          assigns: %{
+            reply_to: %Sheaf{},
+            draft_reflector: %Sheaf{}
+          }
+          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+        } = socket
+      ) do
+    IO.inspect(%{body: body, is_private: is_private, signature: signature},
+      label: "SHEAF CREATION"
+    )
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "sheaf:create_sheaf",
+        _params,
+        %Socket{} = socket
+      ) do
     IO.puts("sheaf:create_sheaf")
     {:noreply, socket}
   end
@@ -677,9 +724,12 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
-  def handle_event(_event_name, _params, socket) do
+  def handle_event(event_name, params, socket) do
     # Handle the event here (e.g., log it, update state, etc.)
-    IO.puts("POKEMON READ CONTEXT EVENT HANDLING")
+    IO.inspect(%{event_name: event_name, params: params},
+      label: "POKEMON READ CONTEXT EVENT HANDLING"
+    )
+
     # dbg()
 
     {:noreply, socket}
@@ -727,7 +777,7 @@ defmodule VyasaWeb.Context.Read do
               marks_ui={@marks_ui}
               reply_to={@reply_to}
               active_sheaf={@draft_reflector}
-              event_target="content-display"
+              event_target="#content-display"
             />
           <% end %>
           <.live_component
