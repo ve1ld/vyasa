@@ -116,9 +116,9 @@ defmodule VyasaWeb.Context.Read do
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
     else
       [%Chapter{} = chapter | _] ->
-        send(self(), {"helm", ~p"/explore/#{source_title}/#{chapter.no}/"})
 
         socket
+        |> apply_action(:show_verses, params |> Map.put("chap_no", chapter.no))
 
       _ ->
         raise VyasaWeb.ErrorHTML.FourOFour, message: "No Chapters here yet"
