@@ -117,7 +117,6 @@ defmodule VyasaWeb.Context.Read do
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
     else
       [%Chapter{} = chapter | _] ->
-
         socket
         |> apply_action(:show_verses, params |> Map.put("chap_no", chapter.no))
 
@@ -139,7 +138,7 @@ defmodule VyasaWeb.Context.Read do
       socket
       |> assign(:content_action, :show_verses)
       |> init_reply_to_context()
-      # |> gather_marks_from_personal_session()
+      # |> init_personal_session()
       |> init_draft_reflector()
       |> init_marks()
       |> sync_media_session()
@@ -179,6 +178,11 @@ defmodule VyasaWeb.Context.Read do
     socket
     |> assign(:page_title, "Sources")
   end
+
+  # analogy: rooms in a school, you join a public room where folks are talking and you wanna fetch the sticky note
+  # that is currently in your private locker room, which you wanna use to contribute to this public room you just entered.
+  # defp init_personal_session() do
+  # end
 
   # NOTE: This is needed because a stream can't be reconfigured.
   # Consider the case where we move from :show_chapters -> :show_verses -> :show_chapters.
