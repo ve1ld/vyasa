@@ -680,10 +680,9 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   # TODO: sheaf crud -- event handler
-  # Essentially:
-  # 1. the sheaf created may be private or public (regardless how we implement the private public [i.e. A: private notes for person X is in whole separate session that is deemed as private])
-  # 2. the existing draft sheaf that is active will now EVOLVE to become the active non-draft sheaf
-  # 3. (UNSURE OF THIS): will
+  # this is for the case where a session name is not set yet.
+  # TBD: in this case, our intent is to allow them to put anon messages right? or do we not?
+  # in which case, should they be redirected to the profile setup?
   def handle_event(
         "sheaf:create_sheaf",
         %{
@@ -702,6 +701,40 @@ defmodule VyasaWeb.Context.Read do
     IO.inspect(%{body: body, is_private: is_private, signature: signature},
       label: "SHEAF CREATION"
     )
+
+    dbg()
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  # TODO: sheaf crud -- event handler
+  # Essentially:
+  # 1. the sheaf created may be private or public (regardless how we implement the private public [i.e. A: private notes for person X is in whole separate session that is deemed as private])
+  # 2. the existing draft sheaf that is active will now EVOLVE to become the active non-draft sheaf
+  # 3. (UNSURE OF THIS): will
+  def handle_event(
+        "sheaf:create_sheaf",
+        %{
+          "body" => body,
+          "is_private" => is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            reply_to: %Sheaf{},
+            draft_reflector: %Sheaf{},
+            session: %VyasaWeb.Session{
+              name: session_signature
+            }
+          }
+          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+        } = socket
+      ) do
+    IO.inspect(%{body: body, is_private: is_private, signature: session_signature},
+      label: "SHEAF CREATION"
+    )
+
+    dbg()
 
     {:noreply, socket}
   end
@@ -773,6 +806,7 @@ defmodule VyasaWeb.Context.Read do
             />
             <.sheaf_creator_modal
               id="sheaf-creator"
+              session={@session}
               marks={@marks}
               marks_ui={@marks_ui}
               reply_to={@reply_to}

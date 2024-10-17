@@ -251,6 +251,11 @@ defmodule VyasaWeb.Context.Components do
       accumulating marks for."
 
   attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
+
+  attr :session, VyasaWeb.Session,
+    default: nil,
+    doc: "Refers to the currently initialised sangh session"
+
   # TODO: the reply_to should probably just be a binding since we can reply to any binding
   attr :event_target, :string, required: true
 
@@ -272,6 +277,7 @@ defmodule VyasaWeb.Context.Components do
       <div class="flex flex-col p-6">
         <.replyto_context sheaf={@reply_to} />
         <.sheaf_creator_form
+          session={@session}
           id={@id}
           marks={@marks}
           marks_ui={@marks_ui}
@@ -285,6 +291,9 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  # TODO 1) need to inject the "signature" prop into this so that if a session already exists, it should be pre-filled
+  # TODO 2) @rtshkmr @ks0m1c we need to wire up some form-rejection logic to ensure that things like the signature will
+  # always be present. More generally, we'd need some form validation related patterns to be added to these function-component UI primitives
   def sheaf_creator_form(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">
@@ -317,15 +326,18 @@ defmodule VyasaWeb.Context.Components do
             <div>
               <label
                 for={"sheaf-creator-form-signature-textarea-" <> @id}
-                class="mb-2 text-sm font-medium text-gray-700"
+                class="mb-2 text-sm font-medium text-gray-600"
               >
-                Signature:
+                Signed by:
               </label>
               <input
                 type="text"
                 name="signature"
-                id={"sheaf-creator-form-signature-textarea-"<> @id}
-                class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
+                id={"sheaf-creator-form-signature-textarea-" <> @id}
+                value={if @session, do: @session.name, else: ""}
+                class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
+                placeholder={if @session, do: "Session name", else: "Enter your signature..."}
+                disabled={not is_nil(@session) and @session.name}
               />
             </div>
           </div>
