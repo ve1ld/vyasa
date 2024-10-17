@@ -117,7 +117,6 @@ defmodule VyasaWeb.Context.Read do
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
     else
       [%Chapter{} = chapter | _] ->
-
         socket
         |> apply_action(:show_verses, params |> Map.put("chap_no", chapter.no))
 
