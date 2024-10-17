@@ -11,10 +11,17 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
   alias Vyasa.Sangh.Mark
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
-  defstruct [:is_expanded_view?, :is_editable_marks?, :mark_id_to_ui]
+
+  defstruct [
+    :is_expanded_view?,
+    :show_sheaf_modal?,
+    :is_editable_marks?,
+    :mark_id_to_ui
+  ]
 
   @initial %{
     is_expanded_view?: false,
+    show_sheaf_modal?: false,
     is_editable_marks?: false,
     mark_id_to_ui: %{}
   }
@@ -42,6 +49,15 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
           ui_entries
           |> Enum.into(mark_id_to_ui)
     }
+  end
+
+  def toggle_show_sheaf_modal?(
+        %MarksUiState{
+          show_sheaf_modal?: curr
+        } = ui_state
+      ) do
+    # show_modal("sheaf-creator")
+    %MarksUiState{ui_state | show_sheaf_modal?: !curr}
   end
 
   def toggle_is_editable(

@@ -222,11 +222,11 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
           <button
             type="button"
             phx-click={
-              JS.push("change_form_type",
-                value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
+              JS.push("toggle_show_sheaf_modal?",
+                value: %{}
               )
             }
-            phx-target={@myself}
+            phx-target={@event_target}
             class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
           >
             <.icon
