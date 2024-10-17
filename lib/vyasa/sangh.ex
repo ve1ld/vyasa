@@ -61,7 +61,7 @@ defmodule Vyasa.Sangh do
 
   @doc """
   TODO
-  Creates a new child sheaf from a parent, using the attrs provided.
+  Creates a new child sheaf struct from a parent, using the attrs provided.
   This merely inits the relationships and is not responsible for other state-toggles in
   either parent or child sheafs.
   """

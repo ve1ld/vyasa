@@ -204,7 +204,12 @@ defmodule VyasaWeb.CoreComponents do
   )
 
   attr(:container_class, :string, default: "", doc: "inline style for the outermost container")
-  attr(:background_class, :string, default: "", doc: "inline style for the background / backdrop")
+
+  attr(:background_class, :string,
+    default: "bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+    doc: "inline style for the background / backdrop"
+  )
+
   attr(:dialog_class, :string, default: "", doc: "inline style for the dialog container")
   attr(:focus_wrap_class, :string, default: "", doc: "inline style for the focus wrap")
 
@@ -250,7 +255,7 @@ defmodule VyasaWeb.CoreComponents do
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 bg-gray-500 dark:bg-black opacity-90 dark:opacity-80 backdrop-blur-md",
+          "fixed inset-0 backdrop-blur-md",
           @background_class
         ]}
         aria-hidden="true"
@@ -262,7 +267,7 @@ defmodule VyasaWeb.CoreComponents do
         tabindex="0"
         class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
       >
-        <div class={["bg-white rounded-lg shadow-xl overflow-scroll", @focus_container_class]}>
+        <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
           <.focus_wrap
             id={"#{@id}-container"}
             phx-mounted={@show && @on_mount_callback && show_modal(@id)}
@@ -270,7 +275,7 @@ defmodule VyasaWeb.CoreComponents do
             phx-key={@cancel_key}
             phx-click-away={hide_modal(@on_click_away_callback, @id)}
             class={[
-              "relative flex flex-col w-full max-w-lg p-6",
+              "relative flex flex-col w-full",
               @focus_wrap_class
             ]}
           >
