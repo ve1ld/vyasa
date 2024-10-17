@@ -29,7 +29,11 @@ defmodule Vyasa.Sangh.Sheaf do
     belongs_to :session, Session, references: :id, type: Ecto.UUID
     belongs_to :parent, Sheaf, references: :id, type: Ecto.UUID
 
-    has_many :marks, Mark, references: :id, foreign_key: :sheaf_id, on_replace: :delete_if_exists, preload_order: [desc: :order]
+    has_many :marks, Mark,
+      references: :id,
+      foreign_key: :sheaf_id,
+      on_replace: :delete_if_exists,
+      preload_order: [desc: :order]
 
     # has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
@@ -63,9 +67,12 @@ defmodule Vyasa.Sangh.Sheaf do
     |> cast_assoc(:marks, with: &Mark.changeset/2)
   end
 
-  defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, %{parent: %Sheaf{id: p_sheaf_id, path: lpath}}) do
+  defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, %{
+         parent: %Sheaf{id: p_sheaf_id, path: lpath}
+       }) do
     IO.inspect(sheaf_id)
     IO.inspect(lpath)
+
     sheaf
     |> cast(%{parent_id: p_sheaf_id, path: encode_path(sheaf_id, lpath)}, [:parent_id, :path])
   end
@@ -75,10 +82,9 @@ defmodule Vyasa.Sangh.Sheaf do
     |> cast(%{path: encode_path(sheaf_id)}, [:path])
   end
 
-  defp cast_path(sheaf , _) do
+  defp cast_path(sheaf, _) do
     sheaf
   end
-
 
   defp validate_include_subset(changeset, field, data, opts \\ []) do
     validate_change(changeset, field, {:superset, data}, fn _, value ->
@@ -108,7 +114,7 @@ defmodule Vyasa.Sangh.Sheaf do
     end)
   end
 
-    #   @doc """
+  #   @doc """
   #   Encodes lpath with sheaf id and parent_path (in string).
   #   Parent first then child
 
@@ -119,7 +125,7 @@ defmodule Vyasa.Sangh.Sheaf do
 
   #   """
   #
-  def encode_path(id, %Ltree{} = parent_ltree) when is_binary(id)  do
+  def encode_path(id, %Ltree{} = parent_ltree) when is_binary(id) do
     to_string(parent_ltree) <> "." <> hd(String.split(id, "-"))
   end
 
@@ -139,5 +145,20 @@ defmodule Vyasa.Sangh.Sheaf do
   #
   def encode_path(id) do
     hd(String.split(id, "-"))
+  end
+
+  @doc """
+  Used to create the first (draft) sheaf for a sangh session, if no sheafs exist.
+  This writes the sheaf to the db.
+  """
+  def gen_first_sheaf(sangh_id) when is_binary(sangh_id) do
+    {:ok, com} =
+      Vyasa.Sangh.create_sheaf(%{
+        id: Ecto.UUID.generate(),
+        session_id: sangh_id,
+        traits: ["draft"]
+      })
+
+    com
   end
 end
