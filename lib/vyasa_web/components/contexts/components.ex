@@ -82,79 +82,104 @@ defmodule VyasaWeb.Context.Components do
   def mark_display(assigns) do
     ~H"""
     <div class="border-l border-brand-light pl-2">
+      <.debug_dump
+        mark_state={@mark.state}
+        mark_id={@mark.id}
+        class="relative"
+        mark_order={@mark.order}
+      />
       <%= if @mark.state == :live do %>
-        <div
-          id={"mark-container-" <>
-          @mark.id}
-          class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
+        <.form
+          for={%{}}
+          phx-submit="editMarkContent"
+          phx-value-mark_id={@mark.id}
+          phx-target={@marks_target}
         >
           <div
-            :if={@is_editable?}
-            id={"ordering-button-group-"<> @mark.id}
-            class="flex flex-col items-center"
+            id={"mark-container-" <>
+          @mark.id}
+            class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
           >
-            <button
-              phx-click="dummy_event"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Up Arrow"
+            <div
+              :if={@is_editable?}
+              id={"ordering-button-group-"<> @mark.id}
+              class="flex flex-col items-center"
             >
-              <.icon
-                name="custom-icon-sort-up"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
-            <!-- Displaying Order -->
-            <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
-            <button
-              phx-click="dummy_event"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Down Arrow"
+              <button
+                phx-click="dummy_event"
+                phx-target={@marks_target}
+                class="p-1 hover:bg-gray-200 rounded"
+                aria-label="Up Arrow"
+              >
+                <.icon
+                  name="custom-icon-sort-up"
+                  class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+                />
+              </button>
+              <!-- Displaying Order -->
+              <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
+              <button
+                phx-click="dummy_event"
+                phx-target={@marks_target}
+                class="p-1 hover:bg-gray-200 rounded"
+                aria-label="Down Arrow"
+              >
+                <.icon
+                  name="custom-icon-sort-down"
+                  class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+                />
+              </button>
+            </div>
+            <div id={"mark-content-container-" <> @mark.id} class="h-full w-full flex-grow mx-2 pt-2">
+              <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+                <span class="block mb-1 text-sm italic text-secondary">
+                  "<%= @mark.binding.window.quote %>"
+                </span>
+              <% end %>
+              <%= if is_binary(@mark.body) do %>
+                <div class="flex-grow h-full">
+                  <.mark_body id={@mark.id} mark_ui={@mark_ui} body_content={@mark.body} />
+                </div>
+              <% end %>
+            </div>
+            <div
+              :if={@is_editable?}
+              id={"mark-edit-actions-button-group-" <> @mark.id}
+              class="h-full flex flex-col ml-2 space-y-2 justify-between"
             >
-              <.icon
-                name="custom-icon-sort-down"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
+              <button
+                phx-click="tombMark"
+                phx-target={@marks_target}
+                phx-value-id={@mark.id}
+                title="Delete"
+                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                aria-label="Delete"
+              >
+                <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
+              </button>
+              <%= if not @mark_ui.is_editing_content? do %>
+                <button
+                  phx-click="toggle_is_editing_mark_content?"
+                  phx-target={@marks_target}
+                  phx-value-mark_id={@mark.id}
+                  class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                  aria-label="Toggle edit mark body"
+                >
+                  <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
+                </button>
+              <% else %>
+                <!-- Alternative content when not editing -->
+                <button
+                  type="submit"
+                  class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                  aria-label="Edit mark body"
+                >
+                  <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
+                </button>
+              <% end %>
+            </div>
           </div>
-          <div id={"mark-content-container-" <> @mark.id} class="h-full w-full flex-grow mx-2 pt-2">
-            <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-              <span class="block mb-1 text-sm italic text-secondary">
-                "<%= @mark.binding.window.quote %>"
-              </span>
-            <% end %>
-            <%= if is_binary(@mark.body) do %>
-              <div class="flex-grow h-full">
-                <.mark_body id={@mark.id} mark_ui={@mark_ui} body_content={@mark.body} />
-              </div>
-            <% end %>
-          </div>
-          <div
-            :if={@is_editable?}
-            id={"mark-edit-actions-button-group-" <> @mark.id}
-            class="h-full flex flex-col ml-2 space-y-2 justify-between"
-          >
-            <button
-              phx-click="tombMark"
-              phx-target={@marks_target}
-              phx-value-id={@mark.id}
-              title="Delete"
-              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-              aria-label="Delete"
-            >
-              <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
-            </button>
-            <button
-              phx-click="dummy_event"
-              phx-target={@marks_target}
-              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-              aria-label="Edit mark body"
-            >
-              <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-            </button>
-          </div>
-        </div>
+        </.form>
       <% end %>
     </div>
     """
@@ -167,7 +192,7 @@ defmodule VyasaWeb.Context.Components do
   def mark_body(assigns) do
     ~H"""
     <textarea
-      name="mark-body"
+      name="mark_body"
       disabled={not @mark_ui.is_editing_content?}
       id={"mark-body-" <> @id}
       rows="3"

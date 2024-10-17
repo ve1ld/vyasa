@@ -33,10 +33,19 @@ defmodule Vyasa.Sangh.Mark do
   def changeset(event, attrs) do
     event
     |> cast(attrs, [:id, :body, :order, :state, :sheaf_id, :binding_id, :updated_at, :inserted_at])
+    |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
   end
 
-  def update_mark(%Mark{} = draft_mark, opts \\ %{}) do
-    draft_mark
+  def edit_mark_in_marks([%Mark{} | _] = marks, id, opts \\ %{}) do
+    marks
+    |> Enum.map(fn
+      %{id: ^id} = m -> m |> update_mark(opts)
+      m -> m
+    end)
+  end
+
+  def update_mark(%Mark{} = mark, opts \\ %{}) do
+    mark
     |> Map.merge(Map.new(opts))
     |> Time.maybe_insert_current_time(:inserted_at)
     |> Time.update_current_time(:updated_at)
@@ -55,11 +64,11 @@ defmodule Vyasa.Sangh.Mark do
     1 +
       (marks
        |> Enum.map(& &1.order)
-       |> Enum.max(&>=/2, fn -> 0 end))
+       |> Enum.max(&>=/2, fn -> 0 end) || 0)
   end
 
   def get_next_order(_) do
-    1
+    0
   end
 
   @doc """
@@ -69,7 +78,7 @@ defmodule Vyasa.Sangh.Mark do
   """
   def sanitise_marks([%Mark{} | _] = marks) do
     marks
-    |> Enum.reject(fn mark -> mark.state == :tomb end)
+    |> Enum.reject(fn mark -> mark.state == :tomb or mark.state == :draft end)
     |> defrag_marks_orders()
   end
 
@@ -82,21 +91,30 @@ defmodule Vyasa.Sangh.Mark do
   returns the same list but updates the marks with order values that are
   part of a contiguous sequence of integers.
 
+  NOTE:
   This does NOT update the timestamps of the entry since this is purely intended
   to make the data-side prettier.
 
+  Precondition:
+  * the original list of marks is ordered in descending order for the order field in marks
+  and it will return marks in the same order
+
+  Postcondition:
+  * the order of marks returned is the same as the input (descending order for the Mark.order attribute)
+
   for example:
   IN:
-  orders = [1,4,6,7]
+  orders = [7,6,4,1]
 
   OUT:
-  order = [1,2,3,4]
+  order = [4,3,2,1]
   """
   def defrag_marks_orders([%Mark{} | _] = marks) do
     marks
     |> Enum.sort_by(& &1.order)
     |> Enum.with_index(0)
     |> Enum.map(fn {mark, index} -> %Mark{mark | order: index} end)
+    |> Enum.sort_by(& &1.order, :desc)
   end
 
   def defrag_marks_orders(marks) do
