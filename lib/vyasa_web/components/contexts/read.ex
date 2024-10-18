@@ -16,6 +16,7 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
   import VyasaWeb.Context.Components
+  alias Stubs.Vyasa.Sangh.Sheaf, as: SheafStub
 
   @impl true
   def update(
@@ -279,16 +280,12 @@ defmodule VyasaWeb.Context.Read do
     # STUB:
     socket
     |> assign(
-      reply_to: %Sheaf{
-        id: Ecto.UUID.generate(),
-        session_id: sangh_id,
-        body:
-          "Hey, so this is my sheaf, I have something important to say\n what do you think about it?",
-        signature: "Ritesh Kumar",
-        inserted_at: DateTime.add(Utils.Time.get_utc_now(), -10000),
-        updated_at: DateTime.add(Utils.Time.get_utc_now(), -9000),
-        traits: ["draft"]
-      }
+      reply_to:
+        SheafStub.get_dummy_sheaf(%{
+          session_id: sangh_id,
+          inserted_at: DateTime.add(Utils.Time.get_utc_now(), -40000),
+          updated_at: DateTime.add(Utils.Time.get_utc_now(), -18000)
+        })
     )
   end
 
