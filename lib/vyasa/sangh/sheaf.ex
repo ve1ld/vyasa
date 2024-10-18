@@ -42,11 +42,24 @@ defmodule Vyasa.Sangh.Sheaf do
   @doc false
   def changeset(%Sheaf{} = sheaf, attrs) do
     sheaf
-    |> cast(attrs, [:id, :body, :active, :session_id, :signature, :traits])
+    |> cast(attrs, [
+      :id,
+      :body,
+      :active,
+      :session_id,
+      :signature,
+      :traits,
+      :updated_at,
+      :inserted_at
+    ])
     |> cast_path(attrs)
     |> assoc_marks(attrs)
     |> validate_required([:id, :session_id, :path])
-    |> validate_include_subset(:traits, ["personal", "draft", "publish"])
+    |> validate_include_subset(:traits, ["personal", "draft", "published"])
+
+    # QQ: @ks0m1c in my mind, i see private vs public and draft vs published as two distinct dimensions
+    # and we'd want to filter by these dimensions separately. Therefore, I wonder if it's better to NOT keep
+    # them all as string identifiers within a list.
   end
 
   def mutate_changeset(%Sheaf{} = sheaf, attrs) do
@@ -70,9 +83,6 @@ defmodule Vyasa.Sangh.Sheaf do
   defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, %{
          parent: %Sheaf{id: p_sheaf_id, path: lpath}
        }) do
-    IO.inspect(sheaf_id)
-    IO.inspect(lpath)
-
     sheaf
     |> cast(%{parent_id: p_sheaf_id, path: encode_path(sheaf_id, lpath)}, [:parent_id, :path])
   end

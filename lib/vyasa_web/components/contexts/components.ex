@@ -3,6 +3,7 @@ defmodule VyasaWeb.Context.Components do
   Provides core components that shall be used in multiple contexts (e.g. read, discuss).
   """
   use VyasaWeb, :html
+  alias Vyasa.Sangh.{Sheaf}
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
 
@@ -11,12 +12,17 @@ defmodule VyasaWeb.Context.Components do
   attr :marks_target, :string
   attr :myself, :any, required: true
 
+  attr :id, :string,
+    default: "",
+    doc: "An optional id suffix, to differentate intentionally duplicate components."
+
   # FIXME: the UUID generation for marks should ideally not be happening here, we should try to ensure that every mark has an id @ the point of creation, wherever that may be (fresh creation or created at point of insertion into the db)
   def collapsible_marks_display(assigns) do
     ~H"""
+    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
     <div class="mb-4">
       <div
-        id="collapse-header-container"
+        id={"collapse-header-container" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
@@ -50,7 +56,7 @@ defmodule VyasaWeb.Context.Components do
         </button>
       </div>
       <div
-        id="collapsible-content-container"
+        id={"collapsible-content-container" <> @id}
         class={
           if @marks_ui.is_expanded_view?,
             do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
@@ -59,6 +65,7 @@ defmodule VyasaWeb.Context.Components do
       >
         <.mark_display
           :for={mark <- @marks |> Enum.reverse()}
+          id={@id}
           mark={mark}
           marks_target={@marks_target}
           mark_ui={
@@ -79,15 +86,22 @@ defmodule VyasaWeb.Context.Components do
   attr :myself, :any
   attr :is_editable?, :boolean
 
+  attr :id,
+       :string,
+       default: "",
+       doc: "An optional id suffix, to differentate intentionally duplicate components."
+
   def mark_display(assigns) do
     ~H"""
+    <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
-      <.debug_dump
+      <!-- <.debug_dump
         mark_state={@mark.state}
         mark_id={@mark.id}
         class="relative"
         mark_order={@mark.order}
       />
+      -->
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
@@ -97,12 +111,12 @@ defmodule VyasaWeb.Context.Components do
         >
           <div
             id={"mark-container-" <>
-          @mark.id}
+          @mark.id <> "-" <> @id}
             class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
           >
             <div
               :if={@is_editable?}
-              id={"ordering-button-group-"<> @mark.id}
+              id={"ordering-button-group-"<> @mark.id <> "-" <> @id}
               class="flex flex-col items-center"
             >
               <button
@@ -130,7 +144,10 @@ defmodule VyasaWeb.Context.Components do
                 />
               </button>
             </div>
-            <div id={"mark-content-container-" <> @mark.id} class="h-full w-full flex-grow mx-2 pt-2">
+            <div
+              id={"mark-content-container-" <> @mark.id <> "-" <> @id}
+              class="h-full w-full flex-grow mx-2 pt-2"
+            >
               <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
                 <span class="block mb-1 text-sm italic text-secondary">
                   "<%= @mark.binding.window.quote %>"
@@ -138,13 +155,17 @@ defmodule VyasaWeb.Context.Components do
               <% end %>
               <%= if is_binary(@mark.body) do %>
                 <div class="flex-grow h-full">
-                  <.mark_body id={@mark.id} mark_ui={@mark_ui} body_content={@mark.body} />
+                  <.mark_body
+                    id={@mark.id <> "-" <> @id}
+                    mark_ui={@mark_ui}
+                    body_content={@mark.body}
+                  />
                 </div>
               <% end %>
             </div>
             <div
               :if={@is_editable?}
-              id={"mark-edit-actions-button-group-" <> @mark.id}
+              id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
               class="h-full flex flex-col ml-2 space-y-2 justify-between"
             >
               <button
@@ -218,28 +239,221 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  attr :id, :string, required: true
+  attr :marks_ui, MarksUiState, required: true
+  attr :marks, :list, required: true
+
+  attr :active_sheaf, Sheaf,
+    required: false,
+    doc: "Refers to the sheaf that we are currently accumulating marks for.
+      It's named active in line with the original intent of creating that active
+      flag, where we define what the current sheaf is for which we are
+      accumulating marks for."
+
+  attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
+
+  attr :session, VyasaWeb.Session,
+    default: nil,
+    doc: "Refers to the currently initialised sangh session"
+
+  # TODO: the reply_to should probably just be a binding since we can reply to any binding
+  attr :event_target, :string, required: true
+
   def sheaf_creator_modal(assigns) do
     ~H"""
-    <.debug_dump label="Sheaf Creator Dump" show={@marks_ui.show_sheaf_modal?} class="relative" />
     <.generic_modal_wrapper
-      id="my-modal"
+      id={"modal-wrapper-" <> @id}
       show={@marks_ui.show_sheaf_modal?}
       on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
       on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
       window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      container_class="rounded-lg shadow-lg overflow-hidden"
-      background_class="bg-gray-800 bg-opacity-75 backdrop-blur-md"
-      dialog_class="rounded-lg shadow-xl p-6 w-3/4 h-3/4 max-w-lg max-h-screen mx-auto my-auto"
-      focus_wrap_class="flex flex-col items-center justify-center h-full"
-      inner_block_container_class="w-full p-4"
+      container_class="rounded-lg shadow-lg overflow-scroll"
+      background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
+      dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
+      focus_wrap_class="flex flex-col h-full shadow-xl"
+      inner_block_container_class="w-full p-6"
       close_button_icon_class="text-red-500 hover:text-red-700"
     >
-      <h2 class="text-2xl font-semibold text-gray-800">My Modal Title</h2>
-      <p class="mt-2 text-gray-600">
-        This is a description of what the modal is about. You can provide additional information here.
-      </p>
-      <.debug_dump assigns={assigns} class="mt-4" />
+      <div class="flex flex-col p-6">
+        <.replyto_context sheaf={@reply_to} />
+        <.sheaf_creator_form
+          session={@session}
+          id={@id}
+          marks={@marks}
+          marks_ui={@marks_ui}
+          active_sheaf={@active_sheaf}
+          reply_to={@reply_to}
+          event_target={@event_target}
+          on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+        />
+      </div>
     </.generic_modal_wrapper>
+    """
+  end
+
+  # TODO 1) need to inject the "signature" prop into this so that if a session already exists, it should be pre-filled
+  # TODO 2) @rtshkmr @ks0m1c we need to wire up some form-rejection logic to ensure that things like the signature will
+  # always be present. More generally, we'd need some form validation related patterns to be added to these function-component UI primitives
+  def sheaf_creator_form(assigns) do
+    ~H"""
+    <div id="sheaf-creator-container" class="flex flex-col">
+      <.form
+        for={%{}}
+        phx-submit={JS.push("sheaf:create_sheaf")}
+        phx-target={@event_target}
+        class="flex items-center"
+      >
+        <div class="flex flex-col w-full">
+          <textarea
+            name="body"
+            id={"sheaf-creator-form-body-textarea-"<> @id}
+            phx-hook="TextareaAutoResize"
+            class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
+            placeholder="Type your Sheaf body here..."
+          />
+
+          <div class="flex justify-between mt-2 space-x-2">
+            <!-- Checkbox for is_private -->
+            <div class="flex items-center m-2">
+              <.input
+                type="checkbox"
+                name="is_private"
+                id="is_private"
+                label="Private comment?"
+                class="mx-1"
+              />
+            </div>
+            <div>
+              <label
+                for={"sheaf-creator-form-signature-textarea-" <> @id}
+                class="mb-2 text-sm font-medium text-gray-600"
+              >
+                Signed by:
+              </label>
+              <input
+                type="text"
+                name="signature"
+                id={"sheaf-creator-form-signature-textarea-" <> @id}
+                value={if @session, do: @session.name, else: ""}
+                class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
+                placeholder={if @session, do: "Session name", else: "Enter your signature..."}
+                disabled={not is_nil(@session) and @session.name}
+              />
+            </div>
+          </div>
+
+          <.collapsible_marks_display
+            id={@id}
+            myself={nil}
+            marks_target="#content-display"
+            marks={@marks}
+            marks_ui={@marks_ui}
+          />
+
+          <div class="flex justify-between space-x-2">
+            <button
+              phx-click={@on_cancel_callback}
+              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
+              phx-target={@event_target}
+            >
+              Cancel and go back
+            </button>
+            <button
+              type="submit"
+              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-brand bg-white hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 space-x-2"
+              phx-target={@event_target}
+            >
+              <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" /> Submit
+            </button>
+          </div>
+        </div>
+      </.form>
+    </div>
+    """
+  end
+
+  # TODO: add nav action buttons
+  def replyto_context(assigns) do
+    ~H"""
+    <div class="overflow-auto">
+      <%= if not is_nil(@sheaf) do %>
+        <div class="flex flex-col">
+          <.sheaf_summary label="Responding to" sheaf={@sheaf} action_buttons={[]} />
+        </div>
+      <% else %>
+        <h2 class="text-2xl font-normal text-gray-800">
+          Creating a new thread
+        </h2>
+      <% end %>
+    </div>
+    """
+  end
+
+  @doc """
+  TODO: implement a reddit-top-comment-like UI for this
+  A brief view of a sheaf, showing the contextually relevant information about it.
+  """
+  attr :label, :string,
+    default: nil,
+    doc: "A string to serve as some label text to the sheaf being displayed"
+
+  attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
+  attr :action_buttons, :list, default: [], doc: "List of action button configurations."
+
+  def sheaf_summary(assigns) do
+    ~H"""
+    <div class="border p-4 rounded-lg shadow-md bg-white">
+      <h2
+        :if={@label}
+        class="italic text-lg font-normal text-gray-800 pb-1 mb-1 border-b border-gray-400"
+      >
+        <%= @label %>
+      </h2>
+      <!-- Body Display -->
+      <div class="mb-2">
+        <p class="text-gray-800"><%= @sheaf.body || "EMPTY BODY" %></p>
+      </div>
+      <!-- Signature and Action Button Group -->
+      <div class="flex justify-between items-center mt-2">
+        <.sheaf_signature_display sheaf={@sheaf} />
+        <!-- Action Button Group -->
+        <div class="flex space-x-2">
+          <%= for {icon, action} <- @action_buttons do %>
+            <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+              <.icon name={icon} class="h-5 w-5 mr-1" />
+              <span>Action</span>
+              <!-- Replace with meaningful labels -->
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Gives information about who, when (created / last updated).
+  """
+  attr :sheaf, Sheaf, required: true
+  attr :text_container_class, :string, default: ""
+  attr :signature_class, :string, default: ""
+  attr :time_class, :string, default: "text-sm italic"
+
+  def sheaf_signature_display(assigns) do
+    ~H"""
+    <div class="flex mt-2 text-sm text-gray-600">
+      <div class="mx-1 text-gray-800">
+        <p>- <%= @sheaf.signature %></p>
+      </div>
+      <!-- Time Display -->
+      <div class="mx-1 text-gray-800 text-sm italic">
+        <%= if is_nil(@sheaf.updated_at) do %>
+          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
+        <% else %>
+          <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
+        <% end %>
+      </div>
+    </div>
     """
   end
 end
