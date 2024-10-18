@@ -1,0 +1,51 @@
+# CURD Rice 🍚 :: for ricing CRUD
+
+## Sheaf 🌾 Manipulation
+
+```elixir
+{:ok, %{id: s_id}} = Vyasa.Sangh.create_session()
+```
+
+```elixir
+{:ok, sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), session_id: s_id})
+```
+
+```elixir
+{:ok, child_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: sangh, session_id: s_id})
+
+{:ok, grandchild_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: child_sangh, session_id: s_id})
+```
+
+```elixir
+defmodule R do
+  def recompile() do
+    Mix.Task.reenable("app.start")
+    Mix.Task.reenable("compile")
+    Mix.Task.reenable("compile.all")
+    compilers = Mix.compilers()
+    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+    Mix.Task.run("compile.all")
+  end
+end
+
+R.recompile()
+```
+
+```elixir
+sheaf_lattice = Vyasa.Sangh.get_child_sheafs_by_session("a33b4f92-90de-45a0-88b0-c19518491182", "085994cc", 2)
+|> Enum.map(fn sheaf -> 
+  {sheaf.path.labels, sheaf}
+  end)
+|> Enum.into(%{})
+# length(sangh.path.labels)
+
+
+sheaf_lattice |> Enum.map(fn {["085994cc" | [ "01a1bb12" | _]] = k , sheaf} ->  sheaf 
+_ -> nil
+  end)
+# |> Enum.into(%{})
+```
+
+```elixir
+
+```

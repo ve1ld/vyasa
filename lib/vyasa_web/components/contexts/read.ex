@@ -276,16 +276,7 @@ defmodule VyasaWeb.Context.Read do
     # STUB:
     socket
     |> assign(
-      reply_to: %Sheaf{
-        id: Ecto.UUID.generate(),
-        session_id: sangh_id,
-        body:
-          "Hey, so this is my sheaf, I have something important to say\n what do you think about it?",
-        signature: "Ritesh Kumar",
-        inserted_at: DateTime.add(Utils.Time.get_utc_now(), -10000),
-        updated_at: DateTime.add(Utils.Time.get_utc_now(), -9000),
-        traits: ["draft"]
-      }
+      reply_to: nil || Vyasa.Sangh.get_sheaf("6f9a4799-1f4c-4fbd-a768-ef51f5eb6f14")
     )
   end
 
@@ -682,34 +673,33 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
-  @impl true
   # TODO: sheaf crud -- event handler
   # this is for the case where a session name is not set yet.
   # TBD: in this case, our intent is to allow them to put anon messages right? or do we not?
   # in which case, should they be redirected to the profile setup?
-  def handle_event(
-        "sheaf:create_sheaf",
-        %{
-          "body" => body,
-          "is_private" => is_private,
-          "signature" => signature
-        } = _params,
-        %Socket{
-          assigns: %{
-            reply_to: %Sheaf{},
-            draft_reflector: %Sheaf{}
-          }
-          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
-        } = socket
-      ) do
-    IO.inspect(%{body: body, is_private: is_private, signature: signature},
-      label: "SHEAF CREATION"
-    )
+  # def handle_event(
+  #       "sheaf:create_sheaf",
+  #       %{
+  #         "body" => body,
+  #         "is_private" => is_private,
+  #         "signature" => signature
+  #       } = _params,
+  #       %Socket{
+  #         assigns: %{
+  #           reply_to: %Sheaf{},
+  #           draft_reflector: %Sheaf{}
+  #         }
+  #         # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+  #       } = socket
+  #     ) do
+  #   IO.inspect(%{body: body, is_private: is_private, signature: signature},
+  #     label: "SHEAF CREATION"
+  #   )
 
-    dbg()
+  #   dbg()
 
-    {:noreply, socket}
-  end
+  #   {:noreply, socket}
+  # end
 
   @impl true
   # TODO: sheaf crud -- event handler
@@ -725,20 +715,52 @@ defmodule VyasaWeb.Context.Read do
         } = _params,
         %Socket{
           assigns: %{
-            reply_to: %Sheaf{},
+            reply_to: %Sheaf{} = parent_sheaf,
             draft_reflector: %Sheaf{},
             session: %VyasaWeb.Session{
-              name: session_signature
+              name: user_signature,
+              sangh: sangh
             }
-          }
-          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+          },
+          #reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
         } = socket
       ) do
-    IO.inspect(%{body: body, is_private: is_private, signature: session_signature},
+    IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION"
     )
 
-    dbg()
+    Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(),
+                               body: body,
+                               session_id: sangh.id,
+                               parent: parent_sheaf,
+                               signature: user_signature})
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "sheaf:create_sheaf",
+        %{
+          "body" => body,
+          "is_private" => is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            draft_reflector: %Sheaf{},
+            session: %VyasaWeb.Session{
+              name: user_signature,
+              sangh: sangh
+            }
+          },
+          #reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
+        } = socket
+      ) do
+    IO.inspect(%{body: body, is_private: is_private},
+      label: "SHEAF CREATION without parent"
+    )
+
+     Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), body: body, session_id: sangh.id, signature: user_signature})
+     |> IO.inspect()
 
     {:noreply, socket}
   end
@@ -748,7 +770,7 @@ defmodule VyasaWeb.Context.Read do
         _params,
         %Socket{} = socket
       ) do
-    IO.puts("sheaf:create_sheaf")
+    IO.puts("sheaf:create_sheaf:pokemon")
     {:noreply, socket}
   end
 
