@@ -260,6 +260,9 @@ defmodule VyasaWeb.Context.Read do
   RENAME: init_context()
   - initialises the
   - it's not ALWAYS a replying to
+
+  TODO: @ks0m1c this is to be shifted out, into the mediator so that the pattern would be that the mediator injects
+  context into the MODE_CONTEXT (read context, discuss context)
   """
   def init_reply_to_context(
         %Socket{
