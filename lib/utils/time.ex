@@ -26,7 +26,7 @@ defmodule Utils.Time do
   def maybe_insert_current_time(target_map, target_key)
       when is_map(target_map) and (is_atom(target_key) or is_binary(target_key)) do
     case Map.get(target_map, target_key) do
-      nil -> Map.put(target_map, target_key, DateTime.utc_now())
+      nil -> Map.put(target_map, target_key, get_utc_now())
       _ -> target_map
     end
   end
@@ -59,11 +59,21 @@ defmodule Utils.Time do
   @spec update_current_time(map(), atom() | String.t()) :: map()
   def update_current_time(target_map, target_key)
       when is_map(target_map) and (is_atom(target_key) or is_binary(target_key)) do
-    Map.put(target_map, target_key, DateTime.utc_now())
+    Map.put(target_map, target_key, get_utc_now())
   end
 
   def update_current_time(target_map, target_key) do
     raise ArgumentError,
           "Invalid arguments. Expected a map and a key (atom or string), got: #{inspect(target_map)}, #{inspect(target_key)}"
+  end
+
+  @doc """
+  Returns datetime for now in utc, and also truncates the microseconds.
+  This is to make it compatible for ecto because ecto expects microseconds to be empty
+  if the timestamps fields are defined as :utc_datetime
+  """
+  def get_utc_now() do
+    DateTime.utc_now()
+    |> DateTime.truncate(:second)
   end
 end

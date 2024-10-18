@@ -7,13 +7,15 @@ defmodule VyasaWeb.Context.Read do
   @default_lang "en"
   @default_voice_lang "sa"
   alias VyasaWeb.ModeLive.{UserMode}
+  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias Vyasa.{Written, Draft}
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter}
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh.{Mark}
+  alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
+  import VyasaWeb.Context.Components
 
   @impl true
   def update(
@@ -115,9 +117,8 @@ defmodule VyasaWeb.Context.Read do
       |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
     else
       [%Chapter{} = chapter | _] ->
-        send(self(), {"helm", ~p"/explore/#{source_title}/#{chapter.no}/"})
-
         socket
+        |> apply_action(:show_verses, params |> Map.put("chap_no", chapter.no))
 
       _ ->
         raise VyasaWeb.ErrorHTML.FourOFour, message: "No Chapters here yet"
@@ -135,18 +136,17 @@ defmodule VyasaWeb.Context.Read do
       fmted_title = to_title_case(source.title)
 
       socket
+      |> assign(:content_action, :show_verses)
+      |> init_draft_reflector()
+      |> init_marks()
+      |> sync_media_session()
       |> assign(
         :kv_verses,
-        # creates a map of verse_id_to_verses
         Enum.into(verses, %{}, &{&1.id, &1})
       )
-      |> assign(:marks, [%Mark{state: :draft, order: 0}])
-      |> sync_session()
-      |> assign(:content_action, :show_verses)
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
-      # DEPRECATED
-      # RENAME?
+      # DEPRECATED this src may not be needed OR RENAME src to something else??
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
       |> assign(:chap, chap)
@@ -203,27 +203,176 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  defp sync_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
+  # syncs the media sessions by subscribing and publishing to the relevant channels
+  defp sync_media_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
        when is_binary(sess_id) do
     Vyasa.PubSub.subscribe("written:session:" <> sess_id)
     Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
 
     socket
-    |> sync_draft_reflector()
   end
 
-  defp sync_session(socket) do
+  defp sync_media_session(socket) do
+    socket
+  end
+
+  @doc """
+  Sets the initial value of the draft reflector.
+  This is the reflection of the sheaf for which marks are currently being gathered for.
+
+  Currently it takes the first draft sheaf in the session.
+
+  This reflector is hot-swappable to other sheafs if there's a need to switch what
+  sheaf to focus on and gather marks for.
+
+  TODO: add other params-based sheaf-setting
+  """
+  def init_draft_reflector(
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: sangh_id}}
+          }
+        } = socket
+      ) do
+    draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
+
+    case draft_sheafs do
+      [%Sheaf{} = sheaf | _] ->
+        socket
+        |> assign(draft_reflector: sheaf)
+
+      _ ->
+        socket
+        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
+    end
+  end
+
+  def init_draft_reflector(socket) do
     socket
   end
 
   @impl true
   def handle_event(
-        "foo",
-        _,
-        socket
+        "toggle_marks_display_collapsibility",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
       ) do
-    IO.puts("TRACE FOO")
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())
+     |> cascade_stream_change()}
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_editable_marks?",
+        %{"value" => _},
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())
+     |> cascade_stream_change()}
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_show_sheaf_modal?",
+        _,
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+      |> cascade_stream_change()
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_show_sheaf_modal?",
+        _,
+        %Socket{} = socket
+      ) do
+    {
+      :noreply,
+      socket
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_editing_mark_content?",
+        %{"mark_id" => mark_id} = _payload,
+        %Socket{
+          assigns:
+            %{
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      ) do
+    IO.puts("NICELY")
+
+    {:noreply,
+     socket
+     |> assign(
+       marks_ui:
+         ui_state
+         |> MarksUiState.toggle_is_editing_mark_content(mark_id)
+     )
+     |> cascade_stream_change()}
+  end
+
+  @impl true
+  def handle_event(
+        "editMarkContent",
+        %{"mark_id" => id, "mark_body" => body} = _payload,
+        %Socket{
+          assigns:
+            %{
+              marks: [%Mark{} | _] = marks,
+              marks_ui: %MarksUiState{} = ui_state
+            } = _assigns
+        } = socket
+      )
+      when is_binary(body) do
+    {[old_mark | _] = _old_versions_of_changed, updated_marks} =
+      get_and_update_in(
+        marks,
+        [Access.filter(&match?(%Mark{id: ^id}, &1))],
+        &{&1, Map.put(&1, :body, body)}
+      )
+
+    old_mark |> Vyasa.Draft.update_mark(%{body: body})
+
+    IO.inspect(old_mark, label: "oldmark for you to push down the stairs")
+
+    {:noreply,
+     socket
+     |> assign(:marks, updated_marks)
+     |> assign(
+       :marks_ui,
+       ui_state
+       |> MarksUiState.toggle_is_editing_mark_content(id)
+     )
+     |> mutate_draft_reflector()
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -266,11 +415,13 @@ defmodule VyasaWeb.Context.Read do
       |> then(&put_in(&1[verse_id].binding, bind))
       |> then(&put_in(&1[curr_verse_id].binding, nil))
 
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
     {:noreply,
      socket
      |> mutate_verses(curr_verse_id, bound_verses)
      |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+     |> assign(:marks, [updated_draft_mark | marks])}
   end
 
   # already in mark in drafting state, remember to late bind binding => with a fn()
@@ -283,26 +434,32 @@ defmodule VyasaWeb.Context.Read do
     bind = Draft.bind_node(bind_target_payload)
     bound_verses = put_in(verses[verse_id].binding, bind)
 
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
-     |> assign(:marks, [%{d_mark | binding: bind, verse_id: verse_id} | marks])}
+     |> assign(:marks, [updated_draft_mark | marks])}
   end
 
   @impl true
   def handle_event(
         "bindHoveRune",
         %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{assigns: %{kv_verses: verses, marks: [%Mark{order: no} | _] = marks}} = socket
+        %{assigns: %{kv_verses: verses, marks: [%Mark{} | _] = marks}} = socket
       ) do
     bind = Draft.bind_node(bind)
     bound_verses = put_in(verses[verse_id].binding, bind)
+
+    IO.inspect(marks)
+
+    new_draft_mark = Mark.get_draft_mark(marks, %{verse_id: verse_id, binding: bind})
 
     {:noreply,
      socket
      |> mutate_verses(verse_id, bound_verses)
      |> assign(:marks, [
-       %Mark{state: :draft, order: no + 1, verse_id: verse_id, binding: bind} | marks
+       new_draft_mark | marks
      ])}
   end
 
@@ -346,46 +503,61 @@ defmodule VyasaWeb.Context.Read do
         %{"body" => body},
         %{
           assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :draft, verse_id: v_id, binding: binding} = d_mark | marks]
+            marks: [
+              %Mark{state: :draft, id: mark_id} = draft_mark
+              | rest_marks
+            ]
           }
         } = socket
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
+    new_mark = %Mark{
+      draft_mark
+      | id: if(not is_nil(mark_id), do: Ecto.UUID.generate(), else: mark_id),
+        order: Mark.get_next_order(rest_marks),
+        body: body,
+        state: :live
+    }
+
     {
       :noreply,
       socket
-      |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+      |> assign(:marks, [new_mark | rest_marks])
       |> mutate_draft_reflector()
-      |> stream_insert(
-        :verses,
-        %{verses[v_id] | binding: binding}
-      )
+      |> cascade_stream_change()
     }
   end
 
   # when user remains on the the same binding
+  # TODO: prevent empty both (quote, mark body) from being submitted
   def handle_event(
         "createMark",
         %{"body" => body},
         %{
           assigns: %{
-            kv_verses: verses,
-            marks: [%Mark{state: :live, verse_id: v_id, binding: binding} = d_mark | _] = marks
+            marks:
+              [%Mark{state: :live} = sibling_mark | _] =
+                all_marks
           }
         } = socket
       ) do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
+    new_mark =
+      sibling_mark
+      |> Mark.update_mark(%{
+        id: Ecto.UUID.generate(),
+        order: Mark.get_next_order(all_marks),
+        body: body,
+        state: :live
+      })
+
     {:noreply,
      socket
-     |> assign(:marks, [%{d_mark | body: body, state: :live} | marks])
+     |> assign(:marks, [new_mark | all_marks])
      |> mutate_draft_reflector()
-     |> stream_insert(
-       :verses,
-       %{verses[v_id] | binding: binding}
-     )}
+     |> cascade_stream_change()}
   end
 
   @impl true
@@ -397,6 +569,25 @@ defmodule VyasaWeb.Context.Read do
     send(self(), {"mutate_UiState", "update_media_bridge_visibility", [false]})
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "tombMark",
+        %{"id" => id},
+        %{
+          assigns: %{
+            marks: [%Mark{} | _] = marks
+          }
+        } = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(:marks, marks |> Mark.edit_mark_in_marks(id, %{state: :tomb}))
+      |> mutate_draft_reflector()
+      |> cascade_stream_change()
+    }
   end
 
   @impl true
@@ -414,15 +605,31 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  def handle_event("dummy_event", _params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.puts("Dummy event triggered")
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(_event_name, _params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.puts("POKEMON READ CONTEXT EVENT HANDLING")
+    # dbg()
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump session={@session} user_mode={@user_mode} />
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if @content_action == :show_sources do %>
           <.live_component
-            module={VyasaWeb.Content.Sources}
+            module={VyasaWeb.Context.Read.Sources}
             id="content-sources"
             sources={@streams.sources}
             user_mode={@user_mode}
@@ -431,7 +638,7 @@ defmodule VyasaWeb.Context.Read do
 
         <%= if @content_action == :show_chapters do %>
           <.live_component
-            module={VyasaWeb.Content.Chapters}
+            module={VyasaWeb.Context.Read.Chapters}
             id="content-chapters"
             source={@source}
             chapters={@streams.chapters}
@@ -440,14 +647,21 @@ defmodule VyasaWeb.Context.Read do
         <% end %>
 
         <%= if @content_action == :show_verses do %>
+          <.debug_dump label="UI State Info" marks_ui={@marks_ui} class="relative w-screen" />
+          <.sheaf_creator_modal
+            id="sheaf-creator"
+            marks_ui={@marks_ui}
+            event_target="content-display"
+          />
           <.live_component
-            module={VyasaWeb.Content.Verses}
+            module={VyasaWeb.Context.Read.Verses}
             id="content-verses"
             src={@src}
             verses={@streams.verses}
             chap={@chap}
             kv_verses={@kv_verses}
             marks={@marks}
+            marks_ui={@marks_ui}
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
@@ -470,12 +684,19 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # Helper function that syncs and mutates Draft Reflector
-
-  # Helper function that syncs and mutates Draft Reflector
   defp mutate_draft_reflector(
-         %{assigns: %{draft_reflector: %Vyasa.Sangh.Sheaf{} = dt, marks: marks}} = socket
+         %{
+           assigns: %{
+             draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf,
+             marks: marks
+           }
+         } = socket
        ) do
-    {:ok, com} = Vyasa.Sangh.update_sheaf(dt, %{marks: marks})
+    # IO.inspect(marks, label: "see the mark")
+    {:ok, com} =
+      Vyasa.Sangh.update_sheaf(curr_sheaf, %{
+        marks: marks |> Mark.sanitise_marks()
+      })
 
     socket
     |> assign(:draft_reflector, com)
@@ -486,59 +707,84 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # currently naive hd lookup can be filter based on active toggle,
-  # tree like sheafs can be used to store nested collapsible topics (personal mark collection e.g.)
-  # currently marks merged in and swapped out probably can be singular data structure
-  # managing of lifecycle of marks
-  # if sangh_id is active open
-  defp sync_draft_reflector(%{assigns: %{session: %{sangh: %{id: sangh_id}}}} = socket) do
-    case Vyasa.Sangh.get_sheafs_by_session(sangh_id, %{traits: ["draft"]}) do
-      [%Vyasa.Sangh.Sheaf{marks: [_ | _] = marks} = dt | _] ->
-        IO.inspect(marks, label: "is this triggering")
+  @doc """
+  Initialises the following 3 state attributes that we use for managing marks:
+
+  1. draft reflector:
+     this is a reflection of the sheaf that we care about during interactions in
+     the read mode.
+  2. marks:
+     the actual marks state, this strictly follows the invariant that the order
+     of marks kept in the socket here will always be in descending order of their
+     order attribute.
+  3. marks_ui:
+     ui state for the marks, this is currently just for the read mode.
+
+  NOTE: during the init of marks, we will be mutating the draft reflector. This
+  keeps the state of the draft marks on the db-side always sanitised.
+  """
+  def init_marks(
+        %Socket{
+          assigns: %{
+            content_action: :show_verses,
+            draft_reflector: draft_reflector
+          }
+        } = socket
+      ) do
+    IO.puts("INIT_MARKS")
+
+    case draft_reflector do
+      # handles head sheaf with existing marks:
+      %Sheaf{marks: [_ | _] = marks} ->
+        IO.puts("CHECKPOINT A")
+
+        marks_with_draft =
+          [marks |> Mark.get_draft_mark() | marks]
+          |> Mark.sanitise_marks()
 
         socket
-        |> assign(draft_reflector: dt)
+        |> assign(marks: marks_with_draft)
+        |> assign(marks_ui: marks_with_draft |> MarksUiState.get_initial_ui_state())
+        |> mutate_draft_reflector()
+
+      # handles head sheaf without existing marks:
+      %Sheaf{} ->
+        IO.puts("CHECKPOINT B")
+        marks = [Mark.get_draft_mark()]
+
+        socket
         |> assign(marks: marks)
-
-      [%Vyasa.Sangh.Sheaf{} = dt | _] ->
-        socket
-        |> assign(draft_reflector: dt)
-
-      _ ->
-        {:ok, com} =
-          Vyasa.Sangh.create_sheaf(%{
-            id: Ecto.UUID.generate(),
-            session_id: sangh_id,
-            traits: ["draft"]
-          })
-
-        socket
-        |> assign(draft_reflector: com)
+        |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
+        |> mutate_draft_reflector()
     end
   end
 
-  defp sync_draft_reflector(%{assigns: %{session: _}} = socket) do
+  def init_marks(%Socket{} = socket) do
+    IO.puts("INIT_MARKS POKEMON")
+    marks = [Mark.get_draft_mark()]
+
     socket
+    |> assign(marks: marks)
+    |> assign(marks_ui: marks |> MarksUiState.get_initial_ui_state())
   end
 
-  def debug_dump(assigns) do
-    ~H"""
-    <div
-      :if={System.get_env("MIX_ENV") !== "prod"}
-      class="fixed top-0 left-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50"
-    >
-      <h2 class="text-lg font-bold mb-2">Developer Dump</h2>
-      <div class="mb-4">
-        <strong class="text-gray-600">Session:</strong> <%= @session && @session.name %><br />
-        <strong class="text-gray-600">Sangh ID:</strong> <%= @session && @session.sangh &&
-          @session.sangh.id %><br />
-        <strong class="text-gray-600">User Mode:</strong> <%= @user_mode.mode_context_component %> | <%= @user_mode.mode_context_component_selector %> | <%= @user_mode.mode %> mode
-      </div>
-      <div>
-        <h3 class="text-md font-bold mb-2">Parameters:</h3>
-        <pre class="bg-gray-100 p-2 rounded-md whitespace-pre-wrap"><%= inspect(Map.drop(assigns, [:session, :user_mode]), pretty: true) %></pre>
-      </div>
-    </div>
-    """
+  defp cascade_stream_change(
+         %Socket{
+           assigns: %{
+             kv_verses: verses,
+             streams: %{verses: _current_verses} = _streams,
+             marks: [%Mark{verse_id: v_id, binding: binding} | _] = _marks
+           }
+         } = socket
+       ) do
+    socket
+    |> stream_insert(
+      :verses,
+      %{verses[v_id] | binding: binding}
+    )
+  end
+
+  defp cascade_stream_change(socket) do
+    socket
   end
 end
