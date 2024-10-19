@@ -7,7 +7,7 @@ defmodule VyasaWeb.Context.Discuss do
   alias VyasaWeb.ModeLive.{UserMode}
   alias VyasaWeb.Session
   alias Phoenix.LiveView.Socket
-  # alias Vyasa.Sangh
+  alias Vyasa.Sangh
   alias Vyasa.Sangh.Session, as: SanghSession
   # alias VyasaWeb.Context.Discuss.SheafContainer
 
@@ -18,7 +18,7 @@ defmodule VyasaWeb.Context.Discuss do
           live_action: live_action,
           session:
             %Session{
-              sangh: %SanghSession{id: _sangh_id} = _sangh_session
+              sangh: %SanghSession{id: sangh_id} = _sangh_session
             } = session,
           id: id
         } =
@@ -34,6 +34,7 @@ defmodule VyasaWeb.Context.Discuss do
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       |> assign(content_action: live_action)
+      |> assign(sheafs: Sangh.get_sheafs_by_session(sangh_id))
       |> apply_action(live_action, nil)
     }
   end
@@ -43,7 +44,6 @@ defmodule VyasaWeb.Context.Discuss do
     socket
     |> init_reply_to_context()
 
-    # |>assign()
     # |> assign(sheafs: Sangh.get_sheafs_by_session(sangh_id))
   end
 

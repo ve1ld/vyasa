@@ -1,20 +1,6 @@
 # CURD Rice 🍚 :: for ricing CRUD
 
-## Sheaf 🌾 Manipulation
-
-```elixir
-{:ok, %{id: s_id}} = Vyasa.Sangh.create_session()
-```
-
-```elixir
-{:ok, sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), session_id: s_id})
-```
-
-```elixir
-{:ok, child_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: sangh, session_id: s_id})
-
-{:ok, grandchild_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: child_sangh, session_id: s_id})
-```
+## Sheaf 🌾 Manipulations
 
 ```elixir
 defmodule R do
@@ -30,6 +16,24 @@ end
 
 R.recompile()
 ```
+
+```elixir
+{:ok, %{id: s_id}} = Vyasa.Sangh.create_session()
+```
+
+```elixir
+{:ok, sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), session_id: s_id})
+```
+
+```elixir
+{:ok, child_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: sangh, session_id: s_id})
+
+{:ok, grandchild_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: child_sangh, session_id: s_id})
+```
+
+#### Keeping Sheaf Lattice
+
+Here's a suggestion on how to use it in state
 
 ```elixir
 sheaf_lattice = Vyasa.Sangh.get_child_sheafs_by_session("a33b4f92-90de-45a0-88b0-c19518491182", "085994cc", 2)
