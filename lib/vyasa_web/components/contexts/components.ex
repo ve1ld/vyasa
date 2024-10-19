@@ -448,9 +448,9 @@ defmodule VyasaWeb.Context.Components do
       <!-- Time Display -->
       <div class="mx-1 text-gray-800 text-sm italic">
         <%= if is_nil(@sheaf.updated_at) do %>
-          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.human_friendly_time()).formatted_time %>
+          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
         <% else %>
-          <%= (@sheaf.updated_at |> Utils.Formatters.Time.human_friendly_time()).formatted_time %> (edited)
+          <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
         <% end %>
       </div>
     </div>

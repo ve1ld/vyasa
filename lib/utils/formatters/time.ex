@@ -7,10 +7,12 @@ defmodule Utils.Formatters.Time do
   ## Examples
 
       iex> datetime = DateTime.utc_now()
-      iex> Utils.Formatters.Time.human_friendly_time(datetime)
+      iex> Utils.Formatters.Time.friendly(datetime)
       %Utils.Formatters.TimeDisplay{formatted_time: "just now", original_datetime: datetime}
   """
-  def human_friendly_time(datetime) when is_struct(datetime, DateTime) do
+
+  def friendly(datetime) when is_struct(datetime, NaiveDateTime), do: friendly(DateTime.from_naive!(datetime, "Etc/UTC"))
+  def friendly(datetime) when is_struct(datetime, DateTime) do
     now = DateTime.utc_now()
 
     # Calculate the difference in seconds

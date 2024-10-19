@@ -83,9 +83,6 @@ defmodule Vyasa.Sangh.Sheaf do
   defp cast_path(%{changes: %{id: sheaf_id}} = sheaf, %{
          parent: %Sheaf{id: p_sheaf_id, path: lpath}
        }) do
-    IO.inspect(sheaf_id)
-    IO.inspect(lpath)
-
     sheaf
     |> cast(%{parent_id: p_sheaf_id, path: encode_path(sheaf_id, lpath)}, [:parent_id, :path])
   end

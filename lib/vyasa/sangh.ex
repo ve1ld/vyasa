@@ -65,8 +65,8 @@ defmodule Vyasa.Sangh do
   This merely inits the relationships and is not responsible for other state-toggles in
   either parent or child sheafs.
   """
-  def create_child_sheaf_from_parent(%Sheaf{path: _parent_path} = parent, _child_attrs \\ %{}) do
-    parent
+  def create_child_sheaf_from_parent(%Sheaf{path: _parent_path} = parent, child_attrs \\ %{}) do
+    create_sheaf(Map.put(child_attrs, :parent, parent))
   end
 
   @doc """
@@ -322,8 +322,8 @@ defmodule Vyasa.Sangh do
   [%Sheaf{}, ...]
 
   """
-  def get_child_sheafs_by_session(id, path) do
-    path = path <> ".*{1}"
+  def get_child_sheafs_by_session(id, path, depth \\ 1) do
+    path = path <> ".*{#{depth}}"
 
     query =
       from c in Sheaf,
@@ -357,11 +357,11 @@ defmodule Vyasa.Sangh do
   [%Sheaf{}, ...]
 
   """
-  def get_ancestor_sheafs_by_sheaf(sheaf_id, path) do
+  def get_ancestor_sheafs_by_session(session_id, path) do
     query =
       from c in Sheaf,
         as: :c,
-        where: c.sheaf_id == ^sheaf_id,
+        where: c.session_id == ^session_id,
         where: fragment("? @> ?", c.path, ^path),
         preload: [marks: [:binding]],
         inner_lateral_join:

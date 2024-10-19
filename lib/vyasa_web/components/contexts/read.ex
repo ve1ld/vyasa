@@ -16,7 +16,6 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
   import VyasaWeb.Context.Components
-  alias Stubs.Vyasa.Sangh.Sheaf, as: SheafStub
 
   @impl true
   def update(
@@ -279,14 +278,7 @@ defmodule VyasaWeb.Context.Read do
     #  read from the db to get the SOLE non-draft active sheaf for session (and user(?))
     # STUB:
     socket
-    |> assign(
-      reply_to:
-        SheafStub.get_dummy_sheaf(%{
-          session_id: sangh_id,
-          inserted_at: DateTime.add(Utils.Time.get_utc_now(), -40000),
-          updated_at: DateTime.add(Utils.Time.get_utc_now(), -18000)
-        })
-    )
+    |> assign(reply_to: nil)
   end
 
   def init_reply_to_context(%Socket{} = socket) do
@@ -682,34 +674,33 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
-  @impl true
   # TODO: sheaf crud -- event handler
   # this is for the case where a session name is not set yet.
   # TBD: in this case, our intent is to allow them to put anon messages right? or do we not?
   # in which case, should they be redirected to the profile setup?
-  def handle_event(
-        "sheaf:create_sheaf",
-        %{
-          "body" => body,
-          "is_private" => is_private,
-          "signature" => signature
-        } = _params,
-        %Socket{
-          assigns: %{
-            reply_to: %Sheaf{},
-            draft_reflector: %Sheaf{}
-          }
-          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
-        } = socket
-      ) do
-    IO.inspect(%{body: body, is_private: is_private, signature: signature},
-      label: "SHEAF CREATION"
-    )
+  # def handle_event(
+  #       "sheaf:create_sheaf",
+  #       %{
+  #         "body" => body,
+  #         "is_private" => is_private,
+  #         "signature" => signature
+  #       } = _params,
+  #       %Socket{
+  #         assigns: %{
+  #           reply_to: %Sheaf{},
+  #           draft_reflector: %Sheaf{}
+  #         }
+  #         # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+  #       } = socket
+  #     ) do
+  #   IO.inspect(%{body: body, is_private: is_private, signature: signature},
+  #     label: "SHEAF CREATION"
+  #   )
 
-    dbg()
+  #   dbg()
 
-    {:noreply, socket}
-  end
+  #   {:noreply, socket}
+  # end
 
   @impl true
   # TODO: sheaf crud -- event handler
@@ -725,20 +716,59 @@ defmodule VyasaWeb.Context.Read do
         } = _params,
         %Socket{
           assigns: %{
-            reply_to: %Sheaf{},
+            reply_to: %Sheaf{} = parent_sheaf,
             draft_reflector: %Sheaf{},
             session: %VyasaWeb.Session{
-              name: session_signature
+              name: user_signature,
+              sangh: sangh
             }
           }
-          # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
+          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
         } = socket
       ) do
-    IO.inspect(%{body: body, is_private: is_private, signature: session_signature},
+    IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION"
     )
 
-    dbg()
+    Vyasa.Sangh.create_sheaf(%{
+      id: Ecto.UUID.generate(),
+      body: body,
+      session_id: sangh.id,
+      parent: parent_sheaf,
+      signature: user_signature
+    })
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "sheaf:create_sheaf",
+        %{
+          "body" => body,
+          "is_private" => is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            draft_reflector: %Sheaf{},
+            session: %VyasaWeb.Session{
+              name: user_signature,
+              sangh: sangh
+            }
+          }
+          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
+        } = socket
+      ) do
+    IO.inspect(%{body: body, is_private: is_private},
+      label: "SHEAF CREATION without parent"
+    )
+
+    Vyasa.Sangh.create_sheaf(%{
+      id: Ecto.UUID.generate(),
+      body: body,
+      session_id: sangh.id,
+      signature: user_signature
+    })
+    |> IO.inspect()
 
     {:noreply, socket}
   end
@@ -748,7 +778,7 @@ defmodule VyasaWeb.Context.Read do
         _params,
         %Socket{} = socket
       ) do
-    IO.puts("sheaf:create_sheaf")
+    IO.puts("sheaf:create_sheaf:pokemon")
     {:noreply, socket}
   end
 
