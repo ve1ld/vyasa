@@ -216,6 +216,137 @@ root_sheafs
 
 ```
 
+## Lattice Definition
+
+So this is how we define a flatmap (which we call :kv_verses), so our intent is to use a similar pattern for keeping state in the discussions mode
+
+```elixir
+alias Vyasa.Sangh
+alias Vyasa.Sangh.Sheaf
+alias Vyasa.Written.{Source}
+alias Vyasa.Written
+default_lang = "en"
+source_title = "hanuman_chalisa"
+chap_no = 1
+%Source{id: sid} = source = Written.get_source_by_title(source_title)
+chaps = Written.list_chapters_by_source(sid, default_lang)
+%{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap = Written.get_chapter(chap_no, sid, default_lang)
+
+
+Enum.into(verses, %{}, &{&1.id, &1})
+# Written.get_chapter(1, sid, @default_lang)
+```
+
+```elixir
+VyasaWeb.Context.Components.UiState.Marks.get_initial_ui_state()
+```
+
+#### Defining Lattices for Discussion Context
+
+So we will be keeping a flatmap for state. 
+First about the sheaf states themselves.
+
+These will be streams of their own:
+
+A) sheafs stream: 
+   [ sheaf path label slugs ] => %Sheaf{}
+
+B) sheaf_ui stream 
+   [ sheaf id ] => sheaf ui state
+
+* this will have mark's info for them also ==> for now we shall also load all the marks per sheaf
+
+now for ui state: 
+the Marks UI state looks like this:
+
+%VyasaWeb.Context.Components.UiState.Marks{
+  is_expanded_view?: false,
+  show_sheaf_modal?: false,
+  is_editable_marks?: false,
+  mark_id_to_ui: %{}
+}
+
+for sheaf ui do a composition: 
+so sheaf ui state likely can just contain the marks ui state
+
+extra info: pagination info needs to be in the ui state
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Sheaf Lattice Definition
+
+```elixir
+R.recompile()
+alias Vyasa.Sangh
+alias Vyasa.Sangh.Sheaf
+alias Vyasa.Written.{Source}
+alias Vyasa.Written
+sangh_session_id = "164eb05d-221a-4939-b180-8394e1a5515f"
+%{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
+# root_sheafs = root_sheafs |> Enum.filter(fn sheaf -> "published" in sheaf.traits end)
+
+# root_sheafs = sangh_session_id
+#     |> Sangh.get_root_sheafs_by_session(1, ["published"])
+
+# sheaf lattice creation:
+levels = [0, 1, 2]
+
+sheaf_lattice =
+  levels
+  |> Enum.flat_map(fn level ->
+    root_sheafs
+    |> Enum.map(fn sheaf -> to_string(sheaf.path) end)
+    |> Enum.flat_map(fn sheaf_id ->
+      Sangh.get_child_sheafs_by_session(sangh_session_id, sheaf_id, level)
+    end)
+    |> Enum.map(fn s -> {s.path.labels, s} end)
+  end)
+  |> Enum.into(%{})
+
+# my_key = ["cfd1c8d7", "b0a2275a", "d123dc10"]
+# sheaf_lattice |> get_in([Access.key(my_key)])
+# sheaf_lattice |> Map.keys() |> Enum.map(fn [_] = k -> Enum.get(sheaf_lattice, k)end)
+
+sheaf_lattice
+|> Map.keys()
+|> Enum.filter(fn k -> Enum.count(k) == 1 end)
+
+  sheaf_lattice
+|> Enum.map(fn
+  {["ce38b8ec" | [_ | _]] = k, sheaf} -> sheaf
+  _ -> nil
+end)
+
+
+sheaf_lattice
+|> Enum.map(fn 
+  {k, sheaf} -> 
+    case(Enum.count(k)) do
+      1 -> sheaf
+      _ -> nil
+    end
+end)
+|> Enum.reject(fn s -> is_nil(s) end)
+
+
+sheaf_lattice
+|> Enum.filter(fn
+  {[_] , _sheaf} -> true
+  _ -> false                  
+end)
+|> Enum.map(fn {_, s} -> s end)
+
+
+
+
+
+```
+
+```elixir
+Sheaf.encode_path(hd(root_sheafs).id)
+to_string(hd(root_sheafs).path)
+```
+
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## Creation Related Test Section
@@ -235,12 +366,14 @@ root_sheafs
 ```
 
 ```elixir
-sheaf_lattice = Vyasa.Sangh.get_child_sheafs_by_session("a33b4f92-90de-45a0-88b0-c19518491182", "085994cc", 2)
-|> Enum.map(fn sheaf -> 
-  {sheaf.path.labels, sheaf}
-  end)
-|> Enum.into(%{})
-# length(sangh.path.labels)
+
+
+# sheaf_lattice = Vyasa.Sangh.get_child_sheafs_by_session("a33b4f92-90de-45a0-88b0-c19518491182", "085994cc", 2)
+# |> Enum.map(fn sheaf -> 
+#   {sheaf.path.labels, sheaf}
+#   end)
+# |> Enum.into(%{})
+# # length(sangh.path.labels)
 
 
 sheaf_lattice |> Enum.map(fn {["085994cc" | [ "01a1bb12" | _]] = k , sheaf} ->  sheaf 

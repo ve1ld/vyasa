@@ -390,8 +390,15 @@ defmodule VyasaWeb.Context.Components do
   end
 
   @doc """
-  TODO: implement a reddit-top-comment-like UI for this
   A brief view of a sheaf, showing the contextually relevant information about it.
+  Shows a barebones, brief summary of a sheaf, which gives just enough context for someone to
+  understand it.
+
+  Some key information:
+  1. Sheaf body -- what are they saying?
+  2. Sheaf Signature display -- who signed it and when did they do so?
+  3. [FUTURE] Engagement Icons -- displays info about engagement (e.g. 12 replies)
+  4. [FUTURE] Possible Quick Action buttons -- "reply to"
   """
   attr :label, :string,
     default: nil,
@@ -402,16 +409,16 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class="border p-4 rounded-lg shadow-md bg-white">
+    <div class="border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
       <h2
         :if={@label}
-        class="italic text-lg font-normal text-gray-800 pb-1 mb-1 border-b border-gray-400"
+        class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
       >
         <%= @label %>
       </h2>
       <!-- Body Display -->
       <div class="mb-2">
-        <p class="text-gray-800"><%= @sheaf.body || "EMPTY BODY" %></p>
+        <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Signature and Action Button Group -->
       <div class="flex justify-between items-center mt-2">
@@ -422,7 +429,6 @@ defmodule VyasaWeb.Context.Components do
             <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
               <.icon name={icon} class="h-5 w-5 mr-1" />
               <span>Action</span>
-              <!-- Replace with meaningful labels -->
             </button>
           <% end %>
         </div>

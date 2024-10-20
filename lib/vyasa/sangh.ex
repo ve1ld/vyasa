@@ -234,7 +234,12 @@ defmodule Vyasa.Sangh do
   [%Sheaf{}, ...]
 
   """
-  def get_root_sheafs_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
+  def get_root_sheafs_by_session(
+        id,
+        page,
+        sort_attribute \\ :inserted_at,
+        limit \\ 12
+      ) do
     query =
       from c in Sheaf,
         as: :c,

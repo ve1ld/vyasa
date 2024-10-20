@@ -16,6 +16,8 @@ defmodule Vyasa.Sangh.Sheaf do
   alias EctoLtree.LabelTree, as: Ltree
   alias Vyasa.Sangh.{Sheaf, Session, Mark}
 
+  @supported_sheaf_traits ["personal", "draft", "published"]
+
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "sheafs" do
     field :body, :string
@@ -55,7 +57,7 @@ defmodule Vyasa.Sangh.Sheaf do
     |> cast_path(attrs)
     |> assoc_marks(attrs)
     |> validate_required([:id, :session_id, :path])
-    |> validate_include_subset(:traits, ["personal", "draft", "published"])
+    |> validate_include_subset(:traits, @supported_sheaf_traits)
 
     # QQ: @ks0m1c in my mind, i see private vs public and draft vs published as two distinct dimensions
     # and we'd want to filter by these dimensions separately. Therefore, I wonder if it's better to NOT keep
@@ -179,5 +181,9 @@ defmodule Vyasa.Sangh.Sheaf do
       })
 
     com
+  end
+
+  def get_supported_sheaf_traits() do
+    @supported_sheaf_traits
   end
 end
