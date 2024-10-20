@@ -145,6 +145,15 @@ defmodule Vyasa.Sangh.Sheaf do
 
   #   @doc """
   #   Encodes lpath with sheaf id.
+  #   A typical UUID has sections delimited by "-" character e.g. "178bf506-e0fa-4972-b390-5781efb5de2b".
+  #   For a path_encode for a particular id, we shall take the head of that ==> 178bf506.
+  #
+  #   FIXME @ks0m1c I think this function is more accurately named as "encode_path_slug/encode_path_label" as opposed to "encode_path" because
+  #   the path would imply that it's the full lpath for that sheaf.
+  #   To give an example, let's take this nested grandchild sheaf: "178bf506-e0fa-4972-b390-5781efb5de2b".
+  #   This function currently  returns: "178bf506",
+  #   HOWEVER, the actual path will have the labels from its ancestors:  %EctoLtree.LabelTree{labels: ["039e537b", "81fccdaf", "178bf506"]}},
+  #   Hence, this current function name of "encode" path is misleading.
 
   #   ## Examples
 

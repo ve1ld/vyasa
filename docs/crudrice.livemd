@@ -1,6 +1,6 @@
 # CURD Rice 🍚 :: for ricing CRUD
 
-## Sheaf 🌾 Manipulations
+## Sheaf 🌾 Manipulation
 
 ```elixir
 defmodule R do
@@ -17,6 +17,213 @@ end
 R.recompile()
 ```
 
+<!-- livebook:{"branch_parent_index":0} -->
+
+## CRUD Helper -- set up a family of sheafs for discussions UI
+
+```elixir
+R.recompile()
+alias Vyasa.Sangh
+alias Vyasa.Sangh.Sheaf
+```
+
+### CRUD Helper Module
+
+This has a purge function and a seed function. Intent is to use this during the UI creation phase for discussions.
+
+```elixir
+defmodule CRUDHelper do
+  alias Vyasa.Sangh
+  alias Vyasa.Sangh.Sheaf
+  alias EctoLtree
+
+  @roots [
+    {"Hey there, this is the start of a discussion about how to set up the discussions UI",
+     "freebird"},
+    {"Hello folks, let's talk about why fruits are absolutely the best thing on earth.",
+     "fruitfinder"},
+    {"I like cars, what about y'all?", "carboi"}
+  ]
+
+  @second_layer [
+    {"What do you think about the future of discussions?", "discussion_enthusiast"},
+    {"Fruits are not just tasty; they're also healthy!", "health_freak"},
+    {"Cars have changed so much over the years, haven't they?", "car_historian"},
+    {"How do you feel about online discussions?", "digital_native"},
+    {"What's your favorite fruit and why?", "fruit_lover"},
+    {"What car model do you dream of owning?", "car_dreamer"},
+    {"What features do you think discussions should have?", "feature_fanatic"},
+    {"Do you prefer sweet or savory fruits?", "taste_explorer"},
+    {"What was your first car experience like?", "first_driver"}
+  ]
+
+  @third_layer [
+    # For first root's children
+    [
+      {"I think discussions should be more interactive.", "interactivity_lover"},
+      {"Have you tried any new discussion platforms?", "platform_explorer"},
+      {"What would improve online discussions for you?", "improvement_seeker"}
+    ],
+    # For second root's children
+    [
+      {"I love fruits that are both sweet and tangy!", "sweet_tangy_lover"},
+      {"Have you ever tried exotic fruits?", "exotic_fruit_explorer"},
+      {"What's your go-to fruit for a snack?", "snack_time_fruit"}
+    ],
+    # For third root's children
+    [
+      {"Electric cars are the future!", "electric_car_enthusiast"},
+      {"What's your opinion on self-driving cars?", "self_driving_advocate"},
+      {"Car maintenance tips anyone?", "maintenance_master"}
+    ]
+  ]
+
+  @doc """
+  Seeds a family of sheafs. With 3 roots, 3 children per root and 3 children per 2nd level root.
+  """
+  def seed_family(sangh_session_id) do
+    # Create root sheafs
+    created_root_sheafs =
+      @roots
+      |> Enum.map(fn {body, user_signature} ->
+        payload = %{
+          id: Ecto.UUID.generate(),
+          active: false,
+          body: body,
+          marks: [],
+          traits: ["published"],
+          session_id: sangh_session_id,
+          signature: user_signature,
+          # Each root has 3 children
+          child_count: length(@second_layer)
+        }
+
+        case Sangh.create_sheaf(payload) do
+          {:ok, sheaf} -> sheaf
+          {:error, reason} -> IO.puts("Error creating root sheaf: #{reason}")
+        end
+      end)
+
+    # Create second layer sheafs
+    created_second_layer_sheafs =
+      created_root_sheafs
+      |> Enum.flat_map(fn root ->
+        Enum.map(@second_layer, fn {body, user_signature} ->
+          payload = %{
+            id: Ecto.UUID.generate(),
+            active: false,
+            body: body,
+            marks: [],
+            traits: ["published"],
+            session_id: sangh_session_id,
+            signature: user_signature,
+            # Each second layer has 3 children
+            child_count: length(@third_layer)
+          }
+
+          case Sangh.create_child_sheaf_from_parent(root, payload) do
+            {:ok, child_sheaf} -> child_sheaf
+            {:error, reason} -> IO.puts("Error creating second layer sheaf: #{reason}")
+          end
+        end)
+      end)
+
+    # Create third layer sheafs
+    _created_third_layer_sheafs =
+      created_second_layer_sheafs
+      |> Enum.flat_map(fn child ->
+        Enum.flat_map(@third_layer, fn layer ->
+          Enum.map(layer, fn {body, user_signature} ->
+            payload = %{
+              id: Ecto.UUID.generate(),
+              active: false,
+              body: body,
+              marks: [],
+              traits: ["published"],
+              session_id: sangh_session_id,
+              signature: user_signature,
+              # Third layer has no children
+              child_count: 0
+            }
+
+            case Sangh.create_child_sheaf_from_parent(child, payload) do
+              {:ok, grandchild_sheaf} -> grandchild_sheaf
+              {:error, reason} -> IO.puts("Error creating third layer sheaf: #{reason}")
+            end
+          end)
+        end)
+      end)
+  end
+
+  @doc """
+  Indiscriminately purges all the sheafs in the session. 
+  Deletes child sheafs before deleting their parents to avoid foreign key constraint errors.
+  Handles stale entries gracefully.
+  """
+  def purge(sangh_session_id) do
+    # Retrieve all root sheafs for the session
+    root_sheafs = Sangh.get_root_sheafs_by_session(sangh_session_id)
+
+    _second_level_deletes =
+      root_sheafs
+      |> Enum.map(fn root ->
+        Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 2)
+      end)
+      |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
+
+    _first_level_deletes = 
+            root_sheafs
+      |> Enum.map(fn root ->
+        Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 1)
+      end)
+      |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
+
+    _root_level_deletes =  root_sheafs
+      |> Enum.map(fn root ->
+        Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 0)
+      end)
+      |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
+
+
+  end
+end
+```
+
+### Creating the Family Tree
+
+This is for some basic setup while creating the discussion view.
+
+```elixir
+# set based on current session:
+sangh_session_id = "164eb05d-221a-4939-b180-8394e1a5515f"
+
+```
+
+```elixir
+CRUDHelper.purge(sangh_session_id)
+CRUDHelper.seed_family(sangh_session_id)
+```
+
+#### Verifying the Family Fixture
+
+```elixir
+root =  hd(Sangh.get_root_sheafs_by_session(sangh_session_id))
+Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 2)
+|>Enum.count()
+
+%{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
+root_sheafs
+
+```
+
+```elixir
+
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Creation Related Test Section
+
 ```elixir
 {:ok, %{id: s_id}} = Vyasa.Sangh.create_session()
 ```
@@ -30,10 +237,6 @@ R.recompile()
 
 {:ok, grandchild_sangh} = Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), parent: child_sangh, session_id: s_id})
 ```
-
-#### Keeping Sheaf Lattice
-
-Here's a suggestion on how to use it in state
 
 ```elixir
 sheaf_lattice = Vyasa.Sangh.get_child_sheafs_by_session("a33b4f92-90de-45a0-88b0-c19518491182", "085994cc", 2)
