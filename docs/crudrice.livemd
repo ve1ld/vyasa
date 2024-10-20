@@ -216,10 +216,6 @@ root_sheafs
 
 ```
 
-```elixir
-
-```
-
 <!-- livebook:{"branch_parent_index":0} -->
 
 ## Creation Related Test Section
@@ -251,8 +247,4 @@ sheaf_lattice |> Enum.map(fn {["085994cc" | [ "01a1bb12" | _]] = k , sheaf} ->  
 _ -> nil
   end)
 # |> Enum.into(%{})
-```
-
-```elixir
-
 ```
