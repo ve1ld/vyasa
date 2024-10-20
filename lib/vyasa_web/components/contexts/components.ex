@@ -29,6 +29,7 @@ defmodule VyasaWeb.Context.Components do
           phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
+          type="button"
         >
           <.icon
             name={if @marks_ui.is_expanded_view?, do: "hero-chevron-up", else: "hero-chevron-down"}
@@ -299,7 +300,7 @@ defmodule VyasaWeb.Context.Components do
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
         for={%{}}
-        phx-submit={JS.push("sheaf:create_sheaf")}
+        phx-submit={JS.push("sheaf:publish")}
         phx-target={@event_target}
         class="flex items-center"
       >
