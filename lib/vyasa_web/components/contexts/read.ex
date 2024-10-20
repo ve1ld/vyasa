@@ -313,7 +313,7 @@ defmodule VyasaWeb.Context.Read do
 
       _ ->
         socket
-        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
+        |> assign(draft_reflector: Sheaf.draft!(sangh_id))
     end
   end
 
@@ -692,7 +692,7 @@ defmodule VyasaWeb.Context.Read do
   # 2. if it's a public sheaf ==> (no change) keep usingthe current sangh session id
   #
   def handle_event(
-        "sheaf:create_sheaf",
+        "sheaf:publish",
         %{
           "body" => body,
           "is_private" => is_private
@@ -703,15 +703,13 @@ defmodule VyasaWeb.Context.Read do
             reply_to: %Sheaf{} = parent_sheaf,
             draft_reflector:
               %Sheaf{
-                id: draft_id,
-                marks: marks
-              } = _draft_reflector,
+              } = draft_sheaf,
             session: %VyasaWeb.Session{
-              name: user_signature,
+              name: username,
               sangh:
                 %Vyasa.Sangh.Session{
-                  id: sangh_session_id
-                } = _sangh
+                  id: sangh_id
+                }
             }
           }
         } = socket
@@ -720,24 +718,19 @@ defmodule VyasaWeb.Context.Read do
     IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION"
     )
-
-    created_sheaf =
-      Vyasa.Sangh.create_sheaf(%{
-        id: draft_id || Ecto.UUID.generate(),
-        active: true,
+      Vyasa.Sangh.update_sheaf(
+        draft_sheaf,
+        %{
         body: body,
-        marks: marks,
         traits: ["published"],
-        session_id: sangh_session_id,
         parent: parent_sheaf,
-        signature: user_signature
+        signature: username
       })
-
-    dbg()
 
     {:noreply,
      socket
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+     |> assign(draft_reflector: Sheaf.draft!(sangh_id))
      |> cascade_stream_change()}
   end
 
@@ -748,7 +741,7 @@ defmodule VyasaWeb.Context.Read do
   # TODO @ks0m1c same 2 cases as before: A) it's a private sheaf ==> use private sangh session B) it's a public sheaf
   # creates a root sheaf, no parent associated
   def handle_event(
-        "sheaf:create_sheaf",
+        "sheaf:publish",
         %{
           "body" => body,
           "is_private" => is_private
@@ -758,15 +751,13 @@ defmodule VyasaWeb.Context.Read do
             marks_ui: %MarksUiState{} = ui_state,
             draft_reflector:
               %Sheaf{
-                id: draft_id,
-                marks: marks
-              } = _draft_reflector,
+              } = draft_sheaf,
             session: %VyasaWeb.Session{
-              name: user_signature,
+              name: username,
               sangh:
                 %Vyasa.Sangh.Session{
-                  id: sangh_session_id
-                } = _sangh
+                  id: sangh_id
+                }
             }
           }
         } = socket
@@ -774,23 +765,19 @@ defmodule VyasaWeb.Context.Read do
     IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION without parent"
     )
-
-    created_sheaf =
-      Vyasa.Sangh.create_sheaf(%{
-        id: draft_id || Ecto.UUID.generate(),
-        active: false,
+    #current_sheaf_id context is always inherited from the in-context window
+      Vyasa.Sangh.update_sheaf(draft_sheaf,
+        %{
         body: body,
-        marks: marks,
         traits: ["published"],
-        session_id: sangh_session_id,
-        signature: user_signature
+        signature: username
       })
 
-    dbg()
 
     {:noreply,
      socket
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+     |> assign(draft_reflector: Sheaf.draft!(sangh_id))
      |> cascade_stream_change()}
   end
 
