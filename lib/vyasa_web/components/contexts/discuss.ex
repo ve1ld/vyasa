@@ -34,7 +34,7 @@ defmodule VyasaWeb.Context.Discuss do
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       |> assign(content_action: live_action)
-      |> assign(sheafs: Sangh.get_sheafs_by_session(sangh_id))
+      |> assign(sheafs: Sangh.get_root_sheafs_by_session(sangh_id))
       |> apply_action(live_action, nil)
     }
   end
@@ -59,7 +59,11 @@ defmodule VyasaWeb.Context.Discuss do
         <.icon name="custom-spinner-bars-scale-middle" />
         <h1>DISCUSS MODE -- sheafs in this session:</h1>
         <div :for={sheaf <- @sheafs}>
-          <.debug_dump label={"sheaf dump, id =" <> sheaf.id} sheaf={sheaf} class="relative bg-green" />
+          <.debug_dump
+            label={Enum.join(sheaf.traits, ",") <> " sheaf dump, id =" <> sheaf.id}
+            sheaf={sheaf}
+            class="relative bg-green"
+          />
         </div>
       </div>
     </div>
