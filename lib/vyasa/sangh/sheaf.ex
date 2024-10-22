@@ -66,8 +66,10 @@ defmodule Vyasa.Sangh.Sheaf do
     sheaf
     |> Vyasa.Repo.preload([:marks])
     |> cast(attrs, [:id, :body, :active, :signature])
+    |> cast_path(attrs)
     |> assoc_marks(attrs)
     |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
+    |> validate_include_subset(:traits, ["personal", "draft", "published"])
   end
 
   defp assoc_marks(sheaf, %{marks: [%Mark{} | _] = marks}) do
@@ -145,6 +147,15 @@ defmodule Vyasa.Sangh.Sheaf do
 
   #   @doc """
   #   Encodes lpath with sheaf id.
+  #   A typical UUID has sections delimited by "-" character e.g. "178bf506-e0fa-4972-b390-5781efb5de2b".
+  #   For a path_encode for a particular id, we shall take the head of that ==> 178bf506.
+  #
+  #   FIXME @ks0m1c I think this function is more accurately named as "encode_path_slug/encode_path_label" as opposed to "encode_path" because
+  #   the path would imply that it's the full lpath for that sheaf.
+  #   To give an example, let's take this nested grandchild sheaf: "178bf506-e0fa-4972-b390-5781efb5de2b".
+  #   This function currently  returns: "178bf506",
+  #   HOWEVER, the actual path will have the labels from its ancestors:  %EctoLtree.LabelTree{labels: ["039e537b", "81fccdaf", "178bf506"]}},
+  #   Hence, this current function name of "encode" path is misleading.
 
   #   ## Examples
 
@@ -161,14 +172,13 @@ defmodule Vyasa.Sangh.Sheaf do
   Used to create the first (draft) sheaf for a sangh session, if no sheafs exist.
   This writes the sheaf to the db.
   """
-  def gen_first_sheaf(sangh_id) when is_binary(sangh_id) do
+  def draft!(sangh_id) when is_binary(sangh_id) do
     {:ok, com} =
       Vyasa.Sangh.create_sheaf(%{
         id: Ecto.UUID.generate(),
         session_id: sangh_id,
         traits: ["draft"]
       })
-
     com
   end
 end

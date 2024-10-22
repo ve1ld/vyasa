@@ -24,9 +24,16 @@ defmodule VyasaWeb.Router do
 
     live_session :gen_sangh_session,
       on_mount: [{VyasaWeb.Session, :sangh}, {VyasaWeb.Hook.UserAgent, :default}] do
+      # NOTE: SLUG PATTERN:
+      # /<mode>/<binding-info-slug>/<final_identifying_slug>?=<url-encoded-params>
+      # TODO: to standardise, should rename "explore" -> "read"
+      # TODO: @ks0m1c @rtshkmr the actions need to be udpated so that mediator can pipe things based on mode
       live "/explore/", ModeLive.Mediator, :show_sources
       live "/explore/:source_title/", ModeLive.Mediator, :show_chapters
       live "/explore/:source_title/:chap_no", ModeLive.Mediator, :show_verses
+      # live "/discuss/", ModeLive.Mediator, :show_sources
+      # live "/discuss/:source_title/", ModeLive.Mediator, :show_chapters
+      # live "/discuss/:source_title/:chap_no", ModeLive.Mediator, :show_verses
     end
 
     live_admin "/admin" do
