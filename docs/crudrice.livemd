@@ -202,12 +202,9 @@ This is for some basic setup while creating the discussion view.
 ```elixir
 # set based on current session:
 sangh_session_id = "164eb05d-221a-4939-b180-8394e1a5515f"
-
-```
-
-```elixir
 CRUDHelper.purge(sangh_session_id)
 CRUDHelper.seed_family(sangh_session_id)
+
 ```
 
 #### Verifying the Family Fixture
@@ -219,8 +216,6 @@ Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 
 
 %{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
 root_sheafs
-
-
 
 ```
 
@@ -243,10 +238,6 @@ chaps = Written.list_chapters_by_source(sid, default_lang)
 
 Enum.into(verses, %{}, &{&1.id, &1})
 # Written.get_chapter(1, sid, @default_lang)
-```
-
-```elixir
-VyasaWeb.Context.Components.UiState.Marks.get_initial_ui_state()
 ```
 
 #### Defining Lattices for Discussion Context
@@ -284,27 +275,35 @@ extra info: pagination info needs to be in the ui state
 ###### Sheaf Lattice Definition
 
 ```elixir
+alias Vyasa.Sangh.SheafLattice
 sangh_session_id = "164eb05d-221a-4939-b180-8394e1a5515f"
+
 R.recompile()
 alias Vyasa.Sangh
 alias Vyasa.Sangh.Sheaf
 alias Vyasa.Written.{Source}
 alias Vyasa.Written
 
-%{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
-levels = [0, 1, 2]
+# this is the function exposed for it: 
+sheaf_lattice = SheafLattice.create_complete_sheaf_lattice(sangh_session_id)
 
-sheaf_lattice =
-  levels
-  |> Enum.flat_map(fn level ->
-    root_sheafs
-    |> Enum.map(fn sheaf -> to_string(sheaf.path) end)
-    |> Enum.flat_map(fn sheaf_id ->
-      Sangh.get_child_sheafs_by_session(sangh_session_id, sheaf_id, level)
-    end)
-    |> Enum.map(fn s -> {s.path.labels, s} end)
-  end)
-  |> Enum.into(%{})
+
+# here's the manual way of doing it
+# %{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
+# levels = [0, 1, 2]
+# sheaf_lattice =
+#   levels
+#   |> Enum.flat_map(fn level ->
+#     root_sheafs
+#     |> Enum.map(fn sheaf -> to_string(sheaf.path) end)
+#     |> Enum.flat_map(fn sheaf_id ->
+#       Sangh.get_child_sheafs_by_session(sangh_session_id, sheaf_id, level)
+#     end)
+#     |> Enum.map(fn s -> {s.path.labels, s} end)
+#   end)
+#   |> Enum.into(%{})
+
+
 
 
 ```
@@ -318,7 +317,7 @@ Test this out by setting test_input correctly to the label of a valid leaf-sheaf
 alias Vyasa.Sangh.SheafLattice
 example_leaf_sheaf = hd(SheafLattice.read_sheaf_lattice(sheaf_lattice, 2, nil))
 test_input = [a, b, c] = example_leaf_sheaf.path.labels 
-# manually set test input in this block:
+# OR manually set test input in this block:
 # test_input = ["8955df0c", "2628a71a", "f9ce1eee"]
 
 ```
@@ -348,35 +347,44 @@ SheafLattice.read_sheaf_lattice(sheaf_lattice, 2, [a, b, nil])
 
 #### Sheaf UI States
 
+Intent here is to keep ui state auxilliary to the actual data state.
+The shape of the data and ui lattices shall be exactly the same, so that the same read_sheaf_lattice() can be used on both ui and data state lattices.
+
 ```elixir
 R.recompile()
 
-test_root_sheaf = hd(sheaf_lattice
-|> Enum.filter(fn
-  {[_] , %Sheaf{ marks: []} = _sheaf} -> true
-  _ -> false                  
-end)
-|> Enum.map(fn {_, s} -> s end))
-
-sheaf_lattice
-|> Enum.filter(fn
-  {[_] , %Sheaf{ marks: []} = _sheaf} -> true
-  _ -> false                  
+# getting info about the sheaf's marks and stuff: 
+[ test_root_sheaf | _]= SheafLattice.read_sheaf_lattice(sheaf_lattice, 0, nil)
+  |> Enum.map(fn s -> s |> Vyasa.Repo.preload(:marks) end)
+|> Enum.map(fn  
+  %{marks: [_|_] = _m} = s -> s
+  %{marks: [] = _m} -> nil
     end)
+|> Enum.reject(fn s -> is_nil(s) end)
 
+alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
+SheafUiState.get_initial_ui_state(test_root_sheaf)
 
-# alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
-# SheafUiState.get_initial_ui_state(test_root_sheaf)
+# sheaf_lattice 
+# |> Enum.map(fn {k, } end)
 
-# test_root_sheaf
+sheaf_ui_lattice =
+      sheaf_lattice
+      |> Enum.map(fn {k,
+                      %Sheaf{
+                        marks: _marks
+                      } = sheaf} ->
+        sheaf_ui = sheaf |> SheafUiState.get_initial_ui_state()
+        {k, sheaf_ui}
+      end)
+      |> Enum.into(%{})
+   
+
+sheaf_lattice |> SheafLattice.read_sheaf_lattice(2, "08e53d81")
+sheaf_ui_lattice |> SheafLattice.read_sheaf_lattice(2, "08e53d81")
+
 # test_root_sheaf |> SheafUiState.get_initial_ui_state()
 # SheafUi
-```
-
-```elixir
-R.recompile()
-
-Stubs.Vyasa.Sangh.Mark.get_dummy_mark()
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->

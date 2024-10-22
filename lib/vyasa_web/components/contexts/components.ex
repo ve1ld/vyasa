@@ -404,6 +404,10 @@ defmodule VyasaWeb.Context.Components do
     default: nil,
     doc: "A string to serve as some label text to the sheaf being displayed"
 
+  attr :level, :integer,
+    default: 0,
+    doc: "The level in our 3-leveled tree that this sheaf corresponds to"
+
   attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
   attr :action_buttons, :list, default: [], doc: "List of action button configurations."
 

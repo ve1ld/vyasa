@@ -8,7 +8,8 @@ defmodule VyasaWeb.Context.Discuss do
   alias VyasaWeb.Session
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh.Session, as: SanghSession
-  alias Vyasa.Sangh.SheafLattice
+  alias Vyasa.Sangh.{SheafLattice, Sheaf}
+  alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
   import VyasaWeb.Context.Components
 
   @impl true
@@ -53,6 +54,7 @@ defmodule VyasaWeb.Context.Discuss do
     socket
     |> assign(content_action: :index)
     |> init_sheaf_lattice()
+    |> init_sheaf_ui_lattice()
   end
 
   # when there is no sangh session in state:
@@ -66,6 +68,7 @@ defmodule VyasaWeb.Context.Discuss do
     socket
     |> assign(content_action: :index)
     |> init_sheaf_lattice()
+    |> init_sheaf_ui_lattice()
   end
 
   @doc """
@@ -208,6 +211,35 @@ defmodule VyasaWeb.Context.Discuss do
   defp init_sheaf_lattice(%Socket{} = socket) do
     socket
     |> assign(sheaf_lattice: nil)
+  end
+
+  # creates a ui lattice in a similar shape to the actual lattice. This lattice
+  # may be read in the same way using the same functions as the data lattice.
+  defp init_sheaf_ui_lattice(
+         %Socket{
+           assigns: %{
+             sheaf_lattice: sheaf_lattice
+           }
+         } = socket
+       )
+       when is_map(sheaf_lattice) do
+    sheaf_ui_lattice =
+      sheaf_lattice
+      |> Enum.map(fn {k,
+                      %Sheaf{
+                        marks: _marks
+                      } = sheaf} ->
+        {k, sheaf |> SheafUiState.get_initial_ui_state()}
+      end)
+      |> Enum.into(%{})
+
+    socket
+    |> assign(sheaf_ui_lattice: sheaf_ui_lattice)
+  end
+
+  defp init_sheaf_ui_lattice(%Socket{} = socket) do
+    socket
+    |> assign(sheaf_ui_lattice: nil)
   end
 
   @impl true

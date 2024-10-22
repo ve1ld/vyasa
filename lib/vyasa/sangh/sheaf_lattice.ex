@@ -1,5 +1,6 @@
 defmodule Vyasa.Sangh.SheafLattice do
   alias Vyasa.Sangh
+  alias Vyasa.Repo
 
   @moduledoc """
   A sheaf lattice is a flatmap that represents the tree-structure of sheafs.
@@ -10,6 +11,8 @@ defmodule Vyasa.Sangh.SheafLattice do
   c) level 2 sheafs: keyed by [x, y, z] where is_binary(x) and is_binary(y) and is_binary(z)
 
   And subsequently, we can read by means of specific filters as well.
+
+  NOTE: this preloads the marks in each sheaf.
   """
   def create_complete_sheaf_lattice(sangh_id) when is_binary(sangh_id) do
     root_sheafs =
@@ -24,7 +27,11 @@ defmodule Vyasa.Sangh.SheafLattice do
       |> Enum.flat_map(fn sheaf_id ->
         Sangh.get_child_sheafs_by_session(sangh_id, sheaf_id, level)
       end)
-      |> Enum.map(fn s -> {s.path.labels, s} end)
+      |> Enum.map(fn s ->
+        {s.path.labels,
+         s
+         |> Repo.preload(:marks)}
+      end)
     end)
     |> Enum.into(%{})
   end
