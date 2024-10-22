@@ -10,6 +10,9 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
+  # QQ: @ks0m1c i haven't thought of whether the is_active should be duplicated from
+  # the actual ui state and kept within the SheafUiState or not.
+  # @rtshkmr to decide later, and remove this flag  if unnecessary
   defstruct [
     :is_active?,
     :is_expanded?,

@@ -16,11 +16,10 @@ defmodule VyasaWeb.Context.Components do
     default: "",
     doc: "An optional id suffix, to differentate intentionally duplicate components."
 
-  # FIXME: the UUID generation for marks should ideally not be happening here, we should try to ensure that every mark has an id @ the point of creation, wherever that may be (fresh creation or created at point of insertion into the db)
   def collapsible_marks_display(assigns) do
     ~H"""
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
-    <div class="mb-4">
+    <div :if={not is_nil(@marks_ui)} class="mb-4">
       <div
         id={"collapse-header-container" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
@@ -95,13 +94,6 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
-      <!-- <.debug_dump
-        mark_state={@mark.state}
-        mark_id={@mark.id}
-        class="relative"
-        mark_order={@mark.order}
-      />
-      -->
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}

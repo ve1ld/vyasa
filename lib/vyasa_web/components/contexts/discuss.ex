@@ -10,6 +10,7 @@ defmodule VyasaWeb.Context.Discuss do
   alias Vyasa.Sangh.Session, as: SanghSession
   alias Vyasa.Sangh.{SheafLattice, Sheaf}
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
+  import VyasaWeb.Context.Discuss.SheafTree
   import VyasaWeb.Context.Components
 
   @impl true
@@ -252,12 +253,12 @@ defmodule VyasaWeb.Context.Discuss do
             root_sheaf <-
               read_sheaf_lattice(@sheaf_lattice, 0)
           }>
+            <.root_sheaf
+              sheaf={root_sheaf}
+              sheaf_lattice={@sheaf_lattice}
+              sheaf_ui_lattice={@sheaf_ui_lattice}
+            />
             <.sheaf_summary sheaf={root_sheaf} />
-            <!-- <.debug_dump
-            label={Enum.join(root_sheaf.traits, ",") <> " root_sheaf dump, id =" <> root_sheaf.id}
-            sheaf={root_sheaf}
-            class="relative bg-green"
-          /> -->
           </div>
         <% end %>
       </div>

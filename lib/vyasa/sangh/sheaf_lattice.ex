@@ -1,5 +1,6 @@
 defmodule Vyasa.Sangh.SheafLattice do
   alias Vyasa.Sangh
+  alias Vyasa.Sangh.{Sheaf}
 
   @moduledoc """
   A sheaf lattice is a flatmap that represents the tree-structure of sheafs.
@@ -158,5 +159,13 @@ defmodule Vyasa.Sangh.SheafLattice do
       {[^a, ^b, _], _sheaf} -> true
       _ -> false
     end
+  end
+
+  def get_ui_from_lattice(
+        %{} = sheaf_ui_lattice,
+        %Sheaf{path: path} = sheaf
+      )
+      when not is_nil(path) do
+    sheaf_ui_lattice |> Map.get(sheaf |> Sheaf.get_path_labels(), nil)
   end
 end

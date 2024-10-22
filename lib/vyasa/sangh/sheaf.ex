@@ -15,6 +15,7 @@ defmodule Vyasa.Sangh.Sheaf do
   import Ecto.Changeset
   alias EctoLtree.LabelTree, as: Ltree
   alias Vyasa.Sangh.{Sheaf, Session, Mark}
+  alias Vyasa.Sangh.Sheaf
 
   @supported_sheaf_traits ["personal", "draft", "published"]
 
@@ -186,5 +187,19 @@ defmodule Vyasa.Sangh.Sheaf do
 
   def get_supported_sheaf_traits() do
     @supported_sheaf_traits
+  end
+
+  @doc """
+  Returns the list of labels for a particular sheaf's path.
+  """
+  def get_path_labels(
+        %Sheaf{
+          path:
+            %Ltree{
+              labels: labels
+            } = _path
+        } = _sheaf
+      ) do
+    labels
   end
 end
