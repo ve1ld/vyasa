@@ -69,9 +69,126 @@ defmodule VyasaWeb.Context.Discuss do
     |> init_sheaf_lattice()
   end
 
+  @doc """
+  Reads sheaf layers from a lattice based on the specified level and match criteria.
+
+  ## Examples
+
+  # Fetch all sheafs in a particular level
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice)
+      # equivalent to:
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 0, nil)
+
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 1, nil)
+
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 2, nil)
+
+  # Fetch based on specific matches of a single label
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 0, "cf27deab")
+
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 1, "65c1ac0c")
+
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 2, "56c369e4")
+
+  # Fetch based on complete matches
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 1, ["c9cbcb0c", "65c1ac0c"])
+
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 2, ["c9cbcb0c", "f91bac0d", "56c369e4"])
+
+  # Fetch immediate children based on particular parent
+  # Fetch immediate children of a specific level 0 node:
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 1, ["cf27deab", nil])
+
+  # Fetch immediate children of a specific level 1 node:
+      iex> Discuss.read_sheaf_lattice(sheaf_lattice, 2, ["c9cbcb0c", "65c1ac0c", nil])
+  """
+
+  def read_sheaf_lattice(%{} = sheaf_lattice, level \\ 0, match \\ nil) do
+    output =
+      case {level, match} do
+        # fetch all sheafs in a particular level:
+        {0, m} when is_nil(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[_], _sheaf} -> true
+            _ -> false
+          end)
+
+        {1, m} when is_nil(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[_, a], _sheaf} when not is_list(a) -> true
+            _ -> false
+          end)
+
+        {2, m} when is_nil(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[a | [b | [c]]], _sheaf} when is_binary(a) and is_binary(b) and is_binary(c) -> true
+            _ -> false
+          end)
+
+        # specific matches based on a particular layer's label:
+        {0, m} when is_binary(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[^m], _sheaf} -> true
+            _ -> false
+          end)
+
+        {1, m} when is_binary(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[_, ^m], _sheaf} -> true
+            _ -> false
+          end)
+
+        {2, m} when is_binary(m) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[_ | [_ | [^m]]], _sheaf} -> true
+            _ -> false
+          end)
+
+        # exact matches:
+        {1, [a, b]} when is_binary(a) and is_binary(b) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[^a, ^b], _sheaf} -> true
+            _ -> false
+          end)
+
+        {2, [a, b, c]} when is_binary(a) and is_binary(b) and is_binary(c) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[^a, ^b, ^c], _sheaf} -> true
+            _ -> false
+          end)
+
+        # children of a specific level 0 node:
+        {1, [a, b]} when is_binary(a) and is_nil(b) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[^a, _], _sheaf} when is_binary(a) -> true
+            _ -> false
+          end)
+
+        # children of a specific level 1 node:
+        {2, [a, b, nil]} when is_binary(a) and is_binary(b) ->
+          sheaf_lattice
+          |> Enum.filter(fn
+            {[^a, ^b, _], _sheaf} -> true
+            _ -> false
+          end)
+      end
+
+    output |> Enum.map(fn {_, s} -> s end)
+  end
+
   defp init_sheaf_lattice(
          %Socket{
            assigns: %{
+             content_action: :index,
              session:
                %{
                  sangh: %{id: sangh_session_id}
@@ -114,18 +231,13 @@ defmodule VyasaWeb.Context.Discuss do
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if not is_nil(@sheaf_lattice) do %>
           <div :for={
-            sheaf <-
-              @sheaf_lattice
-              |> Enum.filter(fn
-                {[_], _sheaf} -> true
-                _ -> false
-              end)
-              |> Enum.map(fn {_, s} -> s end)
+            root_sheaf <-
+              read_sheaf_lattice(@sheaf_lattice, 0)
           }>
-            <.sheaf_summary sheaf={sheaf} />
+            <.sheaf_summary sheaf={root_sheaf} />
             <!-- <.debug_dump
-            label={Enum.join(sheaf.traits, ",") <> " sheaf dump, id =" <> sheaf.id}
-            sheaf={sheaf}
+            label={Enum.join(root_sheaf.traits, ",") <> " root_sheaf dump, id =" <> root_sheaf.id}
+            sheaf={root_sheaf}
             class="relative bg-green"
           /> -->
           </div>
