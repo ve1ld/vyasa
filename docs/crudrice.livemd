@@ -383,7 +383,8 @@ sheaf_ui_lattice =
 sheaf_lattice |> SheafLattice.read_sheaf_lattice(2, "08e53d81")
 sheaf_ui_lattice |> SheafLattice.read_sheaf_lattice(2, "08e53d81")
 
-# test_root_sheaf |> SheafUiState.get_initial_ui_state()
+
+test_root_sheaf |> SheafUiState.get_initial_ui_state()
 # SheafUi
 ```
 

@@ -172,7 +172,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
@@ -253,7 +254,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
@@ -356,7 +358,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
