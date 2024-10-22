@@ -12,13 +12,13 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
 
   defstruct [
     :is_active?,
-    :show_summary_only?,
+    :is_expanded?,
     :marks_ui
   ]
 
   @initial %{
     is_active?: false,
-    show_summary_only?: true,
+    is_expanded?: true,
     marks_ui: nil
   }
 

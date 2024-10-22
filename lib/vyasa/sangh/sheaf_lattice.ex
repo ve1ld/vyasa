@@ -34,6 +34,8 @@ defmodule Vyasa.Sangh.SheafLattice do
   @doc """
   Reads sheaf layers from a lattice based on the specified level and match criteria.
 
+  NOTE: because we are having a max depth of 3, this shall return an empty list if argument for level > 2 (zero-indexed).
+
   ## Examples
 
   # Fetch all sheafs in a particular level
@@ -66,9 +68,15 @@ defmodule Vyasa.Sangh.SheafLattice do
   """
 
   def read_sheaf_lattice(%{} = sheaf_lattice, level \\ 0, match \\ nil) do
-    sheaf_lattice
-    |> Enum.filter(create_sheaf_lattice_filter(level, match))
-    |> Enum.map(fn {_, s} -> s end)
+    case level > 2 do
+      true ->
+        []
+
+      false ->
+        sheaf_lattice
+        |> Enum.filter(create_sheaf_lattice_filter(level, match))
+        |> Enum.map(fn {_, s} -> s end)
+    end
   end
 
   # fetches all sheafs in level 0:
