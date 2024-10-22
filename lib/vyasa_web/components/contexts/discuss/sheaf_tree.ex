@@ -86,6 +86,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
 
   def collapsible_sheaf_container(assigns) do
     ~H"""
+    container class : <%= @container_class %>
     <div
       class={["border-l-2 border-gray-200", @container_class]}
       id={"collapsible-sheaf-container-" <> @id}
@@ -102,7 +103,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
             sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
             sheaf_lattice={@sheaf_lattice}
             sheaf_ui_lattice={@sheaf_ui_lattice}
-            level={@level + 1}
+            level={@level}
           />
         <% end %>
       <% end %>
@@ -149,6 +150,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
   def sheaf_component(assigns) do
     ~H"""
     <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
+      <.debug_dump
+        label={"LEVEL "<> to_string(@level) <>  " sheaf component id=" <> @id}
+        sheaf_ui={@sheaf_ui}
+        level={@level}
+        sheaf_path={@sheaf.path}
+      />
       <.sheaf_summary sheaf={@sheaf} />
       <!-- Display Marks if Active -->
       <%= if @sheaf_ui.is_active? do %>

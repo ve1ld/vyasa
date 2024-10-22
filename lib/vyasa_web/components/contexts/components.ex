@@ -405,7 +405,7 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class="border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
+    <div class="flex flex-col border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
       <h2
         :if={@label}
         class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"

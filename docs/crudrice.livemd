@@ -343,6 +343,7 @@ SheafLattice.read_sheaf_lattice(sheaf_lattice, 2, [a, b, c])
 SheafLattice.read_sheaf_lattice(sheaf_lattice, 1, [a, nil])
 # # # # # fetch immediate children of a specific level 1 node:
 SheafLattice.read_sheaf_lattice(sheaf_lattice, 2, [a, b, nil])
+SheafLattice.read_sheaf_lattice(sheaf_lattice, 1, ["1bebc4d1", nil])
 |> Enum.map(fn s -> s.path.labels end)
 
 # |> Enum.count()
