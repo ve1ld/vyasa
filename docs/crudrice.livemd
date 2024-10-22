@@ -32,6 +32,7 @@ alias Vyasa.Sangh.Sheaf
 This has a purge function and a seed function. Intent is to use this during the UI creation phase for discussions.
 
 ```elixir
+R.recompile()
 defmodule CRUDHelper do
   alias Vyasa.Sangh
   alias Vyasa.Sangh.Sheaf
@@ -153,6 +154,10 @@ defmodule CRUDHelper do
           end)
         end)
       end)
+
+    # insert test map to one of the roots:
+    updated_root_sheaf_with_mark = hd(created_root_sheafs) |> Sangh.update_sheaf(%{marks: [Stubs.Vyasa.Sangh.Mark.get_dummy_mark()]}) 
+    IO.inspect(updated_root_sheaf_with_mark, label: "CHECK ME OUT")
   end
 
   @doc """
@@ -162,7 +167,9 @@ defmodule CRUDHelper do
   """
   def purge(sangh_session_id) do
     # Retrieve all root sheafs for the session
-    root_sheafs = Sangh.get_root_sheafs_by_session(sangh_session_id)
+    root_sheafs = Sangh.get_root_sheafs_by_session(sangh_session_id) |> Vyasa.Repo.preload(:marks)
+    # _deleted_marks = root_sheafs |> Enum.map(fn s -> s |> Sangh.delete_marks_in_sheaf() end)
+
 
     _second_level_deletes =
       root_sheafs
@@ -171,20 +178,19 @@ defmodule CRUDHelper do
       end)
       |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
 
-    _first_level_deletes = 
-            root_sheafs
+    _first_level_deletes =
+      root_sheafs
       |> Enum.map(fn root ->
         Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 1)
       end)
       |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
 
-    _root_level_deletes =  root_sheafs
+    _root_level_deletes =
+      root_sheafs
       |> Enum.map(fn root ->
         Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 0)
       end)
       |> Enum.map(fn sheafs -> sheafs |> Enum.map(fn s -> Sangh.delete_sheaf(s) end) end)
-
-
   end
 end
 ```
@@ -213,6 +219,8 @@ Sangh.get_child_sheafs_by_session(sangh_session_id, Sheaf.encode_path(root.id), 
 
 %{data: root_sheafs} = Sangh.get_root_sheafs_by_session(sangh_session_id, 1)
 root_sheafs
+
+
 
 ```
 
@@ -337,14 +345,52 @@ end)
 |> Enum.map(fn {_, s} -> s end)
 
 
+VyasaWeb.Context.Discuss.read_sheaf_layer_from_lattice(sheaf_lattice, 1, ["c9cbcb0c", "65c1ac0c"])
+# |> Enum.count
+
+# USAGE A: gets all the layer 2 sheafs
+VyasaWeb.Context.Discuss.read_sheaf_layer_from_lattice(sheaf_lattice, 2)
+# USAGE B: gets a particular layer 2 sheaf, based on a complete path
+VyasaWeb.Context.Discuss.read_sheaf_layer_from_lattice(sheaf_lattice, 2, ["c9cbcb0c", "f91bac0d", "56c369e4"])
+# USAGE C: gets a particualr layer 2 sheaf, based on the slug for that level 
+VyasaWeb.Context.Discuss.read_sheaf_layer_from_lattice(sheaf_lattice, 2, "56c369e4")
+# note: B and C yield the same output
 
 
 
 ```
 
+#### Sheaf UI States
+
 ```elixir
-Sheaf.encode_path(hd(root_sheafs).id)
-to_string(hd(root_sheafs).path)
+R.recompile()
+
+test_root_sheaf = hd(sheaf_lattice
+|> Enum.filter(fn
+  {[_] , %Sheaf{ marks: []} = _sheaf} -> true
+  _ -> false                  
+end)
+|> Enum.map(fn {_, s} -> s end))
+
+sheaf_lattice
+|> Enum.filter(fn
+  {[_] , %Sheaf{ marks: []} = _sheaf} -> true
+  _ -> false                  
+    end)
+
+
+# alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
+# SheafUiState.get_initial_ui_state(test_root_sheaf)
+
+# test_root_sheaf
+# test_root_sheaf |> SheafUiState.get_initial_ui_state()
+# SheafUi
+```
+
+```elixir
+R.recompile()
+
+Stubs.Vyasa.Sangh.Mark.get_dummy_mark()
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->

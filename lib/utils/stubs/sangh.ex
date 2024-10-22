@@ -1,7 +1,7 @@
 defmodule Stubs.Vyasa.Sangh.Sheaf do
-  alias Vyasa.Sangh.Sheaf
+  alias Vyasa.Sangh.{Sheaf, Mark}
 
-  def foo(attrs \\ {}) do
+  def foo(attrs \\ %{}) do
     %Sheaf{
       id: Ecto.UUID.generate(),
       session_id: Ecto.UUID.generate(),
@@ -13,7 +13,7 @@ defmodule Stubs.Vyasa.Sangh.Sheaf do
     |> Map.merge(attrs)
   end
 
-  def get_dummy_sheaf(attrs \\ {}) do
+  def get_dummy_sheaf(attrs \\ %{}) do
     %Sheaf{
       id: Ecto.UUID.generate(),
       session_id: Ecto.UUID.generate(),
@@ -23,5 +23,20 @@ defmodule Stubs.Vyasa.Sangh.Sheaf do
       traits: ["draft"]
     }
     |> Map.merge(attrs)
+  end
+end
+
+defmodule Stubs.Vyasa.Sangh.Mark do
+  alias Vyasa.Sangh.{Mark}
+
+  def get_dummy_mark(attrs \\ %{}) do
+    %Mark{
+      id: Ecto.UUID.generate(),
+      order: 0,
+      body: "Hey I'm a mark",
+      state: :live
+    }
+    |> Map.merge(attrs)
+    |> Mark.update_mark(%{})
   end
 end

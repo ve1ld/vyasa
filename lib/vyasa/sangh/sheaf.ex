@@ -35,7 +35,8 @@ defmodule Vyasa.Sangh.Sheaf do
       references: :id,
       foreign_key: :sheaf_id,
       on_replace: :delete_if_exists,
-      preload_order: [desc: :order]
+      preload_order: [desc: :order],
+      on_delete: :delete_all
 
     # has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
