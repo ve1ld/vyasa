@@ -12,6 +12,11 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The root sheaf being displayed."
 
+  attr :events_target, :string,
+    required: true,
+    doc:
+      "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
+
   attr :sheaf_lattice, :map,
     required: true,
     doc: "The flatmap representing the entire sheaf lattice."
@@ -22,16 +27,17 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
 
   def root_sheaf(assigns) do
     ~H"""
-    <div class="root-sheaf" id={"root-sheaf-container-" <> @sheaf.id}>
-      <.debug_dump
+    <div class="flex flex-col" id={"root-sheaf-container-" <> @sheaf.id}>
+      <!-- <.debug_dump
         class="relative"
         label="root sheaf dump"
         sheaf={@sheaf}
         sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf)}
         level={0}
-      />
+      /> -->
       <.sheaf_component
         id={"sheaf-" <> @sheaf.id}
+        events_target={@events_target}
         sheaf={@sheaf}
         sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf)}
         sheaf_lattice={@sheaf_lattice}
@@ -53,6 +59,11 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "A suffix for id values, injected by the caller of this function component."
 
+  attr :events_target, :string,
+    required: true,
+    doc:
+      "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
+
   attr :sheafs, :list,
     required: true,
     doc: "A list of child sheafs to be displayed in this container."
@@ -69,16 +80,24 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The current depth level of the tree structure."
 
+  attr :container_class, :string,
+    default: "",
+    doc: "Overridable class definition to be applied to the container."
+
   def collapsible_sheaf_container(assigns) do
     ~H"""
-    <div class="collapsible-sheafs" id={"collapsible-sheaf-container-" <> @id}>
+    <div
+      class={["border-l-2 border-gray-200", @container_class]}
+      id={"collapsible-sheaf-container-" <> @id}
+    >
       <!-- Non-Collapsible View -->
       <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
-        <p>No child sheafs available.</p>
+        <p class="text-gray-500">No child sheafs available.</p>
       <% else %>
         <%= for child <- @sheafs do %>
           <.sheaf_component
             id={"sheaf-" <> child.id}
+            events_target={@events_target}
             sheaf={child}
             sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
             sheaf_lattice={@sheaf_lattice}
@@ -102,6 +121,11 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The id suffix that gets injected by the parent node of this function component"
 
+  attr :events_target, :string,
+    required: true,
+    doc:
+      "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
+
   attr :sheaf, Sheaf,
     required: true,
     doc: "The individual sheaf being displayed."
@@ -124,33 +148,32 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
 
   def sheaf_component(assigns) do
     ~H"""
-    <div class="sheaf" id={"container-" <> @id}>
+    <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
       <.sheaf_summary sheaf={@sheaf} />
-      <!-- display only if maarks ui says so -->
-      <!-- <.collapsible_marks_display
-        :if={
-          not is_nil(@sheaf_ui) and
-            Map.get(@sheaf_ui, :marks_ui, MarksUiState.get_initial_ui_state()).is_expanded_view?
-        }
-        marks_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf).marks_ui}
-        id={@sheaf.id}
-        myself={@events_target}
-      />
+      <!-- Display Marks if Active -->
+      <%= if @sheaf_ui.is_active? do %>
+        <.collapsible_marks_display
+          marks_ui={@sheaf_ui.marks_ui}
+          marks_target={@events_target}
+          marks={@sheaf.marks}
+          id={"marks-" <> @sheaf.id}
+          myself={@events_target}
+        />
+      <% end %>
       <!-- Collapsible Sheaf Container -->
-      <.collapsible_sheaf_container
-        :if={
-          not is_nil(@sheaf_ui) and
-            @sheaf_ui
-            |> Map.get(:is_expanded?, false)
-        }
-        id={@sheaf.id}
-        sheafs={
-          SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
-        }
-        sheaf_lattice={@sheaf_lattice}
-        sheaf_ui_lattice={@sheaf_ui_lattice}
-        level={@level + 1}
-      />
+      <%= if @sheaf_ui.is_expanded? do %>
+        <.collapsible_sheaf_container
+          id={"collapsible_sheaf_container-" <> @id}
+          container_class={"flex flex-col overflow-scroll ml-" <> to_string((@level + 1) * 4)}
+          events_target={@events_target}
+          sheafs={
+            SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
+          }
+          sheaf_lattice={@sheaf_lattice}
+          sheaf_ui_lattice={@sheaf_ui_lattice}
+          level={@level + 1}
+        />
+      <% end %>
     </div>
     """
   end

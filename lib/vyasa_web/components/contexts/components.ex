@@ -140,7 +140,7 @@ defmodule VyasaWeb.Context.Components do
               id={"mark-content-container-" <> @mark.id <> "-" <> @id}
               class="h-full w-full flex-grow mx-2 pt-2"
             >
-              <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+              <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
                 <span class="block mb-1 text-sm italic text-secondary">
                   "<%= @mark.binding.window.quote %>"
                 </span>

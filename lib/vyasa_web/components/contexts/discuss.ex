@@ -254,6 +254,7 @@ defmodule VyasaWeb.Context.Discuss do
               read_sheaf_lattice(@sheaf_lattice, 0)
           }>
             <.root_sheaf
+              events_target="#content-display"
               sheaf={root_sheaf}
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
