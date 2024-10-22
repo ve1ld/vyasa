@@ -7,9 +7,8 @@ defmodule VyasaWeb.Context.Discuss do
   alias VyasaWeb.ModeLive.{UserMode}
   alias VyasaWeb.Session
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh
   alias Vyasa.Sangh.Session, as: SanghSession
-  # alias VyasaWeb.Context.Discuss.SheafContainer
+  alias Vyasa.Sangh.SheafLattice
   import VyasaWeb.Context.Components
 
   @impl true
@@ -104,85 +103,90 @@ defmodule VyasaWeb.Context.Discuss do
   """
 
   def read_sheaf_lattice(%{} = sheaf_lattice, level \\ 0, match \\ nil) do
-    output =
-      case {level, match} do
-        # fetch all sheafs in a particular level:
-        {0, m} when is_nil(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[_], _sheaf} -> true
-            _ -> false
-          end)
+    sheaf_lattice
+    |> Enum.filter(create_sheaf_lattice_filter(level, match))
+    |> Enum.map(fn {_, s} -> s end)
+  end
 
-        {1, m} when is_nil(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[_, a], _sheaf} when not is_list(a) -> true
-            _ -> false
-          end)
+  # fetches all sheafs in level 0:
+  defp create_sheaf_lattice_filter(0, nil) do
+    fn
+      {[_], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        {2, m} when is_nil(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[a | [b | [c]]], _sheaf} when is_binary(a) and is_binary(b) and is_binary(c) -> true
-            _ -> false
-          end)
+  # fetches all sheafs in level 1:
+  defp create_sheaf_lattice_filter(1, nil) do
+    fn
+      {[_, a], _sheaf} when is_binary(a) -> true
+      _ -> false
+    end
+  end
 
-        # specific matches based on a particular layer's label:
-        {0, m} when is_binary(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[^m], _sheaf} -> true
-            _ -> false
-          end)
+  # fetches all sheafs in level 2:
+  defp create_sheaf_lattice_filter(2, nil) do
+    fn
+      {[a | [b | [c]]], _sheaf} when is_binary(a) and is_binary(b) and is_binary(c) -> true
+      _ -> false
+    end
+  end
 
-        {1, m} when is_binary(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[_, ^m], _sheaf} -> true
-            _ -> false
-          end)
+  # fetches particular sheaf from level 0
+  defp create_sheaf_lattice_filter(0, m) when is_binary(m) do
+    fn
+      {[^m], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        {2, m} when is_binary(m) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[_ | [_ | [^m]]], _sheaf} -> true
-            _ -> false
-          end)
+  # fetches particular sheaf from level 1
+  defp create_sheaf_lattice_filter(1, m) when is_binary(m) do
+    fn
+      {[_, ^m], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        # exact matches:
-        {1, [a, b]} when is_binary(a) and is_binary(b) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[^a, ^b], _sheaf} -> true
-            _ -> false
-          end)
+  # fetches particular sheaf from level 2
+  defp create_sheaf_lattice_filter(2, m) when is_binary(m) do
+    fn
+      {[_ | [_ | [^m]]], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        {2, [a, b, c]} when is_binary(a) and is_binary(b) and is_binary(c) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[^a, ^b, ^c], _sheaf} -> true
-            _ -> false
-          end)
+  # fetches particular sheaf from level 1, by matching labels completely
+  defp create_sheaf_lattice_filter(1, [a, b]) when is_binary(a) and is_binary(b) do
+    fn
+      {[^a, ^b], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        # children of a specific level 0 node:
-        {1, [a, b]} when is_binary(a) and is_nil(b) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[^a, _], _sheaf} when is_binary(a) -> true
-            _ -> false
-          end)
+  # fetches particular sheaf from level 2, by matching labels completely
+  defp create_sheaf_lattice_filter(2, [a, b, c])
+       when is_binary(a) and is_binary(b) and is_binary(c) do
+    fn
+      {[^a, ^b, ^c], _sheaf} -> true
+      _ -> false
+    end
+  end
 
-        # children of a specific level 1 node:
-        {2, [a, b, nil]} when is_binary(a) and is_binary(b) ->
-          sheaf_lattice
-          |> Enum.filter(fn
-            {[^a, ^b, _], _sheaf} -> true
-            _ -> false
-          end)
-      end
+  # fetches all the immeidate children (level 1) of a root sheaf (level 2)
+  defp create_sheaf_lattice_filter(1, [a, b]) when is_binary(a) and is_nil(b) do
+    fn
+      {[^a, _], _sheaf} when is_binary(a) -> true
+      _ -> false
+    end
+  end
 
-    output |> Enum.map(fn {_, s} -> s end)
+  # fetches all the immediate children (level 2) of a level 1 sheaf
+  defp create_sheaf_lattice_filter(2, [a, b, nil]) when is_binary(a) and is_binary(b) do
+    fn
+      {[^a, ^b, _], _sheaf} -> true
+      _ -> false
+    end
   end
 
   defp init_sheaf_lattice(
@@ -191,31 +195,13 @@ defmodule VyasaWeb.Context.Discuss do
              content_action: :index,
              session:
                %{
-                 sangh: %{id: sangh_session_id}
+                 sangh: %{id: sangh_id}
                } = _session
            }
          } = socket
        ) do
-    root_sheafs =
-      sangh_session_id
-      # TODO: use paginated version for this eventually
-      |> Sangh.get_root_sheafs_by_session()
-      |> Enum.filter(fn s -> s.traits == ["published"] end)
-
-    sheaf_lattice =
-      [0, 1, 2]
-      |> Enum.flat_map(fn level ->
-        root_sheafs
-        |> Enum.map(fn sheaf -> to_string(sheaf.path) end)
-        |> Enum.flat_map(fn sheaf_id ->
-          Sangh.get_child_sheafs_by_session(sangh_session_id, sheaf_id, level)
-        end)
-        |> Enum.map(fn s -> {s.path.labels, s} end)
-      end)
-      |> Enum.into(%{})
-
     socket
-    |> assign(sheaf_lattice: sheaf_lattice)
+    |> assign(sheaf_lattice: SheafLattice.create_complete_sheaf_lattice(sangh_id))
   end
 
   # fallback when no session loaded:
