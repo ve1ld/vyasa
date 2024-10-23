@@ -21,7 +21,11 @@ defmodule Vyasa.Sangh.Mark do
     field :order, :integer
 
     # TODO: @ks0m1c these enums need better names or a docstring to explain why they are named like so
-    field :state, Ecto.Enum, values: [:draft, :bookmark, :live]
+    # draft: yet to be created and NOT persisted
+    # live: created, and in a sheaf
+    # shared: created, standalone (not in a sheaf) and shared to others
+    # TODO: [LOW PRIORITY for launch] eventually support swapping states b/w shared and live (i.e. when creating a sheaf, bundle a shared, standalone mark)
+    field :state, Ecto.Enum, values: [:draft, :dangling, :live]
     field :verse_id, :string, virtual: true
 
     belongs_to :sheaf, Sheaf, foreign_key: :sheaf_id, type: :binary_id

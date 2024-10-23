@@ -410,6 +410,8 @@ defmodule Vyasa.Sangh do
 
   #   """
   def update_sheaf(%Sheaf{} = sheaf, attrs) do
+    IO.inspect("TRACE: update_sheaf -- this is supposed to persist")
+
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update()
@@ -428,6 +430,8 @@ defmodule Vyasa.Sangh do
   #   """
 
   def update_sheaf!(%Sheaf{} = sheaf, attrs) do
+    IO.inspect("TRACE: update_sheaf!")
+
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update!()
