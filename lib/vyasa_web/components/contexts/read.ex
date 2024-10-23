@@ -142,10 +142,7 @@ defmodule VyasaWeb.Context.Read do
       |> init_draft_reflector()
       |> init_marks()
       |> sync_media_session()
-      |> assign(
-        :kv_verses,
-        Enum.into(verses, %{}, &{&1.id, &1})
-      )
+      |> assign(:kv_verses, Enum.into(verses, %{}, &{&1.id, &1}))
       |> maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
       |> stream(:verses, verses)
       # DEPRECATED this src may not be needed OR RENAME src to something else??
@@ -877,7 +874,6 @@ defmodule VyasaWeb.Context.Read do
             src={@src}
             verses={@streams.verses}
             chap={@chap}
-            kv_verses={@kv_verses}
             marks={@marks}
             marks_ui={@marks_ui}
             lang={@lang}
