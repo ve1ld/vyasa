@@ -278,7 +278,10 @@ defmodule VyasaWeb.Context.Read do
     #  read from the db to get the SOLE non-draft active sheaf for session (and user(?))
     # STUB:
     socket
-    |> assign(reply_to: nil)
+    # |> assign(reply_to: nil)
+    |> assign(
+      reply_to: hd(sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["published"]}))
+    )
   end
 
   def init_reply_to_context(%Socket{} = socket) do

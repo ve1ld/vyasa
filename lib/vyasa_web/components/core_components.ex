@@ -1048,7 +1048,7 @@ defmodule VyasaWeb.CoreComponents do
   def debug_dump(assigns) do
     ~H"""
     <div class={[
-      "fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50",
+      "relative fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50",
       Map.get(assigns, :class, "")
     ]}>
       <h2 class="text-lg font-bold mb-2">
