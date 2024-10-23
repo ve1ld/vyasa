@@ -67,13 +67,17 @@ defmodule Vyasa.Sangh.Sheaf do
   end
 
   def mutate_changeset(%Sheaf{} = sheaf, attrs) do
-    sheaf
-    |> Vyasa.Repo.preload([:marks])
-    |> cast(attrs, [:id, :body, :active, :signature])
-    |> cast_path(attrs)
-    |> assoc_marks(attrs)
-    |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
-    |> validate_include_subset(:traits, ["personal", "draft", "published"])
+    ch =
+      sheaf
+      |> Vyasa.Repo.preload([:marks])
+      |> cast(attrs, [:id, :body, :active, :signature])
+      |> cast_path(attrs)
+      |> assoc_marks(attrs)
+      |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
+      |> validate_include_subset(:traits, ["personal", "draft", "published"])
+
+    dbg()
+    ch
   end
 
   defp assoc_marks(sheaf, %{marks: [%Mark{} | _] = marks}) do
@@ -183,6 +187,7 @@ defmodule Vyasa.Sangh.Sheaf do
         session_id: sangh_id,
         traits: ["draft"]
       })
+
     com
   end
 

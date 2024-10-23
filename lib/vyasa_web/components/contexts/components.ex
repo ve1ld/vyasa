@@ -25,7 +25,7 @@ defmodule VyasaWeb.Context.Components do
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
-          phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
           type="button"
@@ -42,7 +42,7 @@ defmodule VyasaWeb.Context.Components do
         <button
           :if={@marks_ui.is_expanded_view?}
           class="flex space-x-2 pr-2"
-          phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
           phx-target={@marks_target}
         >
           <.icon
@@ -98,7 +98,7 @@ defmodule VyasaWeb.Context.Components do
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
-          phx-submit="editMarkContent"
+          phx-submit="mark::editMarkContent"
           phx-value-mark_id={@mark.id}
           phx-target={@marks_target}
         >
@@ -162,7 +162,7 @@ defmodule VyasaWeb.Context.Components do
               class="h-full flex flex-col ml-2 space-y-2 justify-between"
             >
               <button
-                phx-click="tombMark"
+                phx-click="mark::tombMark"
                 phx-target={@marks_target}
                 phx-value-id={@mark.id}
                 title="Delete"
@@ -173,7 +173,7 @@ defmodule VyasaWeb.Context.Components do
               </button>
               <%= if not @mark_ui.is_editing_content? do %>
                 <button
-                  phx-click="toggle_is_editing_mark_content?"
+                  phx-click="ui::toggle_is_editing_mark_content?"
                   phx-target={@marks_target}
                   phx-value-mark_id={@mark.id}
                   class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
@@ -257,9 +257,9 @@ defmodule VyasaWeb.Context.Components do
     <.generic_modal_wrapper
       id={"modal-wrapper-" <> @id}
       show={@marks_ui.show_sheaf_modal?}
-      on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      on_click_away_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      window_keydown_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
@@ -277,7 +277,7 @@ defmodule VyasaWeb.Context.Components do
           active_sheaf={@active_sheaf}
           reply_to={@reply_to}
           event_target={@event_target}
-          on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+          on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
         />
       </div>
     </.generic_modal_wrapper>

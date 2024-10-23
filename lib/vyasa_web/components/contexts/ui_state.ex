@@ -31,6 +31,9 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
           active: is_active?
         } = _sheaf
       ) do
+    # dbg()
+    IO.puts("CHECKPOINT get initial ui state HAPPY PATH")
+
     marks_ui =
       case marks do
         [%Mark{} | _] -> MarksUiState.get_initial_ui_state(marks)
@@ -45,7 +48,70 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
   end
 
   def get_initial_ui_state() do
+    IO.puts("CHECKPOINT get initial ui state POKEMON")
     struct(SheafUiState, @initial)
+  end
+
+  @doc """
+  Wraps the toggle function for the marks ui state.
+  """
+  def toggle_marks_is_expanded_view(
+        %SheafUiState{
+          marks_ui: marks_ui_state
+        } = sheaf_ui_state
+      ) do
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui:
+          marks_ui_state
+          |> MarksUiState.toggle_is_expanded_view()
+    }
+  end
+
+  @doc """
+  Wraps the toggle function for the sheaf ui modal
+  """
+  def toggle_show_sheaf_modal?(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state
+      ) do
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?()
+    }
+  end
+
+  @doc """
+  Wraps the toggle function for the sheaf ui modal
+  """
+  def toggle_is_editable_marks?(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state
+      ) do
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.toggle_is_editable()
+    }
+  end
+
+  @doc """
+  Wraps the toggle function for the is editing mark content for a particular mark
+  """
+  def toggle_is_editing_mark_content?(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state,
+        mark_id
+      )
+      when is_binary(mark_id) do
+    # dbg()
+
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.toggle_is_editing_mark_content(mark_id)
+    }
   end
 end
 
