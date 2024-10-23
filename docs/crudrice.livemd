@@ -202,6 +202,8 @@ This is for some basic setup while creating the discussion view.
 ```elixir
 # set based on current session:
 sangh_session_id = "164eb05d-221a-4939-b180-8394e1a5515f"
+sangh_session_id = "907c4d5e-77a1-4c51-96d1-185b8f314fde"
+sangh_session_id = "907c4d5e-77a1-4c51-96d1-185b8f314fde"
 CRUDHelper.purge(sangh_session_id)
 CRUDHelper.seed_family(sangh_session_id)
 
