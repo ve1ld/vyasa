@@ -76,7 +76,8 @@ defmodule Vyasa.Sangh.Sheaf do
       |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
       |> validate_include_subset(:traits, ["personal", "draft", "published"])
 
-    dbg()
+    # dbg()
+    IO.inspect(ch, label: "CHECK CHANGESET:")
     ch
   end
 
