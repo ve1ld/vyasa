@@ -74,7 +74,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     ~H"""
     <button
       phx-click={
-        JS.push("clickVerseToSeek",
+        JS.push("dom_navigation::clickVerseToSeek",
           target: @event_target,
           value: %{verse_id: @verse_id}
         )
@@ -181,7 +181,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     <div class="p-2">
       <.form
         for={%{}}
-        phx-submit={(@form_type == :mark && "createMark") || "createSheaf"}
+        phx-submit={(@form_type == :mark && "mark::createMark") || "createSheaf"}
         phx-target={@event_target}
         class="flex items-center"
       >
@@ -222,7 +222,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
           <button
             type="button"
             phx-click={
-              JS.push("toggle_show_sheaf_modal?",
+              JS.push("ui::toggle_show_sheaf_modal?",
                 value: %{}
               )
             }

@@ -16,16 +16,17 @@ defmodule VyasaWeb.Context.Components do
     default: "",
     doc: "An optional id suffix, to differentate intentionally duplicate components."
 
+  # [1] @DEMO ERROR: this function component will render marks display
   def collapsible_marks_display(assigns) do
     ~H"""
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
     <div :if={not is_nil(@marks_ui)} class="mb-4">
       <div
-        id={"collapse-header-container" <> @id}
+        id={"collapse-header-container-" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
-          phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
           type="button"
@@ -41,8 +42,9 @@ defmodule VyasaWeb.Context.Components do
         </button>
         <button
           :if={@marks_ui.is_expanded_view?}
+          type="button"
           class="flex space-x-2 pr-2"
-          phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
           phx-target={@marks_target}
         >
           <.icon
@@ -56,7 +58,7 @@ defmodule VyasaWeb.Context.Components do
         </button>
       </div>
       <div
-        id={"collapsible-content-container" <> @id}
+        id={"collapsible-content-container-" <> @id}
         class={
           if @marks_ui.is_expanded_view?,
             do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
@@ -91,6 +93,8 @@ defmodule VyasaWeb.Context.Components do
        default: "",
        doc: "An optional id suffix, to differentate intentionally duplicate components."
 
+  # FIXME: this display has a submission button and if it gets rendered from within another form (e.g. from within the )
+  # [2] @DEMO ERROR: this function component will render a form, which is necessary because we want to get values from the text area (within the <.mark_body/>) when doing the submission
   def mark_display(assigns) do
     ~H"""
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
@@ -98,7 +102,11 @@ defmodule VyasaWeb.Context.Components do
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
-          phx-submit="editMarkContent"
+          id={"mark-display-form-" <> @id}
+          phx-hook="PreventEventPropagation"
+          data-selector={"#mark-display-form-" <> @id}
+          data-event-name="submit"
+          phx-submit="mark::editMarkContent"
           phx-value-mark_id={@mark.id}
           phx-target={@marks_target}
         >
@@ -117,6 +125,7 @@ defmodule VyasaWeb.Context.Components do
                 phx-target={@marks_target}
                 class="p-1 hover:bg-gray-200 rounded"
                 aria-label="Up Arrow"
+                type="button"
               >
                 <.icon
                   name="custom-icon-sort-up"
@@ -127,6 +136,7 @@ defmodule VyasaWeb.Context.Components do
               <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
               <button
                 phx-click="dummy_event"
+                type="button"
                 phx-target={@marks_target}
                 class="p-1 hover:bg-gray-200 rounded"
                 aria-label="Down Arrow"
@@ -162,7 +172,8 @@ defmodule VyasaWeb.Context.Components do
               class="h-full flex flex-col ml-2 space-y-2 justify-between"
             >
               <button
-                phx-click="tombMark"
+                phx-click="mark::tombMark"
+                type="button"
                 phx-target={@marks_target}
                 phx-value-id={@mark.id}
                 title="Delete"
@@ -173,7 +184,8 @@ defmodule VyasaWeb.Context.Components do
               </button>
               <%= if not @mark_ui.is_editing_content? do %>
                 <button
-                  phx-click="toggle_is_editing_mark_content?"
+                  phx-click="ui::toggle_is_editing_mark_content?"
+                  type="button"
                   phx-target={@marks_target}
                   phx-value-mark_id={@mark.id}
                   class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
@@ -257,9 +269,9 @@ defmodule VyasaWeb.Context.Components do
     <.generic_modal_wrapper
       id={"modal-wrapper-" <> @id}
       show={@marks_ui.show_sheaf_modal?}
-      on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      on_click_away_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      window_keydown_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
@@ -277,7 +289,7 @@ defmodule VyasaWeb.Context.Components do
           active_sheaf={@active_sheaf}
           reply_to={@reply_to}
           event_target={@event_target}
-          on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+          on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
         />
       </div>
     </.generic_modal_wrapper>
@@ -287,6 +299,12 @@ defmodule VyasaWeb.Context.Components do
   # TODO 1) need to inject the "signature" prop into this so that if a session already exists, it should be pre-filled
   # TODO 2) @rtshkmr @ks0m1c we need to wire up some form-rejection logic to ensure that things like the signature will
   # always be present. More generally, we'd need some form validation related patterns to be added to these function-component UI primitives
+  # [3] @DEMO ERROR: this function component gets rendered when the modal is up -- it's the sheaf creator modal. Naturally, this is a form.
+  # THis willrender the marks display too, which is also a form. This is what causes the nesting where the marks display form (B) is nested within the creator form (A).
+  # The HTML dom primitive is that events are bubbled up. Therefore B's submission event gets bubbled up to A.
+  # This means that the simplest solution would have been to prevent the bubbling up (see DEMO point 4)
+  # HOWEVER, this shit doesn't work becasue it seems that hooks don't get mounted for dynamically mounted dom elements. So since this form is within a modal, it gets dynamically mounted
+  # so the hook DOES NOT get mounted. check console logs for this demonstration (see the console.log() statements within teh hoook)
   def sheaf_creator_form(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">
@@ -336,7 +354,7 @@ defmodule VyasaWeb.Context.Components do
           </div>
 
           <.collapsible_marks_display
-            id={@id}
+            id={"nested-"<> @id}
             myself={nil}
             marks_target="#content-display"
             marks={@marks}
@@ -345,6 +363,7 @@ defmodule VyasaWeb.Context.Components do
 
           <div class="flex justify-between space-x-2">
             <button
+              type="button"
               phx-click={@on_cancel_callback}
               class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
@@ -423,7 +442,11 @@ defmodule VyasaWeb.Context.Components do
         <!-- Action Button Group -->
         <div class="flex space-x-2">
           <%= for {icon, action} <- @action_buttons do %>
-            <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+            <button
+              type="button"
+              phx-click={action}
+              class="flex items-center text-blue-500 hover:text-blue-700"
+            >
               <.icon name={icon} class="h-5 w-5 mr-1" />
               <span>Action</span>
             </button>

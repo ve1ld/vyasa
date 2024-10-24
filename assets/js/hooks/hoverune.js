@@ -90,7 +90,7 @@ export default HoveRune = {
             target: `#${this.eventTarget}`,
             payload: { binding: binding },
           });
-          this.pushEventTo(`#${this.eventTarget}`, "bindHoveRune", {
+          this.pushEventTo(`#${this.eventTarget}`, "hoverune::bindHoveRune", {
             binding: binding,
           });
 
