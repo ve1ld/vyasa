@@ -21,7 +21,7 @@ defmodule VyasaWeb.Context.Components do
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
     <div :if={not is_nil(@marks_ui)} class="mb-4">
       <div
-        id={"collapse-header-container" <> @id}
+        id={"collapse-header-container-" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
@@ -57,7 +57,7 @@ defmodule VyasaWeb.Context.Components do
         </button>
       </div>
       <div
-        id={"collapsible-content-container" <> @id}
+        id={"collapsible-content-container-" <> @id}
         class={
           if @marks_ui.is_expanded_view?,
             do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
@@ -100,6 +100,10 @@ defmodule VyasaWeb.Context.Components do
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
+          id={"mark-display-form-" <> @id}
+          phx-hook="PreventEventPropagation"
+          data-selector={"#mark-display-form-" <> @id}
+          data-event-name="submit"
           phx-submit="mark::editMarkContent"
           phx-value-mark_id={@mark.id}
           phx-target={@marks_target}
@@ -342,7 +346,7 @@ defmodule VyasaWeb.Context.Components do
           </div>
 
           <.collapsible_marks_display
-            id={@id}
+            id={"nested-"<> @id}
             myself={nil}
             marks_target="#content-display"
             marks={@marks}
