@@ -2,6 +2,8 @@
  *
  */
 
+// [4] @DEMO ERROR: this is how we are supposed to stop theh propagation, the event handling is working
+// if you just do it on the marks display that isn't rendered from within the modal.
 PreventEventPropagation = {
   mounted() {
     const selector = this.el.dataset.selector; // Get the selector from data attributes
