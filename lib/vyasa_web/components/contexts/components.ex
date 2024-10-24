@@ -41,6 +41,7 @@ defmodule VyasaWeb.Context.Components do
         </button>
         <button
           :if={@marks_ui.is_expanded_view?}
+          type="button"
           class="flex space-x-2 pr-2"
           phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
           phx-target={@marks_target}
@@ -91,6 +92,7 @@ defmodule VyasaWeb.Context.Components do
        default: "",
        doc: "An optional id suffix, to differentate intentionally duplicate components."
 
+  # FIXME: this display has a submission button and if it gets rendered from within another form (e.g. from within the )
   def mark_display(assigns) do
     ~H"""
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
@@ -117,6 +119,7 @@ defmodule VyasaWeb.Context.Components do
                 phx-target={@marks_target}
                 class="p-1 hover:bg-gray-200 rounded"
                 aria-label="Up Arrow"
+                type="button"
               >
                 <.icon
                   name="custom-icon-sort-up"
@@ -127,6 +130,7 @@ defmodule VyasaWeb.Context.Components do
               <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
               <button
                 phx-click="dummy_event"
+                type="button"
                 phx-target={@marks_target}
                 class="p-1 hover:bg-gray-200 rounded"
                 aria-label="Down Arrow"
@@ -163,6 +167,7 @@ defmodule VyasaWeb.Context.Components do
             >
               <button
                 phx-click="mark::tombMark"
+                type="button"
                 phx-target={@marks_target}
                 phx-value-id={@mark.id}
                 title="Delete"
@@ -174,6 +179,7 @@ defmodule VyasaWeb.Context.Components do
               <%= if not @mark_ui.is_editing_content? do %>
                 <button
                   phx-click="ui::toggle_is_editing_mark_content?"
+                  type="button"
                   phx-target={@marks_target}
                   phx-value-mark_id={@mark.id}
                   class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
@@ -345,6 +351,7 @@ defmodule VyasaWeb.Context.Components do
 
           <div class="flex justify-between space-x-2">
             <button
+              type="button"
               phx-click={@on_cancel_callback}
               class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
@@ -423,7 +430,11 @@ defmodule VyasaWeb.Context.Components do
         <!-- Action Button Group -->
         <div class="flex space-x-2">
           <%= for {icon, action} <- @action_buttons do %>
-            <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+            <button
+              type="button"
+              phx-click={action}
+              class="flex items-center text-blue-500 hover:text-blue-700"
+            >
               <.icon name={icon} class="h-5 w-5 mr-1" />
               <span>Action</span>
             </button>

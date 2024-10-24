@@ -13,7 +13,7 @@ defmodule VyasaWeb.Context.Read do
   alias Utils.Stream
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
-  alias Vyasa.Written.{Source, Chapter}
+  alias Vyasa.Written.{Source, Chapter, Verse}
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
@@ -138,14 +138,15 @@ defmodule VyasaWeb.Context.Read do
       fmted_title = to_title_case(source.title)
 
       socket
+      |> assign(:kv_verses, Enum.into(verses, %{}, &{&1.id, &1}))
+      |> Stream.maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
+      |> stream(:verses, verses)
       |> assign(:content_action, :show_verses)
       |> init_reply_to_context()
       |> init_draft_reflector()
       # |> hydrate_reflector_with_draft_mark()
       |> sync_media_session()
-      |> assign(:kv_verses, Enum.into(verses, %{}, &{&1.id, &1}))
-      |> Stream.maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
-      |> stream(:verses, verses)
+
       # DEPRECATED this src may not be needed OR RENAME src to something else??
       |> assign(:src, source)
       |> assign(:lang, @default_lang)
@@ -180,32 +181,6 @@ defmodule VyasaWeb.Context.Read do
   # analogy: rooms in a school, you join a public room where folks are talking and you wanna fetch the sticky note
   # that is currently in your private locker room, which you wanna use to contribute to this public room you just entered.
   # defp init_personal_session() do
-  # end
-
-  # NOTE: This is needed because a stream can't be reconfigured.
-  # Consider the case where we move from :show_chapters -> :show_verses -> :show_chapters.
-  # In this case, because the state is held @ the live_view side (DM), we will end up with a situation
-  # where the stream (e.g. chapters stream) would have already been configed.
-  # Hence, a maybe_stream_configure/3 is necessary to avoid throwing an error.
-  # defp maybe_stream_configure(
-  #        %Socket{
-  #          assigns: assigns
-  #        } = socket,
-  #        stream_name,
-  #        opts
-  #      )
-  #      when is_list(opts) do
-  #   case Map.has_key?(assigns, :streams) && Map.has_key?(assigns.streams, stream_name) do
-  #     true ->
-  #       socket
-
-  #     false ->
-  #       socket |> stream_configure(stream_name, opts)
-  #   end
-  # end
-
-  # defp maybe_stream_configure(%Socket{} = socket, _, _) do
-  #   socket
   # end
 
   # syncs the media sessions by subscribing and publishing to the relevant channels
@@ -314,163 +289,7 @@ defmodule VyasaWeb.Context.Read do
 
     socket
     |> maybe_prepend_draft_mark_in_reflector()
-
-    # updated_socket =
-    #   case draft_sheafs do
-    #     # case: when head of draft sheaf has existing marks
-    #     [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
-    #       marks_with_draft =
-    #         [marks |> Mark.get_draft_mark() | marks]
-    #         |> Mark.sanitise_marks()
-
-    #       socket
-    #       |> assign(draft_reflector: %Sheaf{sheaf | marks: marks_with_draft})
-
-    #     # case: when head sheaf has no existing marks:
-    #     [%Sheaf{} = sheaf | _] ->
-    #       socket
-    #       |> assign(draft_reflector: %Sheaf{sheaf | marks: [Mark.get_draft_mark()]})
-
-    #     # fallthrough case: no draft sheafs
-    #     _ ->
-    #       socket
-    #       |> assign(
-    #         draft_reflector: %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-    #       )
-    #   end
-
-    #   # updated_socket =
-    #   #   case draft_sheafs do
-    #   #     # case: when head of draft sheaf has existing marks
-    #   #     [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
-    #   #       marks_with_draft =
-    #   #         [marks |> Mark.get_draft_mark() | marks]
-    #   #         |> Mark.sanitise_marks()
-
-    #   #       socket
-    #   #       |> assign(draft_reflector: %Sheaf{sheaf | marks: marks_with_draft})
-
-    #   #     # case: when head sheaf has no existing marks:
-    #   #     [%Sheaf{} = sheaf | _] ->
-    #   #       socket
-    #   #       |> assign(draft_reflector: %Sheaf{sheaf | marks: [Mark.get_draft_mark()]})
-
-    #   #     # fallthrough case: no draft sheafs
-    #   #     _ ->
-    #   #       socket
-    #   #       |> assign(
-    #   #         draft_reflector: %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-    #   #       )
-    #   #   end
-
-    #   # |> assign(draft_reflector: reflector)
-    #   # |> assign(draft_reflector_ui: reflector |> SheafUiState.get_initial_ui_state())
-    #   # persists the new insertion(s)
-    #   |> assign(new_marks)
-    #   |> mutate_draft_reflector(new_marks)
   end
-
-  # @doc """
-  # Sets the initial value of the draft reflector.
-  # This is the reflection of the sheaf for which marks are currently being gathered for.
-
-  # Currently it takes the first draft sheaf in the session.
-
-  # Next, it ensures that there will always be a draft mark at the head of the marks list. This
-  # is a necessary pre-condition that the binding functions rely on, therefore we have to
-  # make this insertion here.
-
-  # Finally, a ui struct is also added to socket state.
-
-  # This reflector is hot-swappable to other sheafs if there's a need to switch what
-  # sheaf to focus on and gather marks for.
-
-  # NOTE: we are currently doing a rudimentary approach of just taking the head sheaf
-
-  # TODO: add other params-based sheaf-setting
-  # """
-  # def init_draft_reflector(
-  #       %Socket{
-  #         assigns: %{
-  #           session: %{sangh: %{id: sangh_id}}
-  #         }
-  #       } = socket
-  #     ) do
-  #   draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
-
-  # updated_socket =
-  #   case draft_sheafs do
-  #     # case: when head of draft sheaf has existing marks
-  #     [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
-  #       marks_with_draft =
-  #         [marks |> Mark.get_draft_mark() | marks]
-  #         |> Mark.sanitise_marks()
-
-  #       socket
-  #       |> assign(draft_reflector: %Sheaf{sheaf | marks: marks_with_draft})
-
-  #     # case: when head sheaf has no existing marks:
-  #     [%Sheaf{} = sheaf | _] ->
-  #       socket
-  #       |> assign(draft_reflector: %Sheaf{sheaf | marks: [Mark.get_draft_mark()]})
-
-  #     # fallthrough case: no draft sheafs
-  #     _ ->
-  #       socket
-  #       |> assign(
-  #         draft_reflector: %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-  #       )
-  #   end
-
-  #   new_marks =
-  #     case draft_sheafs do
-  #       # case: when head of draft sheafs has existing draft marks
-  #       [
-  #         %Sheaf{
-  #           marks:
-  #             [
-  #               %Mark{state: [:draft | _]} = _draft_mark
-  #               | _
-  #             ] = marks
-  #         } = _head_sheaf
-  #         | _
-  #       ] ->
-  #         # marks_with_draft =
-  #         #   [marks |> Mark.get_draft_mark() | marks]
-  #         #   |> Mark.sanitise_marks()
-  #         IO.inspect("CHECKPOINT A -- THIS NEVER HAPPENS")
-  #         marks |> Mark.sanitise_marks()
-
-  #       # %Sheaf{head_sheaf | marks: marks_with_draft}
-
-  #       # case: when head sheaf has marks but no draft marks existing:
-  #       [%Sheaf{marks: [%Mark{} | _] = existing_marks} = _draft_sheaf | _] ->
-  #         IO.inspect("CHECKPOINT B")
-  #         [Mark.get_draft_mark() | existing_marks]
-
-  #       # %Sheaf{sheaf | marks: [Mark.get_draft_mark() | existing_marks]}
-
-  #       # case: when head sheaf has no existing marks:
-  #       [%Sheaf{marks: [] = _marks} = _draft_sheaf | _] ->
-  #         IO.inspect("CHECKPOINT C")
-  #         [Mark.get_draft_mark()]
-
-  #       # %Sheaf{sheaf | marks: [Mark.get_draft_mark()]}
-
-  #       # fallthrough case: no draft sheafs
-  #       _ ->
-  #         IO.inspect("CHECKPOINT D")
-  #         [Mark.get_draft_mark()]
-  #         # %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-  #     end
-
-  #   socket
-  #   # |> assign(draft_reflector: reflector)
-  #   # |> assign(draft_reflector_ui: reflector |> SheafUiState.get_initial_ui_state())
-  #   # persists the new insertion(s)
-  #   |> assign(new_marks)
-  #   |> mutate_draft_reflector(new_marks)
-  # end
 
   def init_draft_reflector(socket) do
     socket
@@ -519,128 +338,6 @@ defmodule VyasaWeb.Context.Read do
     socket
     |> assign(draft_reflector: updated_reflector)
     |> assign(draft_reflector_ui: updated_reflector |> SheafUiState.get_initial_ui_state())
-  end
-
-  @doc """
-  Ensures that the initial marks within the draft reflectot has a draft mark in
-  its head. This is a necessary pre-condition for other things like binding of
-  hoverunes.
-
-  NOTE: we will never have a situation that on init, the draft sheaf has a draft mark
-  because draft marks are never persisted.
-  """
-  def hydrate_reflector_with_draft_mark(
-        %Socket{
-          assigns: %{
-            draft_reflector:
-              %Sheaf{
-                marks: marks
-              } = _draft_reflector,
-            session: %{sangh: %{id: _sangh_id}}
-          }
-        } = socket
-      ) do
-    updated_marks =
-      case marks do
-        # has existing marks:
-        [%Mark{} | _] = existing_marks ->
-          [Mark.get_draft_mark() | existing_marks]
-
-        # no existing marks:
-        _ ->
-          [Mark.get_draft_mark()]
-      end
-
-    IO.inspect(updated_marks |> Enum.map(fn m -> m.id end),
-      label: "CHECKPOINT: hydrating reflector with draft marks, now we shall commit these"
-    )
-
-    socket
-    |> commit_marks_in_reflector(updated_marks)
-
-    # socket
-    # |> assign(draft_reflector: %Sheaf{draft_reflector | marks: updated_marks})
-
-    # draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
-
-    # updated_socket =
-    #   case draft_sheafs do
-    #     # case: when head of draft sheaf has existing marks
-    #     [%Sheaf{marks: [_ | _] = marks} = sheaf | _] ->
-    #       marks_with_draft =
-    #         [marks |> Mark.get_draft_mark() | marks]
-    #         |> Mark.sanitise_marks()
-
-    #       socket
-    #       |> assign(draft_reflector: %Sheaf{sheaf | marks: marks_with_draft})
-
-    #     # case: when head sheaf has no existing marks:
-    #     [%Sheaf{} = sheaf | _] ->
-    #       socket
-    #       |> assign(draft_reflector: %Sheaf{sheaf | marks: [Mark.get_draft_mark()]})
-
-    #     # fallthrough case: no draft sheafs
-    #     _ ->
-    #       socket
-    #       |> assign(
-    #         draft_reflector: %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-    #       )
-    #   end
-
-    # new_marks =
-    #   case draft_sheafs do
-    #     # case: when head of draft sheafs has existing draft marks
-    #     [
-    #       %Sheaf{
-    #         marks:
-    #           [
-    #             %Mark{state: [:draft | _]} = _draft_mark
-    #             | _
-    #           ] = marks
-    #       } = _head_sheaf
-    #       | _
-    #     ] ->
-    #       # marks_with_draft =
-    #       #   [marks |> Mark.get_draft_mark() | marks]
-    #       #   |> Mark.sanitise_marks()
-    #       IO.inspect("CHECKPOINT A -- THIS NEVER HAPPENS")
-    #       marks |> Mark.sanitise_marks()
-
-    #     # %Sheaf{head_sheaf | marks: marks_with_draft}
-
-    #     # case: when head sheaf has marks but no draft marks existing:
-    #     [%Sheaf{marks: [%Mark{} | _] = existing_marks} = _draft_sheaf | _] ->
-    #       IO.inspect("CHECKPOINT B")
-    #       [Mark.get_draft_mark() | existing_marks]
-
-    #     # %Sheaf{sheaf | marks: [Mark.get_draft_mark() | existing_marks]}
-
-    #     # case: when head sheaf has no existing marks:
-    #     [%Sheaf{marks: [] = _marks} = _draft_sheaf | _] ->
-    #       IO.inspect("CHECKPOINT C")
-    #       [Mark.get_draft_mark()]
-
-    #     # %Sheaf{sheaf | marks: [Mark.get_draft_mark()]}
-
-    #     # fallthrough case: no draft sheafs
-    #     _ ->
-    #       IO.inspect("CHECKPOINT D")
-    #       [Mark.get_draft_mark()]
-    #       # %Sheaf{Sheaf.draft!(sangh_id) | marks: [Mark.get_draft_mark()]}
-    #   end
-
-    # socket
-    # # |> assign(draft_reflector: reflector)
-    # # |> assign(draft_reflector_ui: reflector |> SheafUiState.get_initial_ui_state())
-    # # persists the new insertion(s)
-    # |> assign(new_marks)
-    # |> mutate_draft_reflector(new_marks)
-  end
-
-  # fallthrough
-  def hydrate_reflector_with_draft_mark(socket) do
-    socket
-    |> assign(draft_reflector_ui: nil)
   end
 
   @impl true
@@ -1511,27 +1208,45 @@ defmodule VyasaWeb.Context.Read do
              draft_reflector:
                %Sheaf{
                  # marks: [%Mark{verse_id: v_id, binding: binding} | _] = _marks
-                 marks: [%Mark{} | _] = marks
+                 marks: [%Mark{} | _] = _marks
                } = _draft_reflector
            }
          } = socket
        ) do
-    %Mark{verse_id: v_id, binding: binding} =
-      _live_mark = marks |> Enum.find(fn m -> m.state == :live end)
+    # %Verse{
+    #   id: v_id,
+    #   binding: binding
+    # } = _first_verse = hd(Map.values(current_verses))
 
-    IO.inspect(
-      %{
-        particular_verse: verses[v_id],
-        binding: binding
-      },
-      label: "CHECKPOINT cascade stream change, check the values here"
-    )
+    %Verse{
+      id: v_id,
+      binding: binding
+    } =
+      Map.values(verses)
+      |> Enum.find(fn v -> not is_nil(v.binding) end)
 
     socket
     |> stream_insert(
       :verses,
       %{verses[v_id] | binding: binding}
     )
+
+    # %Mark{verse_id: v_id, binding: binding} =
+    #   _live_mark = marks |> Enum.find(fn m -> m.state == :live end)
+
+    # IO.inspect(
+    #   %{
+    #     particular_verse: verses[v_id],
+    #     binding: binding
+    #   },
+    #   label: "CHECKPOINT cascade stream change, check the values here"
+    # )
+
+    # socket
+    # |> stream_insert(
+    #   :verses,
+    #   %{verses[v_id] | binding: binding}
+    # )
   end
 
   defp cascade_stream_change(socket) do
