@@ -1,4 +1,4 @@
-defmodule Utils.Stream do
+defmodule VyasaWeb.Utils.Stream do
   @moduledoc """
   Contains functions useful for stream operations, that need not be
   web or server-specific.

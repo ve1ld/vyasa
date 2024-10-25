@@ -10,7 +10,7 @@ defmodule VyasaWeb.Context.Read do
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
   alias Vyasa.{Written, Draft}
-  alias Utils.Stream
+  alias VyasaWeb.Utils.Stream
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter, Verse}
@@ -947,7 +947,7 @@ defmodule VyasaWeb.Context.Read do
         <% end %>
 
         <%= if @content_action == :show_verses && not is_nil(@draft_reflector_ui) && not is_nil(@draft_reflector) do %>
-          <.debug_dump
+          <!-- <.debug_dump
             label="Sheaf Creator"
             class="relative"
             session={@session}
@@ -956,7 +956,7 @@ defmodule VyasaWeb.Context.Read do
             reply_to={@reply_to}
             active_sheaf={@draft_reflector}
             event_target="#content-display"
-          />
+          /> -->
           <.sheaf_creator_modal
             id="sheaf-creator"
             session={@session}
