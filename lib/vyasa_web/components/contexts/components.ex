@@ -16,7 +16,6 @@ defmodule VyasaWeb.Context.Components do
     default: "",
     doc: "An optional id suffix, to differentate intentionally duplicate components."
 
-  # [1] @DEMO ERROR: this function component will render marks display
   def collapsible_marks_display(assigns) do
     ~H"""
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
@@ -93,8 +92,6 @@ defmodule VyasaWeb.Context.Components do
        default: "",
        doc: "An optional id suffix, to differentate intentionally duplicate components."
 
-  # FIXME: this display has a submission button and if it gets rendered from within another form (e.g. from within the )
-  # [2] @DEMO ERROR: this function component will render a form, which is necessary because we want to get values from the text area (within the <.mark_body/>) when doing the submission
   def mark_display(assigns) do
     ~H"""
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
@@ -294,15 +291,6 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
-  # TODO 1) need to inject the "signature" prop into this so that if a session already exists, it should be pre-filled
-  # TODO 2) @rtshkmr @ks0m1c we need to wire up some form-rejection logic to ensure that things like the signature will
-  # always be present. More generally, we'd need some form validation related patterns to be added to these function-component UI primitives
-  # [3] @DEMO ERROR: this function component gets rendered when the modal is up -- it's the sheaf creator modal. Naturally, this is a form.
-  # THis willrender the marks display too, which is also a form. This is what causes the nesting where the marks display form (B) is nested within the creator form (A).
-  # The HTML dom primitive is that events are bubbled up. Therefore B's submission event gets bubbled up to A.
-  # This means that the simplest solution would have been to prevent the bubbling up (see DEMO point 4)
-  # HOWEVER, this shit doesn't work becasue it seems that hooks don't get mounted for dynamically mounted dom elements. So since this form is within a modal, it gets dynamically mounted
-  # so the hook DOES NOT get mounted. check console logs for this demonstration (see the console.log() statements within teh hoook)
   def sheaf_creator_form(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">

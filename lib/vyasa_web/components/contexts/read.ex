@@ -27,12 +27,9 @@ defmodule VyasaWeb.Context.Read do
           live_action: live_action,
           session: session,
           id: id
-        } =
-          params,
+        } = _params,
         socket
       ) do
-    IO.inspect(params, label: "TRACE: params passed to ReadContext")
-
     {
       :ok,
       socket
@@ -75,48 +72,47 @@ defmodule VyasaWeb.Context.Read do
   end
 
   defp apply_action(%Socket{} = socket, :show_sources, _params) do
-    IO.inspect(:show_sources, label: "TRACE: apply action DM action show_sources:")
-
     socket
     |> stream(:sources, Written.list_sources())
-    |> assign(:content_action, :show_sources)
-    |> assign(:page_title, "Sources")
-    |> assign(:meta, %{
-      title: "Sources to Explore",
-      description: "Explore the wealth of indic knowledge, distilled into words.",
-      type: "website",
-      image: url(~p"/images/the_vyasa_project_1.png"),
-      url: url(socket, ~p"/explore/")
+    |> assign(%{
+      content_action: :show_sources,
+      page_title: "Sources",
+      meta: %{
+        title: "Sources to Explore",
+        description: "Explore the wealth of indic knowledge, distilled into words.",
+        type: "website",
+        image: url(~p"/images/the_vyasa_project_1.png"),
+        url: url(socket, ~p"/explore/")
+      }
     })
   end
 
   defp apply_action(
          %Socket{} = socket,
          :show_chapters,
-         %{"source_title" => source_title} =
-           params
+         %{"source_title" => source_title} = params
        ) do
-    IO.inspect(:show_chapters, label: "TRACE: apply action DM action show_chapters:")
-    IO.inspect(params, label: "TRACE: apply action DM params:")
-    IO.inspect(source_title, label: "TRACE: apply action DM params source_title:")
-
     with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
-         # when is more than 1 chapter
          [%Chapter{} | [%Chapter{} | _]] = chapters <-
            Written.list_chapters_by_source(sid, @default_lang) do
+      # case 1: when there is more than 1 chapter
       socket
-      |> assign(:content_action, :show_chapters)
-      |> assign(:page_title, to_title_case(source.title))
-      |> assign(:source, source)
-      |> assign(:meta, %{
-        title: to_title_case(source.title),
-        description: "Explore the #{to_title_case(source.title)}",
-        type: "website",
-        image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: source})}"),
-        url: url(socket, ~p"/explore/#{source.title}")
+      |> assign(%{
+        content_action: :show_chapters,
+        page_title: to_title_case(source.title),
+        source: source,
+        meta: %{
+          title: to_title_case(source.title),
+          description: "Explore the #{to_title_case(source.title)}",
+          type: "website",
+          image: url(~p"/og/#{VyasaWeb.OgImageController.get_by_binding(%{source: source})}"),
+          url: url(socket, ~p"/explore/#{source.title}")
+        }
       })
       |> Stream.maybe_stream_configure(:chapters, dom_id: &"Chapter-#{&1.no}")
-      |> stream(:chapters, chapters |> Enum.sort_by(fn chap -> chap.no end))
+      |> stream(:chapters, chapters |> Enum.sort_by(& &1.no))
+
+      # case 2: when there's a single chapter for the source, short circuit to show verses for that chapter
     else
       [%Chapter{} = chapter | _] ->
         socket
@@ -135,7 +131,7 @@ defmodule VyasaWeb.Context.Read do
     with %Source{id: sid} = source <- Written.get_source_by_title(source_title),
          %{verses: verses, translations: [ts | _], title: chap_title, body: chap_body} = chap <-
            Written.get_chapter(chap_no, sid, @default_lang) do
-      fmted_title = to_title_case(source.title)
+      desc_title = "#{to_title_case(source.title)} Chapter #{chap_no} | #{chap_title}"
 
       socket
       |> Stream.maybe_stream_configure(:verses, dom_id: &"verse-#{&1.id}")
@@ -147,9 +143,9 @@ defmodule VyasaWeb.Context.Read do
         lang: @default_lang,
         chap: chap,
         selected_transl: ts,
-        page_title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
+        page_title: desc_title,
         meta: %{
-          title: "#{fmted_title} Chapter #{chap_no} | #{chap_title}",
+          title: desc_title,
           description: chap_body,
           type: "website",
           image:
@@ -159,10 +155,6 @@ defmodule VyasaWeb.Context.Read do
       })
       |> init_reply_to_context()
       |> init_drafting_context()
-      # the following should just have its own function:
-      # |> init_draft_reflector()
-      # |> init_draft_reflector_ui()
-      # |> maybe_prepend_draft_mark_in_reflector()
       |> sync_media_session()
     else
       _ ->
@@ -184,6 +176,7 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
+  # fallthrough
   defp sync_media_session(socket) do
     socket
   end
@@ -320,11 +313,11 @@ defmodule VyasaWeb.Context.Read do
     end
   end
 
-  # fallthrough TODO: possibly can be deleted
-  def init_draft_reflector(socket) do
-    socket
-    |> assign(draft_reflector: nil)
-  end
+  # # fallthrough TODO: possibly can be deleted
+  # def init_draft_reflector(socket) do
+  #   socket
+  #   |> assign(draft_reflector: nil)
+  # end
 
   def init_draft_reflector_ui(
         %Socket{
@@ -338,11 +331,11 @@ defmodule VyasaWeb.Context.Read do
     |> assign(draft_reflector_ui: draft_reflector |> SheafUiState.get_initial_ui_state())
   end
 
-  # fallthrough TODO: possibly can be deleted
-  def init_draft_reflector_ui(socket) do
-    socket
-    |> assign(draft_reflector_ui: nil)
-  end
+  # # fallthrough TODO: possibly can be deleted
+  # def init_draft_reflector_ui(socket) do
+  #   socket
+  #   |> assign(draft_reflector_ui: nil)
+  # end
 
   @doc """
   Helps ensure that the head of the mark in the reflector will be a draft mark.
@@ -387,32 +380,6 @@ defmodule VyasaWeb.Context.Read do
         )
         |> ui_register_mark(possible_new_draft.id)
     end
-
-    # updated_marks =
-    #   case marks do
-    #     # case 1: has existing draft marks
-    #     [
-    #       %Mark{
-    #         state: :draft
-    #       }
-    #       | _
-    #     ] = existing_marks ->
-    #       existing_marks
-
-    #     # case 2: has existing marks that are non-draft:
-    #     [%Mark{} | _] = existing_marks ->
-    #       [possible_new_draft | existing_marks]
-
-    #     # no existing marks:
-    #     _ ->
-    #       [possible_new_draft]
-    #   end
-
-    # updated_reflector = %Sheaf{draft_reflector | marks: updated_marks}
-
-    # socket
-    # |> assign(draft_reflector: updated_reflector)
-    # |> assign(draft_reflector_ui: updated_reflector |> SheafUiState.get_initial_ui_state())
   end
 
   @impl true
@@ -422,7 +389,6 @@ defmodule VyasaWeb.Context.Read do
         %Socket{
           assigns:
             %{
-              # marks_ui: %MarksUiState{} = ui_state
               draft_reflector_ui:
                 %SheafUiState{
                   marks_ui: %MarksUiState{}
@@ -432,7 +398,6 @@ defmodule VyasaWeb.Context.Read do
       ) do
     {:noreply,
      socket
-     # |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_expanded_view())
      |> assign(
        draft_reflector_ui:
          draft_reflector_ui
@@ -458,12 +423,6 @@ defmodule VyasaWeb.Context.Read do
     {:noreply,
      socket
      |> ui_toggle_is_editable_marks?()
-     # |> assign(marks_ui: ui_state |> MarksUiState.toggle_is_editable())
-     # |> assign(
-     #   draft_reflector_ui:
-     #     sheaf_ui_state
-     #     |> SheafUiState.toggle_is_editable_marks?()
-     # )
      |> cascade_stream_change()}
   end
 
@@ -484,7 +443,6 @@ defmodule VyasaWeb.Context.Read do
     {
       :noreply,
       socket
-      # |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
       |> assign(draft_reflector_ui: draft_reflector_ui |> SheafUiState.toggle_show_sheaf_modal?())
       |> cascade_stream_change()
     }
@@ -509,7 +467,6 @@ defmodule VyasaWeb.Context.Read do
         %Socket{
           assigns:
             %{
-              # marks_ui: %MarksUiState{} = ui_state
               draft_reflector_ui:
                 %SheafUiState{
                   marks_ui: %MarksUiState{}
@@ -521,11 +478,6 @@ defmodule VyasaWeb.Context.Read do
 
     {:noreply,
      socket
-     # |> assign(
-     #   marks_ui:
-     #     ui_state
-     #     |> MarksUiState.toggle_is_editing_mark_content(mark_id)
-     # )
      |> assign(
        draft_reflector_ui:
          sheaf_ui_state
@@ -564,44 +516,14 @@ defmodule VyasaWeb.Context.Read do
 
     old_mark |> Vyasa.Draft.update_mark(%{body: body})
 
-    IO.inspect(old_mark, label: "oldmark for you to push down the stairs")
-
     {:noreply,
      socket
-     # TODO: commit marks needsto handle ui updates better.
      |> commit_marks_in_reflector(updated_marks)
      |> ui_toggle_is_editing_mark_content(id)
      |> cascade_stream_change()}
-
-    # |> assign(:marks, updated_marks)
-    # |> assign(draft_reflector: %Sheaf{draft_reflector | marks: updated_marks})
-    # |> assign(
-    #   draft_reflector_ui: %SheafUiState{
-    #     draft_reflector_ui
-    #     | marks_ui:
-    #         ui_state
-    #         |> MarksUiState.toggle_is_editing_mark_content(id)
-    #   }
-    # )
-    # |> assign(
-    #   :marks_ui,
-    #   ui_state
-    #   |> MarksUiState.toggle_is_editing_mark_content(id)
-    # )
-    # |> mutate_draft_reflector()
-    # |> cascade_stream_change()}
   end
 
   @impl true
-  @doc """
-  events
-
-  "dom_navigation::clickVerseToSeek" ->
-  Handles the action of clicking to seek by emitting the verse_id to the live player
-  via the pubsub system.
-
-  "binding"
-  """
   def handle_event(
         "dom_navigation::clickVerseToSeek",
         %{"verse_id" => verse_id} = _payload,
