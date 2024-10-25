@@ -315,12 +315,12 @@ defmodule VyasaWeb.Context.Read do
     end
   end
 
-  # # fallthrough TODO: possibly can be deleted
-  # def init_draft_reflector(socket) do
-  #   socket
-  #   |> assign(draft_reflector: nil)
-  # end
-
+  @doc """
+  The ui states for marks within the draft reflector will be tracked using the
+  draft_reflector_ui.
+  This will just rely on the exposed init functions within SheafUiState module
+  for this init routine.
+  """
   def init_draft_reflector_ui(
         %Socket{
           assigns: %{
