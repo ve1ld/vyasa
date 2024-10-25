@@ -308,7 +308,7 @@ defmodule VyasaWeb.Context.Components do
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
         for={%{}}
-        phx-submit={JS.push("sheaf:publish")}
+        phx-submit={JS.push("sheaf::publish")}
         phx-target={@event_target}
         class="flex items-center"
       >

@@ -73,6 +73,40 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
     }
   end
 
+  @doc """
+  Registers a single mark, its state gets tracked thereafter.
+  """
+  def register_mark(
+        %MarksUiState{mark_id_to_ui: mark_id_to_ui} = ui_state,
+        mark_id
+        # %Mark{
+        #   id: mark_id
+        # } = _mark
+      )
+      when is_binary(mark_id) do
+    %MarksUiState{
+      ui_state
+      | mark_id_to_ui:
+          mark_id_to_ui
+          |> Map.put(mark_id, MarkUiState.get_initial_ui_state())
+    }
+  end
+
+  @doc """
+  Deregisters a single mark, removing its state from tracking.
+  """
+  def deregister_mark(
+        %MarksUiState{mark_id_to_ui: mark_id_to_ui} = ui_state,
+        mark_id
+        # %Mark{id: mark_id}
+      )
+      when is_binary(mark_id) do
+    %MarksUiState{
+      ui_state
+      | mark_id_to_ui: mark_id_to_ui |> Map.delete(mark_id)
+    }
+  end
+
   def toggle_show_sheaf_modal?(
         %MarksUiState{
           show_sheaf_modal?: curr
@@ -227,6 +261,46 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     %SheafUiState{
       sheaf_ui_state
       | marks_ui: ui_state |> MarksUiState.toggle_is_editing_mark_content(mark_id)
+    }
+  end
+
+  @doc """
+  Registers a mark, starts tracking its state
+  """
+  def register_mark(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state,
+        mark_id
+      )
+      when is_binary(mark_id) do
+    IO.inspect(%{mark_id: mark_id, sheaf_ui_state: sheaf_ui_state},
+      label: "UI_STATE::SHEAF::register_mark"
+    )
+
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.register_mark(mark_id)
+    }
+  end
+
+  @doc """
+  Deregisters a mark, stops tracking its state.
+  """
+  def deregister_mark(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state,
+        mark_id
+      )
+      when is_binary(mark_id) do
+    IO.inspect(%{mark_id: mark_id, sheaf_ui_state: sheaf_ui_state},
+      label: "UI_STATE::SHEAF::deregister_mark"
+    )
+
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.deregister_mark(mark_id)
     }
   end
 end
