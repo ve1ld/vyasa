@@ -7,11 +7,7 @@ defmodule VyasaWeb.Context.Components.UiState.Mark do
   @moduledoc """
   Definition of ui state corresponding to a single mark.
   """
-
-  # alias Phoenix.LiveView.Socket
   alias VyasaWeb.Context.Components.UiState.Mark, as: UiState
-
-  # import Phoenix.Component, only: [assign: 2]
 
   defstruct [
     :is_editing_content?
@@ -79,9 +75,6 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
   def register_mark(
         %MarksUiState{mark_id_to_ui: mark_id_to_ui} = ui_state,
         mark_id
-        # %Mark{
-        #   id: mark_id
-        # } = _mark
       )
       when is_binary(mark_id) do
     %MarksUiState{
@@ -98,7 +91,6 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
   def deregister_mark(
         %MarksUiState{mark_id_to_ui: mark_id_to_ui} = ui_state,
         mark_id
-        # %Mark{id: mark_id}
       )
       when is_binary(mark_id) do
     %MarksUiState{
@@ -112,7 +104,6 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
           show_sheaf_modal?: curr
         } = ui_state
       ) do
-    # show_modal("sheaf-creator")
     %MarksUiState{ui_state | show_sheaf_modal?: !curr}
   end
 
@@ -181,7 +172,6 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
           active: is_active?
         } = _sheaf
       ) do
-    # dbg()
     IO.puts("CHECKPOINT get initial ui state HAPPY PATH")
 
     marks_ui =
