@@ -462,7 +462,8 @@ defmodule VyasaWeb.Context.Read do
   @impl true
   def handle_event(
         "mark::editMarkContent",
-        %{"mark_id" => id, "mark_body" => body} = _payload,
+        %{"mark_id" => id, "previous_mark_body" => _prev_body, "input" => body} =
+          _payload,
         %Socket{
           assigns:
             %{
@@ -494,6 +495,7 @@ defmodule VyasaWeb.Context.Read do
 
     {:noreply,
      socket
+     # TODO: commit marks needsto handle ui updates better.
      |> commit_marks_in_reflector(updated_marks)
      |> ui_toggle_is_editing_mark_content(id)
      |> cascade_stream_change()}
@@ -1053,7 +1055,8 @@ defmodule VyasaWeb.Context.Read do
   def commit_marks_in_reflector(
         %Socket{
           assigns: %{
-            draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf
+            draft_reflector: %Vyasa.Sangh.Sheaf{} = curr_sheaf,
+            draft_reflector_ui: current_ui_state
           }
         } = socket,
         [%Mark{} | _] = new_marks
@@ -1063,6 +1066,10 @@ defmodule VyasaWeb.Context.Read do
     {:ok, written_sheaf} = Vyasa.Sangh.update_sheaf(curr_sheaf, %{marks: sanitised_marks})
 
     reflector_ui = written_sheaf |> SheafUiState.get_initial_ui_state()
+
+    IO.inspect(%{current_ui_state: current_ui_state, reflector_ui: reflector_ui},
+      label: "see me:"
+    )
 
     socket
     |> assign(draft_reflector: written_sheaf)
