@@ -226,21 +226,10 @@ defmodule VyasaWeb.Context.Read do
             }
           }
         } = socket
-      ) do
-    reply_to_sheaf =
-      case parent_id do
-        p_id when is_binary(p_id) ->
-          Sangh.get_sheaf(p_id)
-
-        p when is_nil(p) ->
-          nil
-
-        _ ->
-          nil
-      end
-
+      )
+      when is_binary(parent_id) do
     socket
-    |> assign(reply_to: reply_to_sheaf)
+    |> assign(reply_to: Sangh.get_sheaf(parent_id))
   end
 
   def init_reply_to_context(%Socket{} = socket) do
