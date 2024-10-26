@@ -1268,7 +1268,7 @@ defmodule VyasaWeb.Context.Read do
             marks={@draft_reflector.marks}
             marks_ui={@draft_reflector_ui.marks_ui}
             reply_to={@reply_to}
-            active_sheaf={@draft_reflector}
+            draft_sheaf={@draft_reflector}
             event_target="#content-display"
           />
           <.live_component

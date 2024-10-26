@@ -243,12 +243,9 @@ defmodule VyasaWeb.Context.Components do
   attr :marks_ui, MarksUiState, required: true
   attr :marks, :list, required: true
 
-  attr :active_sheaf, Sheaf,
+  attr :draft_sheaf, Sheaf,
     required: false,
-    doc: "Refers to the sheaf that we are currently accumulating marks for.
-      It's named active in line with the original intent of creating that active
-      flag, where we define what the current sheaf is for which we are
-      accumulating marks for."
+    doc: "This is the draft sheaf, for which we are currently accumulating marks"
 
   attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
 
@@ -281,7 +278,7 @@ defmodule VyasaWeb.Context.Components do
           id={@id}
           marks={@marks}
           marks_ui={@marks_ui}
-          active_sheaf={@active_sheaf}
+          draft_sheaf={@draft_sheaf}
           reply_to={@reply_to}
           event_target={@event_target}
           on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
@@ -418,14 +415,17 @@ defmodule VyasaWeb.Context.Components do
       >
         <%= @label %>
       </h2>
+      <!-- Signature Display -->
+      <.sheaf_signature_display sheaf={@sheaf} />
       <!-- Body Display -->
-      <div class="mb-2">
+      <div class="mb-4 mt-3">
+        <!-- Added margin for vertical spacing -->
         <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
-      <!-- Signature and Action Button Group -->
+      <!-- Engagement Display -->
+      <.sheaf_engagement_display sheaf={@sheaf} sheaf_ui={nil} replies_count={3} />
+      <!-- Action Button Group -->
       <div class="flex justify-between items-center mt-2">
-        <.sheaf_signature_display sheaf={@sheaf} />
-        <!-- Action Button Group -->
         <div class="flex space-x-2">
           <%= for {icon, action} <- @action_buttons do %>
             <button
@@ -454,17 +454,55 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_signature_display(assigns) do
     ~H"""
     <div class="flex mt-2 text-sm text-gray-600">
-      <div class="mx-1 text-gray-800">
-        <p>- <%= @sheaf.signature %></p>
+      <div class="mx-1 text-gray-800 font-semibold">
+        <p><%= @sheaf.signature %></p>
       </div>
       <!-- Time Display -->
-      <div class="mx-1 text-gray-800 text-sm italic">
+      <div class="mx-1 text-gray-500 italic">
         <%= if is_nil(@sheaf.updated_at) do %>
           <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
         <% else %>
           <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
         <% end %>
       </div>
+    </div>
+    """
+  end
+
+  attr :replies_count, :integer, default: 0
+  attr :sheaf, Sheaf, required: true, doc: "the sheaf that we are referring to"
+  attr :sheaf_ui, :any, default: "", doc: "corresponding UI struct for the sheaf"
+
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
+  def sheaf_engagement_display(assigns) do
+    ~H"""
+    <div class="flex space-x-4 mt-2 justify-between">
+      <button
+        type="button"
+        phx-click={@on_replies_click}
+        class="flex items-center text-gray-600 hover:text-gray-800"
+      >
+        <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
+        <span class="text-sm">Show <%= @replies_count %> Replies</span>
+      </button>
+
+      <button
+        type="button"
+        phx-click={@on_set_reply_to}
+        class="flex items-center text-gray-600 hover:text-gray-800"
+      >
+        <.icon name="custom-icon-formkit-reply" class="h-4 w-4 mr-1" />
+        <span class="text-sm">Reply</span>
+      </button>
     </div>
     """
   end

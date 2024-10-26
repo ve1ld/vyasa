@@ -1,4 +1,8 @@
 defmodule VyasaWeb.Context.Discuss.SheafTree do
+  @moduledoc """
+  This module provides functions components that can be wired up
+  to render a 3-level deep tree for discussions.
+  """
   use VyasaWeb, :html
 
   alias Vyasa.Sangh.{SheafLattice, Sheaf}
