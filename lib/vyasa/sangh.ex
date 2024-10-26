@@ -9,14 +9,6 @@ defmodule Vyasa.Sangh do
   # alias Vyasa.Draft
   alias Vyasa.Sangh.{Sheaf}
 
-  # TODO: @ks0m1c if a single sheaf has many associated marks and each mark has order with respect to another mark, then
-  # we should float the ability to adjust mark orders in this context module.
-  # "As a user I want to rearrange marks in my sheaf"
-  # Some CRUD Functions needed here:
-  # 1) promote_mark_in_sheaf(sheaf_id, mark_id) ==> swaps rank with previous mark that came along with it
-  # 2) demote_mark_in_sheaf(sheaf_id, mark_id) ==> mirror of number 1
-  # 3) delete_mark_in_sheaf(sheaf_id, mark_id) ==> calls the mark::delete() and adjusts rank order for the remaining marks
-
   @doc """
   Returns a list of sheafs associated with a specific session.
 
@@ -61,7 +53,7 @@ defmodule Vyasa.Sangh do
   end
 
   @doc """
-  TODO
+  TODO [TESTING needed by @rtshkmr]
   Creates a new child sheaf struct from a parent, using the attrs provided.
   This merely inits the relationships and is not responsible for other state-toggles in
   either parent or child sheafs.

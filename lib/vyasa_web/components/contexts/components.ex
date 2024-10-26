@@ -21,11 +21,11 @@ defmodule VyasaWeb.Context.Components do
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
     <div :if={not is_nil(@marks_ui)} class="mb-4">
       <div
-        id={"collapse-header-container" <> @id}
+        id={"collapse-header-container-" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
       >
         <button
-          phx-click={JS.push("toggle_marks_display_collapsibility", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
           type="button"
@@ -41,8 +41,9 @@ defmodule VyasaWeb.Context.Components do
         </button>
         <button
           :if={@marks_ui.is_expanded_view?}
+          type="button"
           class="flex space-x-2 pr-2"
-          phx-click={JS.push("toggle_is_editable_marks?", value: %{value: ""})}
+          phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
           phx-target={@marks_target}
         >
           <.icon
@@ -56,7 +57,7 @@ defmodule VyasaWeb.Context.Components do
         </button>
       </div>
       <div
-        id={"collapsible-content-container" <> @id}
+        id={"collapsible-content-container-" <> @id}
         class={
           if @marks_ui.is_expanded_view?,
             do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
@@ -96,104 +97,110 @@ defmodule VyasaWeb.Context.Components do
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
       <%= if @mark.state == :live do %>
-        <.form
-          for={%{}}
-          phx-submit="editMarkContent"
-          phx-value-mark_id={@mark.id}
-          phx-target={@marks_target}
+        <div
+          id={"mark-container-" <>
+          @mark.id <> "-" <> @id}
+          class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
         >
           <div
-            id={"mark-container-" <>
-          @mark.id <> "-" <> @id}
-            class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
+            :if={@is_editable?}
+            id={"ordering-button-group-"<> @mark.id <> "-" <> @id}
+            class="flex flex-col items-center"
           >
-            <div
-              :if={@is_editable?}
-              id={"ordering-button-group-"<> @mark.id <> "-" <> @id}
-              class="flex flex-col items-center"
+            <button
+              phx-click="dummy_event"
+              phx-target={@marks_target}
+              class="p-1 hover:bg-gray-200 rounded"
+              aria-label="Up Arrow"
+              type="button"
             >
-              <button
-                phx-click="dummy_event"
-                phx-target={@marks_target}
-                class="p-1 hover:bg-gray-200 rounded"
-                aria-label="Up Arrow"
-              >
-                <.icon
-                  name="custom-icon-sort-up"
-                  class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-                />
-              </button>
-              <!-- Displaying Order -->
-              <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
-              <button
-                phx-click="dummy_event"
-                phx-target={@marks_target}
-                class="p-1 hover:bg-gray-200 rounded"
-                aria-label="Down Arrow"
-              >
-                <.icon
-                  name="custom-icon-sort-down"
-                  class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-                />
-              </button>
-            </div>
-            <div
-              id={"mark-content-container-" <> @mark.id <> "-" <> @id}
-              class="h-full w-full flex-grow mx-2 pt-2"
+              <.icon
+                name="custom-icon-sort-up"
+                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+              />
+            </button>
+            <!-- Displaying Order -->
+            <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
+            <button
+              phx-click="dummy_event"
+              type="button"
+              phx-target={@marks_target}
+              class="p-1 hover:bg-gray-200 rounded"
+              aria-label="Down Arrow"
             >
-              <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-                <span class="block mb-1 text-sm italic text-secondary">
-                  "<%= @mark.binding.window.quote %>"
-                </span>
-              <% end %>
-              <%= if is_binary(@mark.body) do %>
-                <div class="flex-grow h-full">
-                  <.mark_body
-                    id={@mark.id <> "-" <> @id}
-                    mark_ui={@mark_ui}
-                    body_content={@mark.body}
-                  />
-                </div>
-              <% end %>
-            </div>
-            <div
-              :if={@is_editable?}
-              id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
-              class="h-full flex flex-col ml-2 space-y-2 justify-between"
-            >
-              <button
-                phx-click="tombMark"
-                phx-target={@marks_target}
-                phx-value-id={@mark.id}
-                title="Delete"
-                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                aria-label="Delete"
-              >
-                <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
-              </button>
-              <%= if not @mark_ui.is_editing_content? do %>
-                <button
-                  phx-click="toggle_is_editing_mark_content?"
-                  phx-target={@marks_target}
-                  phx-value-mark_id={@mark.id}
-                  class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                  aria-label="Toggle edit mark body"
-                >
-                  <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-                </button>
-              <% else %>
-                <!-- Alternative content when not editing -->
-                <button
-                  type="submit"
-                  class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                  aria-label="Edit mark body"
-                >
-                  <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
-                </button>
-              <% end %>
-            </div>
+              <.icon
+                name="custom-icon-sort-down"
+                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+              />
+            </button>
           </div>
-        </.form>
+          <div
+            id={"mark-content-container-" <> @mark.id <> "-" <> @id}
+            class="h-full w-full flex-grow mx-2 pt-2"
+          >
+            <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+              <span class="block mb-1 text-sm italic text-secondary">
+                "<%= @mark.binding.window.quote %>"
+              </span>
+            <% end %>
+            <%= if is_binary(@mark.body) do %>
+              <div class="flex-grow h-full">
+                <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} body_content={@mark.body} />
+              </div>
+            <% end %>
+          </div>
+          <div
+            :if={@is_editable?}
+            id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
+            class="h-full flex flex-col ml-2 space-y-2 justify-between"
+          >
+            <button
+              phx-click="mark::tombMark"
+              type="button"
+              phx-target={@marks_target}
+              phx-value-id={@mark.id}
+              title="Delete"
+              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+              aria-label="Delete"
+            >
+              <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
+            </button>
+            <%= if not @mark_ui.is_editing_content? do %>
+              <button
+                phx-click="ui::toggle_is_editing_mark_content?"
+                type="button"
+                phx-target={@marks_target}
+                phx-value-mark_id={@mark.id}
+                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                aria-label="Toggle edit mark body"
+              >
+                <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
+              </button>
+            <% else %>
+              <!-- pseudo submit button -->
+              <button
+                id={"pseudo-submit-" <> @mark.id <> "-" <> @id }
+                type="button"
+                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+                phx-click={JS.push("shim", value: %{})}
+                phx-hook="PseudoForm"
+                data-event-to-capture="click"
+                data-target-selector={"#mark-body-" <> @mark.id <> "-" <> @id}
+                data-event-name="mark::editMarkContent"
+                data-event-target={@marks_target}
+                data-event-payload={
+                  Jason.encode!(%{
+                    "mark_id" => @mark.id,
+                    "previous_mark_body" => @mark.body
+                  })
+                }
+                aria-label="Edit mark body"
+              >
+                <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
+              </button>
+            <% end %>
+          </div>
+        </div>
       <% end %>
     </div>
     """
@@ -257,9 +264,9 @@ defmodule VyasaWeb.Context.Components do
     <.generic_modal_wrapper
       id={"modal-wrapper-" <> @id}
       show={@marks_ui.show_sheaf_modal?}
-      on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      on_click_away_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
-      window_keydown_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+      on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      on_click_away_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      window_keydown_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
@@ -277,22 +284,19 @@ defmodule VyasaWeb.Context.Components do
           active_sheaf={@active_sheaf}
           reply_to={@reply_to}
           event_target={@event_target}
-          on_cancel_callback={JS.push("toggle_show_sheaf_modal?", target: "#content-display")}
+          on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
         />
       </div>
     </.generic_modal_wrapper>
     """
   end
 
-  # TODO 1) need to inject the "signature" prop into this so that if a session already exists, it should be pre-filled
-  # TODO 2) @rtshkmr @ks0m1c we need to wire up some form-rejection logic to ensure that things like the signature will
-  # always be present. More generally, we'd need some form validation related patterns to be added to these function-component UI primitives
   def sheaf_creator_form(assigns) do
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
         for={%{}}
-        phx-submit={JS.push("sheaf:publish")}
+        phx-submit={JS.push("sheaf::publish")}
         phx-target={@event_target}
         class="flex items-center"
       >
@@ -336,7 +340,7 @@ defmodule VyasaWeb.Context.Components do
           </div>
 
           <.collapsible_marks_display
-            id={@id}
+            id={"nested-"<> @id}
             myself={nil}
             marks_target="#content-display"
             marks={@marks}
@@ -345,6 +349,7 @@ defmodule VyasaWeb.Context.Components do
 
           <div class="flex justify-between space-x-2">
             <button
+              type="button"
               phx-click={@on_cancel_callback}
               class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
@@ -423,7 +428,11 @@ defmodule VyasaWeb.Context.Components do
         <!-- Action Button Group -->
         <div class="flex space-x-2">
           <%= for {icon, action} <- @action_buttons do %>
-            <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
+            <button
+              type="button"
+              phx-click={action}
+              class="flex items-center text-blue-500 hover:text-blue-700"
+            >
               <.icon name={icon} class="h-5 w-5 mr-1" />
               <span>Action</span>
             </button>
