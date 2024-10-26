@@ -47,9 +47,9 @@ defmodule VyasaWeb.Context.Read.Verses do
             id={"verse-" <>verse.id}
             module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
-            marks={@marks}
-            marks_ui={@marks_ui}
-            event_target="#content-display"
+            marks={@draft_sheaf.marks}
+            marks_ui={@draft_sheaf_ui.marks_ui}
+            event_target={@event_target}
             edge={[
               %{
                 title: "#{verse.chapter_no}.#{verse.no}",

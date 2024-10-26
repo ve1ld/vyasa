@@ -6,6 +6,7 @@ defmodule VyasaWeb.Context.Components do
   alias Vyasa.Sangh.{Sheaf}
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
+  alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
   attr :marks, :list, default: []
   attr :marks_ui, MarksUiState, required: true
@@ -240,14 +241,20 @@ defmodule VyasaWeb.Context.Components do
   end
 
   attr :id, :string, required: true
-  attr :marks_ui, MarksUiState, required: true
-  attr :marks, :list, required: true
 
   attr :draft_sheaf, Sheaf,
     required: false,
     doc: "This is the draft sheaf, for which we are currently accumulating marks"
 
+  attr :draft_sheaf_ui, SheafUiState,
+    required: false,
+    doc: "This is the draft sheaf ui, for which we are currently accumulating marks"
+
   attr :reply_to, Sheaf, required: false, doc: "Refers to the sheaf that we are replying to"
+
+  attr :reply_to_ui, SheafUiState,
+    default: SheafUiState.get_initial_ui_state(),
+    doc: "Corresponding ui state for the reply to sheaf"
 
   attr :session, VyasaWeb.Session,
     default: nil,
@@ -260,10 +267,10 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <.generic_modal_wrapper
       id={"modal-wrapper-" <> @id}
-      show={@marks_ui.show_sheaf_modal?}
-      on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
-      on_click_away_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
-      window_keydown_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+      show={@draft_sheaf_ui.marks_ui.show_sheaf_modal?}
+      on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: @event_target)}
+      on_click_away_callback={JS.push("ui::toggle_show_sheaf_modal?", target: @event_target)}
+      window_keydown_callback={JS.push("ui::toggle_show_sheaf_modal?", target: @event_target)}
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
@@ -276,9 +283,8 @@ defmodule VyasaWeb.Context.Components do
         <.sheaf_creator_form
           session={@session}
           id={@id}
-          marks={@marks}
-          marks_ui={@marks_ui}
           draft_sheaf={@draft_sheaf}
+          draft_sheaf_ui={@draft_sheaf_ui}
           reply_to={@reply_to}
           event_target={@event_target}
           on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
@@ -339,9 +345,9 @@ defmodule VyasaWeb.Context.Components do
           <.collapsible_marks_display
             id={"nested-"<> @id}
             myself={nil}
-            marks_target="#content-display"
-            marks={@marks}
-            marks_ui={@marks_ui}
+            marks_target={@event_target}
+            marks={@draft_sheaf.marks}
+            marks_ui={@draft_sheaf_ui.marks_ui}
           />
 
           <div class="flex justify-between space-x-2">

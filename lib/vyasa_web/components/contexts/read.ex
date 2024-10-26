@@ -230,11 +230,15 @@ defmodule VyasaWeb.Context.Read do
       when is_binary(parent_id) do
     socket
     |> assign(reply_to: Sangh.get_sheaf(parent_id))
+
+    # |> assign(reply_to: Sangh.get_sheaf("838272d6-4ccd-4336-96db-348c49c8acdd"))
   end
 
   def init_reply_to_context(%Socket{} = socket) do
     socket
     |> assign(reply_to: nil)
+
+    # |> assign(reply_to: Sangh.get_sheaf("838272d6-4ccd-4336-96db-348c49c8acdd"))
   end
 
   @doc """
@@ -1265,10 +1269,9 @@ defmodule VyasaWeb.Context.Read do
           <.sheaf_creator_modal
             id="sheaf-creator"
             session={@session}
-            marks={@draft_reflector.marks}
-            marks_ui={@draft_reflector_ui.marks_ui}
             reply_to={@reply_to}
             draft_sheaf={@draft_reflector}
+            draft_sheaf_ui={@draft_reflector_ui}
             event_target="#content-display"
           />
           <.live_component
@@ -1277,8 +1280,9 @@ defmodule VyasaWeb.Context.Read do
             src={@src}
             verses={@streams.verses}
             chap={@chap}
-            marks={@draft_reflector.marks}
-            marks_ui={@draft_reflector_ui.marks_ui}
+            event_target="#content-display"
+            draft_sheaf={@draft_reflector}
+            draft_sheaf_ui={@draft_reflector_ui}
             lang={@lang}
             selected_transl={@selected_transl}
             page_title={@page_title}
