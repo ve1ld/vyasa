@@ -260,6 +260,9 @@ defmodule VyasaWeb.Context.Read do
   RENAME: init_context()
   - initialises the
   - it's not ALWAYS a replying to
+
+  TODO: @ks0m1c this is to be shifted out, into the mediator so that the pattern would be that the mediator injects
+  context into the MODE_CONTEXT (read context, discuss context)
   """
   def init_reply_to_context(
         %Socket{
@@ -275,9 +278,7 @@ defmodule VyasaWeb.Context.Read do
     #  read from the db to get the SOLE non-draft active sheaf for session (and user(?))
     # STUB:
     socket
-    |> assign(
-      reply_to: nil || Vyasa.Sangh.get_sheaf("6f9a4799-1f4c-4fbd-a768-ef51f5eb6f14")
-    )
+    |> assign(reply_to: nil)
   end
 
   def init_reply_to_context(%Socket{} = socket) do
@@ -312,7 +313,7 @@ defmodule VyasaWeb.Context.Read do
 
       _ ->
         socket
-        |> assign(draft_reflector: Sheaf.gen_first_sheaf(sangh_id))
+        |> assign(draft_reflector: Sheaf.draft!(sangh_id))
     end
   end
 
@@ -721,19 +722,21 @@ defmodule VyasaWeb.Context.Read do
               name: user_signature,
               sangh: sangh
             }
-          },
-          #reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
+          }
+          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
         } = socket
       ) do
     IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION"
     )
 
-    Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(),
-                               body: body,
-                               session_id: sangh.id,
-                               parent: parent_sheaf,
-                               signature: user_signature})
+    Vyasa.Sangh.create_sheaf(%{
+      id: Ecto.UUID.generate(),
+      body: body,
+      session_id: sangh.id,
+      parent: parent_sheaf,
+      signature: user_signature
+    })
 
     {:noreply, socket}
   end
@@ -751,20 +754,140 @@ defmodule VyasaWeb.Context.Read do
               name: user_signature,
               sangh: sangh
             }
-          },
-          #reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
+          }
+          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
         } = socket
       ) do
     IO.inspect(%{body: body, is_private: is_private},
       label: "SHEAF CREATION without parent"
     )
 
-     Vyasa.Sangh.create_sheaf(%{id: Ecto.UUID.generate(), body: body, session_id: sangh.id, signature: user_signature})
-     |> IO.inspect()
+    Vyasa.Sangh.create_sheaf(%{
+      id: Ecto.UUID.generate(),
+      body: body,
+      session_id: sangh.id,
+      signature: user_signature
+    })
+    |> IO.inspect()
 
     {:noreply, socket}
   end
 
+  def handle_event(
+        "sheaf:create_sheaf",
+        _params,
+        %Socket{} = socket
+      ) do
+    IO.puts("sheaf:create_sheaf:pokemon")
+    {:noreply, socket}
+  end
+
+  @impl true
+  # TODO: @ks0m1c sheaf crud -- event handler
+  # This function handles the case where there's a parent sheaf in the reply_to context.
+  # What should happen:
+  # 1. since this is NOT a ROOT sheaf, the existing draft sheaf should be updated and promoted to a pulished sheaf AND it needs to be associated to the parent sheaf (in the reply to context).
+  #    => also, that should also be the new, active sheaf since it just got created (NOT SURE ABOUT THIS)
+  # 2. no need to add in a new draft sheaf because the init_reply_to_context() will handle it for us.
+  #
+  # Consider the current implementation of init_draft_reflector when writing this out. The draft sheaf used for the draft_reflector may
+  # be fetched from the DB (or may have been generated without being pushed in).
+  # If it was fetched from the DB, then this creation step needs to ensure that entry needs to be updated/delete.
+  #
+  # TODO: @ks0m1c [this can be done another time, or now]
+  # There's some more cases to handle:
+  # 1. if it's a private sheaf ==> needs to be associated with the user's private sangh session id
+  # 2. if it's a public sheaf ==> (no change) keep usingthe current sangh session id
+  #
+  def handle_event(
+        "sheaf:publish",
+        %{
+          "body" => body,
+          "is_private" => is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            marks_ui: %MarksUiState{} = ui_state,
+            reply_to: %Sheaf{} = parent_sheaf,
+            draft_reflector: %Sheaf{} = draft_sheaf,
+            session: %VyasaWeb.Session{
+              name: username,
+              sangh: %Vyasa.Sangh.Session{
+                id: sangh_id
+              }
+            }
+          }
+        } = socket
+      )
+      when not is_nil(parent_sheaf) do
+    IO.inspect(%{body: body, is_private: is_private},
+      label: "SHEAF CREATION"
+    )
+
+    Vyasa.Sangh.update_sheaf(
+      draft_sheaf,
+      %{
+        body: body,
+        traits: ["published"],
+        parent: parent_sheaf,
+        signature: username
+      }
+    )
+
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+     |> assign(draft_reflector: Sheaf.draft!(sangh_id))
+     |> cascade_stream_change()}
+  end
+
+  # TODO: @ks0m1c since this is a root sheaf, no parent to associate.
+  # This function shall:
+  # 1. update (promote) this current draft sheaf in the reflector to a published sheaf
+  #
+  # TODO @ks0m1c same 2 cases as before: A) it's a private sheaf ==> use private sangh session B) it's a public sheaf
+  # creates a root sheaf, no parent associated
+  def handle_event(
+        "sheaf:publish",
+        %{
+          "body" => body,
+          "is_private" => is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            marks_ui: %MarksUiState{} = ui_state,
+            draft_reflector: %Sheaf{} = draft_sheaf,
+            session: %VyasaWeb.Session{
+              name: username,
+              sangh: %Vyasa.Sangh.Session{
+                id: sangh_id
+              }
+            }
+          }
+        } = socket
+      ) do
+    IO.inspect(%{body: body, is_private: is_private},
+      label: "SHEAF CREATION without parent"
+    )
+
+    # current_sheaf_id context is always inherited from the in-context window
+    Vyasa.Sangh.update_sheaf(
+      draft_sheaf,
+      %{
+        body: body,
+        traits: ["published"],
+        signature: username
+      }
+    )
+
+    {:noreply,
+     socket
+     |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
+     |> assign(draft_reflector: Sheaf.draft!(sangh_id))
+     |> cascade_stream_change()}
+  end
+
+  # fallback:
   def handle_event(
         "sheaf:create_sheaf",
         _params,
@@ -788,8 +911,6 @@ defmodule VyasaWeb.Context.Read do
     IO.inspect(%{event_name: event_name, params: params},
       label: "POKEMON READ CONTEXT EVENT HANDLING"
     )
-
-    # dbg()
 
     {:noreply, socket}
   end
