@@ -130,6 +130,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         />
       </div>
       <.collapsible_marks_display
+        id="verse-matrix-level"
         myself={@myself}
         marks_target={@event_target}
         marks={@marks}
@@ -186,7 +187,6 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       >
         <textarea
           name="body"
-          rows="1"
           id="quick-draft-form-textarea"
           phx-hook="TextareaAutoResize"
           class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"

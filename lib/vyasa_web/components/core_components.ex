@@ -204,7 +204,12 @@ defmodule VyasaWeb.CoreComponents do
   )
 
   attr(:container_class, :string, default: "", doc: "inline style for the outermost container")
-  attr(:background_class, :string, default: "", doc: "inline style for the background / backdrop")
+
+  attr(:background_class, :string,
+    default: "bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+    doc: "inline style for the background / backdrop"
+  )
+
   attr(:dialog_class, :string, default: "", doc: "inline style for the dialog container")
   attr(:focus_wrap_class, :string, default: "", doc: "inline style for the focus wrap")
 
@@ -240,8 +245,6 @@ defmodule VyasaWeb.CoreComponents do
      modal-wrapper is structured (containers, children...)
   """
   def generic_modal_wrapper(assigns) do
-    IO.inspect(assigns, label: "SEE ME: modal wrapper assigns")
-
     ~H"""
     <div
       :if={@show}
@@ -252,7 +255,7 @@ defmodule VyasaWeb.CoreComponents do
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+          "fixed inset-0 backdrop-blur-md",
           @background_class
         ]}
         aria-hidden="true"
@@ -262,47 +265,37 @@ defmodule VyasaWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         tabindex="0"
-        class={["w-full fixed inset-0 flex", @dialog_class]}
+        class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
       >
-        <div class="flex w-full absolute lg:inset-0 bottom-0 lg:items-center lg:justify-center">
-          <div class={["w-full lg:py-8 rounded-none lg:rounded-2xl", @focus_container_class]}>
-            <.focus_wrap
-              id={"#{@id}-container"}
-              phx-mounted={@show && @on_mount_callback && show_modal(@id)}
-              phx-window-keydown={hide_modal(@window_keydown_callback, @id)}
-              phx-key={@cancel_key}
-              phx-click-away={hide_modal(@on_click_away_callback, @id)}
-              class={[
-                "hidden relative flex w-full bg-white lg:rounded-3xl lg:shadow-2xl",
-                @focus_wrap_class
-              ]}
-            >
-              <div :if={@close_button_icon} class="absolute top-4 right-4">
-                <button
-                  phx-click={hide_modal(@on_cancel_callback, @id)}
-                  type="button"
-                  class={["-m-3 flex-none p-3 opacity-80 hover:opacity-40", @close_button_class]}
-                  aria-label={gettext("close")}
-                >
-                  <.icon
-                    name={@close_button_icon}
-                    class={"h-5 w-5 text-black " <> (@close_button_icon_class || "")}
-                  />
-                </button>
-              </div>
-              <div id={"#{@id}-content"}>
-                <div
-                  id={"#{@id}-main"}
-                  class={[
-                    "w-full lg:max-w-2xl lg:items-center lg:justify-center flex",
-                    @inner_block_container_class
-                  ]}
-                >
-                  <%= render_slot(@inner_block) %>
-                </div>
-              </div>
-            </.focus_wrap>
-          </div>
+        <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
+          <.focus_wrap
+            id={"#{@id}-container"}
+            phx-mounted={@show && @on_mount_callback && show_modal(@id)}
+            phx-window-keydown={hide_modal(@window_keydown_callback, @id)}
+            phx-key={@cancel_key}
+            phx-click-away={hide_modal(@on_click_away_callback, @id)}
+            class={[
+              "relative flex flex-col w-full",
+              @focus_wrap_class
+            ]}
+          >
+            <div :if={@close_button_icon} class="absolute top-4 right-4">
+              <button
+                phx-click={hide_modal(@on_cancel_callback, @id)}
+                type="button"
+                class={["flex-none p-2 opacity-80 hover:opacity-100", @close_button_class]}
+                aria-label={gettext("close")}
+              >
+                <.icon
+                  name={@close_button_icon}
+                  class={"h-5 w-5 text-black " <> (@close_button_icon_class || "")}
+                />
+              </button>
+            </div>
+            <div id={"#{@id}-content"} class="w-full">
+              <%= render_slot(@inner_block) %>
+            </div>
+          </.focus_wrap>
         </div>
       </div>
     </div>
@@ -1056,7 +1049,7 @@ defmodule VyasaWeb.CoreComponents do
     ~H"""
     <div class={[
       "fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50",
-      assigns.class
+      Map.get(assigns, :class, "")
     ]}>
       <h2 class="text-lg font-bold mb-2">
         <%= Map.get(assigns, :label, "Developer Dump") %>
