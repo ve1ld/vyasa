@@ -22,51 +22,6 @@ defmodule VyasaWeb.Context.Components.UiState.Mark do
   end
 end
 
-defmodule VyasaWeb.Context.Components.UiState.Sheaf do
-  alias Vyasa.Sangh.{Sheaf, Mark}
-  alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
-  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
-  alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
-
-  # QQ: @ks0m1c i haven't thought of whether the is_active should be duplicated from
-  # the actual ui state and kept within the SheafUiState or not.
-  # @rtshkmr to decide later, and remove this flag  if unnecessary
-  defstruct [
-    :is_active?,
-    :is_expanded?,
-    :marks_ui
-  ]
-
-  @initial %{
-    is_active?: false,
-    is_expanded?: true,
-    marks_ui: nil
-  }
-
-  def get_initial_ui_state(
-        %Sheaf{
-          marks: marks,
-          active: is_active?
-        } = _sheaf
-      ) do
-    marks_ui =
-      case marks do
-        [%Mark{} | _] -> MarksUiState.get_initial_ui_state(marks)
-        _ -> nil
-      end
-
-    %SheafUiState{
-      struct(SheafUiState, @initial)
-      | marks_ui: marks_ui,
-        is_active?: is_active?
-    }
-  end
-
-  def get_initial_ui_state() do
-    struct(SheafUiState, @initial)
-  end
-end
-
 defmodule VyasaWeb.Context.Components.UiState.Marks do
   @moduledoc """
   Definition of ui state corresponding to a a set of marks in a sheaf.

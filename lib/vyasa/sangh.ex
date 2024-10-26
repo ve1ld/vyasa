@@ -101,7 +101,8 @@ defmodule Vyasa.Sangh do
   def get_sheaf(id) do
     from(c in Sheaf,
       where: c.id == ^id,
-      limit: 1
+      limit: 1,
+      preload: [:parent, marks: [:binding]]
     )
     |> Repo.one()
   end
