@@ -251,6 +251,14 @@ defmodule Vyasa.Sangh.SheafLattice do
     end
   end
 
+  # fallthrough
+  # QQ: not sure if i should be removing this fallback
+  # too sleepy to figure out
+  # TODO: what to do here?
+  defp create_sheaf_lattice_filter(_, _) do
+    fn _ -> true end
+  end
+
   def get_ui_from_lattice(
         %{} = sheaf_ui_lattice,
         %Sheaf{path: path} = sheaf

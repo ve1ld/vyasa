@@ -13,7 +13,6 @@ defmodule VyasaWeb.Context.Discuss do
   alias Vyasa.Sangh.{SheafLattice, Sheaf, Mark}
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
   import VyasaWeb.Context.Discuss.SheafTree
-  import VyasaWeb.Context.Components
 
   @impl true
   def update(
@@ -384,7 +383,7 @@ defmodule VyasaWeb.Context.Discuss do
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
             />
-            <.sheaf_summary sheaf={root_sheaf} />
+            <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>
         <% end %>
       </div>

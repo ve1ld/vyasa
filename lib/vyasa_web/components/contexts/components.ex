@@ -412,6 +412,18 @@ defmodule VyasaWeb.Context.Components do
   attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
   attr :action_buttons, :list, default: [], doc: "List of action button configurations."
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
+  attr :children, :list, default: [], doc: "The children of this sheaf"
+
   def sheaf_summary(assigns) do
     ~H"""
     <div class="flex flex-col border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
@@ -429,7 +441,13 @@ defmodule VyasaWeb.Context.Components do
         <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Engagement Display -->
-      <.sheaf_engagement_display sheaf={@sheaf} sheaf_ui={nil} replies_count={3} />
+      <.sheaf_engagement_display
+        sheaf={@sheaf}
+        sheaf_ui={nil}
+        replies_count={@children |> Enum.count()}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+      />
       <!-- Action Button Group -->
       <div class="flex justify-between items-center mt-2">
         <div class="flex space-x-2">
@@ -491,16 +509,25 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_engagement_display(assigns) do
     ~H"""
-    <div class="flex space-x-4 mt-2 justify-between">
-      <button
-        type="button"
-        phx-click={@on_replies_click}
-        class="flex items-center text-gray-600 hover:text-gray-800"
-      >
-        <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
-        <span class="text-sm">Show <%= @replies_count %> Replies</span>
-      </button>
-
+    <div class="flex justify-between mt-2">
+      <!-- Show Replies Button -->
+      <div class="flex-shrink-0 w-32">
+        <!-- Fixed width for alignment -->
+        <%= if @replies_count > 0 do %>
+          <button
+            type="button"
+            phx-click={@on_replies_click}
+            class="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
+            <span class="text-sm">Show <%= @replies_count %> Replies</span>
+          </button>
+        <% else %>
+          <span class="text-gray-600 text-sm">No Replies</span>
+          <!-- Optional placeholder -->
+        <% end %>
+      </div>
+      <!-- Reply Button -->
       <button
         type="button"
         phx-click={@on_set_reply_to}

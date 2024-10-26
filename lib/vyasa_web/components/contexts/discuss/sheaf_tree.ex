@@ -29,6 +29,11 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The UI state associated with the sheafs."
 
+  attr :level, :integer,
+    default: 0,
+    doc:
+      "Defines what level the root is, it's expected to be an integer value in the range [0, 2]"
+
   def root_sheaf(assigns) do
     ~H"""
     <div class="flex flex-col" id={"root-sheaf-container-" <> @sheaf.id}>
@@ -43,10 +48,13 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         id={"sheaf-" <> @sheaf.id}
         events_target={@events_target}
         sheaf={@sheaf}
+        children={
+          SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
+        }
         sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf)}
         sheaf_lattice={@sheaf_lattice}
         sheaf_ui_lattice={@sheaf_ui_lattice}
-        level={0}
+        level={@level}
       />
     </div>
     """
@@ -67,6 +75,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc:
       "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
+
+  attr :sheaf, Sheaf, required: true, doc: "What the parent sheaf is"
 
   attr :sheafs, :list,
     required: true,
@@ -107,6 +117,9 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
             sheaf_lattice={@sheaf_lattice}
             sheaf_ui_lattice={@sheaf_ui_lattice}
             level={@level}
+            children={
+              SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
+            }
           />
         <% end %>
       <% end %>
@@ -134,6 +147,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The individual sheaf being displayed."
 
+  attr :children, :list, default: [], doc: "The children of this sheaf"
+
   attr :sheaf_ui, SheafUiState,
     required: true,
     doc: "The corresponding ui state for the sheaf, defined here for ease of access"
@@ -159,7 +174,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         level={@level}
         sheaf_path={@sheaf.path}
       /> -->
-      <.sheaf_summary sheaf={@sheaf} />
+      <.sheaf_summary sheaf={@sheaf} children={@children} />
       <!-- Display Marks if Active -->
       <%= if @sheaf_ui.is_active? do %>
         <.collapsible_marks_display
@@ -174,11 +189,10 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       <%= if @sheaf_ui.is_expanded? do %>
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
-          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 4)}  ml-#{to_string((@level + 1) * 4)}"}
+          sheaf={@sheaf}
+          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 5)}  ml-#{to_string((@level + 1) * 4)}"}
           events_target={@events_target}
-          sheafs={
-            SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
-          }
+          sheafs={@children}
           sheaf_lattice={@sheaf_lattice}
           sheaf_ui_lattice={@sheaf_ui_lattice}
           level={@level + 1}
