@@ -69,7 +69,7 @@ defmodule Vyasa.Sangh.Sheaf do
   def mutate_changeset(%Sheaf{} = sheaf, attrs) do
     sheaf
     |> Vyasa.Repo.preload([:marks])
-    |> cast(attrs, [:id, :body, :active, :signature])
+    |> cast(attrs, [:id, :body, :active, :signature, :traits])
     |> cast_path(attrs)
     |> assoc_marks(attrs)
     |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
