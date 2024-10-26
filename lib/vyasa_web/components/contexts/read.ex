@@ -15,6 +15,7 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter, Verse}
   alias Phoenix.LiveView.Socket
+  alias Vyasa.Sangh
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
   import VyasaWeb.Context.Components
@@ -153,8 +154,8 @@ defmodule VyasaWeb.Context.Read do
           url: url(socket, ~p"/explore/#{source.title}/#{chap_no}")
         }
       })
-      |> init_reply_to_context()
       |> init_drafting_context()
+      |> init_reply_to_context()
       |> sync_media_session()
     else
       _ ->
@@ -199,17 +200,14 @@ defmodule VyasaWeb.Context.Read do
    regardless of whether the intent is a) or b) above.
 
   [TBD: @ks0m1c]
-  TO VERIFY These are the invariants that will hold true for a single user within a single session:
-  1) at any point in time, there's only one OR zero non-draft sheaf that is active
-  2) at any point in time, there's only one draft sheaf that is active
-
-
-  [TBD: @ks0m1c]
 
   There are two main ways this reply to context can be set (implicitly):
   1) because it has been set in another mode (discuss mode) ==> the db is used to mediate this.
-      => init_reply_to_context() reads from DB
-  2) via url params, as permalinked ==> this will take precendence over the db-based determining of reply_to_context
+      => init_reply_to_context() reads from DB.
+      By looking at the currently active draft sheaf, check it's parent id:
+      1A: the parent is nil: so no reply_to sheaf
+      1B: non-nil then load that parent sheaf as reply_to
+  2) TODO  @ks0m1c via url params, as permalinked ==> this will take precendence over the db-based determining of reply_to_context
      --- /http://localhost:4000/<mode>/<binding_type>/id=xxx
      --- /http://localhost:4000/explore/<slug for chapter>/id=xxx
      --- /http://localhost:4000/discuss/sheaf/id=xxx
@@ -218,31 +216,31 @@ defmodule VyasaWeb.Context.Read do
          ==> reading mode
      ==> prioritise urls_params
 
-
-  RENAME: init_context()
-  - initialises the
-  - it's not ALWAYS a replying to
-
   """
   def init_reply_to_context(
         %Socket{
           assigns: %{
-            session: %{sangh: %{id: sangh_id}}
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector: %Sheaf{
+              parent_id: parent_id
+            }
           }
         } = socket
       ) do
-    IO.inspect(sangh_id, label: "TODO Implement init_reply_to_context for sangh id =" <> sangh_id)
-    # TODO implement logic in line with the pseudocode:
-    # if url_params contains info about <binding_type>::<id>, then prioritise the sheaf for that binding
-    # else:
-    #  read from the db to get the SOLE non-draft active sheaf for session (and user(?))
-    # STUB:
-    socket
-    |> assign(reply_to: nil)
+    reply_to_sheaf =
+      case parent_id do
+        p_id when is_binary(p_id) ->
+          Sangh.get_sheaf(p_id)
 
-    # |> assign(
-    #   reply_to: hd(sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["published"]}))
-    # )
+        p when is_nil(p) ->
+          nil
+
+        _ ->
+          nil
+      end
+
+    socket
+    |> assign(reply_to: reply_to_sheaf)
   end
 
   def init_reply_to_context(%Socket{} = socket) do
