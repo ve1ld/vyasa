@@ -891,44 +891,6 @@ defmodule VyasaWeb.Context.Read do
      |> cascade_stream_change()}
   end
 
-  # fallback:
-  def handle_event(
-        "sheaf:create_sheaf",
-        _params,
-        %Socket{} = socket
-      ) do
-    IO.puts("sheaf:create_sheaf:pokemon")
-    {:noreply, socket}
-  end
-
-  # TODO: sheaf crud -- event handler
-  # this is for the case where a session name is not set yet.
-  # TBD: in this case, our intent is to allow them to put anon messages right? or do we not?
-  # in which case, should they be redirected to the profile setup?
-  # def handle_event(
-  #       "sheaf:create_sheaf",
-  #       %{
-  #         "body" => body,
-  #         "is_private" => is_private,
-  #         "signature" => signature
-  #       } = _params,
-  #       %Socket{
-  #         assigns: %{
-  #           reply_to: %Sheaf{},
-  #           draft_reflector: %Sheaf{}
-  #         }
-  #         # reply_to:  %Sheaf{id: parent_id} = parent_sheaf
-  #       } = socket
-  #     ) do
-  #   IO.inspect(%{body: body, is_private: is_private, signature: signature},
-  #     label: "SHEAF CREATION"
-  #   )
-
-  #   dbg()
-
-  #   {:noreply, socket}
-  # end
-
   @impl true
   # TODO: @ks0m1c sheaf crud -- event handler
   # This function handles the case where there's a parent sheaf in the reply_to context.
@@ -1032,16 +994,6 @@ defmodule VyasaWeb.Context.Read do
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
      |> assign(draft_reflector: Sheaf.draft!(sangh_id))
      |> cascade_stream_change()}
-  end
-
-  # fallback:
-  def handle_event(
-        "sheaf:create_sheaf",
-        _params,
-        %Socket{} = socket
-      ) do
-    IO.puts("sheaf:create_sheaf:pokemon")
-    {:noreply, socket}
   end
 
   @impl true
