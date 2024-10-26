@@ -16,11 +16,10 @@ defmodule VyasaWeb.Context.Components do
     default: "",
     doc: "An optional id suffix, to differentate intentionally duplicate components."
 
-  # FIXME: the UUID generation for marks should ideally not be happening here, we should try to ensure that every mark has an id @ the point of creation, wherever that may be (fresh creation or created at point of insertion into the db)
   def collapsible_marks_display(assigns) do
     ~H"""
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
-    <div class="mb-4">
+    <div :if={not is_nil(@marks_ui)} class="mb-4">
       <div
         id={"collapse-header-container" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
@@ -96,13 +95,6 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
-      <!-- <.debug_dump
-        mark_state={@mark.state}
-        mark_id={@mark.id}
-        class="relative"
-        mark_order={@mark.order}
-      />
-      -->
       <%= if @mark.state == :live do %>
         <.form
           for={%{}}
@@ -149,7 +141,7 @@ defmodule VyasaWeb.Context.Components do
               id={"mark-content-container-" <> @mark.id <> "-" <> @id}
               class="h-full w-full flex-grow mx-2 pt-2"
             >
-              <%= if !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+              <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
                 <span class="block mb-1 text-sm italic text-secondary">
                   "<%= @mark.binding.window.quote %>"
                 </span>
@@ -391,28 +383,39 @@ defmodule VyasaWeb.Context.Components do
   end
 
   @doc """
-  TODO: implement a reddit-top-comment-like UI for this
   A brief view of a sheaf, showing the contextually relevant information about it.
+  Shows a barebones, brief summary of a sheaf, which gives just enough context for someone to
+  understand it.
+
+  Some key information:
+  1. Sheaf body -- what are they saying?
+  2. Sheaf Signature display -- who signed it and when did they do so?
+  3. [FUTURE] Engagement Icons -- displays info about engagement (e.g. 12 replies)
+  4. [FUTURE] Possible Quick Action buttons -- "reply to"
   """
   attr :label, :string,
     default: nil,
     doc: "A string to serve as some label text to the sheaf being displayed"
+
+  attr :level, :integer,
+    default: 0,
+    doc: "The level in our 3-leveled tree that this sheaf corresponds to"
 
   attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
   attr :action_buttons, :list, default: [], doc: "List of action button configurations."
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class="border p-4 rounded-lg shadow-md bg-white">
+    <div class="flex flex-col border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
       <h2
         :if={@label}
-        class="italic text-lg font-normal text-gray-800 pb-1 mb-1 border-b border-gray-400"
+        class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
       >
         <%= @label %>
       </h2>
       <!-- Body Display -->
       <div class="mb-2">
-        <p class="text-gray-800"><%= @sheaf.body || "EMPTY BODY" %></p>
+        <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Signature and Action Button Group -->
       <div class="flex justify-between items-center mt-2">
@@ -423,7 +426,6 @@ defmodule VyasaWeb.Context.Components do
             <button phx-click={action} class="flex items-center text-blue-500 hover:text-blue-700">
               <.icon name={icon} class="h-5 w-5 mr-1" />
               <span>Action</span>
-              <!-- Replace with meaningful labels -->
             </button>
           <% end %>
         </div>

@@ -6,7 +6,8 @@ defmodule Vyasa.Sangh do
   import Ecto.Query, warn: false
   import EctoLtree.Functions, only: [nlevel: 1]
   alias Vyasa.Repo
-  alias Vyasa.Sangh.Sheaf
+  # alias Vyasa.Draft
+  alias Vyasa.Sangh.{Sheaf}
 
   # TODO: @ks0m1c if a single sheaf has many associated marks and each mark has order with respect to another mark, then
   # we should float the ability to adjust mark orders in this context module.
@@ -171,7 +172,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
@@ -234,7 +236,12 @@ defmodule Vyasa.Sangh do
   [%Sheaf{}, ...]
 
   """
-  def get_root_sheafs_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
+  def get_root_sheafs_by_session(
+        id,
+        page,
+        sort_attribute \\ :inserted_at,
+        limit \\ 12
+      ) do
     query =
       from c in Sheaf,
         as: :c,
@@ -247,7 +254,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
@@ -350,7 +358,8 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
@@ -423,6 +432,19 @@ defmodule Vyasa.Sangh do
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update!()
   end
+
+  # def delete_marks_in_sheaf(
+  #       %Sheaf{
+  #         marks: [] = marks
+  #       } = sheaf
+  #     ) do
+  #   marks |> Enum.map(fn m -> Draft.delete_mark(m) end)
+  #   sheaf |> update_sheaf(%{marks: nil})
+  # end
+
+  # def delete_marks_in_sheaf(%Sheaf{} = sheaf) do
+  #   sheaf
+  # end
 
   #   @doc """
   #   Deletes a sheaf.
