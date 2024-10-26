@@ -706,86 +706,6 @@ defmodule VyasaWeb.Context.Read do
   # end
 
   @impl true
-  # TODO: sheaf crud -- event handler
-  # Essentially:
-  # 1. the sheaf created may be private or public (regardless how we implement the private public [i.e. A: private notes for person X is in whole separate session that is deemed as private])
-  # 2. the existing draft sheaf that is active will now EVOLVE to become the active non-draft sheaf
-  # 3. (UNSURE OF THIS): will
-  def handle_event(
-        "sheaf:create_sheaf",
-        %{
-          "body" => body,
-          "is_private" => is_private
-        } = _params,
-        %Socket{
-          assigns: %{
-            reply_to: %Sheaf{} = parent_sheaf,
-            draft_reflector: %Sheaf{},
-            session: %VyasaWeb.Session{
-              name: user_signature,
-              sangh: sangh
-            }
-          }
-          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
-        } = socket
-      ) do
-    IO.inspect(%{body: body, is_private: is_private},
-      label: "SHEAF CREATION"
-    )
-
-    Vyasa.Sangh.create_sheaf(%{
-      id: Ecto.UUID.generate(),
-      body: body,
-      session_id: sangh.id,
-      parent: parent_sheaf,
-      signature: user_signature
-    })
-
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "sheaf:create_sheaf",
-        %{
-          "body" => body,
-          "is_private" => is_private
-        } = _params,
-        %Socket{
-          assigns: %{
-            draft_reflector: %Sheaf{},
-            session: %VyasaWeb.Session{
-              name: user_signature,
-              sangh: sangh
-            }
-          }
-          # reply_to:  %Sheaf{id: _parent_id} = parent_sheaf
-        } = socket
-      ) do
-    IO.inspect(%{body: body, is_private: is_private},
-      label: "SHEAF CREATION without parent"
-    )
-
-    Vyasa.Sangh.create_sheaf(%{
-      id: Ecto.UUID.generate(),
-      body: body,
-      session_id: sangh.id,
-      signature: user_signature
-    })
-    |> IO.inspect()
-
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "sheaf:create_sheaf",
-        _params,
-        %Socket{} = socket
-      ) do
-    IO.puts("sheaf:create_sheaf:pokemon")
-    {:noreply, socket}
-  end
-
-  @impl true
   # TODO: @ks0m1c sheaf crud -- event handler
   # This function handles the case where there's a parent sheaf in the reply_to context.
   # What should happen:
@@ -1003,16 +923,6 @@ defmodule VyasaWeb.Context.Read do
      |> assign(marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?())
      |> assign(draft_reflector: Sheaf.draft!(sangh_id))
      |> cascade_stream_change()}
-  end
-
-  # fallback:
-  def handle_event(
-        "sheaf:create_sheaf",
-        _params,
-        %Socket{} = socket
-      ) do
-    IO.puts("sheaf:create_sheaf:pokemon")
-    {:noreply, socket}
   end
 
   @impl true
