@@ -17,6 +17,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   @impl true
   def mount(_params, _sess, socket) do
+    # TODO: this needs to parse mode from the url, the router needs to be updated also.
     %UserMode{
       default_ui_state: %UiState{} = initial_ui_state
     } = mode = UserMode.get_initial_mode()

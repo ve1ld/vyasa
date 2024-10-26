@@ -15,6 +15,9 @@ defmodule Vyasa.Sangh.Sheaf do
   import Ecto.Changeset
   alias EctoLtree.LabelTree, as: Ltree
   alias Vyasa.Sangh.{Sheaf, Session, Mark}
+  alias Vyasa.Sangh.Sheaf
+
+  @supported_sheaf_traits ["personal", "draft", "published"]
 
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "sheafs" do
@@ -33,7 +36,8 @@ defmodule Vyasa.Sangh.Sheaf do
       references: :id,
       foreign_key: :sheaf_id,
       on_replace: :delete_if_exists,
-      preload_order: [desc: :order]
+      preload_order: [desc: :order],
+      on_delete: :delete_all
 
     # has_many :bindings, Binding, references: :id, foreign_key: :sheaf_bind_id, on_replace: :delete_if_exists
     timestamps()
@@ -55,7 +59,7 @@ defmodule Vyasa.Sangh.Sheaf do
     |> cast_path(attrs)
     |> assoc_marks(attrs)
     |> validate_required([:id, :session_id, :path])
-    |> validate_include_subset(:traits, ["personal", "draft", "published"])
+    |> validate_include_subset(:traits, @supported_sheaf_traits)
 
     # QQ: @ks0m1c in my mind, i see private vs public and draft vs published as two distinct dimensions
     # and we'd want to filter by these dimensions separately. Therefore, I wonder if it's better to NOT keep
@@ -179,6 +183,25 @@ defmodule Vyasa.Sangh.Sheaf do
         session_id: sangh_id,
         traits: ["draft"]
       })
+
     com
+  end
+
+  def get_supported_sheaf_traits() do
+    @supported_sheaf_traits
+  end
+
+  @doc """
+  Returns the list of labels for a particular sheaf's path.
+  """
+  def get_path_labels(
+        %Sheaf{
+          path:
+            %Ltree{
+              labels: labels
+            } = _path
+        } = _sheaf
+      ) do
+    labels
   end
 end
