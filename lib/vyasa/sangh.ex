@@ -207,6 +207,18 @@ defmodule Vyasa.Sangh do
   end
 
   @doc """
+  Fetches all root sheafs for a given session where parent_id is nil.
+  TODO: @ks0m1c need to update the other root-fetching functions?
+  """
+  def get_root_sheafs_by_session(session_id) do
+    from(s in Sheaf,
+      where: s.session_id == ^session_id,
+      where: is_nil(s.parent_id)
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Retrieves root sheafs associated with a specific session, with pagination options.
 
   ## Parameters
