@@ -27,6 +27,7 @@ defmodule VyasaWeb.Context.Components do
         <button
           phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
+          phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
           class="flex items-center w-full hover:bg-brand-light hover:text-brand"
           type="button"
         >

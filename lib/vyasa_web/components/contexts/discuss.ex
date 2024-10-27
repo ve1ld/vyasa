@@ -361,6 +361,35 @@ defmodule VyasaWeb.Context.Discuss do
   # end
   @impl true
   def handle_event(
+        "ui::toggle_marks_display_collapsibility",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(sheaf_labels,
+      label: "ui::toggle_marks_display_collapsibility"
+    )
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice:
+         sheaf_ui_lattice |> SheafLattice.toggle_marks_display_collapsibility(lattice_key)
+     )}
+  end
+
+  @impl true
+  def handle_event(
         "ui::toggle_sheaf_is_expanded?",
         %{
           "sheaf_path_labels" => sheaf_labels
@@ -372,9 +401,10 @@ defmodule VyasaWeb.Context.Discuss do
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
           }
         } = socket
-      ) do
+      )
+      when is_binary(sheaf_labels) do
     lattice_key = Jason.decode!(sheaf_labels)
-    # Handle the event here (e.g., log it, update state, etc.)
+
     IO.inspect(sheaf_labels,
       label: "HANDLE -- ui::toggle_sheaf_is_expanded?"
     )
