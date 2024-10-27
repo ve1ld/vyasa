@@ -35,14 +35,6 @@ function floatHoveRune({ clientX, clientY }) {
       top: `${y}px`,
     });
   });
-
-  // computePosition(virtualEl, hoverune, {placement: 'top-end', middleware: [inline(getSelectRect.x, getSelectRect.y), offset(5)]}).then(({x, y}) => {
-  //   hoverune.classList.remove("hidden")
-  //   Object.assign(hoverune.style, {
-  //     left: `${getSelectRect.x}px`,
-  //     top: `${y}px`,
-  //   });
-  // })
 }
 
 const findHook = (el) => findParent(el, "phx-hook", "HoveRune");
@@ -70,16 +62,19 @@ export default HoveRune = {
           return;
         }
 
-        var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
+        var range = selection.getRangeAt(0);
+        var getSelectRect = range.getBoundingClientRect();
         const getSelectText = selection.toString();
-        //const validElem = findHook(target)
-        // const isMarginote = findMarginote(target)
         const isNode = findNode(target);
+
+        console.log("binding selected here!")
+        console.log(selection)
 
         if (isNode) {
           binding = forgeBinding(target, [
             "node",
             "node_id",
+            "text",
             "field",
             "verse_id",
           ]);
