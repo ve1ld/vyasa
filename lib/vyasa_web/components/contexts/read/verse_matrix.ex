@@ -98,21 +98,17 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
     # cant be just pure binary operations
     ~H"""
-    <dd  class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
-    <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line">
-    <%= @content %>
+    <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
+      <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
+        <%= @content %>
+      </span>
+      <span :if={@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="relative whitespace-pre-line group">
+    <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><div id="start_windowmarks" data-window-end="false" class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20">『</div><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><div id="end_windowmarks" data-window-end="true" class="absolute -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20">』</div></span><%= @window && String.byte_slice(@content, @window.end_quote ,byte_size(@content)-@window.end_quote) %>
     </span>
-    <span :if={@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="relative whitespace-pre-line inline-block group">
-    <%= String.byte_slice(@content, 0, @window.start_quote) %>
-    <div id="start_windowmarks" data-window-end="false" class="absolute -left-6 -top-2 cursor-ew-resize select-none text-red-600 opacity-80 z-20">『</div>
-    <span class="relative z-10 text-red-600 inline-flex" style="text-shadow: 0 0 5px rgba(220, 38, 38, 0.2), 0 0 10px rgba(220, 38, 38, 0.1), 0 0 15px rgba(220, 38, 38, 0.1);">
-    <%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %>
-    <span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300" />
-    </span>
-    <div id="end_windowmarks" data-window-end="true" class="absolute -right-6 -bottom-3 cursor-ew-resize select-none text-red-600 opacity-80 z-20">』</div>
-    <%= @window && String.byte_slice(@content, @window.end_quote ,byte_size(@content)-@window.end_quote) %>
-    </span>
+
+
     </dd>
+
     """
   end
 
