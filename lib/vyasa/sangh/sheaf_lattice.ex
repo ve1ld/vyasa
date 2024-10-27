@@ -1,6 +1,8 @@
 defmodule Vyasa.Sangh.SheafLattice do
   alias Vyasa.Sangh
   alias Vyasa.Sangh.{Sheaf}
+  alias EctoLtree.LabelTree, as: Ltree
+  alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
   @moduledoc """
   A sheaf lattice is a flatmap that represents the tree-structure of sheafs.
@@ -31,6 +33,94 @@ defmodule Vyasa.Sangh.SheafLattice do
     end)
     |> Enum.into(%{})
   end
+
+  # @doc """
+  # Inserts a particular mark into a particular sheaf in the lattice.
+
+  # Intent is that it gets used when creating a mark in the discuss mode.
+  # TODO: figure out what is the best place to put this?
+  # """
+  # def insert_mark_into_sheaf_in_lattice(
+  #       %{} = lattice,
+  #       %Ltree{labels: lattice_key} = _sheaf_path,
+  #       %Mark{id: mark_id, body: body} = mark
+  #     ) do
+  #   %Sheaf{
+  #     marks: rest_marks
+  #   } = target_sheaf = lattice |> Map.get(lattice_key)
+
+  #   updated_new_mark = %Mark{
+  #     mark
+  #     | id: if(not is_nil(mark_id), do: Ecto.UUID.generate(), else: mark_id),
+  #       order: Mark.get_next_order(rest_marks),
+  #       body: body,
+  #       state: :live
+  #   }
+
+  #   updated_sheaf = %Sheaf{target_sheaf | marks: [updated_new_mark | rest_marks]}
+
+  #   socket
+  #   |> register_sheaf(updated_sheaf)
+  # end
+
+  @doc """
+  Inserts sheaf into sheaf state lattice, overwrites existing sheaf
+  if exists.
+  """
+  def insert_sheaf_into_lattice(
+        %{} = lattice,
+        %Sheaf{
+          path: %Ltree{labels: path_labels}
+        } = sheaf
+      ) do
+    lattice |> Map.put(path_labels, sheaf)
+  end
+
+  @doc """
+  Inserts %SheafUiState{} into sheaf state lattice, overwrites existing sheaf
+  if exists.
+  Intended to be used @ the point of init, rather than when incrementally updating things.
+  """
+  def insert_sheaf_into_ui_lattice(
+        %{} = ui_lattice,
+        %Sheaf{
+          path: %Ltree{labels: path_labels}
+        } = sheaf
+      ) do
+    ui_lattice |> Map.put(path_labels, sheaf |> SheafUiState.get_initial_ui_state())
+  end
+
+  @doc """
+  Removes sheaf from state lattice, expected to be used in deletes.
+  """
+  def remove_sheaf_from_lattice(
+        %{} = lattice,
+        %Sheaf{
+          path: %Ltree{labels: path_labels}
+        } = _old_sheaf
+      ) do
+    lattice |> Map.delete(path_labels)
+  end
+
+  @doc """
+  Removes sheaf from ui lattice, expected to be used in deletes.
+  """
+  def remove_sheaf_from_ui_lattice(
+        %{} = ui_lattice,
+        %Sheaf{
+          path: %Ltree{labels: _path_labels}
+        } = old_sheaf
+      ) do
+    ui_lattice |> remove_sheaf_from_lattice(old_sheaf)
+  end
+
+  # TODO implement wrappers for the other sheaf ui state changes:
+  # 1. register and deregister mark
+  # 2. toggles:
+  #    a) toggle_is_editable_marks ==> for a particular sheaf in the lattice
+  #    b) toggle_show_sheaf_modal? ==> for a particular sheaf in the lattice
+  #    c) toggle_marks_is_expanded_view? ==> for a particular sheaf in the lattice
+  #    d) toggle_is_editing_mark_content(sheaf, mark_id) ==> for a particular mark within a particular sheaf
 
   @doc """
   Reads sheaf layers from a lattice based on the specified level and match criteria.

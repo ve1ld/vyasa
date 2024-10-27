@@ -74,8 +74,8 @@ defmodule VyasaWeb.ModeLive.UserMode do
   def supported_modes, do: Map.keys(@defs)
 
   def get_initial_mode() do
-    "read"
-    # "discuss"
+    # "read"
+    "discuss"
     |> get_mode()
   end
 
