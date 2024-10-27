@@ -11,12 +11,18 @@ defmodule Vyasa.Draft do
 
   # Inits the binding for an empty selection
   def bind_node(%{"selection" => ""} = node = _bind_target_payload) do
-    bind_node(node, %Binding{})
+    bind_node(Map.delete(node, "selection"), %Binding{})
   end
 
   # Shifts the selection within the bind target payload to the %Binding{} struct, and continues with the binding.
-  def bind_node(%{"selection" => selection} = node = _bind_target_payload) do
-    bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection}})
+  def bind_node(%{"selection" => selection, "text" => text} = node = _bind_target_payload) do
+    case :binary.match(text, selection) do
+      {start_quote, len} ->
+        bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection, :start_quote => start_quote, :end_quote => start_quote + len}})
+      _ ->
+        bind_node(Map.delete(node, "selection"), %Binding{})
+    end
+
   end
 
   # Uses the "field" attribute in the bind_target

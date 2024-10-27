@@ -27,9 +27,10 @@ defmodule Vyasa.Adapters.Binding do
     # either by timestamping of events or through line no and character range
     embeds_one :window, Window, on_replace: :delete do
       field(:line_number, :integer)
-      field(:start, :integer)
-      field(:end, :integer)
       field(:quote, :string)
+
+      field(:start_quote, :integer)
+      field(:end_quote, :integer)
 
       field(:start_time, :integer)
       field(:end_time, :integer)
