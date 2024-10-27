@@ -40,7 +40,10 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     ~H"""
     <div id={"verse-#{@verse.id}"} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
+        <div
+          :for={elem <- @edge}
+          class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center"
+        >
           <dt :if={Map.has_key?(elem, :title)} class="w-full text-center flex-none text-zinc-500">
             <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
@@ -68,10 +71,10 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         </div>
       </dl>
       <div class="flex items-center justify-center w-full py-6">
-         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
-         <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
-         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
-         </div>
+        <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+        <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
+        <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+      </div>
     </div>
     """
   end
@@ -95,20 +98,70 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   end
 
   def verse_content(assigns) do
-    # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
-    # cant be just pure binary operations
     ~H"""
     <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
-      <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
+      <span
+        :if={!@window}
+        verse_id={@verse_id}
+        node={@node}
+        node_id={@node_id}
+        field={@field}
+        text={@content}
+        class="whitespace-pre-line inline"
+      >
         <%= @content %>
       </span>
-      <span :if={@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="relative whitespace-pre-line group">
-    <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><div id="start_windowmarks" data-window-end="false" class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20">『</div><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><div id="end_windowmarks" data-window-end="true" class="absolute -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20">』</div></span><%= @window && String.byte_slice(@content, @window.end_quote ,byte_size(@content)-@window.end_quote) %>
-    </span>
+      <span
+        :if={@window}
+        verse_id={@verse_id}
+        node={@node}
+        node_id={@node_id}
+        field={@field}
+        text={@content}
+        class="relative whitespace-pre-line group inline"
+      >
+        <%= String.byte_slice(@content, 0, @window.start_quote) %>
 
+        <span class="text-red-600 relative z-10 inline-flex items-center">
+          <!-- Start Window Marks -->
+          <div
+            id="start_windowmarks"
+            data-window-end="false"
+            class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+            style="display: inline; margin: 0; padding: 0;"
+          >
+            <.icon
+              name="custom-icon-park-outline-quote-start"
+              class="text-brand-dark hover:bg-brand rounded-full"
+            />
+          </div>
+          <!-- Emphasized Text -->
+          <%= String.byte_slice(
+            @content,
+            @window.start_quote,
+            @window.end_quote - @window.start_quote
+          ) %>
+          <!-- Background Span for Emphasis -->
+          <span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300">
+          </span>
+          <!-- End Window Marks -->
+          <div
+            id="end_windowmarks"
+            data-window-end="true"
+            class="absolute -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+            style="display: inline; margin: 0; padding: 0;"
+          >
+            <.icon
+              name="custom-icon-park-outline-quote-start"
+              class="rotate-180 text-brand-dark hover:bg-brand rounded-full"
+            />
+          </div>
+        </span>
 
+        <%= @window &&
+          String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
+      </span>
     </dd>
-
     """
   end
 
