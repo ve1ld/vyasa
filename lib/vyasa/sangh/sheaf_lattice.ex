@@ -114,6 +114,40 @@ defmodule Vyasa.Sangh.SheafLattice do
     ui_lattice |> remove_sheaf_from_lattice(old_sheaf)
   end
 
+  def toggle_sheaf_is_expanded?(
+        %{} = ui_lattice,
+        lattice_key
+      )
+      when is_binary(lattice_key) do
+    IO.inspect(lattice_key, label: "toggle_sheaf_is_expanded? lattice key that is a string:")
+
+    ui_lattice
+    |> toggle_sheaf_is_expanded?([lattice_key])
+  end
+
+  @doc """
+  Toggles the is_expanded? flag for a particular sheaf, as keyed by teh
+  lattice_key.
+  If no such entry exists, returns the original ui_lattice without any alteration.
+  """
+  def toggle_sheaf_is_expanded?(
+        %{} = ui_lattice,
+        lattice_key
+      )
+      when is_list(lattice_key) do
+    IO.inspect(lattice_key, label: "toggle_sheaf_is_expanded? lattice key that is a string:")
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.toggle_sheaf_is_expanded?()
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
+  end
+
   # TODO implement wrappers for the other sheaf ui state changes:
   # 1. register and deregister mark
   # 2. toggles:
@@ -168,6 +202,15 @@ defmodule Vyasa.Sangh.SheafLattice do
         |> Enum.filter(create_sheaf_lattice_filter(level, match))
         |> Enum.map(fn {_, s} -> s end)
     end
+  end
+
+  @doc """
+  Returns sheafs from the lattice only if they are non-draft.
+  """
+  def read_published_from_sheaf_lattice(%{} = sheaf_lattice, level \\ 0, match \\ nil) do
+    sheaf_lattice
+    |> read_sheaf_lattice(level, match)
+    |> Enum.reject(fn %Sheaf{traits: traits} -> "draft" in traits end)
   end
 
   # fetches all sheafs in level 0:

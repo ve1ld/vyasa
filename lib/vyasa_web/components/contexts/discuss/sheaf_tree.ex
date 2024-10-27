@@ -34,6 +34,16 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     doc:
       "Defines what level the root is, it's expected to be an integer value in the range [0, 2]"
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
   def root_sheaf(assigns) do
     ~H"""
     <div class="flex flex-col" id={"root-sheaf-container-" <> @sheaf.id}>
@@ -48,8 +58,14 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         id={"sheaf-" <> @sheaf.id}
         events_target={@events_target}
         sheaf={@sheaf}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
         children={
-          SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
+          SheafLattice.read_published_from_sheaf_lattice(
+            @sheaf_lattice,
+            @level + 1,
+            @sheaf.path.labels ++ [nil]
+          )
         }
         sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf)}
         sheaf_lattice={@sheaf_lattice}
@@ -98,6 +114,16 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     default: "",
     doc: "Overridable class definition to be applied to the container."
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
   def collapsible_sheaf_container(assigns) do
     ~H"""
     <div
@@ -116,9 +142,15 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
             sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
             sheaf_lattice={@sheaf_lattice}
             sheaf_ui_lattice={@sheaf_ui_lattice}
-            level={@level}
+            level={@level + 1}
+            on_replies_click={@on_replies_click}
+            on_set_reply_to={@on_set_reply_to}
             children={
-              SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
+              SheafLattice.read_published_from_sheaf_lattice(
+                @sheaf_lattice,
+                @level,
+                @sheaf.path.labels ++ [nil]
+              )
             }
           />
         <% end %>
@@ -165,6 +197,16 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The current depth level of the tree structure."
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
   def sheaf_component(assigns) do
     ~H"""
     <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
@@ -174,9 +216,15 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         level={@level}
         sheaf_path={@sheaf.path}
       /> -->
-      <.sheaf_summary sheaf={@sheaf} children={@children} />
+      <.sheaf_summary
+        sheaf={@sheaf}
+        sheaf_ui={@sheaf_ui}
+        children={@children}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+      />
       <!-- Display Marks if Active -->
-      <%= if @sheaf_ui.is_active? do %>
+      <%= if @sheaf_ui.is_focused? do %>
         <.collapsible_marks_display
           marks_ui={@sheaf_ui.marks_ui}
           marks_target={@events_target}
@@ -186,7 +234,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         />
       <% end %>
       <!-- Collapsible Sheaf Container -->
-      <%= if @sheaf_ui.is_expanded? do %>
+      <%= if @level <= 2 && @sheaf_ui.is_expanded? do %>
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
           sheaf={@sheaf}
@@ -196,6 +244,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           sheaf_lattice={@sheaf_lattice}
           sheaf_ui_lattice={@sheaf_ui_lattice}
           level={@level + 1}
+          on_replies_click={@on_replies_click}
+          on_set_reply_to={@on_set_reply_to}
         />
       <% end %>
     </div>

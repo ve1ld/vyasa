@@ -358,30 +358,68 @@ defmodule VyasaWeb.Context.Discuss do
   #   socket
   #   |> register_sheaf(updated_sheaf)
   # end
+  @impl true
+  def handle_event(
+        "ui::toggle_sheaf_is_expanded?",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      ) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(sheaf_labels,
+      label: "HANDLE -- ui::toggle_sheaf_is_expanded?"
+    )
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_expanded?(lattice_key)
+     )}
+  end
+
+  @impl true
+  def handle_event(event_name, params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(%{event_name: event_name, params: params},
+      label: "POKEMON DISCUSS CONTEXT EVENT HANDLING"
+    )
+
+    {:noreply, socket}
+  end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.debug_dump
+      <!-- <.debug_dump
         :if={Map.has_key?(assigns, :draft_reflector_path)}
         label="Context Dump on Discussions"
         draft_reflector_path={@draft_reflector_path}
         reply_to_path={@reply_to_path}
         reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
         reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
-      />
+      /> -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <%= if not is_nil(@sheaf_lattice) do %>
           <div :for={
             root_sheaf <-
-              SheafLattice.read_sheaf_lattice(@sheaf_lattice, 0)
+              SheafLattice.read_published_from_sheaf_lattice(@sheaf_lattice, 0)
           }>
             <.root_sheaf
               events_target="#content-display"
               sheaf={root_sheaf}
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
+              on_replies_click={JS.push("ui::toggle_sheaf_is_expanded?", target: "#content-display")}
+              on_set_reply_to={JS.push("sheaf::set_reply_to_context", target: "#content-display")}
             />
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>

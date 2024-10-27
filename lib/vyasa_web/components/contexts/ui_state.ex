@@ -155,25 +155,24 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
   # the actual ui state and kept within the SheafUiState or not.
   # @rtshkmr to decide later, and remove this flag  if unnecessary
   defstruct [
-    :is_active?,
+    # this defines whether the sheaf is currently in focus
+    :is_focused?,
     :is_expanded?,
     :marks_ui
   ]
 
   @initial %{
-    is_active?: false,
-    is_expanded?: true,
+    is_focused?: false,
+    is_expanded?: false,
     marks_ui: MarksUiState.get_initial_ui_state()
   }
 
   def get_initial_ui_state(
         %Sheaf{
           marks: marks,
-          active: is_active?
+          active: is_focused?
         } = _sheaf
       ) do
-    IO.puts("CHECKPOINT get initial ui state HAPPY PATH")
-
     marks_ui =
       case marks do
         [%Mark{} | _] -> MarksUiState.get_initial_ui_state(marks)
@@ -183,13 +182,17 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     %SheafUiState{
       struct(SheafUiState, @initial)
       | marks_ui: marks_ui,
-        is_active?: is_active?
+        is_focused?: is_focused?
     }
   end
 
   def get_initial_ui_state() do
     IO.puts("CHECKPOINT get initial ui state POKEMON")
     struct(SheafUiState, @initial)
+  end
+
+  def toggle_sheaf_is_expanded?(%SheafUiState{is_expanded?: curr} = ui_state) do
+    %SheafUiState{ui_state | is_expanded?: !curr}
   end
 
   @doc """

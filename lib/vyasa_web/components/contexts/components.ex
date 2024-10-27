@@ -410,6 +410,11 @@ defmodule VyasaWeb.Context.Components do
     doc: "The level in our 3-leveled tree that this sheaf corresponds to"
 
   attr :sheaf, Sheaf, required: true, doc: "The Sheaf struct containing details."
+
+  attr :sheaf_ui, SheafUiState,
+    default: SheafUiState.get_initial_ui_state(),
+    doc: "The Sheaf struct containing details."
+
   attr :action_buttons, :list, default: [], doc: "List of action button configurations."
 
   attr(:on_replies_click, JS,
@@ -443,7 +448,7 @@ defmodule VyasaWeb.Context.Components do
       <!-- Engagement Display -->
       <.sheaf_engagement_display
         sheaf={@sheaf}
-        sheaf_ui={nil}
+        sheaf_ui={@sheaf_ui}
         replies_count={@children |> Enum.count()}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
@@ -495,7 +500,10 @@ defmodule VyasaWeb.Context.Components do
 
   attr :replies_count, :integer, default: 0
   attr :sheaf, Sheaf, required: true, doc: "the sheaf that we are referring to"
-  attr :sheaf_ui, :any, default: "", doc: "corresponding UI struct for the sheaf"
+
+  attr :sheaf_ui, SheafUiState,
+    default: SheafUiState.get_initial_ui_state(),
+    doc: "corresponding UI struct for the sheaf"
 
   attr(:on_replies_click, JS,
     default: %JS{},
@@ -517,13 +525,21 @@ defmodule VyasaWeb.Context.Components do
           <button
             type="button"
             phx-click={@on_replies_click}
+            phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
             class="flex items-center text-gray-600 hover:text-gray-800"
           >
             <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
-            <span class="text-sm">Show <%= @replies_count %> Replies</span>
+            <span class="text-sm">
+              <%= if @sheaf_ui.is_expanded? do %>
+                Hide
+              <% else %>
+                Show
+              <% end %>
+              <%= @replies_count %> replies
+            </span>
           </button>
         <% else %>
-          <span class="text-gray-600 text-sm">No Replies</span>
+          <span class="text-gray-600 text-sm"></span>
           <!-- Optional placeholder -->
         <% end %>
       </div>
