@@ -309,4 +309,12 @@ defmodule Vyasa.Sangh.SheafLattice do
       when not is_nil(path) do
     sheaf_ui_lattice |> Map.get(sheaf |> Sheaf.get_path_labels(), nil)
   end
+
+  def get_sheaf_from_lattice(
+        %{} = lattice,
+        lattice_key
+      )
+      when is_binary(lattice_key) do
+    lattice |> Map.get(lattice_key, nil)
+  end
 end

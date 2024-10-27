@@ -3,7 +3,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   alias Phoenix.LiveView.Socket
   alias Utils.Struct
 
-  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
+  alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
   import VyasaWeb.Context.Components
 
@@ -15,15 +15,21 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   end
 
   def update(
-        %{verse: verse, marks_ui: marks_ui, marks: marks, event_target: event_target} = assigns,
+        %{
+          verse: verse,
+          draft_sheaf: draft_sheaf,
+          draft_sheaf_ui: draft_sheaf_ui,
+          event_target: event_target
+        } =
+          assigns,
         socket
       ) do
     socket =
       socket
       |> assign(assigns)
       |> assign(:verse, verse)
-      |> assign(:marks, marks)
-      |> assign(:marks_ui, marks_ui)
+      |> assign(:draft_sheaf, draft_sheaf)
+      |> assign(:draft_sheaf_ui, draft_sheaf_ui)
       |> assign(:event_target, event_target)
 
     {:ok, socket}
@@ -40,7 +46,10 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     ~H"""
     <div id={"verse-#{@verse.id}"} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
+        <div
+          :for={elem <- @edge}
+          class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center"
+        >
           <dt :if={Map.has_key?(elem, :title)} class="w-full text-center flex-none text-zinc-500">
             <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
@@ -57,8 +66,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
             <.quick_draft_container
               :if={is_elem_bound_to_verse(@verse, elem)}
               sheafs={@verse.sheafs}
-              marks={@marks}
-              marks_ui={@marks_ui}
+              draft_sheaf={@draft_sheaf}
+              draft_sheaf_ui={@draft_sheaf_ui}
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
               myself={@myself}
@@ -68,10 +77,10 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         </div>
       </dl>
       <div class="flex items-center justify-center w-full py-6">
-         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
-         <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
-         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
-         </div>
+        <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+        <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
+        <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+      </div>
     </div>
     """
   end
@@ -99,24 +108,44 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     # cant be just pure binary operations
     ~H"""
     <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
-      <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
+      <span
+        :if={!@window}
+        verse_id={@verse_id}
+        node={@node}
+        node_id={@node_id}
+        field={@field}
+        text={@content}
+        class="whitespace-pre-line inline"
+      >
         <%= @content %>
       </span>
-      <span :if={@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="relative whitespace-pre-line group">
-    <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon name="custom-icon-park-outline-quote-start"  class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"/><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><.icon name="custom-icon-park-outline-quote-start" class="absolute top-3 rotate-180 -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"/></span><%= @window && String.byte_slice(@content, @window.end_quote ,byte_size(@content)-@window.end_quote) %>
-    </span>
-
-
+      <span
+        :if={@window}
+        verse_id={@verse_id}
+        node={@node}
+        node_id={@node_id}
+        field={@field}
+        text={@content}
+        class="relative whitespace-pre-line group"
+      >
+        <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon
+            name="custom-icon-park-outline-quote-start"
+            class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+          /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><.icon
+            name="custom-icon-park-outline-quote-start"
+            class="absolute top-3 rotate-180 -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+          /></span><%= @window &&
+          String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
+      </span>
     </dd>
-
     """
   end
 
   attr :sheafs, :list, default: []
   attr :event_target, :string, required: true
   attr :quote, :string, default: nil
-  attr :marks, :list, default: []
-  attr :marks_ui, MarksUiState, required: true
+  attr :draft_sheaf, Sheaf, default: nil
+  attr :draft_sheaf_ui, SheafUiState, required: true
   attr :form_type, :atom, required: true
   attr :myself, :any
 
@@ -143,8 +172,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         id="verse-matrix-level"
         myself={@myself}
         marks_target={@event_target}
-        marks={@marks}
-        marks_ui={@marks_ui}
+        sheaf={@draft_sheaf}
+        sheaf_ui={@draft_sheaf_ui}
       />
       <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>

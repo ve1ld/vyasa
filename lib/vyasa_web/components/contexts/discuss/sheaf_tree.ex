@@ -226,9 +226,9 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       <!-- Display Marks if Active -->
       <%= if @sheaf_ui.is_focused? do %>
         <.collapsible_marks_display
-          marks_ui={@sheaf_ui.marks_ui}
           marks_target={@events_target}
-          marks={@sheaf.marks}
+          sheaf={@sheaf}
+          sheaf_ui={@sheaf_ui}
           id={"marks-" <> @sheaf.id}
           myself={@events_target}
         />

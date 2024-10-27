@@ -5,11 +5,10 @@ defmodule VyasaWeb.Context.Components do
   use VyasaWeb, :html
   alias Vyasa.Sangh.{Sheaf}
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
-  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
-  attr :marks, :list, default: []
-  attr :marks_ui, MarksUiState, required: true
+  attr :sheaf, Sheaf, required: true
+  attr :sheaf_ui, SheafUiState, required: true
   attr :marks_target, :string
   attr :myself, :any, required: true
 
@@ -19,8 +18,8 @@ defmodule VyasaWeb.Context.Components do
 
   def collapsible_marks_display(assigns) do
     ~H"""
-    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
-    <div :if={not is_nil(@marks_ui)} class="mb-4">
+    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@sheaf_ui.marks_ui} /> -->
+    <div :if={not is_nil(@sheaf_ui.marks_ui)} class="mb-4">
       <div
         id={"collapse-header-container-" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
@@ -32,16 +31,20 @@ defmodule VyasaWeb.Context.Components do
           type="button"
         >
           <.icon
-            name={if @marks_ui.is_expanded_view?, do: "hero-chevron-up", else: "hero-chevron-down"}
+            name={
+              if @sheaf_ui.marks_ui.is_expanded_view?,
+                do: "hero-chevron-up",
+                else: "hero-chevron-down"
+            }
             class="w-5 h-5 mr-2 text-brand-dark"
           />
           <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
           <span class="text-lg font-small text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}" %>
+            <%= "#{Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live)))}" %>
           </span>
         </button>
         <button
-          :if={@marks_ui.is_expanded_view?}
+          :if={@sheaf_ui.marks_ui.is_expanded_view?}
           type="button"
           class="flex space-x-2 pr-2"
           phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
@@ -49,7 +52,7 @@ defmodule VyasaWeb.Context.Components do
         >
           <.icon
             name={
-              if @marks_ui.is_editable_marks?,
+              if @sheaf_ui.marks_ui.is_editable_marks?,
                 do: "custom-icon-mingcute-save-line",
                 else: "custom-icon-mingcute-edit-4-line"
             }
@@ -60,22 +63,22 @@ defmodule VyasaWeb.Context.Components do
       <div
         id={"collapsible-content-container-" <> @id}
         class={
-          if @marks_ui.is_expanded_view?,
+          if @sheaf_ui.marks_ui.is_expanded_view?,
             do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
             else: "max-h-0 overflow-scroll"
         }
       >
         <.mark_display
-          :for={mark <- @marks |> Enum.reverse()}
+          :for={mark <- @sheaf.marks |> Enum.reverse()}
           id={@id}
           mark={mark}
           marks_target={@marks_target}
           mark_ui={
-            @marks_ui.mark_id_to_ui
+            @sheaf_ui.marks_ui.mark_id_to_ui
             |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
           }
           myself={@marks_target}
-          is_editable?={@marks_ui.is_editable_marks?}
+          is_editable?={@sheaf_ui.marks_ui.is_editable_marks?}
         />
       </div>
     </div>
@@ -346,8 +349,8 @@ defmodule VyasaWeb.Context.Components do
             id={"nested-"<> @id}
             myself={nil}
             marks_target={@event_target}
-            marks={@draft_sheaf.marks}
-            marks_ui={@draft_sheaf_ui.marks_ui}
+            sheaf={@draft_sheaf}
+            sheaf_ui={@draft_sheaf_ui}
           />
 
           <div class="flex justify-between space-x-2">

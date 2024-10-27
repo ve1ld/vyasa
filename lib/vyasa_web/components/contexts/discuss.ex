@@ -13,6 +13,7 @@ defmodule VyasaWeb.Context.Discuss do
   alias Vyasa.Sangh.{SheafLattice, Sheaf, Mark}
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
   import VyasaWeb.Context.Discuss.SheafTree
+  import VyasaWeb.Context.Components
 
   @impl true
   def update(
@@ -408,6 +409,23 @@ defmodule VyasaWeb.Context.Discuss do
         reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
       /> -->
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
+        <.sheaf_creator_modal
+          :if={
+            Map.has_key?(assigns, :reply_to_path) &&
+              not is_nil(@reply_to_path)
+          }
+          id="sheaf-creator"
+          session={@session}
+          reply_to={@sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@reply_to_path.labels)}
+          draft_sheaf={
+            @sheaf_latice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+          }
+          draft_sheaf_ui={
+            @sheaf_ui_latice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+          }
+          event_target="#content-display"
+        />
+
         <%= if not is_nil(@sheaf_lattice) do %>
           <div :for={
             root_sheaf <-
