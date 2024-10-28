@@ -49,6 +49,7 @@ defmodule VyasaWeb.Context.Components do
           type="button"
           class="flex space-x-2 pr-2"
           phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
+          phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
           phx-target={@marks_target}
         >
           <.icon
@@ -72,8 +73,9 @@ defmodule VyasaWeb.Context.Components do
         <.mark_display
           :for={mark <- @sheaf.marks |> Enum.reverse()}
           id={@id}
-          mark={mark}
           marks_target={@marks_target}
+          sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+          mark={mark}
           mark_ui={
             @sheaf_ui.marks_ui.mark_id_to_ui
             |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
@@ -91,6 +93,7 @@ defmodule VyasaWeb.Context.Components do
   attr :marks_target, :any, required: true
   attr :myself, :any
   attr :is_editable?, :boolean
+  attr :sheaf_path_labels, :string, default: nil
 
   attr :id,
        :string,
@@ -176,6 +179,7 @@ defmodule VyasaWeb.Context.Components do
                 type="button"
                 phx-target={@marks_target}
                 phx-value-mark_id={@mark.id}
+                phx-value-sheaf_path_labels={@sheaf_path_labels}
                 class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
                 aria-label="Toggle edit mark body"
               >
@@ -196,7 +200,8 @@ defmodule VyasaWeb.Context.Components do
                 data-event-payload={
                   Jason.encode!(%{
                     "mark_id" => @mark.id,
-                    "previous_mark_body" => @mark.body
+                    "previous_mark_body" => @mark.body,
+                    "sheaf_path_labels" => @sheaf_path_labels
                   })
                 }
                 aria-label="Edit mark body"
@@ -291,7 +296,7 @@ defmodule VyasaWeb.Context.Components do
           draft_sheaf_ui={@draft_sheaf_ui}
           reply_to={@reply_to}
           event_target={@event_target}
-          on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: "#content-display")}
+          on_cancel_callback={JS.push("ui::toggle_show_sheaf_modal?", target: @event_target)}
         />
       </div>
     </.generic_modal_wrapper>

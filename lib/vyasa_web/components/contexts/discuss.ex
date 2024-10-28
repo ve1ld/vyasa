@@ -359,6 +359,86 @@ defmodule VyasaWeb.Context.Discuss do
   #   socket
   #   |> register_sheaf(updated_sheaf)
   # end
+
+  @impl true
+  def handle_event(
+        "ui::toggle_is_editing_mark_content?",
+        %{
+          "sheaf_path_labels" => sheaf_labels,
+          "mark_id" => mark_id
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice:
+         sheaf_ui_lattice |> SheafLattice.toggle_is_editing_mark_content?(lattice_key, mark_id)
+     )}
+  end
+
+  @impl true
+  def handle_event(
+        "ui::toggle_is_editable_marks?",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_is_editable_marks(lattice_key)
+     )}
+  end
+
+  @impl true
+  def handle_event(
+        "ui::toggle_marks_display_collapsibility",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(sheaf_labels,
+      label: "ui::toggle_marks_display_collapsibility"
+    )
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice:
+         sheaf_ui_lattice |> SheafLattice.toggle_marks_display_collapsibility(lattice_key)
+     )}
+  end
+
   @impl true
   def handle_event(
         "ui::toggle_marks_display_collapsibility",
@@ -414,6 +494,65 @@ defmodule VyasaWeb.Context.Discuss do
      |> assign(
        sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_expanded?(lattice_key)
      )}
+  end
+
+  @impl true
+  def handle_event(
+        "mark::editMarkContent",
+        %{
+          "sheaf_path_labels" => sheaf_labels,
+          "mark_id" => mark_id,
+          "input" => input,
+          "previous_mark_body" => _previous_input
+        } = params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(params, label: "Handling mark::editMarkContent")
+
+    # %Sheaf{
+    #   marks: old_marks
+    # } = old_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(lattice_key)
+
+    # {[old_mark | _] = _old_versions_of_changed, updated_marks} =
+    #   get_and_update_in(
+    #     old_marks,
+    #     [Access.filter(&match?(%Mark{id: ^mark_id}, &1))],
+    #     &{&1, Map.put(&1, :body, input)}
+    #   )
+
+    # old_mark |> Vyasa.Draft.update_mark(%{body: input})
+
+    # updated_sheaf = %Sheaf{old_sheaf | marks: updated_marks}
+
+    # TODO: this needs to be updated if the sheaf that is being modded is the draft sheaf.
+    # this is beause in the case of the draft sheafs, there's a need to do sanitising, and maybe prepending draft mark in the reflector
+    # prior to updating the sheaf,
+    # this can likey rely on a separate helepr function and shall be done after bindings are handled on the discuss mode.
+
+    # TODO: after user model is handled, this is likely to be the best place to check if current user is authorised
+    # to make this mark edit
+    {
+      :noreply,
+      socket
+      |> assign(
+        sheaf_lattice:
+          sheaf_lattice
+          |> SheafLattice.edit_mark_content_within_sheaf(lattice_key, mark_id, input)
+      )
+      |> assign(
+        sheaf_ui_lattice:
+          sheaf_ui_lattice |> SheafLattice.toggle_is_editing_mark_content?(lattice_key, mark_id)
+      )
+    }
   end
 
   @impl true

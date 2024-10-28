@@ -1,6 +1,6 @@
 defmodule Vyasa.Sangh.SheafLattice do
   alias Vyasa.Sangh
-  alias Vyasa.Sangh.{Sheaf}
+  alias Vyasa.Sangh.{Sheaf, Mark}
   alias EctoLtree.LabelTree, as: Ltree
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
@@ -112,6 +112,50 @@ defmodule Vyasa.Sangh.SheafLattice do
         } = old_sheaf
       ) do
     ui_lattice |> remove_sheaf_from_lattice(old_sheaf)
+  end
+
+  def toggle_is_editing_mark_content?(
+        %{} = ui_lattice,
+        lattice_key,
+        mark_id
+      )
+      when is_list(lattice_key) and is_binary(mark_id) do
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.toggle_is_editing_mark_content?(mark_id)
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
+  end
+
+  def update_sheaf_in_lattice(
+        %{} = lattice,
+        lattice_key,
+        %Sheaf{} = updated_sheaf
+      )
+      when is_list(lattice_key) do
+    lattice |> Map.put(lattice_key, updated_sheaf)
+  end
+
+  def toggle_is_editable_marks(
+        %{} = ui_lattice,
+        lattice_key
+      )
+      when is_list(lattice_key) do
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.toggle_is_editable_marks?()
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
   end
 
   def toggle_marks_display_collapsibility(
@@ -331,7 +375,30 @@ defmodule Vyasa.Sangh.SheafLattice do
         %{} = lattice,
         lattice_key
       )
-      when is_binary(lattice_key) do
+      when is_list(lattice_key) do
     lattice |> Map.get(lattice_key, nil)
+  end
+
+  def edit_mark_content_within_sheaf(
+        %{} = lattice,
+        lattice_key,
+        mark_id,
+        input
+      )
+      when is_list(lattice_key) and is_binary(mark_id) and is_binary(input) do
+    %Sheaf{
+      marks: old_marks
+    } = old_sheaf = lattice |> get_sheaf_from_lattice(lattice_key)
+
+    {[old_mark | _] = _old_versions_of_changed, updated_marks} =
+      get_and_update_in(
+        old_marks,
+        [Access.filter(&match?(%Mark{id: ^mark_id}, &1))],
+        &{&1, Map.put(&1, :body, input)}
+      )
+
+    old_mark |> Vyasa.Draft.update_mark(%{body: input})
+
+    lattice |> update_sheaf_in_lattice(lattice_key, %Sheaf{old_sheaf | marks: updated_marks})
   end
 end
