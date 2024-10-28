@@ -141,6 +141,23 @@ defmodule Vyasa.Sangh.SheafLattice do
     lattice |> Map.put(lattice_key, updated_sheaf)
   end
 
+  def toggle_show_sheaf_modal?(
+        %{} = ui_lattice,
+        lattice_key
+      )
+      when is_list(lattice_key) do
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.toggle_show_sheaf_modal?()
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
+  end
+
   def toggle_is_editable_marks(
         %{} = ui_lattice,
         lattice_key

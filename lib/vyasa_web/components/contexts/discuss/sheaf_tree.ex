@@ -44,6 +44,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     doc: "Defines a callback to invoke when the reply-to button is clicked."
   )
 
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def root_sheaf(assigns) do
     ~H"""
     <div class="flex flex-col" id={"root-sheaf-container-" <> @sheaf.id}>
@@ -60,6 +66,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         sheaf={@sheaf}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
         children={
           SheafLattice.read_published_from_sheaf_lattice(
             @sheaf_lattice,
@@ -124,6 +131,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     doc: "Defines a callback to invoke when the reply-to button is clicked."
   )
 
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def collapsible_sheaf_container(assigns) do
     ~H"""
     <div
@@ -145,6 +158,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
             level={@level + 1}
             on_replies_click={@on_replies_click}
             on_set_reply_to={@on_set_reply_to}
+            on_quick_reply={@on_quick_reply}
             children={
               SheafLattice.read_published_from_sheaf_lattice(
                 @sheaf_lattice,
@@ -207,6 +221,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     doc: "Defines a callback to invoke when the reply-to button is clicked."
   )
 
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def sheaf_component(assigns) do
     ~H"""
     <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
@@ -222,6 +242,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         children={@children}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
       />
       <!-- Display Marks if Active -->
       <%= if @sheaf_ui.is_focused? do %>
@@ -246,6 +267,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           level={@level + 1}
           on_replies_click={@on_replies_click}
           on_set_reply_to={@on_set_reply_to}
+          on_quick_reply={@on_quick_reply}
         />
       <% end %>
     </div>

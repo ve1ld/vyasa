@@ -436,6 +436,12 @@ defmodule VyasaWeb.Context.Components do
     doc: "Defines a callback to invoke when the reply-to button is clicked."
   )
 
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
 
   def sheaf_summary(assigns) do
@@ -461,6 +467,7 @@ defmodule VyasaWeb.Context.Components do
         replies_count={@children |> Enum.count()}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
       />
       <!-- Action Button Group -->
       <div class="flex justify-between items-center mt-2">
@@ -524,6 +531,12 @@ defmodule VyasaWeb.Context.Components do
     doc: "Defines a callback to invoke when the reply-to button is clicked."
   )
 
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def sheaf_engagement_display(assigns) do
     ~H"""
     <div class="flex justify-between mt-2">
@@ -555,7 +568,8 @@ defmodule VyasaWeb.Context.Components do
       <!-- Reply Button -->
       <button
         type="button"
-        phx-click={@on_set_reply_to}
+        phx-click={@on_quick_reply}
+        phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
         class="flex items-center text-gray-600 hover:text-gray-800"
       >
         <.icon name="custom-icon-formkit-reply" class="h-4 w-4 mr-1" />

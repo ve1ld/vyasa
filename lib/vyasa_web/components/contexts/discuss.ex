@@ -412,31 +412,82 @@ defmodule VyasaWeb.Context.Discuss do
 
   @impl true
   def handle_event(
-        "ui::toggle_marks_display_collapsibility",
-        %{
-          "sheaf_path_labels" => sheaf_labels
-        } = _params,
+        "ui::toggle_show_sheaf_modal?",
+        _params,
         %Socket{
           assigns: %{
             session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
             sheaf_lattice: %{} = _sheaf_lattice,
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
           }
         } = socket
+      ) do
+    new_lattice =
+      sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+
+    {
+      :noreply,
+      socket
+      |> assign(sheaf_ui_lattice: new_lattice)
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "sheaf::quick_reply",
+        %{
+          "sheaf_path_labels" => immediate_reply_to_sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            reply_to_path: current_reply_to_path,
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
       )
-      when is_binary(sheaf_labels) do
-    lattice_key = Jason.decode!(sheaf_labels)
+      when is_binary(immediate_reply_to_sheaf_labels) do
+    reply_to_lattice_key = Jason.decode!(immediate_reply_to_sheaf_labels)
+    reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
+
+    new_reply_to_path =
+      case reply_to_sheaf do
+        %Sheaf{
+          path: %Ltree{} = path
+        } ->
+          path
+
+        _ ->
+          current_reply_to_path
+      end
+
     # Handle the event here (e.g., log it, update state, etc.)
-    IO.inspect(sheaf_labels,
-      label: "ui::toggle_marks_display_collapsibility"
+
+    IO.inspect(
+      %{
+        reply_to: immediate_reply_to_sheaf_labels,
+        reply_to_lattice_key: reply_to_lattice_key,
+        draft: draft_sheaf_lattice_key
+      },
+      label: "ui::toggle_show_sheaf_modal?"
     )
 
-    {:noreply,
-     socket
-     |> assign(
-       sheaf_ui_lattice:
-         sheaf_ui_lattice |> SheafLattice.toggle_marks_display_collapsibility(lattice_key)
-     )}
+    {
+      :noreply,
+      socket
+      |> assign(reply_to_path: new_reply_to_path)
+      |> assign(
+        sheaf_ui_lattice:
+          sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+      )
+    }
   end
 
   @impl true
@@ -477,6 +528,7 @@ defmodule VyasaWeb.Context.Discuss do
         %Socket{
           assigns: %{
             session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: draft_reflector_path,
             sheaf_lattice: %{} = _sheaf_lattice,
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
           }
@@ -493,7 +545,9 @@ defmodule VyasaWeb.Context.Discuss do
      socket
      |> assign(
        sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_expanded?(lattice_key)
-     )}
+     )
+     # effects the dom diff:
+     |> assign(draft_reflector_path: draft_reflector_path)}
   end
 
   @impl true
@@ -567,6 +621,18 @@ defmodule VyasaWeb.Context.Discuss do
 
   @impl true
   def render(assigns) do
+    reply_to_sheaf =
+      case Map.has_key?(assigns, :reply_to_path) && not is_nil(assigns.reply_to_path) do
+        true ->
+          assigns.sheaf_lattice
+          |> SheafLattice.get_sheaf_from_lattice(assigns.reply_to_path.labels)
+
+        _ ->
+          nil
+      end
+
+    assigns = assigns |> assign(:reply_to, reply_to_sheaf)
+
     ~H"""
     <div id={@id}>
       <!-- <.debug_dump
@@ -580,22 +646,39 @@ defmodule VyasaWeb.Context.Discuss do
       <div id="content-display" class="mx-auto max-w-2xl pb-16">
         <.sheaf_creator_modal
           :if={
-            Map.has_key?(assigns, :reply_to_path) &&
-              not is_nil(@reply_to_path)
+            Map.has_key?(assigns, :draft_reflector_path) &&
+              not is_nil(@draft_reflector_path)
           }
           id="sheaf-creator"
           session={@session}
-          reply_to={@sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@reply_to_path.labels)}
+          reply_to={@reply_to}
           draft_sheaf={
-            @sheaf_latice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+            @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
           }
           draft_sheaf_ui={
-            @sheaf_ui_latice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+            @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
           }
           event_target="#content-display"
         />
 
         <%= if not is_nil(@sheaf_lattice) do %>
+          <div id="dump-check">
+            <.debug_dump
+              :if={
+                Map.has_key?(assigns, :draft_reflector_path) &&
+                  not is_nil(@draft_reflector_path)
+              }
+              label="CHECK SHEAF CREATOR MODAL INPUTS"
+              draft_sheaf_ui={
+                @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+              }
+              draft_sheaf={
+                @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+              }
+              event_target="#content-display"
+            />
+          </div>
+
           <div :for={
             root_sheaf <-
               SheafLattice.read_published_from_sheaf_lattice(@sheaf_lattice, 0)
@@ -606,7 +689,7 @@ defmodule VyasaWeb.Context.Discuss do
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
               on_replies_click={JS.push("ui::toggle_sheaf_is_expanded?", target: "#content-display")}
-              on_set_reply_to={JS.push("sheaf::set_reply_to_context", target: "#content-display")}
+              on_quick_reply={JS.push("sheaf::quick_reply", target: "#content-display")}
             />
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>
