@@ -265,6 +265,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         sheaf={@sheaf}
         sheaf_ui={@sheaf_ui}
         children={@children}
+        on_signature_deadspace_click={@on_replies_click}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
         on_quick_reply={@on_quick_reply}

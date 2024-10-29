@@ -470,6 +470,11 @@ defmodule VyasaWeb.Context.Components do
       "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
   )
 
+  attr(:on_signature_deadspace_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the user clicks on the deadspace near the signature"
+  )
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
 
   def sheaf_summary(assigns) do
@@ -481,12 +486,28 @@ defmodule VyasaWeb.Context.Components do
       >
         <%= @label %>
       </h2>
-      <!-- Signature Display -->
+      <!-- Signature Display and Clickable Deadspace -->
       <div
-        id={"level-"<> to_string(@level) <> "-sheaf-top-row-"<> @id <> "-" <> @sheaf.id}
-        class="flex justify-between"
+        id={"level-" <> to_string(@level) <> "-sheaf-top-row-" <> @id <> "-" <> @sheaf.id}
+        class="flex justify-between items-center"
       >
-        <.sheaf_signature_display sheaf={@sheaf} />
+        <div class="flex-grow max-w-[40%]">
+          <!-- Allow signature display to grow but limit to 80% -->
+          <.sheaf_signature_display sheaf={@sheaf} />
+        </div>
+        <!-- Invisible Button as Clickable Deadspace -->
+        <button
+          :if={Enum.count(@children) > 0}
+          id={"invisible-button-level-" <> to_string(@level) <> "-sheaf-top-row-" <> @id <> "-" <> @sheaf.id}
+          type="button"
+          phx-click={@on_signature_deadspace_click}
+          phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+          class="flex-grow h-full cursor-pointer opacity-0"
+          aria-label="Click to interact with signature"
+        >
+          hello world, i'm invisible
+        </button>
+
         <button
           type="button"
           phx-click={@on_set_reply_to}
@@ -498,14 +519,12 @@ defmodule VyasaWeb.Context.Components do
             <span class="text-sm">Unpin</span>
           <% else %>
             <.icon name="custom-icon-material-symbols-pin-drop-empty" class="h-5 w-5 mr-1" />
-
-            <span class="text-sm">Pin </span>
+            <span class="text-sm">Pin</span>
           <% end %>
         </button>
       </div>
       <!-- Body Display -->
       <div class="mb-4 mt-3">
-        <!-- Added margin for vertical spacing -->
         <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Engagement Display -->
@@ -546,7 +565,7 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_signature_display(assigns) do
     ~H"""
-    <div class="flex mt-2 text-sm text-gray-600">
+    <div class="w-auto flex mt-2 text-sm text-gray-600">
       <div class="mx-1 text-gray-800 font-semibold">
         <p><%= @sheaf.signature %></p>
       </div>
