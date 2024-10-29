@@ -102,17 +102,15 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_display(assigns) do
     ~H"""
-    <!-- <.debug_dump class="relative" mark_ui={@mark_ui} is_editable?={@is_editable?} />-->
     <div class="border-l border-brand-light pl-2">
       <%= if @mark.state == :live do %>
         <div
-          id={"mark-container-" <>
-          @mark.id <> "-" <> @id}
+          id={"mark-container-" <> @mark.id <> "-" <> @id}
           class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
         >
           <div
             :if={@is_editable?}
-            id={"ordering-button-group-"<> @mark.id <> "-" <> @id}
+            id={"ordering-button-group-" <> @mark.id <> "-" <> @id}
             class="flex flex-col items-center"
           >
             <button
@@ -142,21 +140,39 @@ defmodule VyasaWeb.Context.Components do
               />
             </button>
           </div>
+
           <div
             id={"mark-content-container-" <> @mark.id <> "-" <> @id}
-            class="h-full w-full flex-grow mx-2 pt-2"
+            class="h-full w-full flex-grow mx-2 pt-2 flex flex-col"
           >
-            <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-              <span class="block mb-1 text-sm italic text-secondary">
-                "<%= @mark.binding.window.quote %>"
-              </span>
-            <% end %>
-            <%= if is_binary(@mark.body) do %>
-              <div class="flex-grow h-full">
-                <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} body_content={@mark.body} />
+            <div class="flex justify-between items-start">
+              <!-- Flex container for content and button -->
+              <div class="flex-grow">
+                <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+                  <span class="block mb-1 text-sm italic text-secondary">
+                    "<%= @mark.binding.window.quote %>"
+                  </span>
+                <% end %>
+                <%= if is_binary(@mark.body) do %>
+                  <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} mark={@mark} />
+                <% end %>
               </div>
-            <% end %>
+              <!-- Visit Button -->
+              <%= if !@is_editable? do %>
+                <button
+                  type="button"
+                  phx-click="navigate::visit_mark"
+                  phx-value-mark_id={@mark.id}
+                  phx-target={@marks_target}
+                  class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+                  aria-label="Visit"
+                >
+                  <.icon name="custom-icon-material-symbols-select-jump-to-end" class="h-6 w-6 mr-1" />
+                </button>
+              <% end %>
+            </div>
           </div>
+
           <div
             :if={@is_editable?}
             id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
@@ -173,6 +189,7 @@ defmodule VyasaWeb.Context.Components do
             >
               <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
             </button>
+            <!-- Toggle Edit Button -->
             <%= if not @mark_ui.is_editing_content? do %>
               <button
                 phx-click="ui::toggle_is_editing_mark_content?"
@@ -186,7 +203,7 @@ defmodule VyasaWeb.Context.Components do
                 <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
               </button>
             <% else %>
-              <!-- pseudo submit button -->
+              <!-- Pseudo Submit Button -->
               <button
                 id={"pseudo-submit-" <> @mark.id <> "-" <> @id }
                 type="button"
@@ -216,23 +233,21 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
-  attr :mark_ui, MarkUiState, required: true
-  attr :id, :string, required: true
-  attr :body_content, :string, required: true
-
   def mark_body(assigns) do
     ~H"""
-    <textarea
-      name="mark_body"
-      disabled={not @mark_ui.is_editing_content?}
-      id={"mark-body-" <> @id}
-      rows="3"
-      phx-hook="TextareaAutoResize"
-      class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
-      placeholder="Edit your mark"
-    >
-      <%= @body_content %>
-    </textarea>
+    <div class="relative">
+      <textarea
+        name="mark_body"
+        disabled={not @mark_ui.is_editing_content?}
+        id={"mark-body-" <> @id}
+        rows="3"
+        phx-hook="TextareaAutoResize"
+        class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
+        placeholder="Edit your mark"
+      >
+        <%= @mark.body %>
+      </textarea>
+    </div>
     """
   end
 

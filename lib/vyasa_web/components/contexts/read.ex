@@ -885,6 +885,29 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  # TODO @ks0m1c this is an example of what binding/permalinking should handle
+  # we need to do a push-patch direction from this function
+  def handle_event(
+        "navigate::visit_mark",
+        %{
+          "mark_id" => mark_id
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}}
+          }
+        } = socket
+      )
+      when is_binary(mark_id) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(mark_id,
+      label: "navigate::visit_mark -- TODO"
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("dummy_event", _params, socket) do
     # Handle the event here (e.g., log it, update state, etc.)
     IO.puts("Dummy event triggered")

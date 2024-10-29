@@ -591,6 +591,31 @@ defmodule VyasaWeb.Context.Discuss do
   end
 
   @impl true
+  # TODO @ks0m1c this is an example of what binding/permalinking should handle
+  # we need to do a push-patch direction from this function
+  def handle_event(
+        "navigate::visit_mark",
+        %{
+          "mark_id" => mark_id
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = _sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(mark_id) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(mark_id,
+      label: "navigate::visit_mark -- TODO"
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event(
         "ui::toggle_marks_display_collapsibility",
         %{
