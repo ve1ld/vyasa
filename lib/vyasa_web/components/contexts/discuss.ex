@@ -591,6 +591,37 @@ defmodule VyasaWeb.Context.Discuss do
   end
 
   @impl true
+  # TODO @ks0m1c another place that would require binding / permalinking apis
+  # equivalent handler for the read mode as well...
+  def handle_event(
+        "sheaf::share_sheaf",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = _sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    shareable_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(lattice_key)
+
+    IO.inspect(shareable_sheaf, label: "TODO: sheaf::share_sheaf")
+
+    {
+      :noreply,
+      socket
+      # |> assign(
+      #   sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_is_editable_marks(lattice_key)
+      # )
+    }
+  end
+
+  @impl true
   # TODO @ks0m1c this is an example of what binding/permalinking should handle
   # we need to do a push-patch direction from this function
   def handle_event(

@@ -607,10 +607,9 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_engagement_display(assigns) do
     ~H"""
     <div class="flex justify-between mt-2">
-      <!-- Show Replies Button -->
-      <div class="flex-shrink-0 w-32">
-        <!-- Fixed width for alignment -->
-        <%= if @replies_count > 0 do %>
+      <div class="flex">
+        <!-- Show Replies Button -->
+        <div :if={@replies_count > 0} class="flex-shrink-0 w-32">
           <button
             type="button"
             phx-click={@on_replies_click}
@@ -627,17 +626,25 @@ defmodule VyasaWeb.Context.Components do
               <%= @replies_count %> replies
             </span>
           </button>
-        <% else %>
-          <span class="text-gray-600 text-sm"></span>
-          <!-- Optional placeholder -->
-        <% end %>
+        </div>
+        <!-- Share Button -->
+        <button
+          type="button"
+          phx-click="sheaf::share_sheaf"
+          phx-target="#content-display"
+          phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+          class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        >
+          <.icon name="custom-icon-ph-share-fat-light" class="h-4 w-4 mr-1" />
+          <span class="text-sm">Share</span>
+        </button>
       </div>
       <!-- Reply Button -->
       <button
         type="button"
         phx-click={@on_quick_reply}
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-        class="flex items-center text-gray-600 hover:text-gray-800"
+        class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
       >
         <.icon name="custom-icon-formkit-reply" class="h-4 w-4 mr-1" />
         <span class="text-sm">Reply</span>
