@@ -388,7 +388,12 @@ defmodule VyasaWeb.Context.Components do
     <div class="overflow-auto">
       <%= if not is_nil(@sheaf) do %>
         <div class="flex flex-col">
-          <.sheaf_summary label="Responding to" sheaf={@sheaf} action_buttons={[]} />
+          <.sheaf_summary
+            id="sheaf-summary-reply-to"
+            label="Responding to"
+            sheaf={@sheaf}
+            action_buttons={[]}
+          />
         </div>
       <% else %>
         <h2 class="text-2xl font-normal text-gray-800">
@@ -410,6 +415,14 @@ defmodule VyasaWeb.Context.Components do
   3. [FUTURE] Engagement Icons -- displays info about engagement (e.g. 12 replies)
   4. [FUTURE] Possible Quick Action buttons -- "reply to"
   """
+  attr :id, :string,
+    required: true,
+    doc: "The id suffix that gets injected by the parent node of this function component"
+
+  attr :is_reply_to, :boolean,
+    default: false,
+    doc: "Flag representing whether the sheaf is the current target for the reply_to context"
+
   attr :label, :string,
     default: nil,
     doc: "A string to serve as some label text to the sheaf being displayed"
@@ -454,7 +467,27 @@ defmodule VyasaWeb.Context.Components do
         <%= @label %>
       </h2>
       <!-- Signature Display -->
-      <.sheaf_signature_display sheaf={@sheaf} />
+      <div
+        id={"level-"<> to_string(@level) <> "-sheaf-top-row-"<> @id <> "-" <> @sheaf.id}
+        class="flex justify-between"
+      >
+        <.sheaf_signature_display sheaf={@sheaf} />
+        <button
+          type="button"
+          phx-click={@on_set_reply_to}
+          phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+          class="flex items-center text-gray-600 hover:text-gray-800"
+        >
+          <%= if @is_reply_to do %>
+            <.icon name="custom-icon-material-symbols-pin-drop-filled" class="h-5 w-5 mr-1" />
+            <span class="text-sm">Unpin</span>
+          <% else %>
+            <.icon name="custom-icon-material-symbols-pin-drop-empty" class="h-5 w-5 mr-1" />
+
+            <span class="text-sm">Pin </span>
+          <% end %>
+        </button>
+      </div>
       <!-- Body Display -->
       <div class="mb-4 mt-3">
         <!-- Added margin for vertical spacing -->

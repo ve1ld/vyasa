@@ -492,6 +492,106 @@ defmodule VyasaWeb.Context.Discuss do
 
   @impl true
   def handle_event(
+        "sheaf::set_reply_to_context",
+        %{
+          "sheaf_path_labels" => new_reply_to_target
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            reply_to_path: current_reply_to_path,
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(new_reply_to_target) do
+    reply_to_lattice_key = Jason.decode!(new_reply_to_target)
+    reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
+    draft_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(draft_sheaf_lattice_key)
+
+    new_reply_to_path =
+      case reply_to_sheaf do
+        %Sheaf{
+          path: %Ltree{} = path
+        } ->
+          path
+
+        _ ->
+          current_reply_to_path
+      end
+
+    # IO.inspect(
+    #   %{
+    #     current_reply_to_path: current_reply_to_path,
+    #     new_reply_to_path: new_reply_to_path,
+    #     target_sheaf_ui_before: sheaf_ui_lattice[new_reply_to_path.labels]
+    #   },
+    #   label: "check sanity"
+    # )
+
+    # Handle the event here (e.g., log it, update state, etc.)
+
+    # FIXME: @ks0m1c this update function should be updating the parent for the current draft sheaf, but it doesn't seem to be
+    # doing so right now, can I leave this to you to check why the update isn't happening?
+    # else i'll eventually come back to it.
+    updated_draft_sheaf =
+      draft_sheaf
+      |> Sangh.update_sheaf!(%{
+        parent: reply_to_sheaf
+      })
+
+    # updated_sheaf_ui_lattice = sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+    updated_sheaf_ui_lattice =
+      cond do
+        not is_nil(current_reply_to_path) and current_reply_to_path != new_reply_to_path ->
+          sheaf_ui_lattice
+          |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+          |> SheafLattice.toggle_sheaf_is_focused?(current_reply_to_path.labels)
+
+        not is_nil(current_reply_to_path) and current_reply_to_path == new_reply_to_path ->
+          sheaf_ui_lattice
+          |> SheafLattice.toggle_sheaf_is_focused?(current_reply_to_path.labels)
+
+        true ->
+          sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+      end
+
+    IO.inspect(
+      %{
+        new_reply_to_path: new_reply_to_path,
+        current_reply_to_path: current_reply_to_path,
+        reply_to_lattice_key: reply_to_lattice_key,
+        draft: draft_sheaf_lattice_key,
+        target_sheaf_ui_before: sheaf_ui_lattice[new_reply_to_path.labels],
+        target_sheaf_ui_after: updated_sheaf_ui_lattice[new_reply_to_path.labels]
+      },
+      label: "sheaf::set_reply_to_context"
+    )
+
+    {
+      :noreply,
+      socket
+      |> assign(reply_to_path: new_reply_to_path)
+      |> assign(sheaf_ui_lattice: updated_sheaf_ui_lattice)
+      |> assign(
+        sheaf_lattice:
+          sheaf_lattice
+          |> SheafLattice.update_sheaf_in_lattice(draft_sheaf_lattice_key, updated_draft_sheaf)
+      )
+
+      # |> assign(
+      #   sheaf_ui_lattice:
+      #     sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+      # )
+    }
+  end
+
+  @impl true
+  def handle_event(
         "ui::toggle_marks_display_collapsibility",
         %{
           "sheaf_path_labels" => sheaf_labels
@@ -592,7 +692,7 @@ defmodule VyasaWeb.Context.Discuss do
     # prior to updating the sheaf,
     # this can likey rely on a separate helepr function and shall be done after bindings are handled on the discuss mode.
 
-    # TODO: after user model is handled, this is likely to be the best place to check if current user is authorised
+    # TODOe_path after user model is handled, this is likely to be the best place to check if current user is authorised
     # to make this mark edit
     {
       :noreply,
@@ -631,7 +731,19 @@ defmodule VyasaWeb.Context.Discuss do
           nil
       end
 
-    assigns = assigns |> assign(:reply_to, reply_to_sheaf)
+    root_sheaves =
+      case assigns.sheaf_lattice do
+        l when not is_nil(l) ->
+          SheafLattice.read_published_from_sheaf_lattice(assigns.sheaf_lattice, 0)
+
+        _ ->
+          []
+      end
+
+    assigns =
+      assigns
+      |> assign(:reply_to, reply_to_sheaf)
+      |> assign(:root_sheaves, root_sheaves)
 
     ~H"""
     <div id={@id}>
@@ -639,11 +751,22 @@ defmodule VyasaWeb.Context.Discuss do
         :if={Map.has_key?(assigns, :draft_reflector_path)}
         label="Context Dump on Discussions"
         draft_reflector_path={@draft_reflector_path}
-        reply_to_path={@reply_to_path}
+        reply_to={@reply_to}
         reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
         reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
       /> -->
-      <div id="content-display" class="mx-auto max-w-2xl pb-16">
+      <div id="content-display" class="mx-auto max-w-4xl pb-16">
+        <.header class="m-8 ml-0">
+          <div class="font-dn text-4xl">
+            Discussions
+          </div>
+          <br />
+          <div class="font-dn text-xl">
+            <%= Enum.count(@root_sheaves || []) %> threads with a total of <%= Enum.count(
+              Map.keys(@sheaf_lattice || %{})
+            ) %> comments
+          </div>
+        </.header>
         <.sheaf_creator_modal
           :if={
             Map.has_key?(assigns, :draft_reflector_path) &&
@@ -663,7 +786,7 @@ defmodule VyasaWeb.Context.Discuss do
 
         <%= if not is_nil(@sheaf_lattice) do %>
           <div id="dump-check">
-            <.debug_dump
+            <!--  <.debug_dump
               :if={
                 Map.has_key?(assigns, :draft_reflector_path) &&
                   not is_nil(@draft_reflector_path)
@@ -676,20 +799,22 @@ defmodule VyasaWeb.Context.Discuss do
                 @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
               }
               event_target="#content-display"
-            />
+            /> -->
           </div>
 
           <div :for={
             root_sheaf <-
-              SheafLattice.read_published_from_sheaf_lattice(@sheaf_lattice, 0)
+              @root_sheaves
           }>
             <.root_sheaf
               events_target="#content-display"
+              reply_to={@reply_to}
               sheaf={root_sheaf}
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
               on_replies_click={JS.push("ui::toggle_sheaf_is_expanded?", target: "#content-display")}
               on_quick_reply={JS.push("sheaf::quick_reply", target: "#content-display")}
+              on_set_reply_to={JS.push("sheaf::set_reply_to_context", target: "#content-display")}
             />
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>

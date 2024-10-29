@@ -170,7 +170,7 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
   def get_initial_ui_state(
         %Sheaf{
           marks: marks,
-          active: is_focused?
+          active: _active
         } = _sheaf
       ) do
     marks_ui =
@@ -182,13 +182,17 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     %SheafUiState{
       struct(SheafUiState, @initial)
       | marks_ui: marks_ui,
-        is_focused?: is_focused?
+        is_focused?: false
     }
   end
 
   def get_initial_ui_state() do
     IO.puts("CHECKPOINT get initial ui state POKEMON")
     struct(SheafUiState, @initial)
+  end
+
+  def toggle_sheaf_is_focused?(%SheafUiState{is_focused?: curr} = ui_state) do
+    %SheafUiState{ui_state | is_focused?: !curr}
   end
 
   def toggle_sheaf_is_expanded?(%SheafUiState{is_expanded?: curr} = ui_state) do

@@ -12,6 +12,9 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
   @doc """
   Contains a root sheaf, with its own children and grandchildren sheafs.
   """
+  # attr :reply_to_path, Ltree, default: nil, doc: "The current reply_to context's path"
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
+
   attr :sheaf, Sheaf,
     required: true,
     doc: "The root sheaf being displayed."
@@ -63,6 +66,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       <.sheaf_component
         id={"sheaf-" <> @sheaf.id}
         events_target={@events_target}
+        reply_to={@reply_to}
         sheaf={@sheaf}
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
@@ -100,6 +104,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
 
   attr :sheaf, Sheaf, required: true, doc: "What the parent sheaf is"
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
 
   attr :sheafs, :list,
     required: true,
@@ -143,6 +148,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       class={["border-l-2 border-gray-200", @container_class]}
       id={"collapsible-sheaf-container-" <> @id}
     >
+      <!-- <.debug_dump label="collapsible sheaf container" reply_to={@reply_to} /> -->
       <!-- Non-Collapsible View -->
       <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
         <p class="text-gray-500">No child sheafs available.</p>
@@ -151,6 +157,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           <.sheaf_component
             id={"sheaf-" <> child.id}
             events_target={@events_target}
+            reply_to={@reply_to}
             sheaf={child}
             sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
             sheaf_lattice={@sheaf_lattice}
@@ -193,6 +200,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The individual sheaf being displayed."
 
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
 
   attr :sheaf_ui, SheafUiState,
@@ -228,15 +237,31 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
   )
 
   def sheaf_component(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        is_reply_to:
+          not is_nil(assigns.reply_to) &&
+            assigns.sheaf.path.labels == assigns.reply_to.path.labels &&
+            assigns.sheaf_ui.is_focused?
+      )
+
     ~H"""
-    <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
+    <div
+      id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
+      class="flex flex-col"
+    >
       <!-- <.debug_dump
         label={"LEVEL "<> to_string(@level) <>  " sheaf component id=" <> @id}
-        sheaf_ui={@sheaf_ui}
+        reply_to={@reply_to}
+        is_reply_to={@is_reply_to}
         level={@level}
         sheaf_path={@sheaf.path}
       /> -->
       <.sheaf_summary
+        id={"sheaf-tree-node-sheaf-summary-"<> @id}
+        level={@level}
+        is_reply_to={@is_reply_to}
         sheaf={@sheaf}
         sheaf_ui={@sheaf_ui}
         children={@children}
@@ -245,7 +270,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         on_quick_reply={@on_quick_reply}
       />
       <!-- Display Marks if Active -->
-      <%= if @sheaf_ui.is_focused? do %>
+      <%= if @sheaf.active do %>
         <.collapsible_marks_display
           marks_target={@events_target}
           sheaf={@sheaf}
@@ -259,6 +284,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
           sheaf={@sheaf}
+          reply_to={@reply_to}
           container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 5)}  ml-#{to_string((@level + 1) * 4)}"}
           events_target={@events_target}
           sheafs={@children}
