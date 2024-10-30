@@ -7,6 +7,7 @@ defmodule Vyasa.Sangh.SheafLattice do
   @moduledoc """
   A sheaf lattice is a flatmap that represents the tree-structure of sheafs.
   The keys in this flatmap are the labels for a sheaf and the values are the particular sheafs themselves.
+
   In this way, we can keep all of:
   a) root sheafs: keyed by [x] where is_binary(x)
   b) level 1 sheafs: keyed by [x, y] where is_binary(x) and is_binary(y)
@@ -14,7 +15,15 @@ defmodule Vyasa.Sangh.SheafLattice do
 
   And subsequently, we can read by means of specific filters as well.
 
-  NOTE: this preloads the marks in each sheaf.
+  This module provides context functions to interact with such lattices. We should keep in mind that
+  the functions defined within this context ONLY modify the respective structs that the lattices hold,
+  and have no other side-effects. For example, there shall never be any DB writes happening from these
+  functions.
+  """
+
+  @doc """
+  Represents all the sheafs in the sangh session using the lattice.
+  This shall be used in index actions, hence it has no filters.
   """
   def create_complete_sheaf_lattice(sangh_id) when is_binary(sangh_id) do
     root_sheafs =
@@ -34,38 +43,9 @@ defmodule Vyasa.Sangh.SheafLattice do
     |> Enum.into(%{})
   end
 
-  # @doc """
-  # Inserts a particular mark into a particular sheaf in the lattice.
-
-  # Intent is that it gets used when creating a mark in the discuss mode.
-  # TODO: figure out what is the best place to put this?
-  # """
-  # def insert_mark_into_sheaf_in_lattice(
-  #       %{} = lattice,
-  #       %Ltree{labels: lattice_key} = _sheaf_path,
-  #       %Mark{id: mark_id, body: body} = mark
-  #     ) do
-  #   %Sheaf{
-  #     marks: rest_marks
-  #   } = target_sheaf = lattice |> Map.get(lattice_key)
-
-  #   updated_new_mark = %Mark{
-  #     mark
-  #     | id: if(not is_nil(mark_id), do: Ecto.UUID.generate(), else: mark_id),
-  #       order: Mark.get_next_order(rest_marks),
-  #       body: body,
-  #       state: :live
-  #   }
-
-  #   updated_sheaf = %Sheaf{target_sheaf | marks: [updated_new_mark | rest_marks]}
-
-  #   socket
-  #   |> register_sheaf(updated_sheaf)
-  # end
-
   @doc """
   Inserts sheaf into sheaf state lattice, overwrites existing sheaf
-  if exists.
+  if it exists.
   """
   def insert_sheaf_into_lattice(
         %{} = lattice,
@@ -88,6 +68,18 @@ defmodule Vyasa.Sangh.SheafLattice do
         } = sheaf
       ) do
     ui_lattice |> Map.put(path_labels, sheaf |> SheafUiState.get_initial_ui_state())
+  end
+
+  @doc """
+  Swaps out the current sheaf for a particular key in the lattice to the updated_sheaf.
+  """
+  def update_sheaf_in_lattice(
+        %{} = lattice,
+        lattice_key,
+        %Sheaf{} = updated_sheaf
+      )
+      when is_list(lattice_key) do
+    lattice |> Map.put(lattice_key, updated_sheaf)
   end
 
   @doc """
@@ -114,6 +106,55 @@ defmodule Vyasa.Sangh.SheafLattice do
     ui_lattice |> remove_sheaf_from_lattice(old_sheaf)
   end
 
+  @doc """
+  Registers a particular mark within a particular sheaf.
+
+  TODO: use this when wiring up the mark-creation / deletion events within discuss mode
+  """
+  def ui_register_mark(
+        %{} = ui_lattice,
+        lattice_key,
+        mark_id
+      )
+      when is_list(lattice_key) and is_binary(mark_id) do
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.register_mark(mark_id)
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
+  end
+
+  @doc """
+  De-Registers a particular mark within a particular sheaf.
+
+  TODO: use this when wiring up the mark-creation / deletion events within discuss mode
+  """
+  def ui_deregister_mark(
+        %{} = ui_lattice,
+        lattice_key,
+        mark_id
+      )
+      when is_list(lattice_key) and is_binary(mark_id) do
+    sheaf_ui = ui_lattice |> Map.get(lattice_key, nil)
+
+    case sheaf_ui do
+      ui when not is_nil(ui) ->
+        updated_sheaf_ui = ui |> SheafUiState.deregister_mark(mark_id)
+        ui_lattice |> Map.put(lattice_key, updated_sheaf_ui)
+
+      _ ->
+        ui_lattice
+    end
+  end
+
+  @doc """
+  Toggles the mark ui for a particular mark in a particular sheaf in the lattice.
+  """
   def toggle_is_editing_mark_content?(
         %{} = ui_lattice,
         lattice_key,
@@ -130,15 +171,6 @@ defmodule Vyasa.Sangh.SheafLattice do
       _ ->
         ui_lattice
     end
-  end
-
-  def update_sheaf_in_lattice(
-        %{} = lattice,
-        lattice_key,
-        %Sheaf{} = updated_sheaf
-      )
-      when is_list(lattice_key) do
-    lattice |> Map.put(lattice_key, updated_sheaf)
   end
 
   def toggle_show_sheaf_modal?(
@@ -209,20 +241,10 @@ defmodule Vyasa.Sangh.SheafLattice do
     end
   end
 
-  def toggle_sheaf_is_expanded?(
-        %{} = ui_lattice,
-        lattice_key
-      )
-      when is_binary(lattice_key) do
-    IO.inspect(lattice_key, label: "toggle_sheaf_is_expanded? lattice key that is a string:")
-
-    ui_lattice
-    |> toggle_sheaf_is_expanded?([lattice_key])
-  end
-
   @doc """
-  Toggles the is_expanded? flag for a particular sheaf, as keyed by teh
+  Toggles the is_expanded? flag for a particular sheaf, as keyed by the
   lattice_key.
+
   If no such entry exists, returns the original ui_lattice without any alteration.
   """
   def toggle_sheaf_is_expanded?(
@@ -242,14 +264,6 @@ defmodule Vyasa.Sangh.SheafLattice do
         ui_lattice
     end
   end
-
-  # TODO implement wrappers for the other sheaf ui state changes:
-  # 1. register and deregister mark
-  # 2. toggles:
-  #    a) toggle_is_editable_marks ==> for a particular sheaf in the lattice
-  #    b) toggle_show_sheaf_modal? ==> for a particular sheaf in the lattice
-  #    c) toggle_marks_is_expanded_view? ==> for a particular sheaf in the lattice
-  #    d) toggle_is_editing_mark_content(sheaf, mark_id) ==> for a particular mark within a particular sheaf
 
   @doc """
   Reads sheaf layers from a lattice based on the specified level and match criteria.
@@ -285,6 +299,9 @@ defmodule Vyasa.Sangh.SheafLattice do
 
   # Fetch immediate children of a specific level 1 node:
       iex> SheafLattice.read_sheaf_lattice(sheaf_lattice, 2, ["c9cbcb0c", "65c1ac0c", nil])
+
+  TODO: @ks0m1c could you help me use the Access pattern for this, I think it's much faster if you do it,
+  will be a tiny PR for it as well.
   """
 
   def read_sheaf_lattice(%{} = sheaf_lattice, level \\ 0, match \\ nil) do
@@ -389,10 +406,7 @@ defmodule Vyasa.Sangh.SheafLattice do
     end
   end
 
-  # fallthrough
-  # QQ: not sure if i should be removing this fallback
-  # too sleepy to figure out
-  # TODO: what to do here?
+  # fallthrough -- WARNING: any failure will happen silently
   defp create_sheaf_lattice_filter(_, _) do
     fn _ -> true end
   end
