@@ -80,12 +80,13 @@ export default HoveRune = {
     this.handleEvent("bind::jump", (bind) => {
       console.warn(bind)
       targetNode = findMatchingSpan(bind)
+      if (targetNode) {
       targetNode.focus();
       targetNode.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
-
+      }
 
     });
         const targetEvents = ["pointerdown", "pointerup"];
