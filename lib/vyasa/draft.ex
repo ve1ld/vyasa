@@ -52,6 +52,27 @@ defmodule Vyasa.Draft do
     |> Binding.apply(element)
   end
 
+  def create_binding(%Binding{} = bind) do
+    bind
+    |> Repo.insert()
+  end
+
+  def create_binding(attrs) do
+    bind_node(attrs)
+    |> Repo.insert()
+  end
+
+  def get_binding!(id), do: Repo.get!(Binding, id) |> nodify() |> fieldify()
+
+  defp nodify(%Binding{translation_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
+
+  defp nodify(%Binding{verse_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
+
+  defp nodify(b), do: b
+
+  defp fieldify(%Binding{field_key: keys} = b) when is_list(keys), do: %{b | field: keys |> Enum.join("::")}
+  defp fieldify(b), do: b
+
   @doc """
   Returns the list of marks.
 
@@ -79,7 +100,7 @@ defmodule Vyasa.Draft do
       ** (Ecto.NoResultsError)
 
   """
-  def get_mark!(id), do: Repo.get!(Mark, id)
+  def get_mark(id), do: Repo.get(Mark, id)
 
   @doc """
   Creates a mark.

@@ -82,7 +82,7 @@ defmodule VyasaWeb.Context.Read do
     } = socket
   ) when is_binary(curr_verse_id) and verse_id != curr_verse_id do
     # binding here blocks the stream from appending to quote
-
+    #
     bound_verses =
       verses
       |> then(&put_in(&1[verse_id].binding, bind))
@@ -110,6 +110,7 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
+
     # binding here blocks the stream from appending to quote
     bound_verses = put_in(verses[verse_id].binding, bind)
     updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
@@ -117,7 +118,9 @@ defmodule VyasaWeb.Context.Read do
     {:ok,
      socket
      |> mutate_verses(verse_id, bound_verses)
-     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})}
+     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})
+     |> push_event("bind::jump", bind)
+    }
   end
 
   @impl true
@@ -132,6 +135,7 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
+
     bound_verses = put_in(verses[verse_id].binding, bind)
 
     new_marks = [
@@ -148,6 +152,7 @@ defmodule VyasaWeb.Context.Read do
 
   @impl true
   def update(_assigns, socket) do
+
     {:ok, socket}
   end
 
@@ -352,10 +357,12 @@ defmodule VyasaWeb.Context.Read do
 
   # fallthrough
   def init_drafting_context(%Socket{} = socket) do
+        #%Sheaf{marks: [Mark.get_draft_mark()]}
     socket
     |> assign(draft_reflector: nil)
     |> assign(draft_reflector_ui: nil)
   end
+
 
   @doc """
   Only initialises a draft reflector in the socket state. If there's no existing

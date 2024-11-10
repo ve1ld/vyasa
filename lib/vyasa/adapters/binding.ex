@@ -9,12 +9,14 @@ defmodule Vyasa.Adapters.Binding do
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
   alias Vyasa.Sangh.{Sheaf}
 
+  @derive {Jason.Encoder, only: [:node_id, :field, :verse_id]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "bindings" do
     field :w_type, Ecto.Enum, values: [:quote, :timestamp, :null]
 
-    field :field_key, {:array, :any}
+    field :field_key, {:array, Ecto.Enum}, values: [:target, :body, :body_translit, :body_translit_meant]
 
+    field :field, :string, virtual: true
     field :node_id, :string, virtual: true
 
     belongs_to :verse, Verse, foreign_key: :verse_id, type: :binary_id

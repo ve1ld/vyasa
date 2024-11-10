@@ -97,6 +97,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   def verse_content(assigns) do
     # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
     # cant be just pure binary operations
+    #IO.inspect(assigns, label: "verse_content expand")
     ~H"""
     <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
       <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
@@ -273,6 +274,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   defp verse_class(:mid), do: "font-dn text-m"
 
   defp is_elem_bound_to_verse(verse, edge_elem) do
+
+
     verse.binding &&
       (verse.binding.node_id == Map.get(edge_elem, :node, verse).id &&
          verse.binding.field_key == edge_elem.field)

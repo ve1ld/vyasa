@@ -37,6 +37,16 @@ function floatHoveRune({ clientX, clientY }) {
   });
 }
 
+const findMatchingSpan = ({ node_id, field }) => {
+  // Early return if missing either criteria
+  if (!node_id || !field) return null;
+
+  // Find first span with both exact matches
+  return document.querySelector(
+    `span[node_id="${node_id}"][field="${field}"]`
+  );
+};
+
 const findHook = (el) => findParent(el, "phx-hook", "HoveRune");
 const findMarginote = (el) => findParent(el, "phx-hook", "MargiNote");
 const findNode = (el) => el && el.getAttribute("node");
@@ -54,7 +64,31 @@ export default HoveRune = {
     console.log("CHECK HOVERUNE", {
       dset: this.el.dataset,
     });
-    const targetEvents = ["pointerdown", "pointerup"];
+
+    this.handleEvent("bind::share", (bind) => {
+      if ("share" in navigator) {
+      // uses webshare api:
+        window.shareUrl(bind.url);
+      } else if ("clipboard" in navigator) {
+        navigator.clipboard.writeText(bind.url);
+      } else {
+        alert("Here is the url to share: #{bind.url}");
+      }
+
+    });
+
+    this.handleEvent("bind::jump", (bind) => {
+      console.warn(bind)
+      targetNode = findMatchingSpan(bind)
+      targetNode.focus();
+      targetNode.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+
+    });
+        const targetEvents = ["pointerdown", "pointerup"];
     targetEvents.forEach((e) =>
       window.addEventListener(e, ({ target }) => {
         var selection = window.getSelection();

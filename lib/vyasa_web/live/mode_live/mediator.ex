@@ -34,13 +34,27 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {
-      :noreply,
-      socket
-      |> assign(url_params: params)
-      |> sync_session()
+
+  def handle_params(params, url, socket) do
+    {:noreply,
+     socket
+     |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
+     |> bind_recall()
+     |> sync_session()
     }
+  end
+
+  defp bind_recall(%{assigns: %{url_params: %{"bind" => bind_id}}} = socket) do
+
+    bind = Draft.get_binding!(bind_id)
+    # resolve dynamically according to further url params currently explore is read
+    send_update(VyasaWeb.Context.Read, [id: "read", binding: bind])
+    socket
+    |> UiState.assign(:binding, bind)
+  end
+
+  defp bind_recall(socket) do
+    socket
   end
 
   defp sync_session(
@@ -165,12 +179,31 @@ defmodule VyasaWeb.ModeLive.Mediator do
       ) do
 
     {:ok, bind} = Draft.bind_node(bind)
-    IO.inspect(bind, label: "binding_before")
     # pass binding contexts to the current mode and drafting reflector
     send_update(component, id: selector, binding: bind)
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
     {:noreply, socket |> UiState.assign(:binding, bind)}
+  end
+
+  def handle_event(
+        "bind::share",_,
+        %Socket{
+          assigns: %{
+            ui_state: %UiState{binding: bind},
+            url_params: %{path: path}
+          }
+        } = socket
+      ) do
+
+    {:ok, shared_bind} = bind
+    |> Draft.create_binding()
+
+    IO.inspect(socket.assigns.url_params)
+
+    {:noreply, socket
+    |> push_event("bind::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
+    |> put_flash(:info, "binded to your clipboard")}
   end
 
   def handle_event(event, message, socket) do
@@ -198,7 +231,9 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-    send_update(component, id: selector, event: :media_handshake)
+
+        send_update(component, id: selector, event: :media_handshake)
+
     {:noreply, socket}
   end
 
