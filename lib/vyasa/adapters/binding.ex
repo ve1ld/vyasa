@@ -39,7 +39,13 @@ defmodule Vyasa.Adapters.Binding do
 
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:verse_id, :voice_id, :source_id])
+    |> cast(attrs, [:verse_id, :source_id, :chapter_no])
+  end
+
+  def apply(event, attrs) do
+    event
+    |> changeset(attrs)
+    |> apply_action(:insert)
   end
 
   def windowing_changeset(%__MODULE__{} = binding, attrs) do

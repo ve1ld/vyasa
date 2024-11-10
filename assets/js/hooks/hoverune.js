@@ -79,14 +79,14 @@ export default HoveRune = {
             "verse_id",
           ]);
           binding["selection"] = getSelectText;
-
           console.log("CHECK HOVERUNE", {
             eventTarget: this.eventTarget,
             target: `#${this.eventTarget}`,
             payload: { binding: binding },
           });
-          this.pushEventTo(`#${this.eventTarget}`, "hoverune::bindHoveRune", {
+          this.pushEvent("bind::to", {
             binding: binding,
+            target: this.eventTarget
           });
 
           console.log(binding);

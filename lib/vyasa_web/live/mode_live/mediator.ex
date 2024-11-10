@@ -8,6 +8,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   """
   use VyasaWeb, :live_view
   alias VyasaWeb.ModeLive.{UserMode, UiState}
+  alias Vyasa.{Draft}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh
@@ -150,6 +151,28 @@ defmodule VyasaWeb.ModeLive.Mediator do
     {:noreply, socket}
   end
 
+  def handle_event(
+        "bind::to",
+        %{"binding" => bind},
+        %Socket{
+          assigns: %{
+            mode: %UserMode{
+              mode_context_component: component,
+              mode_context_component_selector: selector
+            }
+          }
+        } = socket
+      ) do
+
+    {:ok, bind} = Draft.bind_node(bind)
+    IO.inspect(bind, label: "binding_before")
+    # pass binding contexts to the current mode and drafting reflector
+    send_update(component, id: selector, binding: bind)
+    # TODO: implement nav_event handlers from action bar
+    # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
+    {:noreply, socket |> UiState.assign(:binding, bind)}
+  end
+
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}
@@ -175,14 +198,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-    send_update(component, id: selector)
+    send_update(component, id: selector, event: :media_handshake)
     {:noreply, socket}
-  end
-
-  def handle_info({"helm", dest}, socket) do
-    {:noreply,
-     socket
-     |> push_patch(to: dest, replace: true)}
   end
 
   @impl true

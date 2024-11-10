@@ -39,7 +39,7 @@ defmodule Vyasa.Draft do
   id as keyed by the node_field_name.
   """
   def bind_node(
-        %{"node" => node, "node_id" => node_id} = _binding_target_payload,
+        %{"node" => node, "node_id" => node_id} = element,
         %Binding{} = bind
       ) do
     node_field_name =
@@ -49,6 +49,7 @@ defmodule Vyasa.Draft do
       |> Binding.field_lookup()
 
     %{bind | node_field_name => node_id, :node_id => node_id}
+    |> Binding.apply(element)
   end
 
   @doc """
