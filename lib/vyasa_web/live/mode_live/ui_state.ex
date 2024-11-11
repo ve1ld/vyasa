@@ -16,7 +16,7 @@ defmodule VyasaWeb.ModeLive.UiState do
   defstruct [
     :show_media_bridge?,
     :show_action_bar?,
-    :binding
+    :focused_binding
   ]
 
   defp set_hide_media_bridge(%UiState{} = state) do

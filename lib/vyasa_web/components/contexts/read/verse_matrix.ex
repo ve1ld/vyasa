@@ -155,7 +155,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   attr :context, :string, required: true
 
   # context list "quoting", "binding" to retvrn back to source of binding, "reply to" to retvrn back to discussion
-
+  # pattern match in the future
   def current_context(assigns) do
     ~H"""
     <div :if={@context == "quoting"}

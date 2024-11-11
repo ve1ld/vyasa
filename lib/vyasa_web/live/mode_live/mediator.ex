@@ -39,21 +39,25 @@ defmodule VyasaWeb.ModeLive.Mediator do
     {:noreply,
      socket
      |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
-     |> bind_recall()
+     |> maybe_focus_binding()
      |> sync_session()
     }
   end
 
-  defp bind_recall(%{assigns: %{url_params: %{"bind" => bind_id}}} = socket) do
+  defp maybe_focus_binding(%{assigns: %{url_params: %{"bind" => bind_id},
+                             mode: %UserMode{
+                               mode_context_component: component,
+                               mode_context_component_selector: selector
+                             }}} = socket) do
 
     bind = Draft.get_binding!(bind_id)
-    # resolve dynamically according to further url params currently explore is read
-    send_update(VyasaWeb.Context.Read, [id: "read", binding: bind])
+    send_update(component, [id: selector, binding: bind])
+
     socket
-    |> UiState.assign(:binding, bind)
+    |> UiState.assign(:focused_binding, bind)
   end
 
-  defp bind_recall(socket) do
+  defp maybe_focus_binding(socket) do
     socket
   end
 
@@ -183,14 +187,14 @@ defmodule VyasaWeb.ModeLive.Mediator do
     send_update(component, id: selector, binding: bind)
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
-    {:noreply, socket |> UiState.assign(:binding, bind)}
+    {:noreply, socket |> UiState.assign(:focused_binding, bind)}
   end
 
   def handle_event(
         "bind::share",_,
         %Socket{
           assigns: %{
-            ui_state: %UiState{binding: bind},
+            ui_state: %UiState{focused_binding: bind},
             url_params: %{path: path}
           }
         } = socket

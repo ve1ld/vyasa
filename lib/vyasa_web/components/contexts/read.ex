@@ -123,7 +123,8 @@ defmodule VyasaWeb.Context.Read do
     }
   end
 
-  @impl true
+
+  ## this is a dead clause to catch error states with draft_reflector to ensure the initial draft mark
   def update(%{id: "read", binding: bind = %{verse_id: verse_id}},
     %{
           assigns: %{
@@ -357,9 +358,9 @@ defmodule VyasaWeb.Context.Read do
 
   # fallthrough
   def init_drafting_context(%Socket{} = socket) do
-        #%Sheaf{marks: [Mark.get_draft_mark()]}
+
     socket
-    |> assign(draft_reflector: nil)
+    |> assign(draft_reflector: %Sheaf{marks: [Mark.get_draft_mark()]})
     |> assign(draft_reflector_ui: nil)
   end
 
