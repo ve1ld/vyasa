@@ -9,7 +9,7 @@ defmodule VyasaWeb.Context.Read do
   alias VyasaWeb.ModeLive.{UserMode}
   alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
-  alias Vyasa.{Written, Draft}
+  alias Vyasa.Written
   alias VyasaWeb.Utils.Stream
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice}
@@ -44,7 +44,7 @@ defmodule VyasaWeb.Context.Read do
   @impl true
   # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
-        %{id: "read"} = _props,
+        %{id: "read", event: :media_handshake},
         %{
           assigns: %{
             session: %{id: sess_id},
@@ -67,8 +67,93 @@ defmodule VyasaWeb.Context.Read do
     {:ok, socket}
   end
 
+  #received changes to binding
+
+  def update(
+    %{id: "read", binding: bind = %{verse_id: verse_id}},
+    %{
+      assigns: %{
+        kv_verses: verses,
+        draft_reflector:
+        %Sheaf{
+          marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
+        } = draft_reflector
+      }
+    } = socket
+  ) when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+    # binding here blocks the stream from appending to quote
+    #
+    bound_verses =
+      verses
+      |> then(&put_in(&1[verse_id].binding, bind))
+      |> then(&put_in(&1[curr_verse_id].binding, nil))
+
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
+    {:ok,
+     socket
+     |> mutate_verses(curr_verse_id, bound_verses)
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})}
+  end
+
+  # already in mark in drafting state, remember to late bind binding => with a fn()
+  def update(
+    %{id: "read", binding: bind = %{verse_id: verse_id}},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            draft_reflector:
+              %Sheaf{
+                marks: [%Mark{state: :draft} = d_mark | marks]
+              } = draft_reflector
+          }
+        } = socket
+      ) do
+
+    # binding here blocks the stream from appending to quote
+    bound_verses = put_in(verses[verse_id].binding, bind)
+    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
+
+    {:ok,
+     socket
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})
+     |> push_event("bind::jump", bind)
+    }
+  end
+
+
+  ## this is a dead clause to catch error states with draft_reflector to ensure the initial draft mark
+  def update(%{id: "read", binding: bind = %{verse_id: verse_id}},
+    %{
+          assigns: %{
+            kv_verses: verses,
+            draft_reflector:
+              %Sheaf{
+                marks: [%Mark{} | _] = marks
+              } = draft_reflector
+          }
+        } = socket
+      ) do
+
+    bound_verses = put_in(verses[verse_id].binding, bind)
+
+    new_marks = [
+      Mark.get_draft_mark(marks, %{verse_id: verse_id, binding: bind})
+      | marks
+    ]
+
+    {:ok,
+     socket
+     |> mutate_verses(verse_id, bound_verses)
+     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: new_marks})}
+  end
+
+
   @impl true
   def update(_assigns, socket) do
+
     {:ok, socket}
   end
 
@@ -273,10 +358,12 @@ defmodule VyasaWeb.Context.Read do
 
   # fallthrough
   def init_drafting_context(%Socket{} = socket) do
+
     socket
-    |> assign(draft_reflector: nil)
+    |> assign(draft_reflector: %Sheaf{marks: [Mark.get_draft_mark()]})
     |> assign(draft_reflector_ui: nil)
   end
+
 
   @doc """
   Only initialises a draft reflector in the socket state. If there's no existing
@@ -520,91 +607,6 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event(
-        "hoverune::bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            draft_reflector:
-              %Sheaf{
-                marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
-              } = draft_reflector
-          }
-        } = socket
-      )
-      when is_binary(curr_verse_id) and verse_id != curr_verse_id do
-    # binding here blocks the stream from appending to quote
-    bind = Draft.bind_node(bind)
-
-    bound_verses =
-      verses
-      |> then(&put_in(&1[verse_id].binding, bind))
-      |> then(&put_in(&1[curr_verse_id].binding, nil))
-
-    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
-
-    {:noreply,
-     socket
-     |> mutate_verses(curr_verse_id, bound_verses)
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})}
-  end
-
-  # already in mark in drafting state, remember to late bind binding => with a fn()
-  def handle_event(
-        "hoverune::bindHoveRune",
-        %{"binding" => bind_target_payload = %{"verse_id" => verse_id}},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            draft_reflector:
-              %Sheaf{
-                marks: [%Mark{state: :draft} = d_mark | marks]
-              } = draft_reflector
-          }
-        } = socket
-      ) do
-    # binding here blocks the stream from appending to quote
-    bind = Draft.bind_node(bind_target_payload)
-    bound_verses = put_in(verses[verse_id].binding, bind)
-
-    updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
-
-    {:noreply,
-     socket
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})}
-  end
-
-  @impl true
-  def handle_event(
-        "hoverune::bindHoveRune",
-        %{"binding" => bind = %{"verse_id" => verse_id}},
-        %{
-          assigns: %{
-            kv_verses: verses,
-            draft_reflector:
-              %Sheaf{
-                marks: [%Mark{} | _] = marks
-              } = draft_reflector
-          }
-        } = socket
-      ) do
-    bind = Draft.bind_node(bind)
-    bound_verses = put_in(verses[verse_id].binding, bind)
-
-    new_marks = [
-      Mark.get_draft_mark(marks, %{verse_id: verse_id, binding: bind})
-      | marks
-    ]
-
-    {:noreply,
-     socket
-     |> mutate_verses(verse_id, bound_verses)
-     |> assign(draft_reflector: %Sheaf{draft_reflector | marks: new_marks})}
-  end
 
   @impl true
   def handle_event(

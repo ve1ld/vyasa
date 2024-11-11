@@ -391,7 +391,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     # of a refactor of how media bridge is supposed to be a nested liveview / slottable entity
     # use this comment to track what needs to be done.
     Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
-    IO.inspect("written handhsaker")
     {:noreply, socket}
   end
 
