@@ -9,12 +9,14 @@ defmodule Vyasa.Adapters.Binding do
   alias Vyasa.Written.{Source, Chapter, Verse, Translation}
   alias Vyasa.Sangh.{Sheaf}
 
+  @derive {Jason.Encoder, only: [:node_id, :field, :verse_id]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "bindings" do
     field :w_type, Ecto.Enum, values: [:quote, :timestamp, :null]
 
-    field :field_key, {:array, :any}
+    field :field_key, {:array, Ecto.Enum}, values: [:target, :body, :body_translit, :body_translit_meant]
 
+    field :field, :string, virtual: true
     field :node_id, :string, virtual: true
 
     belongs_to :verse, Verse, foreign_key: :verse_id, type: :binary_id
@@ -39,7 +41,13 @@ defmodule Vyasa.Adapters.Binding do
 
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:verse_id, :voice_id, :source_id])
+    |> cast(attrs, [:verse_id, :source_id, :chapter_no])
+  end
+
+  def apply(event, attrs) do
+    event
+    |> changeset(attrs)
+    |> apply_action(:insert)
   end
 
   def windowing_changeset(%__MODULE__{} = binding, attrs) do

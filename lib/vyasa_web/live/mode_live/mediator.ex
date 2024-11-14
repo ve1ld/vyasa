@@ -8,6 +8,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   """
   use VyasaWeb, :live_view
   alias VyasaWeb.ModeLive.{UserMode, UiState}
+  alias Vyasa.{Draft}
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh
@@ -33,13 +34,31 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {
-      :noreply,
-      socket
-      |> assign(url_params: params)
-      |> sync_session()
+
+  def handle_params(params, url, socket) do
+    {:noreply,
+     socket
+     |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
+     |> maybe_focus_binding()
+     |> sync_session()
     }
+  end
+
+  defp maybe_focus_binding(%{assigns: %{url_params: %{"bind" => bind_id},
+                             mode: %UserMode{
+                               mode_context_component: component,
+                               mode_context_component_selector: selector
+                             }}} = socket) do
+
+    bind = Draft.get_binding!(bind_id)
+    send_update(component, [id: selector, binding: bind])
+
+    socket
+    |> UiState.assign(:focused_binding, bind)
+  end
+
+  defp maybe_focus_binding(socket) do
+    socket
   end
 
   defp sync_session(
@@ -150,6 +169,47 @@ defmodule VyasaWeb.ModeLive.Mediator do
     {:noreply, socket}
   end
 
+  def handle_event(
+        "bind::to",
+        %{"binding" => bind},
+        %Socket{
+          assigns: %{
+            mode: %UserMode{
+              mode_context_component: component,
+              mode_context_component_selector: selector
+            }
+          }
+        } = socket
+      ) do
+
+    {:ok, bind} = Draft.bind_node(bind)
+    # pass binding contexts to the current mode and drafting reflector
+    send_update(component, id: selector, binding: bind)
+    # TODO: implement nav_event handlers from action bar
+    # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
+    {:noreply, socket |> UiState.assign(:focused_binding, bind)}
+  end
+
+  def handle_event(
+        "bind::share",_,
+        %Socket{
+          assigns: %{
+            ui_state: %UiState{focused_binding: bind},
+            url_params: %{path: path}
+          }
+        } = socket
+      ) do
+
+    {:ok, shared_bind} = bind
+    |> Draft.create_binding()
+
+    IO.inspect(socket.assigns.url_params)
+
+    {:noreply, socket
+    |> push_event("bind::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
+    |> put_flash(:info, "binded to your clipboard")}
+  end
+
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}
@@ -175,14 +235,10 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-    send_update(component, id: selector)
-    {:noreply, socket}
-  end
 
-  def handle_info({"helm", dest}, socket) do
-    {:noreply,
-     socket
-     |> push_patch(to: dest, replace: true)}
+        send_update(component, id: selector, event: :media_handshake)
+
+    {:noreply, socket}
   end
 
   @impl true

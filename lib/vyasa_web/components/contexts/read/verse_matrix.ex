@@ -106,6 +106,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   def verse_content(assigns) do
     # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
     # cant be just pure binary operations
+    # IO.inspect(assigns, label: "verse_content expand")
     ~H"""
     <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
       <span
@@ -119,6 +120,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       >
         <%= @content %>
       </span>
+
       <span
         :if={@window}
         verse_id={@verse_id}
@@ -131,15 +133,33 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon
             name="custom-icon-park-outline-quote-start"
             class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-          /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><.icon
-            name="custom-icon-park-outline-quote-start"
-            class="absolute top-3 rotate-180 -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-          /></span><%= @window &&
+          /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span></span><%= @window &&
           String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
       </span>
     </dd>
     """
   end
+
+  # <<<<<<< variant A
+  #       <span
+  #         :if={@window}
+  #         verse_id={@verse_id}
+  #         node={@node}
+  #         node_id={@node_id}
+  #         field={@field}
+  #         text={@content}
+  #         class="relative whitespace-pre-line group"
+  #       >
+  #         <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon
+  #             name="custom-icon-park-outline-quote-start"
+  #             class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+  #           /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><.icon
+  #             name="custom-icon-park-outline-quote-start"
+  #             class="absolute top-3 rotate-180 -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
+  #           /></span><%= @window &&
+  #           String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
+  #       </span>
+  # >>>>>>> variant B
 
   attr :sheafs, :list, default: []
   attr :event_target, :string, required: true
@@ -160,7 +180,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
       <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
-        <.current_quote quote={@quote} form_type={@form_type} />
+        <.current_context context={@quote && "quoting"} />
         <.quick_draft_form
           event_target={@event_target}
           quote={@quote}
@@ -180,31 +200,38 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     """
   end
 
-  attr :quote, :string, required: true
-  attr :form_type, :atom, required: true
+  attr :context, :string, required: true
 
-  def current_quote(assigns) do
+  # context list "quoting", "binding" to retvrn back to source of binding, "reply to" to retvrn back to discussion
+  # pattern match in the future
+  def current_context(assigns) do
     ~H"""
-    <%= if !is_nil(@quote) && @quote !== "" do %>
-      <div class="p-2 border-b border-brand">
+    <div
+      :if={@context == "quoting"}
+      class="p-2 transition-opacity duration-700 border-b border-red-900 bg-red-50/50 transition-all duration-300 ease-in-out"
+    >
+      <div class="flex items-center justify-between">
         <div class="flex items-center mb-1">
           <.icon
-            name={
-              if @form_type == :mark,
-                do: "hero-bookmark-solid",
-                else: "hero-chat-bubble-left-ellipsis-solid"
-            }
-            class="w-4 h-4 text-brand mr-2"
+            name="hero-chat-bubble-left-ellipsis-solid"
+            class="w-4 h-4 text-red-900 mr-2 transition-transform duration-300 animate-pulse"
           />
-          <span class="text-xs text-secondary">
-            Current <%= if @form_type == :mark, do: "mark", else: "sheaf" %>'s selection
+          <span class="text-xs text-red-800 font-medieval tracking-wide">
+            Quoting...
           </span>
         </div>
-        <div class="text-sm italic text-secondary">
-          "<%= @quote %>"
-        </div>
+
+        <button
+          type="button"
+          phx-click="bind::share"
+          class="flex items-center px-3 py-1 text-xs text-red-900 bg-red-100
+                 hover:bg-red-200 rounded-full transition-colors duration-200
+                 border border-red-900/20 "
+        >
+          <.icon name="hero-share" class="w-3 h-3 mr-1.5 text-red-900" /> Share
+        </button>
       </div>
-    <% end %>
+    </div>
     """
   end
 
