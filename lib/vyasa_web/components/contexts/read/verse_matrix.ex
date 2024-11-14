@@ -104,9 +104,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
   end
 
   def verse_content(assigns) do
-    # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
-    # cant be just pure binary operations
-    # IO.inspect(assigns, label: "verse_content expand")
+    # Using byte-slice to manipulate UTF-8 strings while ensuring valid charlist output
     ~H"""
     <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
       <span
@@ -120,7 +118,6 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
       >
         <%= @content %>
       </span>
-
       <span
         :if={@window}
         verse_id={@verse_id}
@@ -128,38 +125,25 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         node_id={@node_id}
         field={@field}
         text={@content}
-        class="relative whitespace-pre-line group"
+        class="relative whitespace-pre-line group bg-chili-red/20 rounded"
       >
-        <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon
+        <%= String.byte_slice(@content, 0, @window.start_quote) %><span
+          id={"highlighted-window-"<> @verse_id}
+          class="rounded bg-rose-50 text-brand italic underline relative z-10"
+        ><.icon
             name="custom-icon-park-outline-quote-start"
             class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-          /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span></span><%= @window &&
+          /><span class="bg-blue"><%= String.byte_slice(
+            @content,
+            @window.start_quote,
+            @window.end_quote - @window.start_quote
+          ) %></span><span class="absolute inset-0 bg-chili-red/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-chili-red/30 transition-all duration-300">
+           </span></span><%= @window &&
           String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
       </span>
     </dd>
     """
   end
-
-  # <<<<<<< variant A
-  #       <span
-  #         :if={@window}
-  #         verse_id={@verse_id}
-  #         node={@node}
-  #         node_id={@node_id}
-  #         field={@field}
-  #         text={@content}
-  #         class="relative whitespace-pre-line group"
-  #       >
-  #         <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon
-  #             name="custom-icon-park-outline-quote-start"
-  #             class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-  #           /><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span><.icon
-  #             name="custom-icon-park-outline-quote-start"
-  #             class="absolute top-3 rotate-180 -bottom-3.5 -right-4 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-  #           /></span><%= @window &&
-  #           String.byte_slice(@content, @window.end_quote, byte_size(@content) - @window.end_quote) %>
-  #       </span>
-  # >>>>>>> variant B
 
   attr :sheafs, :list, default: []
   attr :event_target, :string, required: true

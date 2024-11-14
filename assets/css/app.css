@@ -13,23 +13,22 @@
  **/
 @layer base {
     :root {
-        --chili-red: #E83A21ff;
-        --pearl: #E3DABEff;
+        --chili-red: #e83a21ff;
+        --pearl: #e3dabeff;
         --black: #070302ff;
-        --dun: #D4CAABff;
-        --blood-red: #5B1208ff;
+        --dun: #deb587;
+        --blood-red: #5b1208ff;
 
-        --white-alabaster: #F3EFE3;
-        --linen: #FAF1E6;
+        --white-alabaster: #f3efe3;
+        --linen: #faf1e6;
 
-        --aerospace-orange: #FD4F00;
-        --coral-orange: #FF8349;
-        --atomic-tangerine: #FF9B6D;
+        --aerospace-orange: #fd4f00;
+        --coral-orange: #ff8349;
+        --atomic-tangerine: #ff9b6d;
 
-
-        --brown: #922E00;
-        --sienna: #7F2800;
-        --rust: #AE3700;
+        --brown: #922e00;
+        --sienna: #7f2800;
+        --rust: #ae3700;
 
         --color-brand: var(--aerospace-orange);
         --color-brand-light: var(--atomic-tangerine);
@@ -40,50 +39,59 @@
         --color-brand-dark: var(--brown);
         --color-brand-extra-dark: var(--sienna);
 
-
         --color-primary: var(--chili-red);
         --color-primary-accent: var(--chili-red);
         --color-primary-background: var(--white-alabaster);
         --color-secondary: var(--blood-red);
         --color-secondary-background: var(--dun);
-        --color-text: var(--black)
+        --color-text: var(--black);
     }
 }
 
 /* fonts declared from priv/assets/fonts */
 
 @font-face {
- font-family: "Karm";
- src: url('/fonts/dn/Karm-Medium.woff2') format('woff2'),
-      url('/fonts/dn/Karm-Medium.woff') format('woff'),
-      url('/fonts/dn/Karm-Medium.ttf') format('ttf');
+    font-family: "Karm";
+    src:
+        url("/fonts/dn/Karm-Medium.woff2") format("woff2"),
+        url("/fonts/dn/Karm-Medium.woff") format("woff"),
+        url("/fonts/dn/Karm-Medium.ttf") format("ttf");
 }
 
 @font-face {
- font-family: "Vyas";
- src: url('/fonts/ta/VyasaTA.woff2') format('woff2'),
-      url('/fonts/ta/VyasaTA.woff') format('woff'),
-      url('/fonts/ta/VyasaTA.ttf') format('ttf');
+    font-family: "Vyas";
+    src:
+        url("/fonts/ta/VyasaTA.woff2") format("woff2"),
+        url("/fonts/ta/VyasaTA.woff") format("woff"),
+        url("/fonts/ta/VyasaTA.ttf") format("ttf");
 }
 
 @font-face {
- font-family: "Vyas";
- src: url('/fonts/ta/VyasaTA.woff2') format('woff2'),
-      url('/fonts/ta/VyasaTA.woff') format('woff'),
-      url('/fonts/ta/VyasaTA.ttf') format('ttf');
+    font-family: "Vyas";
+    src:
+        url("/fonts/ta/VyasaTA.woff2") format("woff2"),
+        url("/fonts/ta/VyasaTA.woff") format("woff"),
+        url("/fonts/ta/VyasaTA.ttf") format("ttf");
 }
-
 
 /* This file is for your main   application CSS */
 
 .emphasized-verse {
-  @apply bg-brandAccentLight border-b-0 border-l-8 border-black p-4 pl-8 rounded-sm;
+    @apply bg-brandAccentLight border-b-0 border-l-8 border-black p-4 pl-8 rounded-sm;
 }
 
 @font-face {
     font-family: "et-book";
     src: url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.eot");
-    src: url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.ttf") format("truetype"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.svg#etbookromanosf") format("svg");
+    src:
+        url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.eot?#iefix")
+            format("embedded-opentype"),
+        url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff")
+            format("woff"),
+        url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.ttf")
+            format("truetype"),
+        url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.svg#etbookromanosf")
+            format("svg");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -92,7 +100,15 @@
 @font-face {
     font-family: "et-book";
     src: url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.eot");
-    src: url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff") format("woff"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.ttf") format("truetype"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.svg#etbookromanosf") format("svg");
+    src:
+        url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.eot?#iefix")
+            format("embedded-opentype"),
+        url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff")
+            format("woff"),
+        url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.ttf")
+            format("truetype"),
+        url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.svg#etbookromanosf")
+            format("svg");
     font-weight: normal;
     font-style: italic;
     font-display: swap;
@@ -101,7 +117,15 @@
 @font-face {
     font-family: "et-book";
     src: url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.eot");
-    src: url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff") format("woff"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.ttf") format("truetype"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.svg#etbookromanosf") format("svg");
+    src:
+        url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.eot?#iefix")
+            format("embedded-opentype"),
+        url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff")
+            format("woff"),
+        url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.ttf")
+            format("truetype"),
+        url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.svg#etbookromanosf")
+            format("svg");
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -110,7 +134,15 @@
 @font-face {
     font-family: "et-book-roman-old-style";
     src: url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.eot");
-    src: url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.woff") format("woff"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.ttf") format("truetype"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.svg#etbookromanosf") format("svg");
+    src:
+        url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.eot?#iefix")
+            format("embedded-opentype"),
+        url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.woff")
+            format("woff"),
+        url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.ttf")
+            format("truetype"),
+        url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.svg#etbookromanosf")
+            format("svg");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
