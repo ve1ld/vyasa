@@ -177,14 +177,25 @@ defmodule VyasaWeb.ModeLive.Mediator do
   def handle_event(
         "change_mode",
         %{
-          "current_mode" => current_mode,
+          "current_mode" => _current_mode,
           "target_mode" => target_mode
         } = _params,
-        socket
-      ) do
+        %Socket{
+          assigns: %{
+            url_params: %{path: path}
+          }
+        } = socket
+      )
+      when is_binary(path) and target_mode in @supported_modes do
+    target_path =
+      path
+      |> String.split("/")
+      |> List.replace_at(1, target_mode)
+      |> Enum.join("/")
+
     {:noreply,
      socket
-     |> change_mode(current_mode, target_mode)}
+     |> push_patch(to: target_path)}
   end
 
   @impl true
