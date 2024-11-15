@@ -19,84 +19,62 @@ defmodule VyasaWeb.ModeLive.Mediator do
   @impl true
   def mount(_params, _sess, socket) do
     # TODO: this needs to parse mode from the url, the router needs to be updated also.
-    %UserMode{
-      default_ui_state: %UiState{} = initial_ui_state
-    } = mode = UserMode.get_initial_mode()
-
-    {
-      :ok,
-      socket
-      |> assign(mode: mode)
-      |> assign(url_params: nil)
-      |> assign(ui_state: initial_ui_state),
-      layout: {VyasaWeb.Layouts, :display_manager}
-    }
+    {:ok, socket, layout: {VyasaWeb.Layouts, :display_manager}}
   end
 
   @impl true
 
   def handle_params(params, url, socket) do
-    url_params = params |> Map.put(:path, URI.parse(url).path)
-
+    path = URI.parse(url).path
+    [mode | _] = path |> String.split("/")
+    url_params = params
+    |> Map.put(:path, path)
+    |> Map.put(:mode, mode)
     {:noreply,
      socket
      |> assign(url_params: url_params)
-     |> maybe_inject_mode()
+     |> init_mode()
+     |> init_ui_state()
      |> maybe_focus_binding()
      |> sync_session()}
   end
 
   # injects mode if url slug contains mode, and there's an existing mode in socket state
-  defp maybe_inject_mode(
+  defp init_mode(
          %{
            assigns: %{
-             url_params: %{path: path},
+             url_params: %{mode: uri_mode},
              mode: %UserMode{mode: curr_mode}
            }
          } = socket
        )
-       when is_binary(path) do
-    injected_mode =
-      path
-      |> String.split("/")
-      |> Enum.at(1)
-
-    case injected_mode in @supported_modes do
-      true ->
+       when uri_mode in @supported_modes do
         socket
-        |> change_mode(curr_mode, injected_mode)
-
-      _ ->
-        socket
-    end
+        |> change_mode(curr_mode, uri_mode)
   end
 
   # injects mode from url slug, when there's no existing loaded mode in the socket state
-  defp maybe_inject_mode(
+  defp init_mode(
          %{
            assigns: %{
-             url_params: %{path: path}
+             url_params: %{mode: uri_mode}
            }
          } = socket
        )
-       when is_binary(path) do
-    injected_mode =
-      path
-      |> String.split("/")
-      |> Enum.at(1)
-
-    case injected_mode in @supported_modes do
-      true ->
+       when uri_mode in @supported_modes do
         socket
-        |> assign(:mode, UserMode.get_mode(injected_mode))
-
-      _ ->
-        socket
-    end
+        |> assign(:mode, UserMode.get_mode(uri_mode))
   end
 
-  defp maybe_inject_mode(socket) do
+  # init default mode
+  defp init_mode(socket) do
     socket
+    |> assign(mode: UserMode.get_initial_mode())
+  end
+
+  defp init_ui_state(%{assigns: %{mode: %{default_ui_state: ui_state}}} = socket) do
+    socket
+    |> assign(ui_state: ui_state)
   end
 
   defp maybe_focus_binding(
