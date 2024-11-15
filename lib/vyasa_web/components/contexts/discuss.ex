@@ -27,7 +27,7 @@ defmodule VyasaWeb.Context.Discuss do
           params,
         socket
       ) do
-    IO.inspect(params, label: "TRACE: params passed to ReadContext")
+    IO.inspect(params, label: "TRACE: params passed to Discuss")
 
     {
       :ok,

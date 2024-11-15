@@ -33,7 +33,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             </div>
           </:subtitle>
         </.header>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back patch={~p"/read/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
         <div
@@ -62,7 +62,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             ]}
           />
         </div>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back patch={~p"/read/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
       </div>

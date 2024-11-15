@@ -20,7 +20,7 @@ defmodule VyasaWeb.Context.Read.Sources do
         row_click={
           fn {_id, source} ->
             JS.push("navigate_to_source",
-              value: %{target: ~p"/explore/#{source.title}/"},
+              value: %{target: ~p"/read/#{source.title}/"},
               target: @myself
             )
           end
