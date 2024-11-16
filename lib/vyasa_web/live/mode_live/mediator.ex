@@ -26,10 +26,13 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   def handle_params(params, url, socket) do
     path = URI.parse(url).path
-    [mode | _] = path |> String.split("/")
-    url_params = params
-    |> Map.put(:path, path)
-    |> Map.put(:mode, mode)
+    [_ | [mode | _]] = path |> String.split("/")
+
+    url_params =
+      params
+      |> Map.put(:path, path)
+      |> Map.put(:mode, mode)
+
     {:noreply,
      socket
      |> assign(url_params: url_params)
@@ -49,8 +52,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
          } = socket
        )
        when uri_mode in @supported_modes do
-        socket
-        |> change_mode(curr_mode, uri_mode)
+    socket
+    |> change_mode(curr_mode, uri_mode)
   end
 
   # injects mode from url slug, when there's no existing loaded mode in the socket state
@@ -62,8 +65,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
          } = socket
        )
        when uri_mode in @supported_modes do
-        socket
-        |> assign(:mode, UserMode.get_mode(uri_mode))
+    socket
+    |> assign(:mode, UserMode.get_mode(uri_mode))
   end
 
   # init default mode
