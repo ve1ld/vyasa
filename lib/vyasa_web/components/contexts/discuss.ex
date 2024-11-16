@@ -597,8 +597,13 @@ defmodule VyasaWeb.Context.Discuss do
       end
 
     # FIXME: @ks0m1c this update function should be updating the parent for the current draft sheaf, but it doesn't seem to be
-    # doing so right now, can I leave this to you to check why the update isn't happening?
-    # else i'll eventually come back to it.
+    # doing so right now
+    # what it needs to do:
+    # 1. remove assoc b/w old parent and this sheaf
+    # 2. create new assoc b/w new parent and this sheaf:
+    #     - updates path of child
+    IO.puts("CHECKPOINT: before updating sheaf")
+
     updated_draft_sheaf =
       draft_sheaf
       |> Sangh.update_sheaf!(%{

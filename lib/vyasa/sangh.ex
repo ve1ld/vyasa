@@ -403,6 +403,8 @@ defmodule Vyasa.Sangh do
 
   #   """
   def update_sheaf(%Sheaf{} = sheaf, attrs) do
+    IO.puts("CHECKPOINT: update_sheaf")
+
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update()
@@ -421,6 +423,8 @@ defmodule Vyasa.Sangh do
   #   """
 
   def update_sheaf!(%Sheaf{} = sheaf, attrs) do
+    IO.puts("CHECKPOINT: update_sheaf!")
+
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update!()
