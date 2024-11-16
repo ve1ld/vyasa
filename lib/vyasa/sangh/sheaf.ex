@@ -108,6 +108,10 @@ defmodule Vyasa.Sangh.Sheaf do
     |> cast(%{path: encode_path(sheaf_id)}, [:path])
   end
 
+  defp cast_path(%{data: %{id: sheaf_id}} = sheaf, %{parent: %Sheaf{id: p_sheaf_id, path: lpath}}) do
+    cast(sheaf, %{parent_id: p_sheaf_id, path: encode_path(sheaf_id, lpath)}, [:parent_id, :path])
+  end
+
   defp cast_path(sheaf, _) do
     sheaf
   end

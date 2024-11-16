@@ -584,6 +584,7 @@ defmodule VyasaWeb.Context.Discuss do
     reply_to_lattice_key = Jason.decode!(new_reply_to_target)
     reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
     draft_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(draft_sheaf_lattice_key)
+    # why not  sheaf_lattice["reply_to_path"] -> quite explicit
 
     new_reply_to_path =
       case reply_to_sheaf do
