@@ -148,12 +148,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       class={["border-l-2 border-gray-200", @container_class]}
       id={"collapsible-sheaf-container-" <> @id}
     >
-      <.debug_dump
+      <!-- <.debug_dump
         label="collapsible sheaf container"
         id={@id}
         level={@level}
         num_children={@sheafs |> Enum.count()}
-      />
+      /> -->
       <!-- Non-Collapsible View -->
       <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
         <p class="text-gray-500">No child sheafs available.</p>
@@ -256,13 +256,13 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
       class="flex flex-col"
     >
-      <.debug_dump
+      <!-- <.debug_dump
         id={@id}
         label="Sheaf Component"
         sheaf_path={@sheaf.path}
         level={@level}
         num_children={@children |> Enum.count()}
-      />
+      /> -->
       <.sheaf_summary
         id={"sheaf-tree-node-sheaf-summary-"<> @id}
         level={@level}
