@@ -148,7 +148,12 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       class={["border-l-2 border-gray-200", @container_class]}
       id={"collapsible-sheaf-container-" <> @id}
     >
-      <!-- <.debug_dump label="collapsible sheaf container" reply_to={@reply_to} /> -->
+      <.debug_dump
+        label="collapsible sheaf container"
+        id={@id}
+        level={@level}
+        num_children={@sheafs |> Enum.count()}
+      />
       <!-- Non-Collapsible View -->
       <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
         <p class="text-gray-500">No child sheafs available.</p>
@@ -169,8 +174,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
             children={
               SheafLattice.read_published_from_sheaf_lattice(
                 @sheaf_lattice,
-                @level,
-                @sheaf.path.labels ++ [nil]
+                @level + 2,
+                child.path.labels ++ [nil]
               )
             }
           />
@@ -251,13 +256,13 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
       class="flex flex-col"
     >
-      <!-- <.debug_dump
-        label={"LEVEL "<> to_string(@level) <>  " sheaf component id=" <> @id}
-        reply_to={@reply_to}
-        is_reply_to={@is_reply_to}
-        level={@level}
+      <.debug_dump
+        id={@id}
+        label="Sheaf Component"
         sheaf_path={@sheaf.path}
-      /> -->
+        level={@level}
+        num_children={@children |> Enum.count()}
+      />
       <.sheaf_summary
         id={"sheaf-tree-node-sheaf-summary-"<> @id}
         level={@level}
@@ -291,7 +296,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           sheafs={@children}
           sheaf_lattice={@sheaf_lattice}
           sheaf_ui_lattice={@sheaf_ui_lattice}
-          level={@level + 1}
+          level={@level}
           on_replies_click={@on_replies_click}
           on_set_reply_to={@on_set_reply_to}
           on_quick_reply={@on_quick_reply}
