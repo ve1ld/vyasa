@@ -6,8 +6,11 @@ defmodule Vyasa.Sangh do
   import Ecto.Query, warn: false
   import EctoLtree.Functions, only: [nlevel: 1]
   alias Vyasa.Repo
+  alias EctoLtree.LabelTree, as: Ltree
   # alias Vyasa.Draft
   alias Vyasa.Sangh.{Sheaf}
+
+  @max_sheaf_depth 3
 
   @doc """
   Returns a list of sheafs associated with a specific session.
@@ -408,6 +411,110 @@ defmodule Vyasa.Sangh do
     sheaf
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update()
+  end
+
+  @doc """
+  Given a sheaf that is ready to be published as a reply, ensures that the
+  replies adhere to the 3-level nesting limit.
+
+  There are 3 ways that the reply to context is determined:
+  1. if the attrs contain :parent, then use that sheaf. This is more of an override-case,
+     for example, in the context of quick replies
+  2. if the attrs don't contain parent, but the draft sheaf already has an associated parent,
+     then that's the reply to context
+  3. there are no parents associated -- so the reply's parent is nil and there's no :parent in the attrs
+
+  Suppose the reply to context is already at depth = 3 (zero-indexed, then level = 2) then we need to reconcile this.
+  To reconcile, we shall update the attrs payload such that:
+  1. the parent of the reply sheaf ends up being the grandparent instead
+  2. the reply sheaf's path gets updated, is now encoded as though its the child of its grandparent
+  """
+  # way number 1 -- using parent in attr
+  def make_reply(
+        %Sheaf{
+          id: id
+        } = reply,
+        %{
+          parent:
+            %Sheaf{
+              parent_id: grandparent_id,
+              path: %Ltree{
+                labels: parent_path_labels
+              }
+            } = _injected_parent
+        } = attrs
+      ) do
+    IO.puts("CHECKPOINT Make Reply way 1 -- use injected parent in attr")
+
+    reconciled_attrs =
+      case parent_path_labels |> Enum.count() do
+        # need to reassign both path and parent:
+        @max_sheaf_depth ->
+          attrs |> reconcile_payload_using_grandparent(grandparent_id, id)
+
+        # keep as is
+        _ ->
+          attrs
+      end
+
+    reply |> update_sheaf(reconciled_attrs)
+  end
+
+  # way number 2 -- if not in attr, then use pre-existing associated parent to the reply sheaf
+  def make_reply(
+        %Sheaf{
+          id: id,
+          parent: %Sheaf{
+            parent_id: grandparent_id,
+            path: %Ltree{
+              labels: parent_path_labels
+            }
+          }
+        } = reply,
+        attrs
+      ) do
+    IO.puts("CHECKPOINT Make Reply way 2 -- use pre-associated parent")
+
+    reconciled_attrs =
+      case parent_path_labels |> Enum.count() do
+        # need to reassign both path and parent:
+        @max_sheaf_depth ->
+          attrs |> reconcile_payload_using_grandparent(grandparent_id, id)
+
+        _ ->
+          attrs
+      end
+
+    reply |> update_sheaf(reconciled_attrs)
+  end
+
+  # way number 3 -- no assoced parent, nothing to reconcile
+  def make_reply(
+        %Sheaf{
+          parent: nil
+        } = reply,
+        attrs
+      ) do
+    IO.puts("CHECKPOINT Make Reply way 3 -- no parent to associate to")
+    reply |> update_sheaf(attrs)
+  end
+
+  # To reconcile, we shall update the attrs payload such that:
+  # 1. the parent of the reply sheaf ends up being the grandparent instead
+  # 2. the reply sheaf's path gets updated, is now encoded as though its the child of its grandparent
+  defp reconcile_payload_using_grandparent(%{} = attrs, grandparent_id, child_id)
+       when is_binary(grandparent_id) do
+    %Sheaf{path: %Ltree{} = grandparent_path} = grandparent = get_sheaf!(grandparent_id)
+
+    IO.puts(
+      "CHECKPOINT -- turns out we need to reconcile this sheaf and assoc to its grandparent instead"
+    )
+
+    attrs
+    |> Map.merge(%{
+      parent: grandparent,
+      path: child_id |> Sheaf.encode_path(grandparent_path)
+    })
   end
 
   #   @doc """

@@ -72,7 +72,7 @@ defmodule Vyasa.Sangh.Sheaf do
     cs =
       sheaf
       |> Vyasa.Repo.preload([:marks])
-      |> cast(attrs, [:id, :body, :active, :signature, :traits])
+      |> cast(attrs, [:id, :body, :active, :signature, :traits, :updated_at, :inserted_at])
       |> cast_path(attrs)
       |> assoc_marks(attrs)
       |> Map.put(:repo_opts, on_conflict: {:replace_all_except, [:id]}, conflict_target: :id)
@@ -217,5 +217,19 @@ defmodule Vyasa.Sangh.Sheaf do
         } = _sheaf
       ) do
     labels
+  end
+
+  @doc """
+  For sorting sheafs, we should just default to only caring about their insertion time,
+  ignoring the update time.
+
+  TODO: update clauses once we are supporting other kinds of ordering
+  """
+  def sort_sheafs_chrono([%Sheaf{} | _] = sheafs) do
+    Enum.sort_by(sheafs, &elem(&1, 1).inserted_at, :desc)
+  end
+
+  def sort_sheaf_chrono(sheafs) do
+    sheafs
   end
 end

@@ -115,8 +115,6 @@ defmodule VyasaWeb.Context.Discuss do
         %Sheaf{id: new_id} = new_sheaf
       )
       when old_id == new_id do
-    new_sheaf = %Sheaf{new_sheaf | inserted_at: Utils.Time.get_utc_now(), updated_at: nil}
-
     socket
     |> deregister_sheaf(old_sheaf)
     |> register_sheaf(new_sheaf)
@@ -715,7 +713,7 @@ defmodule VyasaWeb.Context.Discuss do
               labels: draft_sheaf_lattice_key
             },
             reply_to_path: %Ltree{
-              labels: reply_to_latice_key
+              labels: reply_to_lattice_key
             },
             sheaf_lattice: %{} = sheaf_lattice,
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
@@ -723,17 +721,19 @@ defmodule VyasaWeb.Context.Discuss do
         } = socket
       )
       when is_binary(body) do
-    reply_to_sheaf = sheaf_lattice[reply_to_latice_key]
+    # TODO: the reply_to_lattice_key might be nil, that case of "create new thread" is not handled right now by discuss
+    reply_to_sheaf = sheaf_lattice[reply_to_lattice_key]
     draft_sheaf = sheaf_lattice[draft_sheaf_lattice_key]
 
     payload_precursor = %{
       body: body,
       traits: ["published"],
-      signature: username
+      signature: username,
+      inserted_at: Utils.Time.get_utc_now()
     }
 
     update_payload =
-      case(is_nil(draft_sheaf)) do
+      case(is_nil(reply_to_sheaf)) do
         true ->
           payload_precursor
 
@@ -741,7 +741,7 @@ defmodule VyasaWeb.Context.Discuss do
           Map.put(payload_precursor, :parent, reply_to_sheaf)
       end
 
-    {:ok, updated_sheaf} = Vyasa.Sangh.update_sheaf(draft_sheaf, update_payload)
+    {:ok, updated_sheaf} = draft_sheaf |> Vyasa.Sangh.make_reply(update_payload)
 
     %Sheaf{
       path: %Ltree{} = new_draft_reflector_path
@@ -755,9 +755,10 @@ defmodule VyasaWeb.Context.Discuss do
           sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
       )
       |> reregister_sheaf(draft_sheaf, updated_sheaf)
-      |> register_sheaf(new_draft_reflector)
       |> assign(draft_reflector_path: new_draft_reflector_path)
       |> assign(reply_to_path: nil)
+      |> register_sheaf(new_draft_reflector)
+      |> maybe_prepend_draft_mark_in_reflector()
     }
   end
 

@@ -323,6 +323,8 @@ defmodule Vyasa.Sangh.SheafLattice do
     sheaf_lattice
     |> read_sheaf_lattice(level, match)
     |> Enum.reject(fn %Sheaf{traits: traits} -> "draft" in traits end)
+    # TODO: to verify this, may not be correct
+    |> sort_sheaf_lattice_entries_chrono()
   end
 
   # fetches all sheafs in level 0:
@@ -448,5 +450,13 @@ defmodule Vyasa.Sangh.SheafLattice do
     old_mark |> Vyasa.Draft.update_mark(%{body: input})
 
     lattice |> update_sheaf_in_lattice(lattice_key, %Sheaf{old_sheaf | marks: updated_marks})
+  end
+
+  def sort_sheaf_lattice_entries_chrono([{label, %Sheaf{}} | _] = entries) when is_list(label) do
+    entries |> Enum.sort_by(fn {_, %Sheaf{} = sheaf} -> sheaf.inserted_at end, :desc)
+  end
+
+  def sort_sheaf_lattice_entries_chrono(entries) do
+    entries
   end
 end
