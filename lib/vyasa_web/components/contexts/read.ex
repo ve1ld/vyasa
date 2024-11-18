@@ -311,8 +311,6 @@ defmodule VyasaWeb.Context.Read do
       when is_binary(parent_id) do
     socket
     |> assign(reply_to: Sangh.get_sheaf(parent_id))
-
-    # |> assign(reply_to: Sangh.get_sheaf("4ce67b86-f7db-48e4-8834-c03f6fec69fa"))
   end
 
   def init_reply_to_context(%Socket{} = socket) do

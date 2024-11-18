@@ -115,6 +115,8 @@ defmodule VyasaWeb.Context.Discuss do
         %Sheaf{id: new_id} = new_sheaf
       )
       when old_id == new_id do
+    new_sheaf = %Sheaf{new_sheaf | inserted_at: Utils.Time.get_utc_now(), updated_at: nil}
+
     socket
     |> deregister_sheaf(old_sheaf)
     |> register_sheaf(new_sheaf)

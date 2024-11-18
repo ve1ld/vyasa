@@ -565,6 +565,19 @@ defmodule VyasaWeb.Context.Components do
   attr :time_class, :string, default: "text-sm italic"
 
   def sheaf_signature_display(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        edited_suffix:
+          cond do
+            assigns.sheaf.inserted_at < assigns.sheaf.updated_at ->
+              "(edited)"
+
+            true ->
+              ""
+          end
+      )
+
     ~H"""
     <div class="w-auto flex mt-2 text-sm text-gray-600">
       <div class="mx-1 text-gray-800 font-semibold">
@@ -572,11 +585,7 @@ defmodule VyasaWeb.Context.Components do
       </div>
       <!-- Time Display -->
       <div class="mx-1 text-gray-500 italic">
-        <%= if is_nil(@sheaf.updated_at) do %>
-          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
-        <% else %>
-          <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
-        <% end %>
+        <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time <> @edited_suffix %>
       </div>
     </div>
     """
