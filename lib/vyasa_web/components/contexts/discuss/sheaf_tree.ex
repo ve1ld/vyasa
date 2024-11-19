@@ -254,7 +254,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     ~H"""
     <div
       id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
-      class="flex flex-col"
+      class="flex flex-col my-2"
     >
       <!-- <.debug_dump
         id={@id}
@@ -263,8 +263,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         level={@level}
         num_children={@children |> Enum.count()}
       /> -->
-      <.sheaf_summary
-        id={"sheaf-tree-node-sheaf-summary-"<> @id}
+      <.sheaf_display
+        id={"sheaf-treenode-sheaf-display-" <> @id}
         level={@level}
         is_reply_to={@is_reply_to}
         sheaf={@sheaf}
@@ -274,24 +274,17 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
         on_quick_reply={@on_quick_reply}
+        events_target={@events_target}
+        marks_target={@events_target}
+        myself={@events_target}
       />
-      <!-- Display Marks if Active -->
-      <%= if @sheaf.active do %>
-        <.collapsible_marks_display
-          marks_target={@events_target}
-          sheaf={@sheaf}
-          sheaf_ui={@sheaf_ui}
-          id={"marks-" <> @sheaf.id}
-          myself={@events_target}
-        />
-      <% end %>
       <!-- Collapsible Sheaf Container -->
       <%= if @level <= 2 && @sheaf_ui.is_expanded? do %>
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
           sheaf={@sheaf}
           reply_to={@reply_to}
-          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 5)}  ml-#{to_string((@level + 1) * 4)}"}
+          container_class={"flex flex-col #{if @level <= 1, do: "", else: "border-l border-gray-200"}  overflow-scroll pl-#{to_string((@level + 1) * 5)}"}
           events_target={@events_target}
           sheafs={@children}
           sheaf_lattice={@sheaf_lattice}

@@ -179,7 +179,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         sheaf={@draft_sheaf}
         sheaf_ui={@draft_sheaf_ui}
       />
-      <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
+      <!-- <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} /> -->
     </div>
     """
   end

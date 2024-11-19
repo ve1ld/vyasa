@@ -13,23 +13,29 @@ defmodule VyasaWeb.Context.Components do
   attr :marks_target, :string
   attr :myself, :any, required: true
 
+  attr :is_composite_member, :boolean,
+    default: false,
+    doc: "When true, the collapsible marks display is a member of a larger component"
+
   attr :id, :string,
     default: "",
     doc: "An optional id suffix, to differentate intentionally duplicate components."
 
   def collapsible_marks_display(assigns) do
     ~H"""
-    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@sheaf_ui.marks_ui} /> -->
-    <div :if={not is_nil(@sheaf_ui.marks_ui)} class="mb-4">
+    <div
+      :if={not is_nil(@sheaf_ui.marks_ui)}
+      class={"transition-shadow duration-200 #{if @is_composite_member, do: "border-none", else: "border border-gray-300"}"}
+    >
       <div
         id={"collapse-header-container-" <> @id}
-        class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
+        class="flex items-baseline justify-between p-4 bg-brand-extra-light transition-colors duration-200"
       >
         <button
           phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
           phx-target={@marks_target}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center w-full hover:bg-brand-light hover:text-brand"
+          class="flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
           type="button"
         >
           <.icon
@@ -41,8 +47,9 @@ defmodule VyasaWeb.Context.Components do
             class="w-5 h-5 mr-2 text-brand-dark"
           />
           <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-lg font-small text-brand-dark">
-            <%= "#{Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live)))}" %>
+          <% num_marks = Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live))) %>
+          <span class="text-sm">
+            <%= "#{num_marks} #{Inflex.inflect("mark", num_marks)}" %>
           </span>
         </button>
         <button
@@ -67,23 +74,26 @@ defmodule VyasaWeb.Context.Components do
         id={"collapsible-content-container-" <> @id}
         class={
           if @sheaf_ui.marks_ui.is_expanded_view?,
-            do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
-            else: "max-h-0 overflow-scroll"
+            do:
+              "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden rounded-b-lg bg-brand-light shadow-sm border-t border-gray-300",
+            else: "max-h-0 overflow-hidden"
         }
       >
-        <.mark_display
-          :for={mark <- @sheaf.marks |> Enum.reverse()}
-          id={@id}
-          marks_target={@marks_target}
-          sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          mark={mark}
-          mark_ui={
-            @sheaf_ui.marks_ui.mark_id_to_ui
-            |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
-          }
-          myself={@marks_target}
-          is_editable?={@sheaf_ui.marks_ui.is_editable_marks?}
-        />
+        <div class="p-4">
+          <.mark_display
+            :for={mark <- @sheaf.marks |> Enum.reverse()}
+            id={@id}
+            marks_target={@marks_target}
+            sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+            mark={mark}
+            mark_ui={
+              @sheaf_ui.marks_ui.mark_id_to_ui
+              |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
+            }
+            myself={@marks_target}
+            is_editable?={@sheaf_ui.marks_ui.is_editable_marks?}
+          />
+        </div>
       </div>
     </div>
     """
@@ -168,7 +178,7 @@ defmodule VyasaWeb.Context.Components do
                   class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
                   aria-label="Visit"
                 >
-                  <.icon name="custom-icon-material-symbols-select-jump-to-end" class="h-6 w-6 mr-1" />
+                  <.icon name="custom-icon-game-icons-portal" class="h-5 w-5" />
                 </button>
               <% end %>
             </div>
@@ -252,16 +262,35 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
-  attr :sheaf, :any, required: true
-
   def sheaf_display(assigns) do
     ~H"""
-    <span class="block
-                   before:content-['╰'] before:mr-1 before:text-gray-500
-                   lg:before:content-none
-                   lg:border-l-0 lg:pl-2">
-      SHEAF DISPLAY <%= @sheaf.body %> - <b><%= @sheaf.signature %></b>
-    </span>
+    <div class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
+      #{if @sheaf_ui.is_focused? || @is_reply_to, do: "bg-brandExtraLight shadow-lg", else: "shadow-sm"}"}>
+      <.sheaf_summary
+        id={"sheaf-summary-" <> @id}
+        level={@level}
+        is_reply_to={@is_reply_to}
+        is_composite_member={true}
+        sheaf={@sheaf}
+        sheaf_ui={@sheaf_ui}
+        children={@children}
+        on_signature_deadspace_click={@on_replies_click}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
+      />
+
+      <%= if @sheaf.active do %>
+        <.collapsible_marks_display
+          is_composite_member={true}
+          marks_target={@events_target}
+          sheaf={@sheaf}
+          sheaf_ui={@sheaf_ui}
+          id={"marks-" <> @sheaf.id}
+          myself={@events_target}
+        />
+      <% end %>
+    </div>
     """
   end
 
@@ -476,11 +505,16 @@ defmodule VyasaWeb.Context.Components do
     doc: "Defines a callback to invoke when the user clicks on the deadspace near the signature"
   )
 
+  attr :is_composite_member, :boolean,
+    default: false,
+    doc: "When true, the sheaf summary is a member of a larger component"
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class="flex flex-col border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
+    <div class={"flex flex-col p-4 rounded-lg bg-brand-extra-light transition-shadow duration-200
+    #{if @is_composite_member, do: "pb-0", else: "border-l border-brand-light shadow-sm"}"}>
       <h2
         :if={@label}
         class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
@@ -492,7 +526,7 @@ defmodule VyasaWeb.Context.Components do
         id={"level-" <> to_string(@level) <> "-sheaf-top-row-" <> @id <> "-" <> @sheaf.id}
         class="flex justify-between items-center"
       >
-        <div class="flex-grow max-w-[40%]">
+        <div class="flex-grow max-w-[50%]">
           <!-- Allow signature display to grow but limit to 80% -->
           <.sheaf_signature_display sheaf={@sheaf} />
         </div>
@@ -633,7 +667,7 @@ defmodule VyasaWeb.Context.Components do
               <% else %>
                 Show
               <% end %>
-              <%= @replies_count %> replies
+              <%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
             </span>
           </button>
         </div>

@@ -11,7 +11,9 @@ defmodule Utils.Formatters.Time do
       %Utils.Formatters.TimeDisplay{formatted_time: "just now", original_datetime: datetime}
   """
 
-  def friendly(datetime) when is_struct(datetime, NaiveDateTime), do: friendly(DateTime.from_naive!(datetime, "Etc/UTC"))
+  def friendly(datetime) when is_struct(datetime, NaiveDateTime),
+    do: friendly(DateTime.from_naive!(datetime, "Etc/UTC"))
+
   def friendly(datetime) when is_struct(datetime, DateTime) do
     now = DateTime.utc_now()
 
@@ -21,9 +23,9 @@ defmodule Utils.Formatters.Time do
     formatted_time =
       cond do
         seconds_diff < 60 -> "just now"
-        seconds_diff < 3600 -> "#{div(seconds_diff, 60)} minutes ago"
-        seconds_diff < 86400 -> "#{div(seconds_diff, 3600)} hours ago"
-        true -> "#{div(seconds_diff, 86400)} days ago"
+        seconds_diff < 3600 -> "#{div(seconds_diff, 60)}m ago"
+        seconds_diff < 86400 -> "#{div(seconds_diff, 3600)}h ago"
+        true -> "#{div(seconds_diff, 86400)}d ago"
       end
 
     %TimeDisplay{formatted_time: formatted_time, original_datetime: datetime}

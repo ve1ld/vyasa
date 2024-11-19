@@ -898,9 +898,12 @@ defmodule VyasaWeb.Context.Discuss do
           </div>
           <br />
           <div class="font-dn text-xl">
-            <%= Enum.count(@root_sheaves || []) %> threads with a total of <%= Enum.count(
-              Map.keys(@sheaf_lattice || %{})
-            ) %> comments
+            <% num_active_root_sheaves = Enum.count(@root_sheaves || []) %>
+            <% num_comments = Enum.count(Map.keys(@sheaf_lattice || %{})) %>
+            <%= num_active_root_sheaves %> <%= Inflex.inflect("thread", num_active_root_sheaves) %> with a total of <%= num_comments %> <%= Inflex.inflect(
+              "comment",
+              num_comments
+            ) %>
           </div>
         </.header>
         <.sheaf_creator_modal
