@@ -350,10 +350,18 @@ defmodule VyasaWeb.Context.Read do
         } = socket
       )
       when not is_nil(sangh_id) do
-    socket
-    |> init_draft_reflector()
-    |> init_draft_reflector_ui()
-    |> maybe_prepend_draft_mark_in_reflector()
+    draft_sheafs = sangh_id |> Vyasa.Sangh.get_sheafs_by_session(%{traits: ["draft"]})
+
+    draft_sheaf =
+      case draft_sheafs do
+        [%Sheaf{} = draft_sheaf | _] ->
+          draft_sheaf
+
+        _ ->
+          Sheaf.draft!(sangh_id)
+      end
+
+    socket |> register_sheaf(draft_sheaf)
   end
 
   # fallthrough
@@ -361,6 +369,24 @@ defmodule VyasaWeb.Context.Read do
     socket
     |> assign(draft_reflector: %Sheaf{marks: [Mark.get_draft_mark()]})
     |> assign(draft_reflector_ui: nil)
+  end
+
+  @doc """
+  Registers a sheaf in drafting context by setting its state, the state for its ui
+  and also maybe prepends a draft mark in the draft sheaf.
+  """
+  def register_sheaf(
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}}
+          }
+        } = socket,
+        %Sheaf{} = sheaf
+      ) do
+    socket
+    |> assign(draft_reflector: sheaf)
+    |> assign(draft_reflector_ui: sheaf |> SheafUiState.get_initial_ui_state())
+    |> maybe_prepend_draft_mark_in_reflector()
   end
 
   @doc """
@@ -787,6 +813,7 @@ defmodule VyasaWeb.Context.Read do
             draft_reflector_ui: %SheafUiState{
               marks_ui: %MarksUiState{} = _ui_state
             },
+            reply_to: reply_to_sheaf,
             session: %VyasaWeb.Session{
               name: username,
               sangh: %Vyasa.Sangh.Session{
@@ -800,24 +827,30 @@ defmodule VyasaWeb.Context.Read do
       label: "SHEAF CREATION without parent"
     )
 
-    # current_sheaf_id context is always inherited from the in-context window
-    # TODO: similarto discuss, use a make_reply() instead, which does the reply_to reconciling
-    Vyasa.Sangh.update_sheaf(
-      draft_sheaf,
-      %{
-        body: body,
-        traits: ["published"],
-        signature: username
-      }
-    )
+    payload_precursor = %{
+      body: body,
+      traits: ["published"],
+      signature: username,
+      inserted_at: Utils.Time.get_utc_now()
+    }
+
+    reply_payload =
+      cond do
+        %Sheaf{} = reply_to_sheaf ->
+          payload_precursor |> Map.put(:parent, reply_to_sheaf)
+
+        true ->
+          payload_precursor
+      end
+
+    draft_sheaf
+    |> Vyasa.Sangh.make_reply(reply_payload)
 
     {:noreply,
      socket
      |> ui_toggle_show_sheaf_modal?()
-     |> assign(draft_reflector: Sheaf.draft!(sangh_id))
-     |> init_draft_reflector_ui()
+     |> register_sheaf(Sheaf.draft!(sangh_id))
      |> assign(reply_to: nil)
-     |> maybe_prepend_draft_mark_in_reflector()
      |> cascade_stream_change()}
   end
 
