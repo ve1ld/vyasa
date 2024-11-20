@@ -206,14 +206,29 @@ defmodule VyasaWeb.ModeLive.Mediator do
     IO.inspect(socket.assigns.url_params)
 
     {:noreply, socket
-    |> push_event("bind::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
+    |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
     |> put_flash(:info, "binded to your clipboard")}
   end
+
+
+  def handle_event("sangh::share", _, %{assigns: %{
+            session: %Session{sangh: %{id: sangh_id}},
+            url_params: %{path: path}
+          }
+        } = socket) do
+
+    {:noreply,
+     socket
+     |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [s: sangh_id])})}
+  end
+
 
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}
   end
+
+
 
   @impl true
   @doc """
