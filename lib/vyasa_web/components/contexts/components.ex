@@ -52,23 +52,17 @@ defmodule VyasaWeb.Context.Components do
             <%= "#{num_marks} #{Inflex.inflect("mark", num_marks)}" %>
           </span>
         </button>
-        <button
+        <.action_toggle_button
           :if={@sheaf_ui.marks_ui.is_expanded_view?}
-          type="button"
-          class="flex space-x-2 pr-2"
-          phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
+          on_click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
+          flag={@sheaf_ui.marks_ui.is_editable_marks?}
+          true_text="Done"
+          false_text="Edit"
+          button_class="flex-grow space-x-2"
+          icon_class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
           phx-target={@marks_target}
-        >
-          <.icon
-            name={
-              if @sheaf_ui.marks_ui.is_editable_marks?,
-                do: "custom-icon-mingcute-save-line",
-                else: "custom-icon-mingcute-edit-4-line"
-            }
-            class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
-          />
-        </button>
+        />
       </div>
       <div
         id={"collapsible-content-container-" <> @id}
