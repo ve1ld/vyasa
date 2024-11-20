@@ -215,10 +215,11 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  # && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== ""
   def mark_content(assigns) do
     ~H"""
     <div class="flex-grow">
-      <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+      <%= if !is_nil(@mark) && !is_nil(@mark.binding)  do %>
         <.mark_quote mark={@mark} marks_target={@marks_target} />
       <% end %>
       <%= if is_binary(@mark.body) do %>
@@ -236,18 +237,36 @@ defmodule VyasaWeb.Context.Components do
   end
 
   def mark_quote(assigns) do
+    assigns =
+      assign(assigns,
+        quote_string:
+          case assigns.mark do
+            %{
+              binding: %{
+                window: %{
+                  quote: quote
+                }
+              }
+            } ->
+              quote
+
+            _ ->
+              nil
+          end
+      )
+
     ~H"""
-    <div class="relative p-4 bg-aerospaceOrange/30 border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
-      <div class="flex justify-between items-start mb-2">
-        <p class="text-sm italic text-secondary">
-          "<%= @mark.binding.window.quote %>"
+    <div class="relative p-4 py-1 px-4 sm:p-4 bg-aerospaceOrange/30 border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
+      <div class="flex justify-between items-start mb-2 w-full">
+        <p :if={not is_nil(@quote_string)} class="text-sm italic text-secondary">
+          "<%= @quote_string %>"
         </p>
         <button
           type="button"
           phx-click="navigate::visit_mark"
           phx-value-mark_id={@mark.id}
           phx-target={@marks_target}
-          class="flex items-center text-gray-600 hover:text-gray-800"
+          class="flex items-center text-gray-600 hover:text-gray-800 flex-grow"
           aria-label="Visit"
         >
           <.icon
