@@ -29,29 +29,29 @@ defmodule VyasaWeb.Context.Components do
     >
       <div
         id={"collapse-header-container-" <> @id}
-        class="flex items-baseline justify-between p-4 bg-brand-extra-light transition-colors duration-200"
+        class={
+        "flex items-center justify-between m-2 mb-3 p-2 pb-0 bg-brand-extra-light transition-colors duration-200 " <>
+         if @sheaf_ui.marks_ui.is_expanded_view?, do: "border-t border-gray-200", else: ""
+        }
       >
-        <button
-          phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
+        <.action_toggle_button
+          on_click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
+          flag={@sheaf_ui.marks_ui.is_expanded_view?}
+          true_text=""
+          false_text=""
+          true_icon_name="hero-chevron-up"
+          false_icon_name="hero-chevron-down"
+          button_class="flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
+          icon_class="w-5 h-5 mr-2 text-brand-dark"
           phx-target={@marks_target}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
-          type="button"
         >
-          <.icon
-            name={
-              if @sheaf_ui.marks_ui.is_expanded_view?,
-                do: "hero-chevron-up",
-                else: "hero-chevron-down"
-            }
-            class="w-5 h-5 mr-2 text-brand-dark"
-          />
           <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
           <% num_marks = Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live))) %>
           <span class="text-sm">
             <%= "#{num_marks} #{Inflex.inflect("mark", num_marks)}" %>
           </span>
-        </button>
+        </.action_toggle_button>
         <.action_toggle_button
           :if={@sheaf_ui.marks_ui.is_expanded_view?}
           on_click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
@@ -69,11 +69,11 @@ defmodule VyasaWeb.Context.Components do
         class={
           if @sheaf_ui.marks_ui.is_expanded_view?,
             do:
-              "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden rounded-b-lg bg-brand-light shadow-sm border-t border-gray-300",
+              "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden rounded-b-lg bg-brand-light shadow-sm",
             else: "max-h-0 overflow-hidden"
         }
       >
-        <div class="p-4">
+        <div class="p-4 pt-0">
           <.mark_display
             :for={mark <- @sheaf.marks |> Enum.reverse()}
             id={@id}
@@ -107,112 +107,111 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_display(assigns) do
     ~H"""
-    <div class="">
-      <%= if @mark.state == :live do %>
+    <%= if @mark.state == :live do %>
+      <div
+        id={"mark-container-" <> @mark.id <> "-" <> @id}
+        class="mb-2 bg-brand-light rounded-l-lg border-brandDark flex justify-between items-start"
+      >
         <div
-          id={"mark-container-" <> @mark.id <> "-" <> @id}
-          class="mb-2 bg-brand-light rounded-l-lg border-brandDark flex justify-between items-start"
+          id={"mark-content-container-" <> @mark.id <> "-" <> @id}
+          class="h-full w-full flex-grow flex flex-col"
         >
-          <div
-            :if={@is_editable?}
-            id={"ordering-button-group-" <> @mark.id <> "-" <> @id}
-            class="flex flex-col items-center"
-          >
-            <button
-              phx-click="dummy_event"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Up Arrow"
-              type="button"
-            >
-              <.icon
-                name="custom-icon-sort-up"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
-            <!-- Displaying Order -->
-            <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
-            <button
-              phx-click="dummy_event"
-              type="button"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Down Arrow"
-            >
-              <.icon
-                name="custom-icon-sort-down"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
-          </div>
-
-          <div
-            id={"mark-content-container-" <> @mark.id <> "-" <> @id}
-            class="h-full w-full flex-grow flex flex-col"
-          >
-            <div class="flex justify-between items-start">
-              <!-- Flex container for content and button -->
-              <.mark_content mark={@mark} mark_ui={@mark_ui} id={@id} marks_target={@marks_target} />
-            </div>
-          </div>
-
-          <div
-            :if={@is_editable?}
-            id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
-            class="h-full flex flex-col ml-2 space-y-2 justify-between"
-          >
-            <button
-              phx-click="mark::tombMark"
-              type="button"
-              phx-target={@marks_target}
-              phx-value-id={@mark.id}
-              title="Delete"
-              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-              aria-label="Delete"
-            >
-              <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
-            </button>
-            <!-- Toggle Edit Button -->
-            <%= if not @mark_ui.is_editing_content? do %>
-              <button
-                phx-click="ui::toggle_is_editing_mark_content?"
-                type="button"
-                phx-target={@marks_target}
-                phx-value-mark_id={@mark.id}
-                phx-value-sheaf_path_labels={@sheaf_path_labels}
-                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                aria-label="Toggle edit mark body"
-              >
-                <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-              </button>
-            <% else %>
-              <!-- Pseudo Submit Button -->
-              <button
-                id={"pseudo-submit-" <> @mark.id <> "-" <> @id }
-                type="button"
-                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                phx-click={JS.push("shim", value: %{})}
-                phx-hook="PseudoForm"
-                data-event-to-capture="click"
-                data-target-selector={"#mark-body-" <> @mark.id <> "-" <> @id}
-                data-event-name="mark::editMarkContent"
-                data-event-target={@marks_target}
-                data-event-payload={
-                  Jason.encode!(%{
-                    "mark_id" => @mark.id,
-                    "previous_mark_body" => @mark.body,
-                    "sheaf_path_labels" => @sheaf_path_labels
-                  })
-                }
-                aria-label="Edit mark body"
-              >
-                <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
-              </button>
-            <% end %>
-          </div>
+          <.mark_content
+            id={@id}
+            mark={@mark}
+            mark_ui={@mark_ui}
+            is_editable?={@is_editable?}
+            marks_target={@marks_target}
+            sheaf_path_labels={@sheaf_path_labels}
+          />
         </div>
-      <% end %>
+      </div>
+    <% end %>
+    """
+  end
+
+  def mark_ordering_button_group(assigns) do
+    ~H"""
+    <div
+      :if={@is_editable?}
+      id={"mark-ordering-button-group-" <> @mark.id <> "-" <> @id}
+      class="flex flex-col items-center"
+    >
+      <button
+        phx-click="dummy_event"
+        phx-target={@marks_target}
+        class="p-1 hover:bg-gray-200 rounded"
+        aria-label="Up Arrow"
+        type="button"
+      >
+        <.icon
+          name="custom-icon-sort-up"
+          class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+        />
+      </button>
+      <!-- Displaying Order -->
+      <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
+      <button
+        phx-click="dummy_event"
+        type="button"
+        phx-target={@marks_target}
+        class="p-1 hover:bg-gray-200 rounded"
+        aria-label="Down Arrow"
+      >
+        <.icon
+          name="custom-icon-sort-down"
+          class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+        />
+      </button>
     </div>
+    """
+  end
+
+  @doc """
+  Toggles the edit / save mark body content changes within an editable mark display.
+  The reason this is a little convoluted is because when submitting mark body changes,
+  we are doing a pseudoform submit, via the client side. The use of the pseudoform allows
+  us to nest an editable mark "form" within another form, thereby allowing us to do "nested forms"
+  which are typically an antipattern at an HTML-level.
+
+  WARNING::INCONVENIENT BUT data-target-selector NEEDS TO BE CORRECT, careful on refactors
+  """
+  def mark_body_change_action_button(assigns) do
+    ~H"""
+    <.action_toggle_button
+      id={@id}
+      flag={not @mark_ui.is_editing_content?}
+      on_click={
+        if not @mark_ui.is_editing_content? do
+          "ui::toggle_is_editing_mark_content?"
+        else
+          JS.push("shim", value: %{})
+        end
+      }
+      button_class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+      true_text="Edit"
+      false_text="Save"
+      true_icon_name="custom-icon-recent-changes-ltr"
+      false_icon_name="hero-bookmark"
+      phx-target={@marks_target}
+      phx-value-mark_id={@mark.id}
+      phx-value-sheaf_path_labels={@sheaf_path_labels}
+      icon_class="w-3 h-3 text-brand-dark mr-1"
+      text_class="text-xs"
+      aria-label="Toggle edit mark body"
+      phx-hook="PseudoForm"
+      data-event-to-capture="click"
+      data-target-selector={"#mark-body-" <> @mark.id <> "-textarea"}
+      data-event-name="mark::editMarkContent"
+      data-event-target={@marks_target}
+      data-event-payload={
+        Jason.encode!(%{
+          "mark_id" => @mark.id,
+          "previous_mark_body" => @mark.body,
+          "sheaf_path_labels" => @sheaf_path_labels
+        })
+      }
+    />
     """
   end
 
@@ -223,7 +222,14 @@ defmodule VyasaWeb.Context.Components do
         <.mark_quote mark={@mark} marks_target={@marks_target} />
       <% end %>
       <%= if is_binary(@mark.body) do %>
-        <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} mark={@mark} />
+        <.mark_body
+          id={"mark-body-" <> @mark.id}
+          mark={@mark}
+          mark_ui={@mark_ui}
+          is_editable?={@is_editable?}
+          marks_target={@marks_target}
+          sheaf_path_labels={@sheaf_path_labels}
+        />
       <% end %>
     </div>
     """
@@ -256,14 +262,24 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_body(assigns) do
     ~H"""
-    <div class="relative p-4 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm">
+    <div class="relative xs:p-4 lg:p-2 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm flex items-start">
+      <!-- Left Button Group for Ordering a Mark -->
+      <div :if={@is_editable?} class="flex-shrink-0">
+        <.mark_ordering_button_group
+          id={@id}
+          mark={@mark}
+          is_editable?={@is_editable?}
+          marks_target={@marks_target}
+        />
+      </div>
+      <!-- Textarea -->
       <textarea
         name="mark_body"
         disabled={not @mark_ui.is_editing_content?}
-        id={"mark-body-" <> @id}
+        id={@id <> "-textarea"}
         rows="1"
         phx-hook="TextareaAutoResize"
-        class="h-full w-full flex-grow
+        class="flex-grow h-full
                focus:outline-none
                focus:ring-2 focus:ring-aerospaceOrange/30
                bg-transparent text-sm text-text
@@ -276,6 +292,32 @@ defmodule VyasaWeb.Context.Components do
       >
         <%= @mark.body %>
       </textarea>
+      <!-- Right Button Group for Editing a Mark -->
+      <div :if={@is_editable?} class="flex-shrink-0 ml-2 h-full">
+        <div
+          id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
+          class="h-full flex flex-col space-y-2 justify-between"
+        >
+          <.action_toggle_button
+            on_click="mark::tombMark"
+            true_text="Delete"
+            true_icon_name="hero-x-mark"
+            button_class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+            icon_class="w-3 h-3 text-brand-dark pr-1"
+            text_class="text-xs"
+            phx-target={@marks_target}
+            phx-value-id={@mark.id}
+          />
+          <!-- Toggle Edit/Save Button -->
+          <.mark_body_change_action_button
+            id={@id}
+            mark={@mark}
+            mark_ui={@mark_ui}
+            marks_target={@marks_target}
+            sheaf_path_labels={@sheaf_path_labels}
+          />
+        </div>
+      </div>
     </div>
     """
   end

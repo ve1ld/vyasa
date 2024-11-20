@@ -511,12 +511,13 @@ defmodule VyasaWeb.CoreComponents do
   """
   attr :on_click, :string, required: true, doc: "The event handler for the button click."
   attr :flag, :boolean, default: true, doc: "Determines which icon and text to display."
-  attr :true_text, :string, required: true, doc: "Text displayed when flag is true."
+  attr :true_text, :string, default: "", doc: "Text displayed when flag is true."
   attr :false_text, :string, default: "", doc: "Text displayed when flag is false."
   attr :true_icon_name, :string, default: nil, doc: "Icon name displayed when flag is true."
   attr :false_icon_name, :string, default: nil, doc: "Icon name displayed when flag is false."
   attr :button_class, :string, default: "", doc: "Additional classes for styling the button."
   attr :icon_class, :string, default: "", doc: "Additional classes for styling the icon."
+  attr :text_class, :string, default: "text-sm", doc: "Class definition for text span."
   attr :rest, :global, doc: "Additional global HTML attributes."
 
   slot :inner_block
@@ -531,10 +532,10 @@ defmodule VyasaWeb.CoreComponents do
     >
       <%= if @flag do %>
         <.icon :if={@true_icon_name} name={@true_icon_name} class={@icon_class} />
-        <span class="text-sm"><%= @true_text %></span>
+        <span class={@text_class}><%= @true_text %></span>
       <% else %>
         <.icon :if={@false_icon_name} name={@false_icon_name} class={@icon_class} />
-        <span :if={@false_text} class="text-sm"><%= @false_text %></span>
+        <span :if={@false_text} class={@text_class}><%= @false_text %></span>
       <% end %>
       <%= render_slot(@inner_block) %>
     </button>
