@@ -493,6 +493,55 @@ defmodule VyasaWeb.CoreComponents do
       "inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none"
 
   @doc """
+  Renders a toggle button with text and icons based on a flag.
+
+  ## Examples
+
+      <.action_toggle_button
+        on_click="toggle"
+        flag={@is_toggled}
+        true_text="Enabled"
+        false_text="Disabled"
+        true_icon_name="icon-enabled"
+        false_icon_name="icon-disabled"
+        button_class="my-custom-class"
+        icon_class="my-icon-class">
+        Additional content here
+      </.action_toggle_button>
+  """
+  attr :on_click, :string, required: true, doc: "The event handler for the button click."
+  attr :flag, :boolean, default: true, doc: "Determines which icon and text to display."
+  attr :true_text, :string, required: true, doc: "Text displayed when flag is true."
+  attr :false_text, :string, default: "", doc: "Text displayed when flag is false."
+  attr :true_icon_name, :string, default: nil, doc: "Icon name displayed when flag is true."
+  attr :false_icon_name, :string, default: nil, doc: "Icon name displayed when flag is false."
+  attr :button_class, :string, default: "", doc: "Additional classes for styling the button."
+  attr :icon_class, :string, default: "", doc: "Additional classes for styling the icon."
+  attr :rest, :global, doc: "Additional global HTML attributes."
+
+  slot :inner_block
+
+  def action_toggle_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click={@on_click}
+      {@rest}
+      class={["flex items-center text-gray-600 hover:text-gray-800", @button_class]}
+    >
+      <%= if @flag do %>
+        <.icon :if={@true_icon_name} name={@true_icon_name} class={@icon_class} />
+        <span class="text-sm"><%= @true_text %></span>
+      <% else %>
+        <.icon :if={@false_icon_name} name={@false_icon_name} class={@icon_class} />
+        <span :if={@false_text} class="text-sm"><%= @false_text %></span>
+      <% end %>
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+  @doc """
   Renders an input with label and error messages.
 
   A `Phoenix.HTML.FormField` may be passed as argument,

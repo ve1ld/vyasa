@@ -566,21 +566,16 @@ defmodule VyasaWeb.Context.Components do
         >
           hello world, i'm invisible
         </button>
-
-        <button
-          type="button"
-          phx-click={@on_set_reply_to}
+        <.action_toggle_button
+          on_click={@on_set_reply_to}
+          flag={@is_reply_to}
+          true_text="Unpin"
+          false_text="Pin"
+          true_icon_name="custom-icon-material-symbols-pin-drop-filled"
+          false_icon_name="custom-icon-material-symbols-pin-drop-empty"
+          button_class="flex items-center text-gray-600 hover:text-gray-800"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center text-gray-600 hover:text-gray-800"
-        >
-          <%= if @is_reply_to do %>
-            <.icon name="custom-icon-material-symbols-pin-drop-filled" class="h-5 w-5 mr-1" />
-            <span class="text-sm">Unpin</span>
-          <% else %>
-            <.icon name="custom-icon-material-symbols-pin-drop-empty" class="h-5 w-5 mr-1" />
-            <span class="text-sm">Pin</span>
-          <% end %>
-        </button>
+        />
       </div>
       <!-- Body Display -->
       <div class="mb-4 mt-3">
@@ -678,45 +673,42 @@ defmodule VyasaWeb.Context.Components do
       <div class="flex">
         <!-- Show Replies Button -->
         <div :if={@replies_count > 0} class="flex-shrink-0 w-32">
-          <button
-            type="button"
-            phx-click={@on_replies_click}
+          <.action_toggle_button
+            on_click={@on_replies_click}
+            flag={@sheaf_ui.is_expanded?}
+            true_text="Hide "
+            false_text="Show "
+            true_icon_name="hero-chat-bubble-oval-left"
+            false_icon_name="hero-chat-bubble-oval-left"
+            button_class="flex items-center text-gray-600 hover:text-gray-800"
+            icon_class="h-4 w-4 mr-1"
             phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-            class="flex items-center text-gray-600 hover:text-gray-800"
           >
-            <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
             <span class="text-sm">
-              <%= if @sheaf_ui.is_expanded? do %>
-                Hide
-              <% else %>
-                Show
-              <% end %>
-              <%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
+              &nbsp<%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
             </span>
-          </button>
+          </.action_toggle_button>
         </div>
         <!-- Share Button -->
-        <button
-          type="button"
-          phx-click="sheaf::share_sheaf"
+        <.action_toggle_button
+          on_click="sheaf::share_sheaf"
+          true_text="Share"
+          icon_class="h-4 w-4 mr-1"
+          true_icon_name="custom-icon-ph-share-fat-light"
           phx-target="#content-display"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
-        >
-          <.icon name="custom-icon-ph-share-fat-light" class="h-4 w-4 mr-1" />
-          <span class="text-sm">Share</span>
-        </button>
+          button_class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        />
       </div>
       <!-- Reply Button -->
-      <button
-        type="button"
-        phx-click={@on_quick_reply}
+      <.action_toggle_button
+        on_click={@on_quick_reply}
+        true_text="Reply"
+        true_icon_name="custom-icon-formkit-reply"
+        button_class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        icon_class="h-4 w-4 mr-1"
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-        class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
-      >
-        <.icon name="custom-icon-formkit-reply" class="h-4 w-4 mr-1" />
-        <span class="text-sm">Reply</span>
-      </button>
+      />
     </div>
     """
   end
