@@ -237,7 +237,7 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_quote(assigns) do
     ~H"""
-    <div class="relative p-4 bg-brandAccentLight border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
+    <div class="relative p-4 bg-aerospaceOrange/30 border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
       <div class="flex justify-between items-start mb-2">
         <p class="text-sm italic text-secondary">
           "<%= @mark.binding.window.quote %>"
@@ -267,9 +267,9 @@ defmodule VyasaWeb.Context.Components do
         name="mark_body"
         disabled={not @mark_ui.is_editing_content?}
         id={"mark-body-" <> @id}
-        rows="3"
+        rows="1"
         phx-hook="TextareaAutoResize"
-        class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
+        class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-0 border-b-2 border-b-gray-300 transition-colors duration-200 focus:border-b-red-600 focus:ring-0 focus:ring-red-600"
         placeholder="Edit your mark"
       >
         <%= @mark.body %>
