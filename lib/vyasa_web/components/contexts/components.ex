@@ -113,11 +113,11 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_display(assigns) do
     ~H"""
-    <div class="border-l border-brand-light pl-2">
+    <div class="">
       <%= if @mark.state == :live do %>
         <div
           id={"mark-container-" <> @mark.id <> "-" <> @id}
-          class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
+          class="mb-2 bg-brand-light rounded-l-lg border-brandDark flex justify-between items-start"
         >
           <div
             :if={@is_editable?}
@@ -154,33 +154,11 @@ defmodule VyasaWeb.Context.Components do
 
           <div
             id={"mark-content-container-" <> @mark.id <> "-" <> @id}
-            class="h-full w-full flex-grow mx-2 pt-2 flex flex-col"
+            class="h-full w-full flex-grow flex flex-col"
           >
             <div class="flex justify-between items-start">
               <!-- Flex container for content and button -->
-              <div class="flex-grow">
-                <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-                  <span class="block mb-1 text-sm italic text-secondary">
-                    "<%= @mark.binding.window.quote %>"
-                  </span>
-                <% end %>
-                <%= if is_binary(@mark.body) do %>
-                  <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} mark={@mark} />
-                <% end %>
-              </div>
-              <!-- Visit Button -->
-              <%= if !@is_editable? do %>
-                <button
-                  type="button"
-                  phx-click="navigate::visit_mark"
-                  phx-value-mark_id={@mark.id}
-                  phx-target={@marks_target}
-                  class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
-                  aria-label="Visit"
-                >
-                  <.icon name="custom-icon-game-icons-portal" class="h-5 w-5" />
-                </button>
-              <% end %>
+              <.mark_content mark={@mark} mark_ui={@mark_ui} id={@id} marks_target={@marks_target} />
             </div>
           </div>
 
@@ -244,9 +222,47 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  def mark_content(assigns) do
+    ~H"""
+    <div class="flex-grow">
+      <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
+        <.mark_quote mark={@mark} marks_target={@marks_target} />
+      <% end %>
+      <%= if is_binary(@mark.body) do %>
+        <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} mark={@mark} />
+      <% end %>
+    </div>
+    """
+  end
+
+  def mark_quote(assigns) do
+    ~H"""
+    <div class="relative p-4 bg-brandAccentLight border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm italic text-secondary">
+          "<%= @mark.binding.window.quote %>"
+        </p>
+        <button
+          type="button"
+          phx-click="navigate::visit_mark"
+          phx-value-mark_id={@mark.id}
+          phx-target={@marks_target}
+          class="flex items-center text-gray-600 hover:text-gray-800"
+          aria-label="Visit"
+        >
+          <.icon
+            name="custom-icon-park-outline-quote-start"
+            class="rotate-180 text-red-600 opacity-80"
+          />
+        </button>
+      </div>
+    </div>
+    """
+  end
+
   def mark_body(assigns) do
     ~H"""
-    <div class="relative">
+    <div class="relative p-4 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm">
       <textarea
         name="mark_body"
         disabled={not @mark_ui.is_editing_content?}
