@@ -269,7 +269,15 @@ defmodule VyasaWeb.Context.Components do
         id={"mark-body-" <> @id}
         rows="1"
         phx-hook="TextareaAutoResize"
-        class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-0 border-b-2 border-b-gray-300 transition-colors duration-200 focus:border-b-red-600 focus:ring-0 focus:ring-red-600"
+        class="h-full w-full flex-grow
+               focus:outline-none
+               focus:ring-2 focus:ring-aerospaceOrange/30
+               bg-transparent text-sm text-text
+               placeholder-gray-600 resize-vertical
+               overflow-auto min-h-[2.5rem] max-h-[8rem]
+               p-2 border-0 border-b-2 border-b-gray-300
+               transition-colors duration-200
+               focus:border-b-red-600"
         placeholder="Edit your mark"
       >
         <%= @mark.body %>
