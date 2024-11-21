@@ -891,7 +891,7 @@ defmodule VyasaWeb.Context.Discuss do
         reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
         reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
       /> -->
-      <div id="content-display" class="mx-auto max-w-4xl pb-16">
+      <div id="content-display" class="mx-auto max-w-4xl pb-16 w-full">
         <.header class="m-8 ml-0">
           <div class="font-dn text-4xl">
             Discussions
