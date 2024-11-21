@@ -191,6 +191,18 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     struct(SheafUiState, @initial)
   end
 
+  def get_mark_ui(
+        %SheafUiState{
+          marks_ui: %MarksUiState{
+            mark_id_to_ui: mark_id_to_ui
+          }
+        },
+        mark_id
+      )
+      when is_binary(mark_id) do
+    mark_id_to_ui |> Map.get(mark_id)
+  end
+
   def toggle_sheaf_is_focused?(%SheafUiState{is_focused?: curr} = ui_state) do
     %SheafUiState{ui_state | is_focused?: !curr}
   end

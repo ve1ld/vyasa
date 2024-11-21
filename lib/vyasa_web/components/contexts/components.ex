@@ -3,7 +3,7 @@ defmodule VyasaWeb.Context.Components do
   Provides core components that shall be used in multiple contexts (e.g. read, discuss).
   """
   use VyasaWeb, :html
-  alias Vyasa.Sangh.{Sheaf}
+  alias Vyasa.Sangh.{Sheaf, Mark}
   alias VyasaWeb.CoreComponents
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
@@ -201,7 +201,7 @@ defmodule VyasaWeb.Context.Components do
       aria-label="Toggle edit mark body"
       phx-hook="PseudoForm"
       data-event-to-capture="click"
-      data-target-selector={"#mark-body-" <> @mark.id <> "-textarea"}
+      data-target-selector={@mark |> get_mark_body_input_selector()}
       data-event-name="mark::editMarkContent"
       data-event-target={@marks_target}
       data-event-payload={
@@ -213,6 +213,19 @@ defmodule VyasaWeb.Context.Components do
       }
     />
     """
+  end
+
+  @doc """
+  Returns the selector that the mark body input has.
+  Using this function should reduce the chances of unforced errors.
+  This is an unfortunate outcome of doing the pseudoform approach.
+  """
+  def get_mark_body_input_selector(%Mark{id: id}) do
+    get_mark_body_input_selector(id)
+  end
+
+  def get_mark_body_input_selector(mark_id) when is_binary(mark_id) do
+    "#mark-body-" <> mark_id <> "-textarea"
   end
 
   # && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== ""
@@ -281,7 +294,7 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_body(assigns) do
     ~H"""
-    <div class="relative xs:p-4 lg:p-2 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm flex items-start">
+    <div class="relative xs:p-4 lg:p-2 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm flex items-center">
       <!-- Left Button Group for Ordering a Mark -->
       <div :if={@is_editable?} class="flex-shrink-0">
         <.mark_ordering_button_group
