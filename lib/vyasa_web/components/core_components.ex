@@ -222,7 +222,9 @@ defmodule VyasaWeb.CoreComponents do
   attr(:close_button_class, :string, default: "")
   attr(:close_button_icon_class, :string, default: "")
   attr(:focus_container_class, :string, default: "")
+  attr(:message_box_class, :string, default: "", doc: "Inline style for the message box")
 
+  slot(:message_box, required: false)
   slot(:inner_block, required: true)
 
   @doc """
@@ -250,12 +252,12 @@ defmodule VyasaWeb.CoreComponents do
       :if={@show}
       id={@id}
       phx-mounted={@show && @on_mount_callback && show_modal(@id)}
-      class={["relative z-50 hidden w-full mx-auto", @container_class]}
+      class={["relative z-50 w-full mx-auto overflow-scroll", @container_class]}
     >
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 backdrop-blur-md",
+          "fixed inset-0 backdrop-blur-md transition-opacity duration-300 ease-in-out",
           @background_class
         ]}
         aria-hidden="true"
@@ -267,7 +269,10 @@ defmodule VyasaWeb.CoreComponents do
         tabindex="0"
         class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
       >
-        <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
+        <div class={[
+          "w-full bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 ease-in-out",
+          @focus_container_class
+        ]}>
           <.focus_wrap
             id={"#{@id}-container"}
             phx-mounted={@show && @on_mount_callback && show_modal(@id)}
@@ -275,11 +280,17 @@ defmodule VyasaWeb.CoreComponents do
             phx-key={@cancel_key}
             phx-click-away={hide_modal(@on_click_away_callback, @id)}
             class={[
-              "relative flex flex-col w-full",
+              "relative flex flex-col w-full p-4",
               @focus_wrap_class
             ]}
           >
-            <div :if={@close_button_icon} class="absolute top-4 right-4">
+            <!-- Dialog Top Section -->
+            <div class="flex items-start justify-between items-center">
+              <!-- Aligns items in a row -->
+              <div class="flex-grow">
+                <%= render_slot(@message_box) %>
+                <!-- Render the message box slot -->
+              </div>
               <button
                 phx-click={hide_modal(@on_cancel_callback, @id)}
                 type="button"
@@ -292,7 +303,8 @@ defmodule VyasaWeb.CoreComponents do
                 />
               </button>
             </div>
-            <div id={"#{@id}-content"} class="w-full">
+            <!-- Inner Content -->
+            <div class="flex-grow">
               <%= render_slot(@inner_block) %>
             </div>
           </.focus_wrap>

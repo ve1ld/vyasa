@@ -159,7 +159,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         />
       </div>
       <!-- Non-Collapsible View -->
-      <div class="flex-grow">
+      <div class="flex-grow overflow-y-auto overflow-x-hidden w-full max-w-full">
         <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
           <p class="text-gray-500">No child sheafs available.</p>
         <% else %>
@@ -290,7 +290,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           id={"collapsible_sheaf_container-" <> @id}
           sheaf={@sheaf}
           reply_to={@reply_to}
-          container_class="overflow-scroll"
+          container_class="overflow-y-auto w-full max-w-screen"
           events_target={@events_target}
           sheafs={@children}
           sheaf_lattice={@sheaf_lattice}

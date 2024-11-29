@@ -12,6 +12,7 @@ defmodule VyasaWeb.Context.Components do
   attr :sheaf_ui, SheafUiState, required: true
   attr :marks_target, :string
   attr :myself, :any, required: true
+  attr :container_class, :string, default: "", doc: "Injectable inline styling for the container"
 
   attr :is_composite_member, :boolean,
     default: false,
@@ -25,7 +26,7 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <div
       :if={not is_nil(@sheaf_ui.marks_ui)}
-      class={"transition-shadow duration-200 #{if @is_composite_member, do: "border-none", else: "border border-gray-300"}"}
+      class={"transition-shadow duration-200 #{if @is_composite_member, do: "border-none", else: "border border-gray-100"} " <> @container_class}
     >
       <div
         id={"collapse-header-container-" <> @id}
@@ -41,7 +42,7 @@ defmodule VyasaWeb.Context.Components do
           false_text=""
           true_icon_name="hero-chevron-up"
           false_icon_name="hero-chevron-down"
-          button_class="flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
+          button_class="font-light flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
           icon_class="w-5 h-5 mr-2 text-brand-dark"
           phx-target={@marks_target}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
@@ -58,7 +59,7 @@ defmodule VyasaWeb.Context.Components do
           flag={@sheaf_ui.marks_ui.is_editable_marks?}
           true_text="Done"
           false_text="Edit"
-          button_class="flex-grow space-x-2"
+          button_class="font-light flex-grow space-x-2"
           icon_class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
           phx-target={@marks_target}
@@ -406,7 +407,6 @@ defmodule VyasaWeb.Context.Components do
     default: nil,
     doc: "Refers to the currently initialised sangh session"
 
-  # TODO: the reply_to should probably just be a binding since we can reply to any binding
   attr :event_target, :string, required: true
 
   def sheaf_creator_modal(assigns) do
@@ -420,12 +420,34 @@ defmodule VyasaWeb.Context.Components do
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
-      focus_wrap_class="flex flex-col h-full shadow-xl"
+      focus_wrap_class="flex flex-col h-full shadow-xl overflow-scroll"
       inner_block_container_class="w-full p-6"
-      close_button_icon_class="text-red-500 hover:text-red-700"
+      close_button_icon_class="text-brand hover:text-red-700 w-8 h-8"
+      close_button_class="p-0"
+      close_button_icon="hero-x-circle-solid"
     >
-      <div class="flex flex-col p-6">
-        <.replyto_context sheaf={@reply_to} />
+      <:message_box>
+        <h2 class="text-xl font-normal text-gray-800 pl-2">
+          Make your post
+        </h2>
+      </:message_box>
+      <div class="flex flex-col p-2 ">
+        <.sheaf_summary
+          :if={not is_nil(@reply_to)}
+          id="sheaf-summary-reply-to"
+          container_class="shadown-none"
+          sheaf={@reply_to}
+          action_buttons={[]}
+          show_engagement_display={false}
+        />
+        <div
+          :if={@reply_to}
+          class="w-full flex text-sm text-gray-500 font-light ml-4 h-10 py-4 pl-2 border-brand border-l-2 justify-start items-center"
+        >
+          <div class="py-2">
+            Replying to <span class="italic font-semibold">@<%= @reply_to.signature %></span>
+          </div>
+        </div>
         <.sheaf_creator_form
           session={@session}
           id={@id}
@@ -450,93 +472,76 @@ defmodule VyasaWeb.Context.Components do
         class="flex items-center"
       >
         <div class="flex flex-col w-full">
-          <textarea
-            name="body"
-            id={"sheaf-creator-form-body-textarea-"<> @id}
-            phx-hook="TextareaAutoResize"
-            class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
-            placeholder="Type your Sheaf body here..."
-          />
-
-          <div class="flex justify-between mt-2 space-x-2">
-            <!-- Checkbox for is_private -->
-            <div class="flex items-center m-2">
-              <.input
-                type="checkbox"
-                name="is_private"
-                id="is_private"
-                label="Private comment?"
-                class="mx-1"
-              />
+          <div class="shadow-sm border-1 border-l-2  rounded-lg border-brand">
+            <textarea
+              name="body"
+              id={"sheaf-creator-form-body-textarea-" <> @id}
+              phx-hook="TextareaFocus"
+              phx-hook="TextareaAutoResize"
+              class="w-full flex-grow focus:outline-none bg-brand-extra-light text-sm placeholder-gray-400 placeholder:font-light
+              resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 pt-3 border-l-4 border-gray-300 rounded-lg transition-shadow duration-200 focus:border-brand focus:ring-0"
+              placeholder="Post your reply..."
+            />
+            <div class="flex justify-between p-2 pt-0 space-x-2 whitespace-nowrap">
+              <div class="w-full text-sm">
+                <label
+                  for={"sheaf-creator-form-signature-textarea-" <> @id}
+                  class="italic font-light text-gray-600 whitespace-nowrap"
+                >
+                  Signed by: @
+                </label>
+                <input
+                  type="text"
+                  name="signature"
+                  id={"sheaf-creator-form-signature-textarea-" <> @id}
+                  value={if @session, do: @session.name, else: ""}
+                  class="font-medium underline p-0 flex-grow focus:outline-none bg-transparent text-sm text-light placeholder-gray-600 border-0 border-b-1 transition-shadow duration-200"
+                  placeholder={if @session, do: "Session name", else: "Enter your signature..."}
+                  disabled={not is_nil(@session) and @session.name}
+                />
+              </div>
             </div>
-            <div>
-              <label
-                for={"sheaf-creator-form-signature-textarea-" <> @id}
-                class="mb-2 text-sm font-medium text-gray-600"
-              >
-                Signed by:
-              </label>
-              <input
-                type="text"
-                name="signature"
-                id={"sheaf-creator-form-signature-textarea-" <> @id}
-                value={if @session, do: @session.name, else: ""}
-                class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
-                placeholder={if @session, do: "Session name", else: "Enter your signature..."}
-                disabled={not is_nil(@session) and @session.name}
-              />
-            </div>
+            <.collapsible_marks_display
+              id={"nested-" <> @id}
+              myself={nil}
+              marks_target={@event_target}
+              sheaf={@draft_sheaf}
+              sheaf_ui={@draft_sheaf_ui}
+              container_class="rounded-b-lg border-gray-100"
+            />
           </div>
-
-          <.collapsible_marks_display
-            id={"nested-"<> @id}
-            myself={nil}
-            marks_target={@event_target}
-            sheaf={@draft_sheaf}
-            sheaf_ui={@draft_sheaf_ui}
-          />
-
-          <div class="flex justify-between space-x-2">
+          <!-- start -->
+          <div class="flex justify-between space-x-2 pt-4">
             <button
               type="button"
               phx-click={CoreComponents.hide_modal(@on_cancel_callback, @id)}
-              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-gray-400 text-gray-800 bg-transparent hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
             >
-              Cancel and go back
+              Go back
             </button>
+
             <button
               type="submit"
-              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-brand bg-white hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 space-x-2"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-brand bg-transparent hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-full lg:w-auto"
               phx-target={@event_target}
+              phx-value-is_new_thread={true}
             >
-              <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" /> Submit
+              Start a thread
+            </button>
+
+            <button
+              type="submit"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-white bg-brand hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-full lg:w-auto"
+              phx-target={@event_target}
+              phx-value-is_new_thread={false}
+            >
+              Reply
             </button>
           </div>
+          <!-- end -->
         </div>
       </.form>
-    </div>
-    """
-  end
-
-  # TODO: add nav action buttons
-  def replyto_context(assigns) do
-    ~H"""
-    <div class="overflow-auto">
-      <%= if not is_nil(@sheaf) do %>
-        <div class="flex flex-col">
-          <.sheaf_summary
-            id="sheaf-summary-reply-to"
-            label="Responding to"
-            sheaf={@sheaf}
-            action_buttons={[]}
-          />
-        </div>
-      <% else %>
-        <h2 class="text-2xl font-normal text-gray-800">
-          Creating a new thread
-        </h2>
-      <% end %>
     </div>
     """
   end
@@ -601,12 +606,21 @@ defmodule VyasaWeb.Context.Components do
     default: false,
     doc: "When true, the sheaf summary is a member of a larger component"
 
+  attr :show_engagement_display, :boolean,
+    default: true,
+    doc: "When true, displays the engagement buttons on the sheaf"
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
+
+  attr :container_class, :string, default: "", doc: "Inline class string that is injected"
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class={"flex flex-col p-4 rounded-lg bg-brand-extra-light transition-shadow duration-200
-    #{if @is_composite_member, do: "pb-0", else: "border-l border-brand-light shadow-sm"}"}>
+    <div class={
+    "flex flex-col p-4 rounded-lg bg-brand-extra-light transition-shadow duration-200 " <>
+    (if @is_composite_member, do: "pb-0", else: "border-l border-brand-light shadow-sm ") <>
+    @container_class
+    }>
       <h2
         :if={@label}
         class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
@@ -618,7 +632,7 @@ defmodule VyasaWeb.Context.Components do
         id={"level-" <> to_string(@level) <> "-sheaf-top-row-" <> @id <> "-" <> @sheaf.id}
         class="flex justify-between items-center"
       >
-        <div class="flex-grow max-w-[50%]">
+        <div class="flex-grow">
           <!-- Allow signature display to grow but limit to 80% -->
           <.sheaf_signature_display sheaf={@sheaf} />
         </div>
@@ -629,28 +643,29 @@ defmodule VyasaWeb.Context.Components do
           type="button"
           phx-click={@on_signature_deadspace_click}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex-grow h-full cursor-pointer opacity-0"
+          class="flex-grow h-full cursor-pointer opacity-0 min-w-[40%]"
           aria-label="Click to interact with signature"
         >
           hello world, i'm invisible
         </button>
-        <.action_toggle_button
+        <!--<.action_toggle_button
           on_click={@on_set_reply_to}
           flag={@is_reply_to}
           true_text="Unpin"
           false_text="Pin"
           true_icon_name="custom-icon-material-symbols-pin-drop-filled"
           false_icon_name="custom-icon-material-symbols-pin-drop-empty"
-          button_class="flex items-center text-gray-600 hover:text-gray-800"
+          button_class="font-light flex items-center text-gray-600 hover:text-gray-800"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-        />
+        />-->
       </div>
       <!-- Body Display -->
-      <div class="mb-4 mt-3">
+      <div class="mb-4 mt-3 text-md">
         <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Engagement Display -->
       <.sheaf_engagement_display
+        :if={@show_engagement_display}
         sheaf={@sheaf}
         sheaf_ui={@sheaf_ui}
         replies_count={@children |> Enum.count()}
@@ -700,12 +715,12 @@ defmodule VyasaWeb.Context.Components do
       )
 
     ~H"""
-    <div class="w-auto flex mt-2 text-sm text-gray-600">
-      <div class="mx-1 text-gray-800 font-semibold">
+    <div class="w-auto flex text-sm text-gray-600 whitespace-nowrap items-baseline">
+      <div class="mx-1 text-gray-800 font-medium">
         <p><%= @sheaf.signature %></p>
       </div>
       <!-- Time Display -->
-      <div class="mx-1 text-gray-500 italic">
+      <div class="text-xs mx-1 font-light text-gray-500 italic">
         <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time <> @edited_suffix %>
       </div>
     </div>
@@ -738,42 +753,40 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_engagement_display(assigns) do
     ~H"""
     <div class="flex justify-between mt-2">
-      <div class="flex">
-        <!-- Show Replies Button -->
-        <div :if={@replies_count > 0} class="flex-shrink-0 w-32">
-          <.action_toggle_button
-            on_click={@on_replies_click}
-            flag={@sheaf_ui.is_expanded?}
-            true_text="Hide "
-            false_text="Show "
-            true_icon_name="hero-chat-bubble-oval-left"
-            false_icon_name="hero-chat-bubble-oval-left"
-            button_class="flex items-center text-gray-600 hover:text-gray-800"
-            icon_class="h-4 w-4 mr-1"
-            phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          >
-            <span class="text-sm">
-              &nbsp<%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
-            </span>
-          </.action_toggle_button>
-        </div>
-        <!-- Share Button -->
+      <!-- Show Replies Button -->
+      <div :if={@replies_count > 0} class="flex-shrink-0">
         <.action_toggle_button
-          on_click="sheaf::share_sheaf"
-          true_text="Share"
+          on_click={@on_replies_click}
+          flag={@sheaf_ui.is_expanded?}
+          true_text="Hide "
+          false_text="Show "
+          true_icon_name="hero-chat-bubble-oval-left"
+          false_icon_name="hero-chat-bubble-oval-left"
+          button_class="font-light flex items-center text-gray-600 hover:text-gray-800"
           icon_class="h-4 w-4 mr-1"
-          true_icon_name="custom-icon-ph-share-fat-light"
-          phx-target="#content-display"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          button_class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
-        />
+        >
+          <span class="text-sm">
+            &nbsp<%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
+          </span>
+        </.action_toggle_button>
       </div>
+      <!-- Share Button -->
+      <.action_toggle_button
+        on_click="sheaf::share_sheaf"
+        true_text="Share"
+        icon_class="h-4 w-4 mr-1"
+        true_icon_name="custom-icon-ph-share-fat-light"
+        phx-target="#content-display"
+        phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+        button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
+      />
       <!-- Reply Button -->
       <.action_toggle_button
         on_click={@on_quick_reply}
         true_text="Reply"
         true_icon_name="custom-icon-formkit-reply"
-        button_class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
         icon_class="h-4 w-4 mr-1"
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
       />
