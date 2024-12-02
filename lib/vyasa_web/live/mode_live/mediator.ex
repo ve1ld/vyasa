@@ -12,6 +12,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh
+  alias Vyasa.Sangh.Assembly
   @supported_modes UserMode.supported_modes()
 
   @mod_registry %{"UiState" => UiState}
@@ -41,6 +42,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
      |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
      |> maybe_focus_binding()
      |> sync_session()
+     |> join_sangh()
     }
   end
 
@@ -61,11 +63,40 @@ defmodule VyasaWeb.ModeLive.Mediator do
     socket
   end
 
-  defp sync_session(
-         %{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket
-       )
+
+  defp join_sangh(%{assigns: %{session: %Session{name: name, sangh: %{id: sangh_id}}}} = socket) do
+
+    Assembly.join(self(), sangh_id, %Vyasa.Disciple{name: name, action: "active"})
+
+    socket
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.ref_disciples(sangh_id)})
+  end
+
+
+  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) do
+
+    Assembly.listen(sangh_id)
+
+    socket
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.ref_disciples(sangh_id)})
+  end
+
+
+  defp join_sangh(%{assigns: %{session: _sess}} = socket) do
+    socket |> assign(sangh: %{joined: nil, disciples: []})
+  end
+
+  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: sangh_id}} = sess}} = socket)
+       when is_binary(name) and is_binary(sangh_id) do
+
+    socket
+    |> push_event("initSession", sess)
+
+  end
+
+  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket)
        when is_binary(id) and is_binary(sangh_id) do
-    # currently needs name prerequisite to save
+
     socket
     |> push_event("initSession", sess)
   end
@@ -268,6 +299,21 @@ defmodule VyasaWeb.ModeLive.Mediator do
         IO.puts("Error: #{reason}")
         {:noreply, socket}
     end
+  end
+
+  def handle_info(
+        {:join, "sangh::" <> _ , %{phx_ref: ref} = disciple},
+        %{assigns: %{sangh: %{disciples: d}}} = socket
+      ) do
+
+    {:noreply,
+     socket
+     |> assign(:disciples, Map.put(d, ref, disciple))}
+  end
+
+  def handle_info({:leave, "sangh::"  <> _ , %{phx_ref: ref} = _disciple},
+    %{assigns: %{sangh: %{disciples: d}}} = socket) do
+      {:noreply, socket |> assign(:disciples, Map.delete(d, ref))}
   end
 
   @impl true
