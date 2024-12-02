@@ -44,7 +44,7 @@ defmodule Vyasa.Sangh.Assembly do
 
   ## helper fns
 
-  def orate(binding, %{works: wid})do
+  def orate(binding, %{workspid: wid}) do
     Workspace.publish(wid, {__MODULE__, binding}, :bind)
   end
 

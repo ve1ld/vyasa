@@ -66,10 +66,10 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   defp join_sangh(%{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket) when is_binary(name) and is_binary(sangh_id) do
 
-    Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
+    {:ok, workspid} = Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id)})
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: workspid})
   end
 
 
@@ -78,12 +78,12 @@ defmodule VyasaWeb.ModeLive.Mediator do
     Assembly.listen(sangh_id)
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id)})
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: nil})
   end
 
 
   defp join_sangh(%{assigns: %{session: _sess}} = socket) do
-    socket |> assign(sangh: %{joined: nil, disciples: []})
+    socket |> assign(sangh: %{joined: nil, disciples: [], workspid: nil})
   end
 
   defp sync_session(%{assigns: %{session: %Session{sangh: %{id: sangh_id}} = sess}} = socket)
@@ -209,6 +209,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
       ) do
 
     {:ok, bind} = Draft.bind_node(bind)
+    #binding point
     # pass binding contexts to the current mode and drafting reflector
     send_update(component, id: selector, binding: bind)
     # TODO: implement nav_event handlers from action bar
@@ -300,13 +301,10 @@ defmodule VyasaWeb.ModeLive.Mediator do
         {:join, "sangh::" <> _ , %{id: id} = disciple},
         %{assigns: %{sangh: %{disciples: d}}} = socket
       ) do
-
-        IO.inspect(disciple, label: "SANGH JOIN")
-        IO.inspect(socket.assigns.sangh, label: "SANGH JOIN")
         # latest arriving join message given precedence, should check online_at key
     {:noreply,
      socket
-     |> assign(:disciples, Map.put(d, id, disciple))}
+     |> update(:sangh, &(&1 |> Map.put(:disciples, Map.put(d, id, disciple))))}
   end
 
   def handle_info({:leave, "sangh::"  <> _ , %{id: id, phx_ref: ref} = _disciple},
@@ -315,7 +313,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
     if d[id][:phx_ref] == ref do
       {:noreply,
        socket
-       |> assign(:disciples, Map.delete(d, id))}
+       |> update(:sangh, &(&1 |> Map.put(:disciples, Map.delete(d, id))))}
     else
       {:noreply, socket}
     end
