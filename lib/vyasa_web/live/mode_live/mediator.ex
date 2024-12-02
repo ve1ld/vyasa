@@ -64,21 +64,21 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
 
-  defp join_sangh(%{assigns: %{session: %Session{name: name, sangh: %{id: sangh_id}}}} = socket) do
+  defp join_sangh(%{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket) when is_binary(name) and is_binary(sangh_id) do
 
-    Assembly.join(self(), sangh_id, %Vyasa.Disciple{name: name, action: "active"})
+    Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.ref_disciples(sangh_id)})
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id)})
   end
 
 
-  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) do
+  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) when is_binary(sangh_id) do
 
     Assembly.listen(sangh_id)
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.ref_disciples(sangh_id)})
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id)})
   end
 
 
@@ -86,19 +86,12 @@ defmodule VyasaWeb.ModeLive.Mediator do
     socket |> assign(sangh: %{joined: nil, disciples: []})
   end
 
-  defp sync_session(%{assigns: %{session: %Session{name: name, sangh: %{id: sangh_id}} = sess}} = socket)
-       when is_binary(name) and is_binary(sangh_id) do
+  defp sync_session(%{assigns: %{session: %Session{sangh: %{id: sangh_id}} = sess}} = socket)
+       when  is_binary(sangh_id) do
 
     socket
     |> push_event("initSession", sess)
 
-  end
-
-  defp sync_session(%{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket)
-       when is_binary(id) and is_binary(sangh_id) do
-
-    socket
-    |> push_event("initSession", sess)
   end
 
   defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
@@ -141,7 +134,9 @@ defmodule VyasaWeb.ModeLive.Mediator do
     {:noreply,
      socket
      |> assign(session: %{sess | name: name})
-     |> sync_session()}
+     |> sync_session()
+     |> join_sangh()
+    }
   end
 
   @impl true
@@ -302,18 +297,28 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   def handle_info(
-        {:join, "sangh::" <> _ , %{phx_ref: ref} = disciple},
+        {:join, "sangh::" <> _ , %{id: id} = disciple},
         %{assigns: %{sangh: %{disciples: d}}} = socket
       ) do
 
+        IO.inspect(disciple, label: "SANGH JOIN")
+        IO.inspect(socket.assigns.sangh, label: "SANGH JOIN")
+        # latest arriving join message given precedence, should check online_at key
     {:noreply,
      socket
-     |> assign(:disciples, Map.put(d, ref, disciple))}
+     |> assign(:disciples, Map.put(d, id, disciple))}
   end
 
-  def handle_info({:leave, "sangh::"  <> _ , %{phx_ref: ref} = _disciple},
+  def handle_info({:leave, "sangh::"  <> _ , %{id: id, phx_ref: ref} = _disciple},
     %{assigns: %{sangh: %{disciples: d}}} = socket) do
-      {:noreply, socket |> assign(:disciples, Map.delete(d, ref))}
+    # ensure latest ref is the same
+    if d[id][:phx_ref] == ref do
+      {:noreply,
+       socket
+       |> assign(:disciples, Map.delete(d, id))}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true

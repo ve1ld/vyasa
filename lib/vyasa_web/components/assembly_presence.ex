@@ -35,7 +35,7 @@ defmodule VyasaWeb.AssemblyPresence do
           id="user-avatars"
           class="flex items-center"
         >
-          <%= for {{ref, dis}, index} <- Enum.with_index(@sangh.disciples) do %>
+          <%= for {{ref, dis}, index} <- Enum.with_index(@sangh.disciples |> Enum.sort_by(&elem(&1, 1).online_at, :desc)) do %>
             <div
               id={"user-avatar-#{ref}"}
               class="group relative transition-all duration-300 ease-in-out"
@@ -52,7 +52,7 @@ defmodule VyasaWeb.AssemblyPresence do
                        border border-white/20"
               >
                 <span class="text-gray-500 font-sanskrit text-lg">
-                  <%= String.at(dis.name, 0) %>
+                  <%= String.at(dis.name || "∅", 0) %>
                 </span>
               </button>
 

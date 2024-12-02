@@ -53,9 +53,9 @@ defmodule Vyasa.Sangh.Assembly do
   end
 
   ## referents to disciples
-  def ref_disciples(session) do
+  def id_disciples(session) do
     Vyasa.Gate.list_users(topic(session))
-    |> Enum.into(%{}, fn %{phx_ref: ref} = dis -> {ref, dis} end)
+    |> Enum.into(%{}, fn %{id: id} = dis -> {id, dis} end)
 
   end
 

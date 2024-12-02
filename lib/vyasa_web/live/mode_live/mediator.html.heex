@@ -24,21 +24,21 @@
   <div
     :if={@session.active}
     id="sessionbox"
-    class="absolute p-2 mr-4 w-1/4 top-20 right-10 font-mono text-xs rounded text-brand "
+    class="absolute p-2 mr-4 w-1/4 top-24  z-10 right-10 font-mono text-xs rounded text-brand "
     phx-hook="SessionBox"
   >
     <div :if={!@session.name}>
       <form class="flex items-center" id="name" phx-submit="name">
-        <span class="flex-1 transition-opacity duration-700 animate-pulse block">your name:</span>
+        <span class="transition-opacity text-lg duration-700 animate-pulse block">your name:</span>
         <input
           value={@session.name}
           name="name"
           type="text"
-          class="flex-grow text-xs bg-transparent   border-none outline-none caret-current focus:border-1 focus:ring-0"
+          class="flex-grow text-lg bg-transparent   border-none outline-none caret-current focus:border-1 focus:ring-0"
           autoFocus
         />
       </form>
-      <span class="text-primaryAccent flex items-center justify-left">
+      <span class="text-primaryAccent text-lg flex items-center justify-left">
         ☙ –‹›––– ❊ –––‹›– ❧
       </span>
     </div>
