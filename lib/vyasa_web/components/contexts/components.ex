@@ -435,19 +435,12 @@ defmodule VyasaWeb.Context.Components do
         <.sheaf_summary
           :if={not is_nil(@reply_to)}
           id="sheaf-summary-reply-to"
-          container_class="shadown-none"
+          container_class="z-10 shadown-none bg-brandExtraLight"
           sheaf={@reply_to}
           action_buttons={[]}
           show_engagement_display={false}
         />
-        <div
-          :if={@reply_to}
-          class="w-full flex text-sm text-gray-500 font-light ml-4 h-10 py-4 pl-2 border-brand border-l-2 justify-start items-center"
-        >
-          <div class="py-2">
-            Replying to <span class="italic font-semibold">@<%= @reply_to.signature %></span>
-          </div>
-        </div>
+        <.replyto_context_display reply_to={@reply_to} event_target={@event_target} />
         <.sheaf_creator_form
           session={@session}
           id={@id}
@@ -462,7 +455,48 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  # TODO: wire up the button events
+  def replyto_context_display(assigns) do
+    ~H"""
+    <div class="whitespace-nowrap w-full flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 font-light -ml-2 -mb-4 -mt-2 py-4 pl-4 pb-8 border-brand rounded-l-md border-2 border-r-0 z-5">
+      <!-- Current Situation Indicator -->
+      <div class="flex-grow">
+        <%= if @reply_to do %>
+          Replying <span class="italic font-semibold">@<%= @reply_to.signature %></span>
+        <% else %>
+          Starting a thread
+        <% end %>
+      </div>
+
+      <button class="italic underline underline-offset-2 font-light whitespace-nowrap sm:ml-4 mt-2 sm:mt-0 self-end">
+        <%= if @reply_to do %>
+          ...start a thread?
+        <% else %>
+          ...post a reply?
+        <% end %>
+      </button>
+    </div>
+    """
+  end
+
   def sheaf_creator_form(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        textarea_placeholder:
+          case is_nil(assigns.reply_to) do
+            true -> "Post your thread..."
+            false -> "Post your reply..."
+          end
+      )
+      |> assign(
+        action_button_text:
+          case is_nil(assigns.reply_to) do
+            true -> "Start thread"
+            false -> "Reply"
+          end
+      )
+
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
@@ -478,10 +512,11 @@ defmodule VyasaWeb.Context.Components do
               id={"sheaf-creator-form-body-textarea-" <> @id}
               phx-hook="TextareaFocus"
               phx-hook="TextareaAutoResize"
-              class="w-full flex-grow focus:outline-none bg-brand-extra-light text-sm placeholder-gray-400 placeholder:font-light
-              resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 pt-3 border-l-4 border-gray-300 rounded-lg transition-shadow duration-200 focus:border-brand focus:ring-0"
-              placeholder="Post your reply..."
+              class="w-full flex-grow focus:outline-none bg-brandExtraLight text-sm placeholder-gray-400 placeholder:font-light
+    resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 pt-3 border-tl-4 border-gray-300 rounded-tl-lg rounded-tr-lg transition-shadow duration-200 focus:border-brand focus:ring-0"
+              placeholder={@textarea_placeholder}
             />
+
             <div class="flex justify-between p-2 pt-0 space-x-2 whitespace-nowrap">
               <div class="w-full text-sm">
                 <label
@@ -511,7 +546,7 @@ defmodule VyasaWeb.Context.Components do
             />
           </div>
           <!-- start -->
-          <div class="flex justify-between space-x-2 pt-4">
+          <div class="flex justify-around space-x-2 pt-4">
             <button
               type="button"
               phx-click={CoreComponents.hide_modal(@on_cancel_callback, @id)}
@@ -520,23 +555,13 @@ defmodule VyasaWeb.Context.Components do
             >
               Go back
             </button>
-
             <button
               type="submit"
-              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-brand bg-transparent hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-full lg:w-auto"
-              phx-target={@event_target}
-              phx-value-is_new_thread={true}
-            >
-              Start a thread
-            </button>
-
-            <button
-              type="submit"
-              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-white bg-brand hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-full lg:w-auto"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-white bg-brand hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-auto"
               phx-target={@event_target}
               phx-value-is_new_thread={false}
             >
-              Reply
+              <%= @action_button_text %>
             </button>
           </div>
           <!-- end -->
