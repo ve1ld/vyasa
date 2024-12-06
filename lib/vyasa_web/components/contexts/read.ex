@@ -804,8 +804,7 @@ defmodule VyasaWeb.Context.Read do
   def handle_event(
         "sheaf::publish",
         %{
-          "body" => body,
-          "is_private" => is_private
+          "body" => body
         } = _params,
         %Socket{
           assigns: %{
@@ -823,7 +822,7 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
-    IO.inspect(%{body: body, is_private: is_private},
+    IO.inspect(%{body: body},
       label: "SHEAF CREATION without parent"
     )
 
@@ -835,13 +834,16 @@ defmodule VyasaWeb.Context.Read do
     }
 
     reply_payload =
-      cond do
-        %Sheaf{} = reply_to_sheaf ->
+      case reply_to_sheaf do
+        %Sheaf{} ->
           payload_precursor |> Map.put(:parent, reply_to_sheaf)
 
-        true ->
+        nil ->
           payload_precursor
       end
+
+    dbg()
+    # FIXME: not sure why this is broken lol, just revisit the publishing routine properly
 
     draft_sheaf
     |> Vyasa.Sangh.make_reply(reply_payload)
