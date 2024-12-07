@@ -457,6 +457,23 @@ defmodule VyasaWeb.Context.Components do
 
   # TODO: wire up the button events
   def replyto_context_display(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        alternative_action:
+          case is_nil(assigns.reply_to) do
+            true -> "navigate::see_discussion"
+            false -> "sheaf::clear_reply_to_context"
+          end
+      )
+      |> assign(
+        alternative_action_prompt:
+          case is_nil(assigns.reply_to) do
+            true -> "...post a reply?"
+            false -> "...start a thread?"
+          end
+      )
+
     ~H"""
     <div class="whitespace-nowrap w-full flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 font-light -ml-2 -mb-4 -mt-2 py-4 pl-4 pb-8 border-brand rounded-l-md border-2 border-r-0 z-5">
       <!-- Current Situation Indicator -->
@@ -468,12 +485,12 @@ defmodule VyasaWeb.Context.Components do
         <% end %>
       </div>
 
-      <button class="italic underline underline-offset-2 font-light whitespace-nowrap sm:ml-4 mt-2 sm:mt-0 self-end">
-        <%= if @reply_to do %>
-          ...start a thread?
-        <% else %>
-          ...post a reply?
-        <% end %>
+      <button
+        class="italic underline underline-offset-2 font-light whitespace-nowrap sm:ml-4 mt-2 sm:mt-0 self-end"
+        phx-click={@alternative_action}
+        phx-target={@event_target}
+      >
+        <%= @alternative_action_prompt %>
       </button>
     </div>
     """

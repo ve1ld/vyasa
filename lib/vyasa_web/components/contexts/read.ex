@@ -35,6 +35,7 @@ defmodule VyasaWeb.Context.Read do
       :ok,
       socket
       |> assign(id: id)
+      |> assign(url_params: url_params)
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       |> apply_action(live_action, url_params)
@@ -879,12 +880,18 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("dummy_event", _params, socket) do
-    # Handle the event here (e.g., log it, update state, etc.)
-    IO.puts("Dummy event triggered")
+  def handle_event(
+        "navigate::see_discussion",
+        _,
+        %{assigns: %{url_params: %{path: curr_path}}} = socket
+      ) do
+    target_path =
+      curr_path
+      |> String.split("/")
+      |> List.replace_at(1, "discuss")
+      |> Enum.join("/")
 
-    {:noreply, socket}
+    {:noreply, socket |> push_patch(to: target_path)}
   end
 
   @impl true

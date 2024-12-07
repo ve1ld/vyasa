@@ -33,6 +33,7 @@ defmodule VyasaWeb.Context.Discuss do
       :ok,
       socket
       |> assign(id: id)
+      |> assign(url_params: url_params)
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       # TODO remove TEMP once doing the url_params:
@@ -784,6 +785,22 @@ defmodule VyasaWeb.Context.Discuss do
       label: "navigate::visit_mark -- TODO"
     )
 
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "navigate::see_discussion",
+        _,
+        socket
+      ) do
+    send(self(), "ui::toggle_show_sheaf_modal?")
+    # target_path =
+    #   curr_path
+    #   |> String.split("/")
+    #   |> List.replace_at(1, "discuss")
+    #   |> Enum.join("/")
+
+    # {:noreply, socket |> push_patch(to: target_path)}
     {:noreply, socket}
   end
 
