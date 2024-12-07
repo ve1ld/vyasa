@@ -695,14 +695,10 @@ defmodule VyasaWeb.Context.Discuss do
     }
   end
 
-  # FIXME: with the new desire to start new thread, the event handling has to be updated, I shall commit the UI changes in first so that it can be branched off.
   def handle_event(
         "sheaf::publish",
         %{
-          "body" => body,
-          "is_new_thread" => is_new_thread
-          # "is_private" => _is_private
-          # "is_new_thread" => is_new_thread
+          "body" => body
         } = params,
         %Socket{
           assigns: %{
