@@ -488,10 +488,10 @@ defmodule Vyasa.Sangh do
     reply |> update_sheaf(reconciled_attrs)
   end
 
-  # way number 3 -- no assoced parent, nothing to reconcile
+  # way number 3 -- no assoced parent (i.e. will be root sheaf), nothing to reconcile
   def make_reply(
         %Sheaf{
-          parent: nil
+          parent_id: nil
         } = reply,
         attrs
       ) do
