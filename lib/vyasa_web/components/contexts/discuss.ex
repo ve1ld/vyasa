@@ -893,10 +893,26 @@ defmodule VyasaWeb.Context.Discuss do
           []
       end
 
+    {reflected_sheaf, reflected_sheaf_ui} =
+      case Map.has_key?(assigns, :draft_reflector_path) do
+        true ->
+          lattice_key = assigns.draft_reflector_path.labels
+
+          {assigns.sheaf_lattice |> Map.get(lattice_key),
+           assigns.sheaf_ui_lattice |> Map.get(lattice_key)}
+
+        false ->
+          {nil, nil}
+      end
+
     assigns =
       assigns
-      |> assign(:reply_to, reply_to_sheaf)
-      |> assign(:root_sheaves, root_sheaves)
+      |> assign(%{
+        reply_to: reply_to_sheaf,
+        root_sheaves: root_sheaves,
+        reflected_sheaf: reflected_sheaf,
+        reflected_sheaf_ui: reflected_sheaf_ui
+      })
 
     ~H"""
     <div id={@id}>
@@ -905,8 +921,8 @@ defmodule VyasaWeb.Context.Discuss do
         label="Context Dump on Discussions"
         draft_reflector_path={@draft_reflector_path}
         reply_to={@reply_to}
-        reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
-        reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
+        reflected={@reflected_sheaf}
+        reflected_ui={@reflected_sheaf_ui}
       /> -->
       <div id="content-display" class="mx-auto max-w-4xl pb-16 w-full">
         <.header class="m-8 ml-0">
@@ -931,12 +947,8 @@ defmodule VyasaWeb.Context.Discuss do
           id="sheaf-creator"
           session={@session}
           reply_to={@reply_to}
-          draft_sheaf={
-            @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-          }
-          draft_sheaf_ui={
-            @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-          }
+          draft_sheaf={@reflected_sheaf}
+          draft_sheaf_ui={@reflected_sheaf_ui}
           event_target="#content-display"
         />
 
@@ -948,12 +960,8 @@ defmodule VyasaWeb.Context.Discuss do
                   not is_nil(@draft_reflector_path)
               }
               label="CHECK SHEAF CREATOR MODAL INPUTS"
-              draft_sheaf_ui={
-                @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-              }
-              draft_sheaf={
-                @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-              }
+              draft_sheaf={@reflected_sheaf}
+              draft_sheaf_ui={@reflected_sheaf_ui}
               event_target="#content-display"
             /> -->
           </div>
@@ -975,6 +983,22 @@ defmodule VyasaWeb.Context.Discuss do
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>
         <% end %>
+      </div>
+      <!-- Floating Action Button -->
+      <div class="fixed bottom-20 right-4 z-50">
+        <.floating_action_button
+          :if={@reflected_sheaf_ui}
+          icon_name="hero-plus"
+          icon_class="w-6 h-6"
+          event_target="#content-display"
+          on_click={
+            case @reflected_sheaf_ui.marks_ui.show_sheaf_modal? do
+              # ignores this click event since the clickaway listener for the modal will already do the toggle:
+              true -> nil
+              false -> "ui::toggle_show_sheaf_modal?"
+            end
+          }
+        />
       </div>
     </div>
     """

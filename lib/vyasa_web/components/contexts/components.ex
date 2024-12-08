@@ -835,4 +835,24 @@ defmodule VyasaWeb.Context.Components do
     </div>
     """
   end
+
+  def floating_action_button(assigns) do
+    ~H"""
+    <div class="absolute bottom-20 right-4 z-50 transform">
+      <button
+        id="floating_action"
+        class={[
+          "bg-white/30 hover:bg-white/40 text-white rounded-full focus:outline-none transition-all duration-300 backdrop-blur-lg shadow-lg active:scale-95 flex items-center justify-center w-11 h-11 p-1 border border-white/20"
+        ]}
+        phx-click={@on_click}
+        phx-target={@event_target}
+      >
+        <.icon
+          name={@icon_name}
+          class={"w-5 h-5 text-gray-500 hover:text-primaryAccent transition-colors duration-200 stroke-current stroke-2" <> @icon_class}
+        />
+      </button>
+    </div>
+    """
+  end
 end
