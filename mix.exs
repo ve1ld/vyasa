@@ -47,6 +47,7 @@ defmodule Vyasa.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.5", only: :dev},
+      # in order to get the correct patching behaviour, we needed a un-released commit on the main branch. Ref: https://github.com/phoenixframework/phoenix_live_view/commit/440fd0460405c57f61fcc7457ea9f80ff56f1135
       {:phoenix_live_view,
        github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
       {:floki, ">= 0.30.0"},

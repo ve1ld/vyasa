@@ -4,6 +4,7 @@ defmodule VyasaWeb.Context.Components do
   """
   use VyasaWeb, :html
   alias Vyasa.Sangh.{Sheaf}
+  alias VyasaWeb.CoreComponents
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
 
@@ -323,7 +324,7 @@ defmodule VyasaWeb.Context.Components do
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
         for={%{}}
-        phx-submit={JS.push("sheaf::publish")}
+        phx-submit={CoreComponents.hide_modal(JS.push("sheaf::publish"), @id)}
         phx-target={@event_target}
         class="flex items-center"
       >
@@ -377,7 +378,7 @@ defmodule VyasaWeb.Context.Components do
           <div class="flex justify-between space-x-2">
             <button
               type="button"
-              phx-click={@on_cancel_callback}
+              phx-click={CoreComponents.hide_modal(@on_cancel_callback, @id)}
               class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
             >
@@ -564,6 +565,19 @@ defmodule VyasaWeb.Context.Components do
   attr :time_class, :string, default: "text-sm italic"
 
   def sheaf_signature_display(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        edited_suffix:
+          cond do
+            assigns.sheaf.inserted_at < assigns.sheaf.updated_at ->
+              "(edited)"
+
+            true ->
+              ""
+          end
+      )
+
     ~H"""
     <div class="w-auto flex mt-2 text-sm text-gray-600">
       <div class="mx-1 text-gray-800 font-semibold">
@@ -571,11 +585,7 @@ defmodule VyasaWeb.Context.Components do
       </div>
       <!-- Time Display -->
       <div class="mx-1 text-gray-500 italic">
-        <%= if is_nil(@sheaf.updated_at) do %>
-          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
-        <% else %>
-          <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
-        <% end %>
+        <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time <> @edited_suffix %>
       </div>
     </div>
     """

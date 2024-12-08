@@ -105,6 +105,21 @@ defmodule VyasaWeb.Context.Discuss do
     )
   end
 
+  @doc """
+  For a particular sheaf, re-registers it by deleting its old entry in the lattice and inserting the new entry.
+  This is useful for manipulating the lattices in events such as promoting a sheaf from draft to published.
+  """
+  def reregister_sheaf(
+        %Socket{} = socket,
+        %Sheaf{id: old_id} = old_sheaf,
+        %Sheaf{id: new_id} = new_sheaf
+      )
+      when old_id == new_id do
+    socket
+    |> deregister_sheaf(old_sheaf)
+    |> register_sheaf(new_sheaf)
+  end
+
   def deregister_sheaf(
         %Socket{
           assigns: %{
@@ -490,7 +505,7 @@ defmodule VyasaWeb.Context.Discuss do
      • we don’t want to persist the reply_to in the db (by updating the
        current active draft sheaf).
      • we won’t do an update query on the draft_sheaf form the
-       sheaf::quick_reply
+       sheaf::toggle_quick_reply
      • we will only change the reply_to_path that is kept in state
        within the discuss context
      • the user should expect that since this is a quick reply, this
@@ -501,7 +516,7 @@ defmodule VyasaWeb.Context.Discuss do
        depth, and desires to go and gather marks (e.g. by clicking some
        kind of “nav to read mode”), then this transient case will change
        to case 2, permanent.
-       ^ this event is will be different from the sheaf::quick_reply event though
+       ^ this event is will be different from the sheaf::toggle_quick_reply event though
 
   2. if “permanent/intentional”
      • we update both the reply_to_path in the local socket state as
@@ -511,7 +526,7 @@ defmodule VyasaWeb.Context.Discuss do
   1.1 Conclusions:
   ────────────────
 
-  1. `sheaf::quick_reply' will not do any db write to the current draft
+  1. `sheaf::toggle_quick_reply' will not do any db write to the current draft
      sheaf’s parent field. Will only update the local state (for
      `reply_to_path')
   2. `sheaf::publish' will be updated so that regardless of the upstream
@@ -520,7 +535,7 @@ defmodule VyasaWeb.Context.Discuss do
      current draft sheaf no matter what.
   """
   def handle_event(
-        "sheaf::quick_reply",
+        "sheaf::toggle_quick_reply",
         %{
           "sheaf_path_labels" => immediate_reply_to_sheaf_labels
         } = _params,
@@ -584,6 +599,7 @@ defmodule VyasaWeb.Context.Discuss do
     reply_to_lattice_key = Jason.decode!(new_reply_to_target)
     reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
     draft_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(draft_sheaf_lattice_key)
+    # why not  sheaf_lattice["reply_to_path"] -> quite explicit
 
     new_reply_to_path =
       case reply_to_sheaf do
@@ -597,8 +613,13 @@ defmodule VyasaWeb.Context.Discuss do
       end
 
     # FIXME: @ks0m1c this update function should be updating the parent for the current draft sheaf, but it doesn't seem to be
-    # doing so right now, can I leave this to you to check why the update isn't happening?
-    # else i'll eventually come back to it.
+    # doing so right now
+    # what it needs to do:
+    # 1. remove assoc b/w old parent and this sheaf
+    # 2. create new assoc b/w new parent and this sheaf:
+    #     - updates path of child
+    IO.puts("CHECKPOINT: before updating sheaf")
+
     updated_draft_sheaf =
       draft_sheaf
       |> Sangh.update_sheaf!(%{
@@ -671,6 +692,73 @@ defmodule VyasaWeb.Context.Discuss do
     {
       :noreply,
       socket
+    }
+  end
+
+  def handle_event(
+        "sheaf::publish",
+        %{
+          "body" => body,
+          "is_private" => _is_private
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %VyasaWeb.Session{
+              name: username,
+              sangh: %Vyasa.Sangh.Session{
+                id: sangh_id
+              }
+            },
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            reply_to_path: %Ltree{
+              labels: reply_to_lattice_key
+            },
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(body) do
+    # TODO: the reply_to_lattice_key might be nil, that case of "create new thread" is not handled right now by discuss
+    reply_to_sheaf = sheaf_lattice[reply_to_lattice_key]
+    draft_sheaf = sheaf_lattice[draft_sheaf_lattice_key]
+
+    payload_precursor = %{
+      body: body,
+      traits: ["published"],
+      signature: username,
+      inserted_at: Utils.Time.get_utc_now()
+    }
+
+    update_payload =
+      case(is_nil(reply_to_sheaf)) do
+        true ->
+          payload_precursor
+
+        false ->
+          Map.put(payload_precursor, :parent, reply_to_sheaf)
+      end
+
+    {:ok, updated_sheaf} = draft_sheaf |> Vyasa.Sangh.make_reply(update_payload)
+
+    %Sheaf{
+      path: %Ltree{} = new_draft_reflector_path
+    } = new_draft_reflector = Sheaf.draft!(sangh_id)
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        sheaf_ui_lattice:
+          sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+      )
+      |> reregister_sheaf(draft_sheaf, updated_sheaf)
+      |> assign(draft_reflector_path: new_draft_reflector_path)
+      |> assign(reply_to_path: nil)
+      |> register_sheaf(new_draft_reflector)
+      |> maybe_prepend_draft_mark_in_reflector()
     }
   end
 
@@ -861,7 +949,7 @@ defmodule VyasaWeb.Context.Discuss do
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
               on_replies_click={JS.push("ui::toggle_sheaf_is_expanded?", target: "#content-display")}
-              on_quick_reply={JS.push("sheaf::quick_reply", target: "#content-display")}
+              on_quick_reply={JS.push("sheaf::toggle_quick_reply", target: "#content-display")}
               on_set_reply_to={JS.push("sheaf::set_reply_to_context", target: "#content-display")}
             />
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
