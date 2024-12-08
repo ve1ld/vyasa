@@ -65,18 +65,6 @@ export default HoveRune = {
       dset: this.el.dataset,
     });
 
-    this.handleEvent("bind::share", (bind) => {
-      if ("share" in navigator) {
-      // uses webshare api:
-        window.shareUrl(bind.url);
-      } else if ("clipboard" in navigator) {
-        navigator.clipboard.writeText(bind.url);
-      } else {
-        alert("Here is the url to share: #{bind.url}");
-      }
-
-    });
-
     this.handleEvent("bind::jump", (bind) => {
       console.warn(bind)
       targetNode = findMatchingSpan(bind)
