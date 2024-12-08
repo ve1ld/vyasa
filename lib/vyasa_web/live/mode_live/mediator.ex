@@ -12,6 +12,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.Session
   alias Vyasa.Sangh
+  alias Vyasa.Sangh.Assembly
   @supported_modes UserMode.supported_modes()
 
   @mod_registry %{"UiState" => UiState}
@@ -41,6 +42,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
      |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
      |> maybe_focus_binding()
      |> sync_session()
+     |> join_sangh()
     }
   end
 
@@ -61,13 +63,37 @@ defmodule VyasaWeb.ModeLive.Mediator do
     socket
   end
 
-  defp sync_session(
-         %{assigns: %{session: %Session{id: id, sangh: %{id: sangh_id}} = sess}} = socket
-       )
-       when is_binary(id) and is_binary(sangh_id) do
-    # currently needs name prerequisite to save
+
+  defp join_sangh(%{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket) when is_binary(name) and is_binary(sangh_id) do
+
+    # with a name to presence
+    {:ok, workspid} = Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
+
+    socket
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: workspid})
+  end
+
+
+  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) when is_binary(sangh_id) do
+
+    # anon with no name doesn't hook into presence
+    Assembly.listen(sangh_id)
+
+    socket
+    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: nil})
+  end
+
+
+  defp join_sangh(%{assigns: %{session: _sess}} = socket) do
+    socket |> assign(sangh: %{joined: nil, disciples: [], workspid: nil})
+  end
+
+  defp sync_session(%{assigns: %{session: %Session{sangh: %{id: sangh_id}} = sess}} = socket)
+       when  is_binary(sangh_id) do
+
     socket
     |> push_event("initSession", sess)
+
   end
 
   defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
@@ -110,7 +136,9 @@ defmodule VyasaWeb.ModeLive.Mediator do
     {:noreply,
      socket
      |> assign(session: %{sess | name: name})
-     |> sync_session()}
+     |> sync_session()
+     |> join_sangh()
+    }
   end
 
   @impl true
@@ -183,6 +211,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
       ) do
 
     {:ok, bind} = Draft.bind_node(bind)
+    #binding point
     # pass binding contexts to the current mode and drafting reflector
     send_update(component, id: selector, binding: bind)
     # TODO: implement nav_event handlers from action bar
@@ -206,14 +235,29 @@ defmodule VyasaWeb.ModeLive.Mediator do
     IO.inspect(socket.assigns.url_params)
 
     {:noreply, socket
-    |> push_event("bind::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
+    |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
     |> put_flash(:info, "binded to your clipboard")}
   end
+
+
+  def handle_event("sangh::share", _, %{assigns: %{
+            session: %Session{sangh: %{id: sangh_id}},
+            url_params: %{path: path}
+          }
+        } = socket) do
+
+    {:noreply,
+     socket
+     |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [s: sangh_id])})}
+  end
+
 
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}
   end
+
+
 
   @impl true
   @doc """
@@ -252,6 +296,28 @@ defmodule VyasaWeb.ModeLive.Mediator do
       {:error, reason} ->
         IO.puts("Error: #{reason}")
         {:noreply, socket}
+    end
+  end
+
+  def handle_info(
+        {:join, "sangh::" <> _ , %{id: id} = disciple},
+        %{assigns: %{sangh: %{disciples: d}}} = socket
+      ) do
+        # latest arriving join message given precedence, should check online_at key
+    {:noreply,
+     socket
+     |> update(:sangh, &(&1 |> Map.put(:disciples, Map.put(d, id, disciple))))}
+  end
+
+  def handle_info({:leave, "sangh::"  <> _ , %{id: id, phx_ref: ref} = _disciple},
+    %{assigns: %{sangh: %{disciples: d}}} = socket) do
+    # ensure latest ref is the same
+    if d[id][:phx_ref] == ref do
+      {:noreply,
+       socket
+       |> update(:sangh, &(&1 |> Map.put(:disciples, Map.delete(d, id))))}
+    else
+      {:noreply, socket}
     end
   end
 
