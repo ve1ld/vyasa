@@ -20,7 +20,7 @@ defmodule VyasaWeb.Context.Read.Chapters do
         </div>
       </.header>
 
-      <.back patch={~p"/explore/"}>Back to All Sources</.back>
+      <.back patch={~p"/read/"}>Back to All Sources</.back>
 
       <.table
         id="chapters"
@@ -28,7 +28,7 @@ defmodule VyasaWeb.Context.Read.Chapters do
         row_click={
           fn {_id, chap} ->
             JS.push("navigate_to_chapter",
-              value: %{target: ~p"/explore/#{@source.title}/#{chap.no}/"},
+              value: %{target: ~p"/read/#{@source.title}/#{chap.no}/"},
               target: @myself
             )
           end
@@ -49,7 +49,7 @@ defmodule VyasaWeb.Context.Read.Chapters do
         </:col>
       </.table>
 
-      <.back patch={~p"/explore/"}>Back to All Sources</.back>
+      <.back patch={~p"/read/"}>Back to All Sources</.back>
 
       <span :if={@chapters |> Enum.count() < 10} class="block h-96" />
     </div>

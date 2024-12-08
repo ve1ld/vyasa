@@ -20,40 +20,82 @@ defmodule VyasaWeb.ModeLive.Mediator do
   @impl true
   def mount(_params, _sess, socket) do
     # TODO: this needs to parse mode from the url, the router needs to be updated also.
-    %UserMode{
-      default_ui_state: %UiState{} = initial_ui_state
-    } = mode = UserMode.get_initial_mode()
-
-    {
-      :ok,
-      socket
-      |> assign(mode: mode)
-      |> assign(url_params: nil)
-      |> assign(ui_state: initial_ui_state),
-      layout: {VyasaWeb.Layouts, :display_manager}
-    }
+    {:ok, socket, layout: {VyasaWeb.Layouts, :display_manager}}
   end
 
   @impl true
 
   def handle_params(params, url, socket) do
+    path = URI.parse(url).path
+    [_ | [mode | _]] = path |> String.split("/")
+
+    url_params =
+      params
+      |> Map.put(:path, path)
+      |> Map.put(:mode, mode)
+
     {:noreply,
      socket
-     |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
+     |> assign(url_params: url_params)
+     |> init_mode()
+     |> init_ui_state()
      |> maybe_focus_binding()
      |> sync_session()
      |> join_sangh()
     }
   end
 
-  defp maybe_focus_binding(%{assigns: %{url_params: %{"bind" => bind_id},
-                             mode: %UserMode{
-                               mode_context_component: component,
-                               mode_context_component_selector: selector
-                             }}} = socket) do
+  # injects mode if url slug contains mode, and there's an existing mode in socket state
+  defp init_mode(
+         %{
+           assigns: %{
+             url_params: %{mode: uri_mode},
+             mode: %UserMode{mode: curr_mode}
+           }
+         } = socket
+       )
+       when uri_mode in @supported_modes do
+    socket
+    |> change_mode(curr_mode, uri_mode)
+  end
 
+  # injects mode from url slug, when there's no existing loaded mode in the socket state
+  defp init_mode(
+         %{
+           assigns: %{
+             url_params: %{mode: uri_mode}
+           }
+         } = socket
+       )
+       when uri_mode in @supported_modes do
+    socket
+    |> assign(:mode, UserMode.get_mode(uri_mode))
+  end
+
+  # init default mode
+  defp init_mode(socket) do
+    socket
+    |> assign(mode: UserMode.get_initial_mode())
+  end
+
+  defp init_ui_state(%{assigns: %{mode: %{default_ui_state: ui_state}}} = socket) do
+    socket
+    |> assign(ui_state: ui_state)
+  end
+
+  defp maybe_focus_binding(
+         %{
+           assigns: %{
+             url_params: %{"bind" => bind_id},
+             mode: %UserMode{
+               mode_context_component: component,
+               mode_context_component_selector: selector
+             }
+           }
+         } = socket
+       ) do
     bind = Draft.get_binding!(bind_id)
-    send_update(component, [id: selector, binding: bind])
+    send_update(component, id: selector, binding: bind)
 
     socket
     |> UiState.assign(:focused_binding, bind)
@@ -145,14 +187,25 @@ defmodule VyasaWeb.ModeLive.Mediator do
   def handle_event(
         "change_mode",
         %{
-          "current_mode" => current_mode,
+          "current_mode" => _current_mode,
           "target_mode" => target_mode
         } = _params,
-        socket
-      ) do
+        %Socket{
+          assigns: %{
+            url_params: %{path: path}
+          }
+        } = socket
+      )
+      when is_binary(path) and target_mode in @supported_modes do
+    target_path =
+      path
+      |> String.split("/")
+      |> List.replace_at(1, target_mode)
+      |> Enum.join("/")
+
     {:noreply,
      socket
-     |> change_mode(current_mode, target_mode)}
+     |> push_patch(to: target_path)}
   end
 
   @impl true
@@ -209,7 +262,6 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
     {:ok, bind} = Draft.bind_node(bind)
     #binding point
     # pass binding contexts to the current mode and drafting reflector
@@ -220,7 +272,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   def handle_event(
-        "bind::share",_,
+        "bind::share",
+        _,
         %Socket{
           assigns: %{
             ui_state: %UiState{focused_binding: bind},
@@ -228,9 +281,9 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
-    {:ok, shared_bind} = bind
-    |> Draft.create_binding()
+    {:ok, shared_bind} =
+      bind
+      |> Draft.create_binding()
 
     IO.inspect(socket.assigns.url_params)
 
@@ -279,8 +332,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
-        send_update(component, id: selector, event: :media_handshake)
+    send_update(component, id: selector, event: :media_handshake)
 
     {:noreply, socket}
   end

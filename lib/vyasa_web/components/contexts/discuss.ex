@@ -27,7 +27,7 @@ defmodule VyasaWeb.Context.Discuss do
           params,
         socket
       ) do
-    IO.inspect(params, label: "TRACE: params passed to ReadContext")
+    IO.inspect(params, label: "TRACE: params passed to Discuss")
 
     {
       :ok,
@@ -78,6 +78,7 @@ defmodule VyasaWeb.Context.Discuss do
 
   @doc """
   Adds a new sheaf to both the sheaf_lattice and sheaf_ui_lattice.
+
   This is destructive, and will do overwrites if an existing sheaf exists.
   Note that this and anything downstream of this function will not do any db writes,
   will only update the lattices kept in socket state.
@@ -307,10 +308,10 @@ defmodule VyasaWeb.Context.Discuss do
     possible_new_draft = Mark.get_draft_mark()
 
     %Sheaf{
-      marks: marks
+      marks: current_marks
     } = reflected_sheaf = sheaf_lattice |> Map.get(lattice_key)
 
-    case marks do
+    case current_marks do
       # case 1: has existing draft marks, no change needed
       [%Mark{state: :draft} | _] = _existing_marks ->
         socket
@@ -331,60 +332,539 @@ defmodule VyasaWeb.Context.Discuss do
     end
   end
 
-  # @doc """
-  # Inserts a particular mark into a particular sheaf in the lattice.
+  @impl true
+  def handle_event(
+        "ui::toggle_is_editing_mark_content?",
+        %{
+          "sheaf_path_labels" => sheaf_labels,
+          "mark_id" => mark_id
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
 
-  # Intent is that it gets used when creating a mark in the discuss mode.
-  # TODO: figure out what is the best place to put this? likely when creating mark
-  # """
-  # def insert_mark_into_sheaf_in_lattice(
-  #       %{} = lattice,
-  #       %Ltree{labels: lattice_key} = _sheaf_path,
-  #       %Mark{id: mark_id, body: body} = mark
-  #     ) do
-  #   %Sheaf{
-  #     marks: rest_marks
-  #   } = target_sheaf = lattice |> Map.get(lattice_key)
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice:
+         sheaf_ui_lattice |> SheafLattice.toggle_is_editing_mark_content?(lattice_key, mark_id)
+     )}
+  end
 
-  #   updated_new_mark = %Mark{
-  #     mark
-  #     | id: if(not is_nil(mark_id), do: Ecto.UUID.generate(), else: mark_id),
-  #       order: Mark.get_next_order(rest_marks),
-  #       body: body,
-  #       state: :live
-  #   }
+  @impl true
+  def handle_event(
+        "ui::toggle_is_editable_marks?",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
 
-  #   updated_sheaf = %Sheaf{target_sheaf | marks: [updated_new_mark | rest_marks]}
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_is_editable_marks(lattice_key)
+     )}
+  end
 
-  #   socket
-  #   |> register_sheaf(updated_sheaf)
-  # end
+  @impl true
+  def handle_event(
+        "ui::toggle_show_sheaf_modal?",
+        _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      ) do
+    new_lattice =
+      sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+
+    {
+      :noreply,
+      socket
+      |> assign(sheaf_ui_lattice: new_lattice)
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "ui::toggle_marks_display_collapsibility",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(sheaf_labels,
+      label: "ui::toggle_marks_display_collapsibility"
+    )
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice:
+         sheaf_ui_lattice |> SheafLattice.toggle_marks_display_collapsibility(lattice_key)
+     )}
+  end
+
+  @impl true
+  def handle_event(
+        "ui::toggle_sheaf_is_expanded?",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: draft_reflector_path,
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+
+    IO.inspect(sheaf_labels,
+      label: "HANDLE -- ui::toggle_sheaf_is_expanded?"
+    )
+
+    {:noreply,
+     socket
+     |> assign(
+       sheaf_ui_lattice: sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_expanded?(lattice_key)
+     )
+     # effects the dom diff:
+     |> assign(draft_reflector_path: draft_reflector_path)}
+  end
+
+  @impl true
+  @doc """
+  A quick reply to a sheaf is done when a user wants to reply to a particular comment(sheaf) that
+  they see in the discuss mode.
+
+
+  1 Note on sheaf::publish
+  ════════════════════════
+
+  Curently, at the point of init, to determine the reply_to context, we
+  shall read what the parent id of the current active draft sheaf is.
+
+  However, after init, within a browser session, we expect the user to
+  choose reply_to_focuses multiple times. This choice may be “transient”
+  (e.g. quick reply to this) or “permanent/intentional” – so 2 cases for
+  the user’s intent. This would mean that the final `sheaf::publish'
+  should respect the user’s final choice.
+
+  We have 2 ways to do it:
+  1. if “transient”:
+     • we don’t want to persist the reply_to in the db (by updating the
+       current active draft sheaf).
+     • we won’t do an update query on the draft_sheaf form the
+       sheaf::quick_reply
+     • we will only change the reply_to_path that is kept in state
+       within the discuss context
+     • the user should expect that since this is a quick reply, this
+       sheaf they’re replying to will not have a pin-focus
+     • NOTE HOWEVER, the user will be getting hinted by the UI to go and
+       gather marks (e.g. the marks collapse display could display some
+       text) ==> if a user decides that their quick reply needs more
+       depth, and desires to go and gather marks (e.g. by clicking some
+       kind of “nav to read mode”), then this transient case will change
+       to case 2, permanent.
+       ^ this event is will be different from the sheaf::quick_reply event though
+
+  2. if “permanent/intentional”
+     • we update both the reply_to_path in the local socket state as
+       well as update the parent of the current draft sheaf in the db
+
+
+  1.1 Conclusions:
+  ────────────────
+
+  1. `sheaf::quick_reply' will not do any db write to the current draft
+     sheaf’s parent field. Will only update the local state (for
+     `reply_to_path')
+  2. `sheaf::publish' will be updated so that regardless of the upstream
+     context, it will always use the drafting and reply to contexts to
+     determine parent and child and will ALWAYS update the parent to the
+     current draft sheaf no matter what.
+  """
+  def handle_event(
+        "sheaf::quick_reply",
+        %{
+          "sheaf_path_labels" => immediate_reply_to_sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            reply_to_path: current_reply_to_path,
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(immediate_reply_to_sheaf_labels) do
+    reply_to_lattice_key = Jason.decode!(immediate_reply_to_sheaf_labels)
+    reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
+
+    new_reply_to_path =
+      case reply_to_sheaf do
+        %Sheaf{
+          path: %Ltree{} = path
+        } ->
+          path
+
+        _ ->
+          current_reply_to_path
+      end
+
+    {
+      :noreply,
+      socket
+      |> assign(reply_to_path: new_reply_to_path)
+      |> assign(
+        sheaf_ui_lattice:
+          sheaf_ui_lattice |> SheafLattice.toggle_show_sheaf_modal?(draft_sheaf_lattice_key)
+      )
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "sheaf::set_reply_to_context",
+        %{
+          "sheaf_path_labels" => new_reply_to_target
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            reply_to_path: current_reply_to_path,
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(new_reply_to_target) do
+    reply_to_lattice_key = Jason.decode!(new_reply_to_target)
+    reply_to_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(reply_to_lattice_key)
+    draft_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(draft_sheaf_lattice_key)
+
+    new_reply_to_path =
+      case reply_to_sheaf do
+        %Sheaf{
+          path: %Ltree{} = path
+        } ->
+          path
+
+        _ ->
+          current_reply_to_path
+      end
+
+    # FIXME: @ks0m1c this update function should be updating the parent for the current draft sheaf, but it doesn't seem to be
+    # doing so right now, can I leave this to you to check why the update isn't happening?
+    # else i'll eventually come back to it.
+    updated_draft_sheaf =
+      draft_sheaf
+      |> Sangh.update_sheaf!(%{
+        parent: reply_to_sheaf
+      })
+
+    # updated_sheaf_ui_lattice = sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+    updated_sheaf_ui_lattice =
+      cond do
+        not is_nil(current_reply_to_path) and current_reply_to_path != new_reply_to_path ->
+          sheaf_ui_lattice
+          |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+          |> SheafLattice.toggle_sheaf_is_focused?(current_reply_to_path.labels)
+
+        not is_nil(current_reply_to_path) and current_reply_to_path == new_reply_to_path ->
+          sheaf_ui_lattice
+          |> SheafLattice.toggle_sheaf_is_focused?(current_reply_to_path.labels)
+
+        true ->
+          sheaf_ui_lattice |> SheafLattice.toggle_sheaf_is_focused?(reply_to_lattice_key)
+      end
+
+    IO.inspect(
+      %{
+        new_reply_to_path: new_reply_to_path,
+        current_reply_to_path: current_reply_to_path,
+        reply_to_lattice_key: reply_to_lattice_key,
+        draft: draft_sheaf_lattice_key,
+        target_sheaf_ui_before: sheaf_ui_lattice[new_reply_to_path.labels],
+        target_sheaf_ui_after: updated_sheaf_ui_lattice[new_reply_to_path.labels]
+      },
+      label: "sheaf::set_reply_to_context"
+    )
+
+    {
+      :noreply,
+      socket
+      |> assign(reply_to_path: new_reply_to_path)
+      |> assign(sheaf_ui_lattice: updated_sheaf_ui_lattice)
+      |> assign(
+        sheaf_lattice:
+          sheaf_lattice
+          |> SheafLattice.update_sheaf_in_lattice(draft_sheaf_lattice_key, updated_draft_sheaf)
+      )
+    }
+  end
+
+  @impl true
+  # TODO @ks0m1c another place that would require binding / permalinking apis
+  # equivalent handler for the read mode as well...
+  def handle_event(
+        "sheaf::share_sheaf",
+        %{
+          "sheaf_path_labels" => sheaf_labels
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = _sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    shareable_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(lattice_key)
+
+    IO.inspect(shareable_sheaf, label: "TODO: sheaf::share_sheaf")
+
+    {
+      :noreply,
+      socket
+    }
+  end
+
+  @impl true
+  # TODO @ks0m1c this is an example of what binding/permalinking should handle
+  # we need to do a push-patch direction from this function
+  def handle_event(
+        "navigate::visit_mark",
+        %{
+          "mark_id" => mark_id
+        } = _params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = _sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(mark_id) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(mark_id,
+      label: "navigate::visit_mark -- TODO"
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(
+        "mark::editMarkContent",
+        %{
+          "sheaf_path_labels" => sheaf_labels,
+          "mark_id" => mark_id,
+          "input" => input,
+          "previous_mark_body" => _previous_input
+        } = params,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            sheaf_lattice: %{} = sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      )
+      when is_binary(sheaf_labels) do
+    lattice_key = Jason.decode!(sheaf_labels)
+    IO.inspect(params, label: "Handling mark::editMarkContent")
+
+    # %Sheaf{
+    #   marks: old_marks
+    # } = old_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(lattice_key)
+
+    # {[old_mark | _] = _old_versions_of_changed, updated_marks} =
+    #   get_and_update_in(
+    #     old_marks,
+    #     [Access.filter(&match?(%Mark{id: ^mark_id}, &1))],
+    #     &{&1, Map.put(&1, :body, input)}
+    #   )
+
+    # old_mark |> Vyasa.Draft.update_mark(%{body: input})
+
+    # updated_sheaf = %Sheaf{old_sheaf | marks: updated_marks}
+
+    # TODO: this needs to be updated if the sheaf that is being modded is the draft sheaf.
+    # this is beause in the case of the draft sheafs, there's a need to do sanitising, and maybe prepending draft mark in the reflector
+    # prior to updating the sheaf,
+    # this can likey rely on a separate helepr function and shall be done after bindings are handled on the discuss mode.
+
+    # TODOe_path after user model is handled, this is likely to be the best place to check if current user is authorised
+    # to make this mark edit
+    {
+      :noreply,
+      socket
+      |> assign(
+        sheaf_lattice:
+          sheaf_lattice
+          |> SheafLattice.edit_mark_content_within_sheaf(lattice_key, mark_id, input)
+      )
+      |> assign(
+        sheaf_ui_lattice:
+          sheaf_ui_lattice |> SheafLattice.toggle_is_editing_mark_content?(lattice_key, mark_id)
+      )
+    }
+  end
+
+  @impl true
+  def handle_event(event_name, params, socket) do
+    # Handle the event here (e.g., log it, update state, etc.)
+    IO.inspect(%{event_name: event_name, params: params},
+      label: "POKEMON DISCUSS CONTEXT EVENT HANDLING"
+    )
+
+    {:noreply, socket}
+  end
 
   @impl true
   def render(assigns) do
+    reply_to_sheaf =
+      case Map.has_key?(assigns, :reply_to_path) && not is_nil(assigns.reply_to_path) do
+        true ->
+          assigns.sheaf_lattice
+          |> SheafLattice.get_sheaf_from_lattice(assigns.reply_to_path.labels)
+
+        _ ->
+          nil
+      end
+
+    root_sheaves =
+      case assigns.sheaf_lattice do
+        l when not is_nil(l) ->
+          SheafLattice.read_published_from_sheaf_lattice(assigns.sheaf_lattice, 0)
+
+        _ ->
+          []
+      end
+
+    assigns =
+      assigns
+      |> assign(:reply_to, reply_to_sheaf)
+      |> assign(:root_sheaves, root_sheaves)
+
     ~H"""
     <div id={@id}>
-      <.debug_dump
+      <!-- <.debug_dump
         :if={Map.has_key?(assigns, :draft_reflector_path)}
         label="Context Dump on Discussions"
         draft_reflector_path={@draft_reflector_path}
-        reply_to_path={@reply_to_path}
+        reply_to={@reply_to}
         reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
         reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
-      />
-      <div id="content-display" class="mx-auto max-w-2xl pb-16">
+      /> -->
+      <div id="content-display" class="mx-auto max-w-4xl pb-16">
+        <.header class="m-8 ml-0">
+          <div class="font-dn text-4xl">
+            Discussions
+          </div>
+          <br />
+          <div class="font-dn text-xl">
+            <%= Enum.count(@root_sheaves || []) %> threads with a total of <%= Enum.count(
+              Map.keys(@sheaf_lattice || %{})
+            ) %> comments
+          </div>
+        </.header>
+        <.sheaf_creator_modal
+          :if={
+            Map.has_key?(assigns, :draft_reflector_path) &&
+              not is_nil(@draft_reflector_path)
+          }
+          id="sheaf-creator"
+          session={@session}
+          reply_to={@reply_to}
+          draft_sheaf={
+            @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+          }
+          draft_sheaf_ui={
+            @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+          }
+          event_target="#content-display"
+        />
+
         <%= if not is_nil(@sheaf_lattice) do %>
+          <div id="dump-check">
+            <!--  <.debug_dump
+              :if={
+                Map.has_key?(assigns, :draft_reflector_path) &&
+                  not is_nil(@draft_reflector_path)
+              }
+              label="CHECK SHEAF CREATOR MODAL INPUTS"
+              draft_sheaf_ui={
+                @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+              }
+              draft_sheaf={
+                @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
+              }
+              event_target="#content-display"
+            /> -->
+          </div>
+
           <div :for={
             root_sheaf <-
-              SheafLattice.read_sheaf_lattice(@sheaf_lattice, 0)
+              @root_sheaves
           }>
             <.root_sheaf
               events_target="#content-display"
+              reply_to={@reply_to}
               sheaf={root_sheaf}
               sheaf_lattice={@sheaf_lattice}
               sheaf_ui_lattice={@sheaf_ui_lattice}
+              on_replies_click={JS.push("ui::toggle_sheaf_is_expanded?", target: "#content-display")}
+              on_quick_reply={JS.push("sheaf::quick_reply", target: "#content-display")}
+              on_set_reply_to={JS.push("sheaf::set_reply_to_context", target: "#content-display")}
             />
-            <.sheaf_summary sheaf={root_sheaf} />
+            <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>
         <% end %>
       </div>

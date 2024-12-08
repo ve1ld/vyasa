@@ -1,4 +1,8 @@
 defmodule VyasaWeb.Context.Discuss.SheafTree do
+  @moduledoc """
+  This module provides functions components that can be wired up
+  to render a 3-level deep tree for discussions.
+  """
   use VyasaWeb, :html
 
   alias Vyasa.Sangh.{SheafLattice, Sheaf}
@@ -8,6 +12,9 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
   @doc """
   Contains a root sheaf, with its own children and grandchildren sheafs.
   """
+  # attr :reply_to_path, Ltree, default: nil, doc: "The current reply_to context's path"
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
+
   attr :sheaf, Sheaf,
     required: true,
     doc: "The root sheaf being displayed."
@@ -25,6 +32,27 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The UI state associated with the sheafs."
 
+  attr :level, :integer,
+    default: 0,
+    doc:
+      "Defines what level the root is, it's expected to be an integer value in the range [0, 2]"
+
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def root_sheaf(assigns) do
     ~H"""
     <div class="flex flex-col" id={"root-sheaf-container-" <> @sheaf.id}>
@@ -38,11 +66,22 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
       <.sheaf_component
         id={"sheaf-" <> @sheaf.id}
         events_target={@events_target}
+        reply_to={@reply_to}
         sheaf={@sheaf}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
+        children={
+          SheafLattice.read_published_from_sheaf_lattice(
+            @sheaf_lattice,
+            @level + 1,
+            @sheaf.path.labels ++ [nil]
+          )
+        }
         sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, @sheaf)}
         sheaf_lattice={@sheaf_lattice}
         sheaf_ui_lattice={@sheaf_ui_lattice}
-        level={0}
+        level={@level}
       />
     </div>
     """
@@ -64,6 +103,9 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     doc:
       "the target value to be used as argument for the phx-target field wherever emits shall get emitted."
 
+  attr :sheaf, Sheaf, required: true, doc: "What the parent sheaf is"
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
+
   attr :sheafs, :list,
     required: true,
     doc: "A list of child sheafs to be displayed in this container."
@@ -84,12 +126,29 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     default: "",
     doc: "Overridable class definition to be applied to the container."
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def collapsible_sheaf_container(assigns) do
     ~H"""
     <div
       class={["border-l-2 border-gray-200", @container_class]}
       id={"collapsible-sheaf-container-" <> @id}
     >
+      <!-- <.debug_dump label="collapsible sheaf container" reply_to={@reply_to} /> -->
       <!-- Non-Collapsible View -->
       <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
         <p class="text-gray-500">No child sheafs available.</p>
@@ -98,11 +157,22 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
           <.sheaf_component
             id={"sheaf-" <> child.id}
             events_target={@events_target}
+            reply_to={@reply_to}
             sheaf={child}
             sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
             sheaf_lattice={@sheaf_lattice}
             sheaf_ui_lattice={@sheaf_ui_lattice}
-            level={@level}
+            level={@level + 1}
+            on_replies_click={@on_replies_click}
+            on_set_reply_to={@on_set_reply_to}
+            on_quick_reply={@on_quick_reply}
+            children={
+              SheafLattice.read_published_from_sheaf_lattice(
+                @sheaf_lattice,
+                @level,
+                @sheaf.path.labels ++ [nil]
+              )
+            }
           />
         <% end %>
       <% end %>
@@ -130,6 +200,10 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The individual sheaf being displayed."
 
+  attr :reply_to, Sheaf, default: nil, doc: "The sheaf that is being replied to. "
+
+  attr :children, :list, default: [], doc: "The children of this sheaf"
+
   attr :sheaf_ui, SheafUiState,
     required: true,
     doc: "The corresponding ui state for the sheaf, defined here for ease of access"
@@ -146,38 +220,81 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     required: true,
     doc: "The current depth level of the tree structure."
 
+  attr(:on_replies_click, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the replies button is clicked."
+  )
+
+  attr(:on_set_reply_to, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke when the reply-to button is clicked."
+  )
+
+  attr(:on_quick_reply, JS,
+    default: %JS{},
+    doc:
+      "Defines a callback to invoke when the user wishes to quick reply, this potentially override the reply to context."
+  )
+
   def sheaf_component(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        is_reply_to:
+          not is_nil(assigns.reply_to) &&
+            assigns.sheaf.path.labels == assigns.reply_to.path.labels &&
+            assigns.sheaf_ui.is_focused?
+      )
+
     ~H"""
-    <div id={"sheaf-component_container-" <> @id} class="flex flex-col">
+    <div
+      id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
+      class="flex flex-col"
+    >
       <!-- <.debug_dump
         label={"LEVEL "<> to_string(@level) <>  " sheaf component id=" <> @id}
-        sheaf_ui={@sheaf_ui}
+        reply_to={@reply_to}
+        is_reply_to={@is_reply_to}
         level={@level}
         sheaf_path={@sheaf.path}
       /> -->
-      <.sheaf_summary sheaf={@sheaf} />
+      <.sheaf_summary
+        id={"sheaf-tree-node-sheaf-summary-"<> @id}
+        level={@level}
+        is_reply_to={@is_reply_to}
+        sheaf={@sheaf}
+        sheaf_ui={@sheaf_ui}
+        children={@children}
+        on_signature_deadspace_click={@on_replies_click}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
+      />
       <!-- Display Marks if Active -->
-      <%= if @sheaf_ui.is_active? do %>
+      <%= if @sheaf.active do %>
         <.collapsible_marks_display
-          marks_ui={@sheaf_ui.marks_ui}
           marks_target={@events_target}
-          marks={@sheaf.marks}
+          sheaf={@sheaf}
+          sheaf_ui={@sheaf_ui}
           id={"marks-" <> @sheaf.id}
           myself={@events_target}
         />
       <% end %>
       <!-- Collapsible Sheaf Container -->
-      <%= if @sheaf_ui.is_expanded? do %>
+      <%= if @level <= 2 && @sheaf_ui.is_expanded? do %>
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
-          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 4)}  ml-#{to_string((@level + 1) * 4)}"}
+          sheaf={@sheaf}
+          reply_to={@reply_to}
+          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 5)}  ml-#{to_string((@level + 1) * 4)}"}
           events_target={@events_target}
-          sheafs={
-            SheafLattice.read_sheaf_lattice(@sheaf_lattice, @level + 1, @sheaf.path.labels ++ [nil])
-          }
+          sheafs={@children}
           sheaf_lattice={@sheaf_lattice}
           sheaf_ui_lattice={@sheaf_ui_lattice}
           level={@level + 1}
+          on_replies_click={@on_replies_click}
+          on_set_reply_to={@on_set_reply_to}
+          on_quick_reply={@on_quick_reply}
         />
       <% end %>
     </div>

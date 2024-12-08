@@ -33,7 +33,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             </div>
           </:subtitle>
         </.header>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back patch={~p"/read/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
         <div
@@ -47,9 +47,9 @@ defmodule VyasaWeb.Context.Read.Verses do
             id={"verse-" <>verse.id}
             module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
-            marks={@marks}
-            marks_ui={@marks_ui}
-            event_target="#content-display"
+            draft_sheaf={@draft_sheaf}
+            draft_sheaf_ui={@draft_sheaf_ui}
+            event_target={@event_target}
             edge={[
               %{
                 title: "#{verse.chapter_no}.#{verse.no}",
@@ -62,7 +62,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             ]}
           />
         </div>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back patch={~p"/read/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
         </.back>
       </div>
