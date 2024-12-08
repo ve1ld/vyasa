@@ -1,5 +1,8 @@
 defmodule VyasaWeb.AssemblyPresence do
   use VyasaWeb, :live_component
+  @moduledoc """
+   User interfacing for sangh related functions such as sharing, assemblies and what is to come for
+  """
 
   def render(assigns) do
     ~H"""
@@ -83,13 +86,7 @@ defmodule VyasaWeb.AssemblyPresence do
      socket
      |> assign(
        panel_open: false,
-       is_hovered: false,
-       users: [
-         %{id: 1, name: "Arjuna", initial: "अ", email: "arj@g.com"},
-         %{id: 2, name: "Krishna", initial: "क", email: "arj@g.com"},
-         %{id: 3, name: "Dharma", initial: "ध", email: "arj@g.com"},
-         %{id: 4, name: "Bodhi", initial: "ब", email: "arj@g.com"}
-       ]
+       is_hovered: false
      )}
   end
 

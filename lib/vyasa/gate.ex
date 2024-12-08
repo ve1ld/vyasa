@@ -1,6 +1,12 @@
 defmodule Vyasa.Gate do
   use Phoenix.Tracker
-  # disciple tracker ::: quis custodiet ipsos custodes
+  @moduledoc """
+    the gate tracks the entry and exit of disciples ::: quis custodiet ipsos custodes
+    Tracker shards use a heartbeat protocol and CRDT to replicate info  in an eventually consistent, conflict-free manner
+    This handles diffs across nodes and brodcast to local nodes (thats why direct broadcast)
+    Allows all listeners in the node to pick up on disciples leaving and entering across any gate
+  """
+
   def start_link(opts) do
     opts = Keyword.merge([name: __MODULE__], opts)
     Phoenix.Tracker.start_link(__MODULE__, opts, opts)

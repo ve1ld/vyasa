@@ -66,6 +66,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   defp join_sangh(%{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket) when is_binary(name) and is_binary(sangh_id) do
 
+    # with a name to presence
     {:ok, workspid} = Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
 
     socket
@@ -75,6 +76,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) when is_binary(sangh_id) do
 
+    # anon with no name doesn't hook into presence
     Assembly.listen(sangh_id)
 
     socket
