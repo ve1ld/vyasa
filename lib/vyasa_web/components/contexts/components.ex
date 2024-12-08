@@ -462,8 +462,14 @@ defmodule VyasaWeb.Context.Components do
       |> assign(
         alternative_action:
           case is_nil(assigns.reply_to) do
-            true -> "navigate::see_discussion"
-            false -> "sheaf::clear_reply_to_context"
+            true ->
+              CoreComponents.hide_modal(
+                JS.push("navigate::see_discussion"),
+                "sheaf-creator"
+              )
+
+            false ->
+              "sheaf::clear_reply_to_context"
           end
       )
       |> assign(
