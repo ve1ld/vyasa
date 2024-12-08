@@ -52,6 +52,7 @@ module.exports = {
       colors: {
         aerospaceOrange: "hsla(30, 100%, 50%, 1)",
         primary: "var(--color-primary)",
+        ink: "#1E1024",
         primaryAccent: "var(--color-primary-accent)",
         secondary: "var(--color-secondary)",
         primaryBackground: "var(--color-primary-background)",

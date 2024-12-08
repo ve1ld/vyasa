@@ -909,9 +909,9 @@ defmodule VyasaWeb.Context.Read do
   # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
-    <div id={@id}>
+    <div id={@id} class="flex-grow" >
       <!-- CONTENT DISPLAY: -->
-      <div id="content-display" class="mx-auto max-w-2xl pb-16">
+      <div id="content-display" class="mx-auto max-w-2xl">
         <%= if @content_action == :show_sources do %>
           <.live_component
             module={VyasaWeb.Context.Read.Sources}
