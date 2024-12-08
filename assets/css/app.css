@@ -21,16 +21,16 @@
 
         --white-alabaster: #f3efe3;
         --linen: #faf1e6;
+        --deep-saffron: #ff9933;
+        --coral-orange: #FF8349;
+        --atomic-tangerine: #FF9B6D;
 
-        --aerospace-orange: #fd4f00;
-        --coral-orange: #ff8349;
-        --atomic-tangerine: #ff9b6d;
 
         --brown: #922e00;
         --sienna: #7f2800;
         --rust: #ae3700;
 
-        --color-brand: var(--aerospace-orange);
+        --color-brand: var(--deep-saffron);
         --color-brand-light: var(--atomic-tangerine);
         --color-brand-extra-light: var(--linen);
         --color-brand-accent: var(--aerospace-orange);

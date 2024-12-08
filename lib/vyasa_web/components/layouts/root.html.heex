@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Vyasa" />
+    <link rel="manifest" href="/site.webmanifest" />
     <.live_title prefix="Vyasa | ">
       <%= assigns[:page_title] || "Vyasa" %>
     </.live_title>
@@ -12,7 +18,7 @@
     </script>
     <.meta_tags contents={assigns[:meta]} />
   </head>
-  <body class="bg-white antialiased min-h-screen">
+  <body class="bg-primaryBackground antialiased min-h-screen">
     <%= @inner_content %>
   </body>
 </html>
