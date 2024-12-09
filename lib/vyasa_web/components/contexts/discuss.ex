@@ -668,6 +668,22 @@ defmodule VyasaWeb.Context.Discuss do
     }
   end
 
+  def handle_event(
+        "sheaf::clear_reply_to_context",
+        _,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{},
+            reply_to_path: _
+          }
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(reply_to_path: nil)}
+  end
+
   @impl true
   # TODO @ks0m1c another place that would require binding / permalinking apis
   # equivalent handler for the read mode as well...
@@ -700,7 +716,7 @@ defmodule VyasaWeb.Context.Discuss do
         "sheaf::publish",
         %{
           "body" => body
-        } = params,
+        } = _params,
         %Socket{
           assigns: %{
             session: %VyasaWeb.Session{
@@ -712,19 +728,15 @@ defmodule VyasaWeb.Context.Discuss do
             draft_reflector_path: %Ltree{
               labels: draft_sheaf_lattice_key
             },
-            reply_to_path: %Ltree{
-              labels: reply_to_lattice_key
-            },
+            reply_to_path: reply_to_path,
             sheaf_lattice: %{} = sheaf_lattice,
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
           }
         } = socket
       )
       when is_binary(body) do
-    # TODO: the reply_to_lattice_key might be nil, that case of "create new thread" is not handled right now by discuss
-    reply_to_sheaf = sheaf_lattice[reply_to_lattice_key]
+    reply_to_sheaf = reply_to_path && sheaf_lattice[reply_to_path.labels]
     draft_sheaf = sheaf_lattice[draft_sheaf_lattice_key]
-    dbg()
 
     payload_precursor = %{
       body: body,
@@ -736,10 +748,10 @@ defmodule VyasaWeb.Context.Discuss do
     update_payload =
       case(is_nil(reply_to_sheaf)) do
         true ->
-          payload_precursor
+          payload_precursor |> Map.put(:parent, nil)
 
         false ->
-          Map.put(payload_precursor, :parent, reply_to_sheaf)
+          payload_precursor |> Map.put(:parent, reply_to_sheaf)
       end
 
     {:ok, updated_sheaf} = draft_sheaf |> Vyasa.Sangh.make_reply(update_payload)
@@ -788,11 +800,14 @@ defmodule VyasaWeb.Context.Discuss do
     {:noreply, socket}
   end
 
+  # FIXME: we need to improve how the modal show and hide is happening by calling the necessary
+  # JS-struct based functions, this is what is causing the scrolling bugs
   def handle_event(
         "navigate::see_discussion",
         _,
         socket
       ) do
+    IO.inspect("CHECKPOINT: the discuss context is reached")
     send(self(), "ui::toggle_show_sheaf_modal?")
     # target_path =
     #   curr_path
