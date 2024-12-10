@@ -33,6 +33,7 @@ defmodule VyasaWeb.Context.Discuss do
       :ok,
       socket
       |> assign(id: id)
+      |> assign(url_params: url_params)
       |> assign(session: session)
       |> assign(user_mode: user_mode)
       # TODO remove TEMP once doing the url_params:
@@ -667,6 +668,22 @@ defmodule VyasaWeb.Context.Discuss do
     }
   end
 
+  def handle_event(
+        "sheaf::clear_reply_to_context",
+        _,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{},
+            reply_to_path: _
+          }
+        } = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(reply_to_path: nil)}
+  end
+
   @impl true
   # TODO @ks0m1c another place that would require binding / permalinking apis
   # equivalent handler for the read mode as well...
@@ -698,8 +715,7 @@ defmodule VyasaWeb.Context.Discuss do
   def handle_event(
         "sheaf::publish",
         %{
-          "body" => body,
-          "is_private" => _is_private
+          "body" => body
         } = _params,
         %Socket{
           assigns: %{
@@ -712,17 +728,14 @@ defmodule VyasaWeb.Context.Discuss do
             draft_reflector_path: %Ltree{
               labels: draft_sheaf_lattice_key
             },
-            reply_to_path: %Ltree{
-              labels: reply_to_lattice_key
-            },
+            reply_to_path: reply_to_path,
             sheaf_lattice: %{} = sheaf_lattice,
             sheaf_ui_lattice: %{} = sheaf_ui_lattice
           }
         } = socket
       )
       when is_binary(body) do
-    # TODO: the reply_to_lattice_key might be nil, that case of "create new thread" is not handled right now by discuss
-    reply_to_sheaf = sheaf_lattice[reply_to_lattice_key]
+    reply_to_sheaf = reply_to_path && sheaf_lattice[reply_to_path.labels]
     draft_sheaf = sheaf_lattice[draft_sheaf_lattice_key]
 
     payload_precursor = %{
@@ -735,10 +748,10 @@ defmodule VyasaWeb.Context.Discuss do
     update_payload =
       case(is_nil(reply_to_sheaf)) do
         true ->
-          payload_precursor
+          payload_precursor |> Map.put(:parent, nil)
 
         false ->
-          Map.put(payload_precursor, :parent, reply_to_sheaf)
+          payload_precursor |> Map.put(:parent, reply_to_sheaf)
       end
 
     {:ok, updated_sheaf} = draft_sheaf |> Vyasa.Sangh.make_reply(update_payload)
@@ -785,6 +798,31 @@ defmodule VyasaWeb.Context.Discuss do
     )
 
     {:noreply, socket}
+  end
+
+  # FIXME: we need to improve how the modal show and hide is happening by calling the necessary
+  # JS-struct based functions, this is what is causing the scrolling bugs
+  def handle_event(
+        "navigate::see_discussion",
+        _,
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
+      ) do
+    new_lattice =
+      sheaf_ui_lattice |> SheafLattice.set_show_sheaf_modal?(draft_sheaf_lattice_key, false)
+
+    {:noreply,
+     socket
+     |> push_js_cmd(hide_modal(%JS{}, "modal-wrapper-sheaf-creator"))
+     |> assign(sheaf_ui_lattice: new_lattice)}
   end
 
   @impl true
@@ -876,10 +914,26 @@ defmodule VyasaWeb.Context.Discuss do
           []
       end
 
+    {reflected_sheaf, reflected_sheaf_ui} =
+      case Map.has_key?(assigns, :draft_reflector_path) do
+        true ->
+          lattice_key = assigns.draft_reflector_path.labels
+
+          {assigns.sheaf_lattice |> Map.get(lattice_key),
+           assigns.sheaf_ui_lattice |> Map.get(lattice_key)}
+
+        false ->
+          {nil, nil}
+      end
+
     assigns =
       assigns
-      |> assign(:reply_to, reply_to_sheaf)
-      |> assign(:root_sheaves, root_sheaves)
+      |> assign(%{
+        reply_to: reply_to_sheaf,
+        root_sheaves: root_sheaves,
+        reflected_sheaf: reflected_sheaf,
+        reflected_sheaf_ui: reflected_sheaf_ui
+      })
 
     ~H"""
     <div id={@id}>
@@ -888,19 +942,22 @@ defmodule VyasaWeb.Context.Discuss do
         label="Context Dump on Discussions"
         draft_reflector_path={@draft_reflector_path}
         reply_to={@reply_to}
-        reflected={@sheaf_lattice |> Map.get(@draft_reflector_path.labels)}
-        reflected_ui={@sheaf_ui_lattice |> Map.get(@draft_reflector_path.labels)}
+        reflected={@reflected_sheaf}
+        reflected_ui={@reflected_sheaf_ui}
       /> -->
-      <div id="content-display" class="mx-auto max-w-4xl pb-16">
+      <div id="content-display" class="mx-auto max-w-4xl pb-16 w-full">
         <.header class="m-8 ml-0">
           <div class="font-dn text-4xl">
             Discussions
           </div>
           <br />
           <div class="font-dn text-xl">
-            <%= Enum.count(@root_sheaves || []) %> threads with a total of <%= Enum.count(
-              Map.keys(@sheaf_lattice || %{})
-            ) %> comments
+            <% num_active_root_sheaves = Enum.count(@root_sheaves || []) %>
+            <% num_comments = Enum.count(Map.keys(@sheaf_lattice || %{})) %>
+            <%= num_active_root_sheaves %> <%= Inflex.inflect("thread", num_active_root_sheaves) %> with a total of <%= num_comments %> <%= Inflex.inflect(
+              "comment",
+              num_comments
+            ) %>
           </div>
         </.header>
         <.sheaf_creator_modal
@@ -911,12 +968,8 @@ defmodule VyasaWeb.Context.Discuss do
           id="sheaf-creator"
           session={@session}
           reply_to={@reply_to}
-          draft_sheaf={
-            @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-          }
-          draft_sheaf_ui={
-            @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-          }
+          draft_sheaf={@reflected_sheaf}
+          draft_sheaf_ui={@reflected_sheaf_ui}
           event_target="#content-display"
         />
 
@@ -928,12 +981,8 @@ defmodule VyasaWeb.Context.Discuss do
                   not is_nil(@draft_reflector_path)
               }
               label="CHECK SHEAF CREATOR MODAL INPUTS"
-              draft_sheaf_ui={
-                @sheaf_ui_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-              }
-              draft_sheaf={
-                @sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(@draft_reflector_path.labels)
-              }
+              draft_sheaf={@reflected_sheaf}
+              draft_sheaf_ui={@reflected_sheaf_ui}
               event_target="#content-display"
             /> -->
           </div>
@@ -955,6 +1004,22 @@ defmodule VyasaWeb.Context.Discuss do
             <!-- <.sheaf_summary sheaf={root_sheaf} /> -->
           </div>
         <% end %>
+      </div>
+      <!-- Floating Action Button -->
+      <div class="fixed bottom-20 right-4 z-50">
+        <.floating_action_button
+          :if={@reflected_sheaf_ui}
+          icon_name="hero-plus"
+          icon_class="w-6 h-6"
+          event_target="#content-display"
+          on_click={
+            case @reflected_sheaf_ui.marks_ui.show_sheaf_modal? do
+              # ignores this click event since the clickaway listener for the modal will already do the toggle:
+              true -> nil
+              false -> "ui::toggle_show_sheaf_modal?"
+            end
+          }
+        />
       </div>
     </div>
     """

@@ -144,43 +144,49 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
 
   def collapsible_sheaf_container(assigns) do
     ~H"""
-    <div
-      class={["border-l-2 border-gray-200", @container_class]}
-      id={"collapsible-sheaf-container-" <> @id}
-    >
-      <!-- <.debug_dump
-        label="collapsible sheaf container"
-        id={@id}
-        level={@level}
-        num_children={@sheafs |> Enum.count()}
-      /> -->
+    <div class={["flex", @container_class]} id={"collapsible-sheaf-container-" <> @id}>
+      <!-- Clickable Indent Guide -->
+      <div
+        class="cursor-pointer flex-shrink-0 transition-transform duration-200 ease-in-out transform hover:scale-105 focus:outline-none"
+        phx-click={@on_replies_click}
+        phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+        aria-label="Toggle replies"
+      >
+        <div
+          id={"clickable-indent-guide-level-" <> to_string(@level) <> "-sheaf-" <> @id}
+          class="w-6 xl:w-10 h-full border-l-2 border-dun rounded-bl-lg shadow-sm hover:border-bloodRed focus:border-bloodRed
+                 transition-colors duration-200"
+        />
+      </div>
       <!-- Non-Collapsible View -->
-      <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
-        <p class="text-gray-500">No child sheafs available.</p>
-      <% else %>
-        <%= for child <- @sheafs do %>
-          <.sheaf_component
-            id={"sheaf-" <> child.id}
-            events_target={@events_target}
-            reply_to={@reply_to}
-            sheaf={child}
-            sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
-            sheaf_lattice={@sheaf_lattice}
-            sheaf_ui_lattice={@sheaf_ui_lattice}
-            level={@level + 1}
-            on_replies_click={@on_replies_click}
-            on_set_reply_to={@on_set_reply_to}
-            on_quick_reply={@on_quick_reply}
-            children={
-              SheafLattice.read_published_from_sheaf_lattice(
-                @sheaf_lattice,
-                @level + 2,
-                child.path.labels ++ [nil]
-              )
-            }
-          />
+      <div class="flex-grow overflow-y-auto overflow-x-hidden w-full max-w-full">
+        <%= if is_nil(@sheafs) or !@sheafs or Enum.empty?(@sheafs) do %>
+          <p class="text-gray-500">No child sheafs available.</p>
+        <% else %>
+          <%= for child <- @sheafs do %>
+            <.sheaf_component
+              id={"sheaf-" <> child.id}
+              events_target={@events_target}
+              reply_to={@reply_to}
+              sheaf={child}
+              sheaf_ui={SheafLattice.get_ui_from_lattice(@sheaf_ui_lattice, child)}
+              sheaf_lattice={@sheaf_lattice}
+              sheaf_ui_lattice={@sheaf_ui_lattice}
+              level={@level + 1}
+              on_replies_click={@on_replies_click}
+              on_set_reply_to={@on_set_reply_to}
+              on_quick_reply={@on_quick_reply}
+              children={
+                SheafLattice.read_published_from_sheaf_lattice(
+                  @sheaf_lattice,
+                  @level + 2,
+                  child.path.labels ++ [nil]
+                )
+              }
+            />
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
     </div>
     """
   end
@@ -254,7 +260,7 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
     ~H"""
     <div
       id={"level" <> to_string(@level) <> "-sheaf-component_container-" <> @id}
-      class="flex flex-col"
+      class="flex flex-col my-2"
     >
       <!-- <.debug_dump
         id={@id}
@@ -263,8 +269,8 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         level={@level}
         num_children={@children |> Enum.count()}
       /> -->
-      <.sheaf_summary
-        id={"sheaf-tree-node-sheaf-summary-"<> @id}
+      <.sheaf_display
+        id={"sheaf-treenode-sheaf-display-" <> @id}
         level={@level}
         is_reply_to={@is_reply_to}
         sheaf={@sheaf}
@@ -274,24 +280,17 @@ defmodule VyasaWeb.Context.Discuss.SheafTree do
         on_replies_click={@on_replies_click}
         on_set_reply_to={@on_set_reply_to}
         on_quick_reply={@on_quick_reply}
+        events_target={@events_target}
+        marks_target={@events_target}
+        myself={@events_target}
       />
-      <!-- Display Marks if Active -->
-      <%= if @sheaf.active do %>
-        <.collapsible_marks_display
-          marks_target={@events_target}
-          sheaf={@sheaf}
-          sheaf_ui={@sheaf_ui}
-          id={"marks-" <> @sheaf.id}
-          myself={@events_target}
-        />
-      <% end %>
       <!-- Collapsible Sheaf Container -->
       <%= if @level <= 2 && @sheaf_ui.is_expanded? do %>
         <.collapsible_sheaf_container
           id={"collapsible_sheaf_container-" <> @id}
           sheaf={@sheaf}
           reply_to={@reply_to}
-          container_class={"flex flex-col overflow-scroll pl-#{to_string((@level + 1) * 5)}  ml-#{to_string((@level + 1) * 4)}"}
+          container_class="overflow-y-auto w-full max-w-screen"
           events_target={@events_target}
           sheafs={@children}
           sheaf_lattice={@sheaf_lattice}

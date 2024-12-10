@@ -27,6 +27,7 @@ defmodule VyasaWeb.ControlPanel do
       <!-- SVG Icon Button -->
       <.control_panel_mode_indicator mode={@mode} myself={@myself} session_active?={@session.name} />
       <div
+        :if={@show_control_panel?}
         id="buttonGroup"
         class={[
           "mt-2 p-3 rounded-2xl backdrop-blur-lg bg-white/10 shadow-lg transition-all duration-300 border border-white/20",

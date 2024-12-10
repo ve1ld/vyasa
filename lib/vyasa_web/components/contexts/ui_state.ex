@@ -107,6 +107,16 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
     %MarksUiState{ui_state | show_sheaf_modal?: !curr}
   end
 
+  def set_show_sheaf_modal?(
+        %MarksUiState{
+          show_sheaf_modal?: _
+        } = ui_state,
+        new_val \\ true
+      )
+      when is_boolean(new_val) do
+    %MarksUiState{ui_state | show_sheaf_modal?: new_val}
+  end
+
   def toggle_is_editable(
         %MarksUiState{
           is_editable_marks?: curr
@@ -191,6 +201,18 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     struct(SheafUiState, @initial)
   end
 
+  def get_mark_ui(
+        %SheafUiState{
+          marks_ui: %MarksUiState{
+            mark_id_to_ui: mark_id_to_ui
+          }
+        },
+        mark_id
+      )
+      when is_binary(mark_id) do
+    mark_id_to_ui |> Map.get(mark_id)
+  end
+
   def toggle_sheaf_is_focused?(%SheafUiState{is_focused?: curr} = ui_state) do
     %SheafUiState{ui_state | is_focused?: !curr}
   end
@@ -226,6 +248,19 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     %SheafUiState{
       sheaf_ui_state
       | marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?()
+    }
+  end
+
+  def set_show_sheaf_modal?(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state,
+        new_val \\ true
+      )
+      when is_boolean(new_val) do
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.set_show_sheaf_modal?(new_val)
     }
   end
 

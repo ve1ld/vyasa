@@ -4,6 +4,7 @@
 const plugin = require("tailwindcss/plugin");
 const fs = require("fs");
 const path = require("path");
+// const colors = require("./colors"); // QQ: @ks0m1c_dharma any idea why if i uncomment this, the tailwind plugin config gets broken?
 
 module.exports = {
   content: [
@@ -49,12 +50,13 @@ module.exports = {
         xs: "0.65rem",
       },
       colors: {
+        aerospaceOrange: "hsla(30, 100%, 50%, 1)",
         primary: "var(--color-primary)",
         ink: "#1E1024",
         primaryAccent: "var(--color-primary-accent)",
         secondary: "var(--color-secondary)",
         primaryBackground: "var(--color-primary-background)",
-        secondary: "var(--color-secondary)",
+        secondaryBackground: "var(--color-secondary-background)",
         brand: "var(--color-brand)",
         brandLight: "var(--color-brand-light)",
         brandExtraLight: "var(--color-brand-extra-light)",
@@ -62,6 +64,9 @@ module.exports = {
         brandAccentLight: "var(--color-brand-accent-light)",
         brandDark: "var(--color-brand-dark)",
         brandExtraDark: "var(--color-brand-extra-dark)",
+        // Additional colors from your palette
+        dun: "var(--dun)",
+        bloodRed: "var(--blood-red)",
       },
     },
   },

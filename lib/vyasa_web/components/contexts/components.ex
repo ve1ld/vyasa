@@ -3,7 +3,7 @@ defmodule VyasaWeb.Context.Components do
   Provides core components that shall be used in multiple contexts (e.g. read, discuss).
   """
   use VyasaWeb, :html
-  alias Vyasa.Sangh.{Sheaf}
+  alias Vyasa.Sangh.{Sheaf, Mark}
   alias VyasaWeb.CoreComponents
   alias VyasaWeb.Context.Components.UiState.Mark, as: MarkUiState
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
@@ -12,6 +12,11 @@ defmodule VyasaWeb.Context.Components do
   attr :sheaf_ui, SheafUiState, required: true
   attr :marks_target, :string
   attr :myself, :any, required: true
+  attr :container_class, :string, default: "", doc: "Injectable inline styling for the container"
+
+  attr :is_composite_member, :boolean,
+    default: false,
+    doc: "When true, the collapsible marks display is a member of a larger component"
 
   attr :id, :string,
     default: "",
@@ -19,71 +24,71 @@ defmodule VyasaWeb.Context.Components do
 
   def collapsible_marks_display(assigns) do
     ~H"""
-    <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@sheaf_ui.marks_ui} /> -->
-    <div :if={not is_nil(@sheaf_ui.marks_ui)} class="mb-4">
+    <div
+      :if={not is_nil(@sheaf_ui.marks_ui)}
+      class={"transition-shadow duration-200 #{if @is_composite_member, do: "border-none", else: "border border-gray-100"} " <> @container_class}
+    >
       <div
         id={"collapse-header-container-" <> @id}
-        class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
+        class={
+        "flex items-center justify-between m-2 mb-3 p-2 pb-0 bg-brand-extra-light transition-colors duration-200 " <>
+         if @sheaf_ui.marks_ui.is_expanded_view?, do: "border-t border-gray-200", else: ""
+        }
       >
-        <button
-          phx-click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
+        <.action_toggle_button
+          on_click={JS.push("ui::toggle_marks_display_collapsibility", value: %{value: ""})}
+          flag={@sheaf_ui.marks_ui.is_expanded_view?}
+          true_text=""
+          false_text=""
+          true_icon_name="hero-chevron-up"
+          false_icon_name="hero-chevron-down"
+          button_class="font-light flex items-center w-full hover:bg-brand-light hover:text-brand text-gray-600"
+          icon_class="w-5 h-5 mr-2 text-brand-dark"
           phx-target={@marks_target}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center w-full hover:bg-brand-light hover:text-brand"
-          type="button"
         >
-          <.icon
-            name={
-              if @sheaf_ui.marks_ui.is_expanded_view?,
-                do: "hero-chevron-up",
-                else: "hero-chevron-down"
-            }
-            class="w-5 h-5 mr-2 text-brand-dark"
-          />
           <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-lg font-small text-brand-dark">
-            <%= "#{Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live)))}" %>
+          <% num_marks = Enum.count(@sheaf.marks |> Enum.filter(&(&1.state == :live))) %>
+          <span class="text-sm">
+            <%= "#{num_marks} #{Inflex.inflect("mark", num_marks)}" %>
           </span>
-        </button>
-        <button
+        </.action_toggle_button>
+        <.action_toggle_button
           :if={@sheaf_ui.marks_ui.is_expanded_view?}
-          type="button"
-          class="flex space-x-2 pr-2"
-          phx-click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
+          on_click={JS.push("ui::toggle_is_editable_marks?", value: %{value: ""})}
+          flag={@sheaf_ui.marks_ui.is_editable_marks?}
+          true_text="Done"
+          false_text="Edit"
+          button_class="font-light flex-grow space-x-2"
+          icon_class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
           phx-target={@marks_target}
-        >
-          <.icon
-            name={
-              if @sheaf_ui.marks_ui.is_editable_marks?,
-                do: "custom-icon-mingcute-save-line",
-                else: "custom-icon-mingcute-edit-4-line"
-            }
-            class="w-5 h-5 text-brand-dark cursor-pointer hover:bg-brand-accent hover:text-brand"
-          />
-        </button>
+        />
       </div>
       <div
         id={"collapsible-content-container-" <> @id}
         class={
           if @sheaf_ui.marks_ui.is_expanded_view?,
-            do: "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-scroll",
-            else: "max-h-0 overflow-scroll"
+            do:
+              "mt-2 transition-all duration-500 ease-in-out max-h-screen overflow-hidden rounded-b-lg bg-brand-light shadow-sm",
+            else: "max-h-0 overflow-hidden"
         }
       >
-        <.mark_display
-          :for={mark <- @sheaf.marks |> Enum.reverse()}
-          id={@id}
-          marks_target={@marks_target}
-          sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          mark={mark}
-          mark_ui={
-            @sheaf_ui.marks_ui.mark_id_to_ui
-            |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
-          }
-          myself={@marks_target}
-          is_editable?={@sheaf_ui.marks_ui.is_editable_marks?}
-        />
+        <div class="p-4 pt-0">
+          <.mark_display
+            :for={mark <- @sheaf.marks |> Enum.reverse()}
+            id={@id}
+            marks_target={@marks_target}
+            sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+            mark={mark}
+            mark_ui={
+              @sheaf_ui.marks_ui.mark_id_to_ui
+              |> Map.get(mark.id, MarkUiState.get_initial_ui_state())
+            }
+            myself={@marks_target}
+            is_editable?={@sheaf_ui.marks_ui.is_editable_marks?}
+          />
+        </div>
       </div>
     </div>
     """
@@ -103,165 +108,282 @@ defmodule VyasaWeb.Context.Components do
 
   def mark_display(assigns) do
     ~H"""
-    <div class="border-l border-brand-light pl-2">
-      <%= if @mark.state == :live do %>
+    <%= if @mark.state == :live do %>
+      <div
+        id={"mark-container-" <> @mark.id <> "-" <> @id}
+        class="mb-2 bg-brand-light rounded-l-lg border-brandDark flex justify-between items-start"
+      >
         <div
-          id={"mark-container-" <> @mark.id <> "-" <> @id}
-          class="mb-2 bg-brand-light rounded-lg shadow-sm p-1 border-l-2 border-brand flex justify-between items-start"
+          id={"mark-content-container-" <> @mark.id <> "-" <> @id}
+          class="h-full w-full flex-grow flex flex-col"
         >
-          <div
-            :if={@is_editable?}
-            id={"ordering-button-group-" <> @mark.id <> "-" <> @id}
-            class="flex flex-col items-center"
-          >
-            <button
-              phx-click="dummy_event"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Up Arrow"
-              type="button"
-            >
-              <.icon
-                name="custom-icon-sort-up"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
-            <!-- Displaying Order -->
-            <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
-            <button
-              phx-click="dummy_event"
-              type="button"
-              phx-target={@marks_target}
-              class="p-1 hover:bg-gray-200 rounded"
-              aria-label="Down Arrow"
-            >
-              <.icon
-                name="custom-icon-sort-down"
-                class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
-              />
-            </button>
-          </div>
-
-          <div
-            id={"mark-content-container-" <> @mark.id <> "-" <> @id}
-            class="h-full w-full flex-grow mx-2 pt-2 flex flex-col"
-          >
-            <div class="flex justify-between items-start">
-              <!-- Flex container for content and button -->
-              <div class="flex-grow">
-                <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
-                  <span class="block mb-1 text-sm italic text-secondary">
-                    "<%= @mark.binding.window.quote %>"
-                  </span>
-                <% end %>
-                <%= if is_binary(@mark.body) do %>
-                  <.mark_body id={@mark.id <> "-" <> @id} mark_ui={@mark_ui} mark={@mark} />
-                <% end %>
-              </div>
-              <!-- Visit Button -->
-              <%= if !@is_editable? do %>
-                <button
-                  type="button"
-                  phx-click="navigate::visit_mark"
-                  phx-value-mark_id={@mark.id}
-                  phx-target={@marks_target}
-                  class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
-                  aria-label="Visit"
-                >
-                  <.icon name="custom-icon-material-symbols-select-jump-to-end" class="h-6 w-6 mr-1" />
-                </button>
-              <% end %>
-            </div>
-          </div>
-
-          <div
-            :if={@is_editable?}
-            id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
-            class="h-full flex flex-col ml-2 space-y-2 justify-between"
-          >
-            <button
-              phx-click="mark::tombMark"
-              type="button"
-              phx-target={@marks_target}
-              phx-value-id={@mark.id}
-              title="Delete"
-              class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-              aria-label="Delete"
-            >
-              <.icon name="hero-x-mark" class="w-5 h-5 text-brand-dark font-bold" />
-            </button>
-            <!-- Toggle Edit Button -->
-            <%= if not @mark_ui.is_editing_content? do %>
-              <button
-                phx-click="ui::toggle_is_editing_mark_content?"
-                type="button"
-                phx-target={@marks_target}
-                phx-value-mark_id={@mark.id}
-                phx-value-sheaf_path_labels={@sheaf_path_labels}
-                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                aria-label="Toggle edit mark body"
-              >
-                <.icon name="custom-icon-recent-changes-ltr" class="w-5 h-5 text-brand-dark" />
-              </button>
-            <% else %>
-              <!-- Pseudo Submit Button -->
-              <button
-                id={"pseudo-submit-" <> @mark.id <> "-" <> @id }
-                type="button"
-                class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
-                phx-click={JS.push("shim", value: %{})}
-                phx-hook="PseudoForm"
-                data-event-to-capture="click"
-                data-target-selector={"#mark-body-" <> @mark.id <> "-" <> @id}
-                data-event-name="mark::editMarkContent"
-                data-event-target={@marks_target}
-                data-event-payload={
-                  Jason.encode!(%{
-                    "mark_id" => @mark.id,
-                    "previous_mark_body" => @mark.body,
-                    "sheaf_path_labels" => @sheaf_path_labels
-                  })
-                }
-                aria-label="Edit mark body"
-              >
-                <.icon name="hero-bookmark" class="w-5 h-5 text-brand-dark" />
-              </button>
-            <% end %>
-          </div>
+          <.mark_content
+            id={@id}
+            mark={@mark}
+            mark_ui={@mark_ui}
+            is_editable?={@is_editable?}
+            marks_target={@marks_target}
+            sheaf_path_labels={@sheaf_path_labels}
+          />
         </div>
+      </div>
+    <% end %>
+    """
+  end
+
+  def mark_ordering_button_group(assigns) do
+    ~H"""
+    <div
+      :if={@is_editable?}
+      id={"mark-ordering-button-group-" <> @mark.id <> "-" <> @id}
+      class="flex flex-col items-center"
+    >
+      <button
+        phx-click="dummy_event"
+        phx-target={@marks_target}
+        class="p-1 hover:bg-gray-200 rounded"
+        aria-label="Up Arrow"
+        type="button"
+      >
+        <.icon
+          name="custom-icon-sort-up"
+          class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+        />
+      </button>
+      <!-- Displaying Order -->
+      <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
+      <button
+        phx-click="dummy_event"
+        type="button"
+        phx-target={@marks_target}
+        class="p-1 hover:bg-gray-200 rounded"
+        aria-label="Down Arrow"
+      >
+        <.icon
+          name="custom-icon-sort-down"
+          class="w-5 h-5 text-brand-dark hover:bg-brand rounded-full p-1"
+        />
+      </button>
+    </div>
+    """
+  end
+
+  @doc """
+  Toggles the edit / save mark body content changes within an editable mark display.
+  The reason this is a little convoluted is because when submitting mark body changes,
+  we are doing a pseudoform submit, via the client side. The use of the pseudoform allows
+  us to nest an editable mark "form" within another form, thereby allowing us to do "nested forms"
+  which are typically an antipattern at an HTML-level.
+
+  WARNING::INCONVENIENT BUT data-target-selector NEEDS TO BE CORRECT, careful on refactors
+  """
+  def mark_body_change_action_button(assigns) do
+    ~H"""
+    <.action_toggle_button
+      id={@id}
+      flag={not @mark_ui.is_editing_content?}
+      on_click={
+        if not @mark_ui.is_editing_content? do
+          "ui::toggle_is_editing_mark_content?"
+        else
+          JS.push("shim", value: %{})
+        end
+      }
+      button_class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+      true_text="Edit"
+      false_text="Save"
+      true_icon_name="custom-icon-recent-changes-ltr"
+      false_icon_name="hero-bookmark"
+      phx-target={@marks_target}
+      phx-value-mark_id={@mark.id}
+      phx-value-sheaf_path_labels={@sheaf_path_labels}
+      icon_class="w-3 h-3 text-brand-dark mr-1"
+      text_class="text-xs"
+      aria-label="Toggle edit mark body"
+      phx-hook="PseudoForm"
+      data-event-to-capture="click"
+      data-target-selector={@mark |> get_mark_body_input_selector()}
+      data-event-name="mark::editMarkContent"
+      data-event-target={@marks_target}
+      data-event-payload={
+        Jason.encode!(%{
+          "mark_id" => @mark.id,
+          "previous_mark_body" => @mark.body,
+          "sheaf_path_labels" => @sheaf_path_labels
+        })
+      }
+    />
+    """
+  end
+
+  @doc """
+  Returns the selector that the mark body input has.
+  Using this function should reduce the chances of unforced errors.
+  This is an unfortunate outcome of doing the pseudoform approach.
+  """
+  def get_mark_body_input_selector(%Mark{id: id}) do
+    get_mark_body_input_selector(id)
+  end
+
+  def get_mark_body_input_selector(mark_id) when is_binary(mark_id) do
+    "#mark-body-" <> mark_id <> "-textarea"
+  end
+
+  # && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== ""
+  def mark_content(assigns) do
+    ~H"""
+    <div class="flex-grow">
+      <%= if !is_nil(@mark) && !is_nil(@mark.binding)  do %>
+        <.mark_quote mark={@mark} marks_target={@marks_target} />
       <% end %>
+      <%= if is_binary(@mark.body) do %>
+        <.mark_body
+          id={"mark-body-" <> @mark.id}
+          mark={@mark}
+          mark_ui={@mark_ui}
+          is_editable?={@is_editable?}
+          marks_target={@marks_target}
+          sheaf_path_labels={@sheaf_path_labels}
+        />
+      <% end %>
+    </div>
+    """
+  end
+
+  def mark_quote(assigns) do
+    assigns =
+      assign(assigns,
+        quote_string:
+          case assigns.mark do
+            %{
+              binding: %{
+                window: %{
+                  quote: quote
+                }
+              }
+            } ->
+              quote
+
+            _ ->
+              nil
+          end
+      )
+
+    ~H"""
+    <div class="relative p-4 py-1 px-4 sm:p-4 bg-aerospaceOrange/30 border-l-4 border-brandDark rounded-tl-lg rounded-tr-lg shadow-sm flex flex-col">
+      <div class="flex justify-between items-start mb-2 w-full">
+        <p :if={not is_nil(@quote_string)} class="text-sm italic text-secondary">
+          "<%= @quote_string %>"
+        </p>
+        <button
+          type="button"
+          phx-click="navigate::visit_mark"
+          phx-value-mark_id={@mark.id}
+          phx-target={@marks_target}
+          class="flex items-center text-gray-600 hover:text-gray-800 flex-grow"
+          aria-label="Visit"
+        >
+          <.icon
+            name="custom-icon-park-outline-quote-start"
+            class="rotate-180 text-red-600 opacity-80"
+          />
+        </button>
+      </div>
     </div>
     """
   end
 
   def mark_body(assigns) do
     ~H"""
-    <div class="relative">
+    <div class="relative xs:p-4 lg:p-2 border-l-4 border-brandDark rounded-bl-lg rounded-br-lg shadow-sm flex items-center">
+      <!-- Left Button Group for Ordering a Mark -->
+      <div :if={@is_editable?} class="flex-shrink-0">
+        <.mark_ordering_button_group
+          id={@id}
+          mark={@mark}
+          is_editable?={@is_editable?}
+          marks_target={@marks_target}
+        />
+      </div>
+      <!-- Textarea -->
       <textarea
         name="mark_body"
         disabled={not @mark_ui.is_editing_content?}
-        id={"mark-body-" <> @id}
-        rows="3"
+        id={@id <> "-textarea"}
+        rows="1"
         phx-hook="TextareaAutoResize"
-        class="h-full w-full flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
+        class="flex-grow h-full
+               focus:outline-none
+               focus:ring-2 focus:ring-aerospaceOrange/30
+               bg-transparent text-sm text-text
+               placeholder-gray-600 resize-vertical
+               overflow-auto min-h-[2.5rem] max-h-[8rem]
+               p-2 border-0 border-b-2 border-b-gray-300
+               transition-colors duration-200
+               focus:border-b-red-600"
         placeholder="Edit your mark"
       >
         <%= @mark.body %>
       </textarea>
+      <!-- Right Button Group for Editing a Mark -->
+      <div :if={@is_editable?} class="flex-shrink-0 ml-2 h-full">
+        <div
+          id={"mark-edit-actions-button-group-" <> @mark.id <> "-" <> @id}
+          class="h-full flex flex-col space-y-2 justify-between"
+        >
+          <.action_toggle_button
+            on_click="mark::tombMark"
+            true_text="Delete"
+            true_icon_name="hero-x-mark"
+            button_class="p-3 hover:bg-gray-200 rounded flex items-center justify-center"
+            icon_class="w-3 h-3 text-brand-dark pr-1"
+            text_class="text-xs"
+            phx-target={@marks_target}
+            phx-value-id={@mark.id}
+          />
+          <!-- Toggle Edit/Save Button -->
+          <.mark_body_change_action_button
+            id={@id}
+            mark={@mark}
+            mark_ui={@mark_ui}
+            marks_target={@marks_target}
+            sheaf_path_labels={@sheaf_path_labels}
+          />
+        </div>
+      </div>
     </div>
     """
   end
 
-  attr :sheaf, :any, required: true
-
   def sheaf_display(assigns) do
     ~H"""
-    <span class="block
-                   before:content-['╰'] before:mr-1 before:text-gray-500
-                   lg:before:content-none
-                   lg:border-l-0 lg:pl-2">
-      SHEAF DISPLAY <%= @sheaf.body %> - <b><%= @sheaf.signature %></b>
-    </span>
+    <div class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
+      #{if @sheaf_ui.is_focused? || @is_reply_to, do: "bg-brandExtraLight shadow-lg", else: "shadow-sm"}"}>
+      <.sheaf_summary
+        id={"sheaf-summary-" <> @id}
+        level={@level}
+        is_reply_to={@is_reply_to}
+        is_composite_member={true}
+        sheaf={@sheaf}
+        sheaf_ui={@sheaf_ui}
+        children={@children}
+        on_signature_deadspace_click={@on_replies_click}
+        on_replies_click={@on_replies_click}
+        on_set_reply_to={@on_set_reply_to}
+        on_quick_reply={@on_quick_reply}
+      />
+
+      <%= if @sheaf.active do %>
+        <.collapsible_marks_display
+          is_composite_member={true}
+          marks_target={@events_target}
+          sheaf={@sheaf}
+          sheaf_ui={@sheaf_ui}
+          id={"marks-" <> @sheaf.id}
+          myself={@events_target}
+        />
+      <% end %>
+    </div>
     """
   end
 
@@ -285,7 +407,6 @@ defmodule VyasaWeb.Context.Components do
     default: nil,
     doc: "Refers to the currently initialised sangh session"
 
-  # TODO: the reply_to should probably just be a binding since we can reply to any binding
   attr :event_target, :string, required: true
 
   def sheaf_creator_modal(assigns) do
@@ -299,12 +420,27 @@ defmodule VyasaWeb.Context.Components do
       container_class="rounded-lg shadow-lg overflow-scroll"
       background_class="bg-gray-800 bg-opacity-30 backdrop-blur-lg"
       dialog_class="rounded-lg flex flex-col max-w-lg max-h-screen mx-auto my-auto overflow-scroll"
-      focus_wrap_class="flex flex-col h-full shadow-xl"
+      focus_wrap_class="flex flex-col h-full shadow-xl overflow-scroll"
       inner_block_container_class="w-full p-6"
-      close_button_icon_class="text-red-500 hover:text-red-700"
+      close_button_icon_class="text-brand hover:text-red-700 w-8 h-8"
+      close_button_class="p-0"
+      close_button_icon="hero-x-circle-solid"
     >
-      <div class="flex flex-col p-6">
-        <.replyto_context sheaf={@reply_to} />
+      <:message_box>
+        <h2 class="text-xl font-normal text-gray-800 pl-2">
+          Make your post
+        </h2>
+      </:message_box>
+      <div class="flex flex-col p-2 ">
+        <.sheaf_summary
+          :if={not is_nil(@reply_to)}
+          id="sheaf-summary-reply-to"
+          container_class="z-10 shadown-none bg-brandExtraLight"
+          sheaf={@reply_to}
+          action_buttons={[]}
+          show_engagement_display={false}
+        />
+        <.replyto_context_display reply_to={@reply_to} event_target={@event_target} />
         <.sheaf_creator_form
           session={@session}
           id={@id}
@@ -319,7 +455,71 @@ defmodule VyasaWeb.Context.Components do
     """
   end
 
+  # TODO: wire up the button events
+  def replyto_context_display(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        alternative_action:
+          case is_nil(assigns.reply_to) do
+            true ->
+              CoreComponents.hide_modal(
+                JS.push("navigate::see_discussion"),
+                "sheaf-creator"
+              )
+
+            false ->
+              "sheaf::clear_reply_to_context"
+          end
+      )
+      |> assign(
+        alternative_action_prompt:
+          case is_nil(assigns.reply_to) do
+            true -> "...post a reply?"
+            false -> "...start a thread?"
+          end
+      )
+
+    ~H"""
+    <div class="whitespace-nowrap w-full flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 font-light -ml-2 -mb-4 -mt-2 py-4 pl-4 pb-8 border-brand rounded-l-md border-2 border-r-0 z-5">
+      <!-- Current Situation Indicator -->
+      <div class="flex-grow">
+        <%= if @reply_to do %>
+          Replying <span class="italic font-semibold">@<%= @reply_to.signature %></span>
+        <% else %>
+          Starting a thread
+        <% end %>
+      </div>
+
+      <button
+        class="italic underline underline-offset-2 font-light whitespace-nowrap sm:ml-4 mt-2 sm:mt-0 self-end"
+        phx-click={@alternative_action}
+        phx-target={@event_target}
+      >
+        <%= @alternative_action_prompt %>
+      </button>
+    </div>
+    """
+  end
+
   def sheaf_creator_form(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        textarea_placeholder:
+          case is_nil(assigns.reply_to) do
+            true -> "Post your thread..."
+            false -> "Post your reply..."
+          end
+      )
+      |> assign(
+        action_button_text:
+          case is_nil(assigns.reply_to) do
+            true -> "Start thread"
+            false -> "Reply"
+          end
+      )
+
     ~H"""
     <div id="sheaf-creator-container" class="flex flex-col">
       <.form
@@ -329,93 +529,67 @@ defmodule VyasaWeb.Context.Components do
         class="flex items-center"
       >
         <div class="flex flex-col w-full">
-          <textarea
-            name="body"
-            id={"sheaf-creator-form-body-textarea-"<> @id}
-            phx-hook="TextareaAutoResize"
-            class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
-            placeholder="Type your Sheaf body here..."
-          />
+          <div class="shadow-sm border-1 border-l-2  rounded-lg border-brand">
+            <textarea
+              name="body"
+              id={"sheaf-creator-form-body-textarea-" <> @id}
+              phx-hook="TextareaFocus"
+              phx-hook="TextareaAutoResize"
+              class="w-full flex-grow focus:outline-none bg-brandExtraLight text-sm placeholder-gray-400 placeholder:font-light
+    resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 pt-3 border-tl-4 border-gray-300 rounded-tl-lg rounded-tr-lg transition-shadow duration-200 focus:border-brand focus:ring-0"
+              placeholder={@textarea_placeholder}
+            />
 
-          <div class="flex justify-between mt-2 space-x-2">
-            <!-- Checkbox for is_private -->
-            <div class="flex items-center m-2">
-              <.input
-                type="checkbox"
-                name="is_private"
-                id="is_private"
-                label="Private comment?"
-                class="mx-1"
-              />
+            <div class="flex justify-between p-2 pt-0 space-x-2 whitespace-nowrap">
+              <div class="w-full text-sm">
+                <label
+                  for={"sheaf-creator-form-signature-textarea-" <> @id}
+                  class="italic font-light text-gray-600 whitespace-nowrap"
+                >
+                  Signed by: @
+                </label>
+                <input
+                  type="text"
+                  name="signature"
+                  id={"sheaf-creator-form-signature-textarea-" <> @id}
+                  value={if @session, do: @session.name, else: ""}
+                  class="font-medium underline p-0 flex-grow focus:outline-none bg-transparent text-sm text-light placeholder-gray-600 border-0 border-b-1 transition-shadow duration-200"
+                  placeholder={if @session, do: "Session name", else: "Enter your signature..."}
+                  disabled={not is_nil(@session) and @session.name}
+                />
+              </div>
             </div>
-            <div>
-              <label
-                for={"sheaf-creator-form-signature-textarea-" <> @id}
-                class="mb-2 text-sm font-medium text-gray-600"
-              >
-                Signed by:
-              </label>
-              <input
-                type="text"
-                name="signature"
-                id={"sheaf-creator-form-signature-textarea-" <> @id}
-                value={if @session, do: @session.name, else: ""}
-                class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 p-2 border-t-0 border-l-0 border-r-0 border-b-1 border-b-gray-300"
-                placeholder={if @session, do: "Session name", else: "Enter your signature..."}
-                disabled={not is_nil(@session) and @session.name}
-              />
-            </div>
+            <.collapsible_marks_display
+              id={"nested-" <> @id}
+              myself={nil}
+              marks_target={@event_target}
+              sheaf={@draft_sheaf}
+              sheaf_ui={@draft_sheaf_ui}
+              container_class="rounded-b-lg border-gray-100"
+            />
           </div>
-
-          <.collapsible_marks_display
-            id={"nested-"<> @id}
-            myself={nil}
-            marks_target={@event_target}
-            sheaf={@draft_sheaf}
-            sheaf_ui={@draft_sheaf_ui}
-          />
-
-          <div class="flex justify-between space-x-2">
+          <!-- start -->
+          <div class="flex justify-around space-x-2 pt-4">
             <button
               type="button"
               phx-click={CoreComponents.hide_modal(@on_cancel_callback, @id)}
-              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-grey-800 bg-brand-dark hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-gray-400 text-gray-800 bg-transparent hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
               phx-target={@event_target}
             >
-              Cancel and go back
+              Go back
             </button>
             <button
               type="submit"
-              class="w-2/5 text-bold mt-4 flex items-center justify-center p-3 rounded-full border-2 border-brand text-brand bg-white hover:bg-brand-light transition-colors duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 space-x-2"
+              class="whitespace-nowrap text-xs md:text-sm font-semibold flex items-center justify-center p-2 rounded-full border border-brand text-white bg-brand hover:bg-brand-light transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50 w-auto"
               phx-target={@event_target}
+              phx-value-is_new_thread={false}
             >
-              <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" /> Submit
+              <%= @action_button_text %>
             </button>
           </div>
+          <!-- end -->
         </div>
       </.form>
-    </div>
-    """
-  end
-
-  # TODO: add nav action buttons
-  def replyto_context(assigns) do
-    ~H"""
-    <div class="overflow-auto">
-      <%= if not is_nil(@sheaf) do %>
-        <div class="flex flex-col">
-          <.sheaf_summary
-            id="sheaf-summary-reply-to"
-            label="Responding to"
-            sheaf={@sheaf}
-            action_buttons={[]}
-          />
-        </div>
-      <% else %>
-        <h2 class="text-2xl font-normal text-gray-800">
-          Creating a new thread
-        </h2>
-      <% end %>
     </div>
     """
   end
@@ -476,11 +650,25 @@ defmodule VyasaWeb.Context.Components do
     doc: "Defines a callback to invoke when the user clicks on the deadspace near the signature"
   )
 
+  attr :is_composite_member, :boolean,
+    default: false,
+    doc: "When true, the sheaf summary is a member of a larger component"
+
+  attr :show_engagement_display, :boolean,
+    default: true,
+    doc: "When true, displays the engagement buttons on the sheaf"
+
   attr :children, :list, default: [], doc: "The children of this sheaf"
+
+  attr :container_class, :string, default: "", doc: "Inline class string that is injected"
 
   def sheaf_summary(assigns) do
     ~H"""
-    <div class="flex flex-col border-l border-brand-light p-4 rounded-lg shadow-sm bg-brand-extra-light">
+    <div class={
+    "flex flex-col p-4 rounded-lg bg-brand-extra-light transition-shadow duration-200 " <>
+    (if @is_composite_member, do: "pb-0", else: "border-l border-brand-light shadow-sm ") <>
+    @container_class
+    }>
       <h2
         :if={@label}
         class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
@@ -492,7 +680,7 @@ defmodule VyasaWeb.Context.Components do
         id={"level-" <> to_string(@level) <> "-sheaf-top-row-" <> @id <> "-" <> @sheaf.id}
         class="flex justify-between items-center"
       >
-        <div class="flex-grow max-w-[40%]">
+        <div class="flex-grow">
           <!-- Allow signature display to grow but limit to 80% -->
           <.sheaf_signature_display sheaf={@sheaf} />
         </div>
@@ -503,33 +691,29 @@ defmodule VyasaWeb.Context.Components do
           type="button"
           phx-click={@on_signature_deadspace_click}
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex-grow h-full cursor-pointer opacity-0"
+          class="flex-grow h-full cursor-pointer opacity-0 min-w-[40%]"
           aria-label="Click to interact with signature"
         >
           hello world, i'm invisible
         </button>
-
-        <button
-          type="button"
-          phx-click={@on_set_reply_to}
+        <.action_toggle_button
+          on_click={@on_set_reply_to}
+          flag={@is_reply_to}
+          true_text="Unpin"
+          false_text="Pin"
+          true_icon_name="custom-icon-material-symbols-pin-drop-filled"
+          false_icon_name="custom-icon-material-symbols-pin-drop-empty"
+          button_class="font-light flex items-center text-gray-600 hover:text-gray-800"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center text-gray-600 hover:text-gray-800"
-        >
-          <%= if @is_reply_to do %>
-            <.icon name="custom-icon-material-symbols-pin-drop-filled" class="h-5 w-5 mr-1" />
-            <span class="text-sm">Unpin</span>
-          <% else %>
-            <.icon name="custom-icon-material-symbols-pin-drop-empty" class="h-5 w-5 mr-1" />
-            <span class="text-sm">Pin</span>
-          <% end %>
-        </button>
+        />
       </div>
       <!-- Body Display -->
-      <div class="mb-4 mt-3">
+      <div class="mb-4 mt-3 text-md">
         <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
       </div>
       <!-- Engagement Display -->
       <.sheaf_engagement_display
+        :if={@show_engagement_display}
         sheaf={@sheaf}
         sheaf_ui={@sheaf_ui}
         replies_count={@children |> Enum.count()}
@@ -579,12 +763,12 @@ defmodule VyasaWeb.Context.Components do
       )
 
     ~H"""
-    <div class="w-auto flex mt-2 text-sm text-gray-600">
-      <div class="mx-1 text-gray-800 font-semibold">
+    <div class="w-auto flex text-sm text-gray-600 whitespace-nowrap items-baseline">
+      <div class="mx-1 text-gray-800 font-medium">
         <p><%= @sheaf.signature %></p>
       </div>
       <!-- Time Display -->
-      <div class="mx-1 text-gray-500 italic">
+      <div class="text-xs mx-1 font-light text-gray-500 italic">
         <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time <> @edited_suffix %>
       </div>
     </div>
@@ -617,47 +801,62 @@ defmodule VyasaWeb.Context.Components do
   def sheaf_engagement_display(assigns) do
     ~H"""
     <div class="flex justify-between mt-2">
-      <div class="flex">
-        <!-- Show Replies Button -->
-        <div :if={@replies_count > 0} class="flex-shrink-0 w-32">
-          <button
-            type="button"
-            phx-click={@on_replies_click}
-            phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-            class="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <.icon name="hero-chat-bubble-oval-left" class="h-4 w-4 mr-1" />
-            <span class="text-sm">
-              <%= if @sheaf_ui.is_expanded? do %>
-                Hide
-              <% else %>
-                Show
-              <% end %>
-              <%= @replies_count %> replies
-            </span>
-          </button>
-        </div>
-        <!-- Share Button -->
-        <button
-          type="button"
-          phx-click="sheaf::share_sheaf"
-          phx-target="#content-display"
+      <!-- Show Replies Button -->
+      <div :if={@replies_count > 0} class="flex-shrink-0">
+        <.action_toggle_button
+          on_click={@on_replies_click}
+          flag={@sheaf_ui.is_expanded?}
+          true_text="Hide "
+          false_text="Show "
+          true_icon_name="hero-chat-bubble-oval-left"
+          false_icon_name="hero-chat-bubble-oval-left"
+          button_class="font-light flex items-center text-gray-600 hover:text-gray-800"
+          icon_class="h-4 w-4 mr-1"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-          class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
         >
-          <.icon name="custom-icon-ph-share-fat-light" class="h-4 w-4 mr-1" />
-          <span class="text-sm">Share</span>
-        </button>
+          <span class="text-sm">
+            &nbsp<%= @replies_count %> <%= Inflex.inflect("reply", @replies_count) %>
+          </span>
+        </.action_toggle_button>
       </div>
-      <!-- Reply Button -->
-      <button
-        type="button"
-        phx-click={@on_quick_reply}
+      <!-- Share Button -->
+      <.action_toggle_button
+        on_click="sheaf::share_sheaf"
+        true_text="Share"
+        icon_class="h-4 w-4 mr-1"
+        true_icon_name="custom-icon-ph-share-fat-light"
+        phx-target="#content-display"
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-        class="flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
+      />
+      <!-- Reply Button -->
+      <.action_toggle_button
+        on_click={@on_quick_reply}
+        true_text="Reply"
+        true_icon_name="custom-icon-formkit-reply"
+        button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
+        icon_class="h-4 w-4 mr-1"
+        phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
+      />
+    </div>
+    """
+  end
+
+  def floating_action_button(assigns) do
+    ~H"""
+    <div class="absolute bottom-20 right-4 z-50 transform">
+      <button
+        id="floating_action"
+        class={[
+          "bg-white/30 hover:bg-white/40 text-white rounded-full focus:outline-none transition-all duration-300 backdrop-blur-lg shadow-lg active:scale-95 flex items-center justify-center w-11 h-11 p-1 border border-white/20"
+        ]}
+        phx-click={@on_click}
+        phx-target={@event_target}
       >
-        <.icon name="custom-icon-formkit-reply" class="h-4 w-4 mr-1" />
-        <span class="text-sm">Reply</span>
+        <.icon
+          name={@icon_name}
+          class={"w-5 h-5 text-gray-500 hover:text-primaryAccent transition-colors duration-200 stroke-current stroke-2" <> @icon_class}
+        />
       </button>
     </div>
     """

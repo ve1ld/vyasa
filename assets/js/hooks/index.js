@@ -13,6 +13,7 @@ import Scrolling from "./scrolling.js";
 import ButtonClickRelayer from "./button_click_relayer.js";
 import SessionBox from "./session_box.js";
 import TextareaAutoResize from "./textarea_auto_resize.js";
+import TextareaFocus from "./textarea_focus.js";
 import PseudoForm from "./pseudo_form.js";
 
 let Hooks = {
@@ -29,6 +30,7 @@ let Hooks = {
   ButtonClickRelayer,
   SessionBox,
   TextareaAutoResize,
+  TextareaFocus,
   PseudoForm,
 };
 

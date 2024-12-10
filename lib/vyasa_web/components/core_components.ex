@@ -222,7 +222,9 @@ defmodule VyasaWeb.CoreComponents do
   attr(:close_button_class, :string, default: "")
   attr(:close_button_icon_class, :string, default: "")
   attr(:focus_container_class, :string, default: "")
+  attr(:message_box_class, :string, default: "", doc: "Inline style for the message box")
 
+  slot(:message_box, required: false)
   slot(:inner_block, required: true)
 
   @doc """
@@ -250,12 +252,12 @@ defmodule VyasaWeb.CoreComponents do
       :if={@show}
       id={@id}
       phx-mounted={@show && @on_mount_callback && show_modal(@id)}
-      class={["relative z-50 hidden w-full mx-auto", @container_class]}
+      class={["relative z-50 w-full mx-auto overflow-scroll", @container_class]}
     >
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 backdrop-blur-md",
+          "fixed inset-0 backdrop-blur-md transition-opacity duration-300 ease-in-out",
           @background_class
         ]}
         aria-hidden="true"
@@ -267,7 +269,10 @@ defmodule VyasaWeb.CoreComponents do
         tabindex="0"
         class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
       >
-        <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
+        <div class={[
+          "w-full bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 ease-in-out",
+          @focus_container_class
+        ]}>
           <.focus_wrap
             id={"#{@id}-container"}
             phx-mounted={@show && @on_mount_callback && show_modal(@id)}
@@ -275,11 +280,17 @@ defmodule VyasaWeb.CoreComponents do
             phx-key={@cancel_key}
             phx-click-away={hide_modal(@on_click_away_callback, @id)}
             class={[
-              "relative flex flex-col w-full",
+              "relative flex flex-col w-full p-4",
               @focus_wrap_class
             ]}
           >
-            <div :if={@close_button_icon} class="absolute top-4 right-4">
+            <!-- Dialog Top Section -->
+            <div class="flex items-start justify-between items-center">
+              <!-- Aligns items in a row -->
+              <div class="flex-grow">
+                <%= render_slot(@message_box) %>
+                <!-- Render the message box slot -->
+              </div>
               <button
                 phx-click={hide_modal(@on_cancel_callback, @id)}
                 type="button"
@@ -292,7 +303,8 @@ defmodule VyasaWeb.CoreComponents do
                 />
               </button>
             </div>
-            <div id={"#{@id}-content"} class="w-full">
+            <!-- Inner Content -->
+            <div class="flex-grow">
               <%= render_slot(@inner_block) %>
             </div>
           </.focus_wrap>
@@ -491,6 +503,56 @@ defmodule VyasaWeb.CoreComponents do
   defp button_class(:inline),
     do:
       "inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none"
+
+  @doc """
+  Renders a toggle button with text and icons based on a flag.
+
+  ## Examples
+
+      <.action_toggle_button
+        on_click="toggle"
+        flag={@is_toggled}
+        true_text="Enabled"
+        false_text="Disabled"
+        true_icon_name="icon-enabled"
+        false_icon_name="icon-disabled"
+        button_class="my-custom-class"
+        icon_class="my-icon-class">
+        Additional content here
+      </.action_toggle_button>
+  """
+  attr :on_click, :string, required: true, doc: "The event handler for the button click."
+  attr :flag, :boolean, default: true, doc: "Determines which icon and text to display."
+  attr :true_text, :string, default: "", doc: "Text displayed when flag is true."
+  attr :false_text, :string, default: "", doc: "Text displayed when flag is false."
+  attr :true_icon_name, :string, default: nil, doc: "Icon name displayed when flag is true."
+  attr :false_icon_name, :string, default: nil, doc: "Icon name displayed when flag is false."
+  attr :button_class, :string, default: "", doc: "Additional classes for styling the button."
+  attr :icon_class, :string, default: "", doc: "Additional classes for styling the icon."
+  attr :text_class, :string, default: "text-sm", doc: "Class definition for text span."
+  attr :rest, :global, doc: "Additional global HTML attributes."
+
+  slot :inner_block
+
+  def action_toggle_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click={@on_click}
+      {@rest}
+      class={["flex items-center text-gray-600 hover:text-gray-800", @button_class]}
+    >
+      <%= if @flag do %>
+        <.icon :if={@true_icon_name} name={@true_icon_name} class={@icon_class} />
+        <span class={@text_class}><%= @true_text %></span>
+      <% else %>
+        <.icon :if={@false_icon_name} name={@false_icon_name} class={@icon_class} />
+        <span :if={@false_text} class={@text_class}><%= @false_text %></span>
+      <% end %>
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
 
   @doc """
   Renders an input with label and error messages.
@@ -965,6 +1027,11 @@ defmodule VyasaWeb.CoreComponents do
   end
 
   ## JS Commands
+  def push_js_cmd(socket, %JS{ops: ops}) do
+    detail = %{cmd: Phoenix.json_library().encode!(ops)}
+    IO.inspect(detail, label: "CHECKPOINT detail:")
+    Phoenix.LiveView.push_event(socket, "js:exec", detail)
+  end
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,
