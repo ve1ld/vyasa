@@ -834,17 +834,18 @@ defmodule VyasaWeb.Context.Read do
       inserted_at: Utils.Time.get_utc_now()
     }
 
+    # FIXME: the socket state should be the SOT. So even if the draft sheaf has an associated parent,
+    # when my reply_to_sheaf is nil, then the parent should be set to nil if it gets published.
+    # currently this is NOT happening.
     reply_payload =
       case reply_to_sheaf do
         %Sheaf{} ->
           payload_precursor |> Map.put(:parent, reply_to_sheaf)
 
         nil ->
-          payload_precursor
+          # so the socket's reply_to will take priority, even if the draft sheaf may already an associated parent, this will take priority.
+          payload_precursor |> Map.put(:parent, nil)
       end
-
-    dbg()
-    # FIXME: not sure why this is broken lol, just revisit the publishing routine properly
 
     draft_sheaf
     |> Vyasa.Sangh.make_reply(reply_payload)
@@ -853,6 +854,25 @@ defmodule VyasaWeb.Context.Read do
      socket
      |> ui_toggle_show_sheaf_modal?()
      |> register_sheaf(Sheaf.draft!(sangh_id))
+     |> assign(reply_to: nil)
+     |> cascade_stream_change()}
+  end
+
+  def handle_event(
+        "sheaf::clear_reply_to_context",
+        _,
+        %Socket{
+          assigns: %{
+            draft_reflector: %Sheaf{} = _draft_sheaf,
+            draft_reflector_ui: %SheafUiState{
+              marks_ui: %MarksUiState{} = _ui_state
+            },
+            reply_to: _reply_to_sheaf
+          }
+        } = socket
+      ) do
+    {:noreply,
+     socket
      |> assign(reply_to: nil)
      |> cascade_stream_change()}
   end
@@ -880,6 +900,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
+  # NOTE: this is a mode gate, it hides the modal then routes the user to discussions
   def handle_event(
         "navigate::see_discussion",
         _,
@@ -891,7 +912,14 @@ defmodule VyasaWeb.Context.Read do
       |> List.replace_at(1, "discuss")
       |> Enum.join("/")
 
-    {:noreply, socket |> push_patch(to: target_path)}
+    {
+      :noreply,
+      socket
+      # technically this is not necessary since the pushpatch results in hotswap of dom state for the content-display,
+      # however, this push_js_cmd is a good proof that the push_js_cmd routine works
+      # |> push_js_cmd(hide_modal(%JS{}, "modal-wrapper-sheaf-creator"))
+      |> push_patch(to: target_path)
+    }
   end
 
   @impl true
@@ -909,7 +937,7 @@ defmodule VyasaWeb.Context.Read do
   # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
-    <div id={@id} class="flex-grow" >
+    <div id={@id} class="flex-grow">
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl">
         <%= if @content_action == :show_sources do %>
