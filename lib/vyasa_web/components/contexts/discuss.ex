@@ -805,18 +805,24 @@ defmodule VyasaWeb.Context.Discuss do
   def handle_event(
         "navigate::see_discussion",
         _,
-        socket
+        %Socket{
+          assigns: %{
+            session: %{sangh: %{id: _sangh_id}},
+            draft_reflector_path: %Ltree{
+              labels: draft_sheaf_lattice_key
+            },
+            sheaf_lattice: %{} = _sheaf_lattice,
+            sheaf_ui_lattice: %{} = sheaf_ui_lattice
+          }
+        } = socket
       ) do
-    IO.inspect("CHECKPOINT: the discuss context is reached")
-    send(self(), "ui::toggle_show_sheaf_modal?")
-    # target_path =
-    #   curr_path
-    #   |> String.split("/")
-    #   |> List.replace_at(1, "discuss")
-    #   |> Enum.join("/")
+    new_lattice =
+      sheaf_ui_lattice |> SheafLattice.set_show_sheaf_modal?(draft_sheaf_lattice_key, false)
 
-    # {:noreply, socket |> push_patch(to: target_path)}
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> push_js_cmd(hide_modal(%JS{}, "modal-wrapper-sheaf-creator"))
+     |> assign(sheaf_ui_lattice: new_lattice)}
   end
 
   @impl true

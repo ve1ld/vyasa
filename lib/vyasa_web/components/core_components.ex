@@ -1027,6 +1027,11 @@ defmodule VyasaWeb.CoreComponents do
   end
 
   ## JS Commands
+  def push_js_cmd(socket, %JS{ops: ops}) do
+    detail = %{cmd: Phoenix.json_library().encode!(ops)}
+    IO.inspect(detail, label: "CHECKPOINT detail:")
+    Phoenix.LiveView.push_event(socket, "js:exec", detail)
+  end
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,

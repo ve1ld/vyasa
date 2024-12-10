@@ -107,6 +107,16 @@ defmodule VyasaWeb.Context.Components.UiState.Marks do
     %MarksUiState{ui_state | show_sheaf_modal?: !curr}
   end
 
+  def set_show_sheaf_modal?(
+        %MarksUiState{
+          show_sheaf_modal?: _
+        } = ui_state,
+        new_val \\ true
+      )
+      when is_boolean(new_val) do
+    %MarksUiState{ui_state | show_sheaf_modal?: new_val}
+  end
+
   def toggle_is_editable(
         %MarksUiState{
           is_editable_marks?: curr
@@ -238,6 +248,19 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
     %SheafUiState{
       sheaf_ui_state
       | marks_ui: ui_state |> MarksUiState.toggle_show_sheaf_modal?()
+    }
+  end
+
+  def set_show_sheaf_modal?(
+        %SheafUiState{
+          marks_ui: ui_state
+        } = sheaf_ui_state,
+        new_val \\ true
+      )
+      when is_boolean(new_val) do
+    %SheafUiState{
+      sheaf_ui_state
+      | marks_ui: ui_state |> MarksUiState.set_show_sheaf_modal?(new_val)
     }
   end
 

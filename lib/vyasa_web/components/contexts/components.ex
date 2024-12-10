@@ -696,7 +696,7 @@ defmodule VyasaWeb.Context.Components do
         >
           hello world, i'm invisible
         </button>
-        <!--<.action_toggle_button
+        <.action_toggle_button
           on_click={@on_set_reply_to}
           flag={@is_reply_to}
           true_text="Unpin"
@@ -705,7 +705,7 @@ defmodule VyasaWeb.Context.Components do
           false_icon_name="custom-icon-material-symbols-pin-drop-empty"
           button_class="font-light flex items-center text-gray-600 hover:text-gray-800"
           phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
-        />-->
+        />
       </div>
       <!-- Body Display -->
       <div class="mb-4 mt-3 text-md">

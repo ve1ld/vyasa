@@ -900,6 +900,7 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
+  # NOTE: this is a mode gate, it hides the modal then routes the user to discussions
   def handle_event(
         "navigate::see_discussion",
         _,
@@ -911,7 +912,14 @@ defmodule VyasaWeb.Context.Read do
       |> List.replace_at(1, "discuss")
       |> Enum.join("/")
 
-    {:noreply, socket |> push_patch(to: target_path)}
+    {
+      :noreply,
+      socket
+      # technically this is not necessary since the pushpatch results in hotswap of dom state for the content-display,
+      # however, this push_js_cmd is a good proof that the push_js_cmd routine works
+      # |> push_js_cmd(hide_modal(%JS{}, "modal-wrapper-sheaf-creator"))
+      |> push_patch(to: target_path)
+    }
   end
 
   @impl true
