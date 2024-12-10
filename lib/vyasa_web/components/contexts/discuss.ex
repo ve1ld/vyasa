@@ -42,6 +42,17 @@ defmodule VyasaWeb.Context.Discuss do
     }
   end
 
+
+  def update(
+        %{id: "discuss", binding: %{sheaf_id: sheaf_id}}, socket) do
+    # binding here blocks the stream from appending to quote
+    #
+    IO.inspect(sheaf_id)
+
+    {:ok, socket}
+  end
+
+
   defp apply_action(
          %Socket{
            assigns: %{
@@ -62,7 +73,6 @@ defmodule VyasaWeb.Context.Discuss do
     |> init_drafting_context()
     |> init_reply_to_context()
   end
-
   # when there is no sangh session in state:
   defp apply_action(
          %Socket{
@@ -769,7 +779,8 @@ defmodule VyasaWeb.Context.Discuss do
   def handle_event(
         "navigate::visit_mark",
         %{
-          "mark_id" => mark_id
+          "mark_id" => mark_id,
+          "bind" => binding_id
         } = _params,
         %Socket{
           assigns: %{
@@ -782,9 +793,10 @@ defmodule VyasaWeb.Context.Discuss do
       when is_binary(mark_id) do
     # Handle the event here (e.g., log it, update state, etc.)
     IO.inspect(mark_id,
-      label: "navigate::visit_mark -- TODO"
+      label: "navigate::visit_mark" <> binding_id
     )
 
+    # jump to mark behaviour binding ingestion
     {:noreply, socket}
   end
 

@@ -69,15 +69,15 @@ export default HoveRune = {
       console.warn(bind)
       targetNode = findMatchingSpan(bind)
       if (targetNode) {
-      targetNode.focus();
-      targetNode.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+        targetNode.focus();
+        targetNode.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
 
     });
-        const targetEvents = ["pointerdown", "pointerup"];
+    const targetEvents = ["pointerdown", "pointerup"];
     targetEvents.forEach((e) =>
       window.addEventListener(e, ({ target }) => {
         var selection = window.getSelection();

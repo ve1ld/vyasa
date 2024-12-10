@@ -279,6 +279,7 @@ defmodule VyasaWeb.Context.Components do
           type="button"
           phx-click="navigate::visit_mark"
           phx-value-mark_id={@mark.id}
+          phx-value-bind={@mark.binding_id}
           phx-target={@marks_target}
           class="flex items-center text-gray-600 hover:text-gray-800 flex-grow"
           aria-label="Visit"
@@ -821,11 +822,12 @@ defmodule VyasaWeb.Context.Components do
       </div>
       <!-- Share Button -->
       <.action_toggle_button
-        on_click="sheaf::share_sheaf"
+        on_click="bind::share"
         true_text="Share"
         icon_class="h-4 w-4 mr-1"
         true_icon_name="custom-icon-ph-share-fat-light"
-        phx-target="#content-display"
+        phx-value-node_id={@sheaf.id}
+        phx-value-node={Vyasa.Sangh.Sheaf}
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
         button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
       />
