@@ -2,12 +2,13 @@ name: Prod in Flight
 
 on:
   pull_request:
-    branches: [ prod ]
+    branches: [prod]
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
   test:
-    runs-on: ubuntu-22.04  # Use a specific version for stability
-    name: Build OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} && Run Mix Test
+    runs-on: ubuntu-22.04
+    name: Build OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} && Run Mix Test
     services:
       postgres:
         image: postgres:latest
@@ -24,11 +25,11 @@ jobs:
           --health-retries 5
     strategy:
       matrix:
-        otp: ['26.2']
-        elixir: ['1.16.3']
+        otp: ["26.2"]
+        elixir: ["1.16.3"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Pin to a specific version for stability
+        uses: actions/checkout@v4
 
       - name: Install dependencies for build
         run: sudo apt-get update && sudo apt-get install -y libncurses-dev libtinfo5
@@ -36,8 +37,8 @@ jobs:
       - name: Setup Elixir and OTP
         uses: erlef/setup-beam@v1
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
 
       - name: Restore dependencies cache
         uses: actions/cache@v4
@@ -58,11 +59,11 @@ jobs:
   deploy:
     needs: test
     name: Build & Deploy to Fly
-    runs-on: ubuntu-22.04  # Use a specific version for stability
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Pin to a specific version for stability
+        uses: actions/checkout@v4
 
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions@master
