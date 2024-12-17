@@ -287,7 +287,7 @@ defmodule Vyasa.Sangh.SheafLattice do
   def hist_reduce(list, initial, fun) when is_list(list) do
     list
     |> Enum.reduce({initial, []}, fn elem, {acc, history} ->
-      new_history = [elem | history]
+      new_history = [elem | history] |> Enum.reverse()
       new_acc = fun.(new_history, acc)
       {new_acc, new_history}
     end)
