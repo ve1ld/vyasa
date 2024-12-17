@@ -358,7 +358,7 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_display(assigns) do
     ~H"""
-    <div class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
+    <div node={Vyasa.Sangh.Sheaf} node_id={@sheaf.id} class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
       #{if @sheaf_ui.is_focused? || @is_reply_to, do: "bg-brandExtraLight shadow-lg", else: "shadow-sm"}"}>
       <.sheaf_summary
         id={"sheaf-summary-" <> @id}

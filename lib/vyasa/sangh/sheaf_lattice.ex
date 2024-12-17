@@ -279,6 +279,22 @@ defmodule Vyasa.Sangh.SheafLattice do
     end
   end
 
+  def recurse_sheaf_is_expanded?(ui_lattice, lattice_key) do
+    lattice_key
+    |> hist_reduce(ui_lattice, fn elem, lat -> toggle_sheaf_is_expanded?(lat, elem) end)
+  end
+
+  def hist_reduce(list, initial, fun) when is_list(list) do
+    list
+    |> Enum.reduce({initial, []}, fn elem, {acc, history} ->
+      new_history = [elem | history]
+      new_acc = fun.(new_history, acc)
+      {new_acc, new_history}
+    end)
+    |> elem(0)
+  end
+
+
   @doc """
   Reads sheaf layers from a lattice based on the specified level and match criteria.
 
