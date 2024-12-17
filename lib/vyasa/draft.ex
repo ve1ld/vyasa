@@ -25,6 +25,10 @@ defmodule Vyasa.Draft do
 
   end
 
+  def bind_node(node) do
+    bind_node(node, %Binding{})
+  end
+
   # Uses the "field" attribute in the bind_target
   # When the binding target is defined by a "field" attribute, it sets the field_key for the %Binding{} struct struct.
   def bind_node(%{"field" => field} = node = _bind_target_payload, bind) do
@@ -63,6 +67,8 @@ defmodule Vyasa.Draft do
   end
 
   def get_binding!(id), do: Repo.get!(Binding, id) |> nodify() |> fieldify()
+
+  defp nodify(%Binding{sheaf_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
 
   defp nodify(%Binding{translation_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
 

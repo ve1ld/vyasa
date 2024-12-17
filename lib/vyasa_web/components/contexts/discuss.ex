@@ -8,7 +8,6 @@ defmodule VyasaWeb.Context.Discuss do
   alias VyasaWeb.ModeLive.{UserMode}
   alias VyasaWeb.Session
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh.Session, as: SanghSession
   alias Vyasa.Sangh
   alias Vyasa.Sangh.{SheafLattice, Sheaf, Mark}
   alias VyasaWeb.Context.Components.UiState.Sheaf, as: SheafUiState
@@ -42,12 +41,22 @@ defmodule VyasaWeb.Context.Discuss do
     }
   end
 
+
+  def update(%{id: "discuss", binding: %{sheaf_id: sheaf_id} = bind}, %{assigns: %{sheaf_ui_lattice: lat, draft_reflector_path: path}} =socket) do
+    %{path: %Ltree{labels: lat_key}} = Sangh.get_sheaf(sheaf_id)
+    {:ok,socket
+    |> assign(sheaf_ui_lattice: SheafLattice.recurse_sheaf_is_expanded?(lat, lat_key))
+    |> assign(draft_reflector_path: path)
+    |> push_event("bind::jump", bind)}
+  end
+
+
   defp apply_action(
          %Socket{
            assigns: %{
              session:
                %Session{
-                 sangh: %SanghSession{id: sangh_id} = _sangh_session
+                 sangh: %Sangh.Session{id: sangh_id} = _sangh_session
                } = _session
            }
          } = socket,
@@ -62,7 +71,6 @@ defmodule VyasaWeb.Context.Discuss do
     |> init_drafting_context()
     |> init_reply_to_context()
   end
-
   # when there is no sangh session in state:
   defp apply_action(
          %Socket{
@@ -684,34 +692,6 @@ defmodule VyasaWeb.Context.Discuss do
      |> assign(reply_to_path: nil)}
   end
 
-  @impl true
-  # TODO @ks0m1c another place that would require binding / permalinking apis
-  # equivalent handler for the read mode as well...
-  def handle_event(
-        "sheaf::share_sheaf",
-        %{
-          "sheaf_path_labels" => sheaf_labels
-        } = _params,
-        %Socket{
-          assigns: %{
-            session: %{sangh: %{id: _sangh_id}},
-            sheaf_lattice: %{} = sheaf_lattice,
-            sheaf_ui_lattice: %{} = _sheaf_ui_lattice
-          }
-        } = socket
-      )
-      when is_binary(sheaf_labels) do
-    lattice_key = Jason.decode!(sheaf_labels)
-    shareable_sheaf = sheaf_lattice |> SheafLattice.get_sheaf_from_lattice(lattice_key)
-
-    IO.inspect(shareable_sheaf, label: "TODO: sheaf::share_sheaf")
-
-    {
-      :noreply,
-      socket
-    }
-  end
-
   def handle_event(
         "sheaf::publish",
         %{
@@ -781,7 +761,8 @@ defmodule VyasaWeb.Context.Discuss do
   def handle_event(
         "navigate::visit_mark",
         %{
-          "mark_id" => mark_id
+          "mark_id" => mark_id,
+          "bind" => binding_id
         } = _params,
         %Socket{
           assigns: %{
@@ -794,9 +775,10 @@ defmodule VyasaWeb.Context.Discuss do
       when is_binary(mark_id) do
     # Handle the event here (e.g., log it, update state, etc.)
     IO.inspect(mark_id,
-      label: "navigate::visit_mark -- TODO"
+      label: "navigate::visit_mark" <> binding_id
     )
 
+    # jump to mark behaviour binding ingestion
     {:noreply, socket}
   end
 

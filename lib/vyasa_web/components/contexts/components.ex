@@ -279,6 +279,7 @@ defmodule VyasaWeb.Context.Components do
           type="button"
           phx-click="navigate::visit_mark"
           phx-value-mark_id={@mark.id}
+          phx-value-bind={@mark.binding_id}
           phx-target={@marks_target}
           class="flex items-center text-gray-600 hover:text-gray-800 flex-grow"
           aria-label="Visit"
@@ -357,7 +358,7 @@ defmodule VyasaWeb.Context.Components do
 
   def sheaf_display(assigns) do
     ~H"""
-    <div class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
+    <div node={Vyasa.Sangh.Sheaf} node_id={@sheaf.id} class={"border-l-2 border-gray-250 rounded-lg transition-all duration-200
       #{if @sheaf_ui.is_focused? || @is_reply_to, do: "bg-brandExtraLight shadow-lg", else: "shadow-sm"}"}>
       <.sheaf_summary
         id={"sheaf-summary-" <> @id}
@@ -821,11 +822,12 @@ defmodule VyasaWeb.Context.Components do
       </div>
       <!-- Share Button -->
       <.action_toggle_button
-        on_click="sheaf::share_sheaf"
+        on_click="bind::share"
         true_text="Share"
         icon_class="h-4 w-4 mr-1"
         true_icon_name="custom-icon-ph-share-fat-light"
-        phx-target="#content-display"
+        phx-value-node_id={@sheaf.id}
+        phx-value-node={Vyasa.Sangh.Sheaf}
         phx-value-sheaf_path_labels={Jason.encode!(@sheaf |> Sheaf.get_path_labels() || [])}
         button_class="font-light flex items-center text-gray-600 hover:text-gray-800 ml-2"
       />

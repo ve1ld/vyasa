@@ -133,7 +133,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
         ><.icon
             name="custom-icon-park-outline-quote-start"
             class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"
-          /><span class="bg-blue"><%= String.byte_slice(
+          /><span><%= String.byte_slice(
             @content,
             @window.start_quote,
             @window.end_quote - @window.start_quote

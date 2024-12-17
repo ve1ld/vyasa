@@ -39,7 +39,6 @@ defmodule VyasaWeb.Context.Read.Verses do
         <div
           id="verses"
           phx-update="stream"
-          phx-hook="HoveRune"
           data-event-target={@user_mode.mode_context_component_selector}
         >
           <.live_component

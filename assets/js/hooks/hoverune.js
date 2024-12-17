@@ -37,14 +37,39 @@ function floatHoveRune({ clientX, clientY }) {
   });
 }
 
-const findMatchingSpan = ({ node_id, field }) => {
-  // Early return if missing either criteria
-  if (!node_id || !field) return null;
+const findMatchingEl = (targetEl = document, {
+  node_id = null,
+  field = null
+} = {}) => {
+  // If no identifier criteria provided, return all child elements
+  if (!node_id && !field) {
+    return Array.from(targetEl.children);
+  }
 
-  // Find first span with both exact matches
-  return document.querySelector(
-    `span[node_id="${node_id}"][field="${field}"]`
-  );
+  const elementTypes = ['span', 'div']
+  // Build dynamic selector based on provided criteria
+  const selectors = elementTypes.map(type => {
+    const conditions = [];
+
+    if (node_id) {
+      conditions.push(`[node_id="${node_id}"]`);
+    }
+
+    if (field) {
+      conditions.push(`[field="${field}"]`);
+    }
+
+    return `${type}${conditions.join('')}`;
+  });
+
+  // Try each selector in order
+  for (const selector of selectors) {
+    const matchedElement = targetEl.querySelector(selector);
+    if (matchedElement) return matchedElement;
+  }
+
+  // Return null if no match found
+  return null;
 };
 
 const findHook = (el) => findParent(el, "phx-hook", "HoveRune");
@@ -66,18 +91,17 @@ export default HoveRune = {
     });
 
     this.handleEvent("bind::jump", (bind) => {
-      console.warn(bind)
-      targetNode = findMatchingSpan(bind)
+      targetNode = findMatchingEl(this.el, bind)
       if (targetNode) {
-      targetNode.focus();
-      targetNode.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+        targetNode.focus();
+        targetNode.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
 
     });
-        const targetEvents = ["pointerdown", "pointerup"];
+    const targetEvents = ["pointerdown", "pointerup"];
     targetEvents.forEach((e) =>
       window.addEventListener(e, ({ target }) => {
         var selection = window.getSelection();

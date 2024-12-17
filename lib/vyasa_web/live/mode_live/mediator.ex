@@ -101,6 +101,24 @@ defmodule VyasaWeb.ModeLive.Mediator do
     |> UiState.assign(:focused_binding, bind)
   end
 
+  defp maybe_focus_binding(
+         %{
+           assigns: %{
+             url_params: %{"node" => _, "node_id" => _} = params,
+             mode: %UserMode{
+               mode_context_component: component,
+               mode_context_component_selector: selector
+             }
+           }
+         } = socket
+       ) do
+    {:ok, bind} = params |> Map.take(["node", "node_id"]) |> Draft.bind_node()
+    send_update(component, id: selector, binding: bind)
+
+    socket
+    |> UiState.assign(:focused_binding, bind)
+  end
+
   defp maybe_focus_binding(socket) do
     socket
   end
@@ -269,6 +287,28 @@ defmodule VyasaWeb.ModeLive.Mediator do
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
     {:noreply, socket |> UiState.assign(:focused_binding, bind)}
+  end
+
+
+  def handle_event(
+        "bind::share",
+        %{"node" => node, "node_id" => node_id} = _bind,
+        %Socket{
+          assigns: %{
+            url_params: %{path: path}
+          }
+        } = socket
+      ) do
+
+    #bind node on return
+    # {:ok, shared_bind} =
+    #   bind
+    #   |> Draft.bind_node()
+      # |> Draft.create_binding()
+
+    {:noreply, socket
+    |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [node: node, node_id: node_id])})
+    |> put_flash(:info, "binded to your clipboard")}
   end
 
   def handle_event(
