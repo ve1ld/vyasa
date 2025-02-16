@@ -62,7 +62,7 @@ defmodule VyasaWeb.ModeLive.UserMode do
       mode_icon_name: "hero-chat-bubble-left-right",
       action_bar_component: VyasaWeb.MediaLive.MediaBridge,
       control_panel_component: VyasaWeb.ControlPanel,
-      mode_context_component: VyasaWeb.Context.Read,
+      mode_context_component: VyasaWeb.Context.Discuss,
       quick_actions: @quick_actions,
       control_panel_modes: ["read"],
       mode_actions: @mode_actions,
@@ -75,6 +75,7 @@ defmodule VyasaWeb.ModeLive.UserMode do
 
   def get_initial_mode() do
     "read"
+    # "discuss"
     |> get_mode()
   end
 

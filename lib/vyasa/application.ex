@@ -16,6 +16,13 @@ defmodule Vyasa.Application do
       {Finch, name: Vyasa.Finch},
       # Start a worker by calling: Vyasa.Worker.start_link(arg)
       # {Vyasa.Worker, arg},
+      {Vyasa.Gate,
+       [
+         name: Vyasa.Gate,
+         pubsub_server: Vyasa.PubSub,
+         pool_size: :erlang.system_info(:schedulers_online)
+       ]},
+      {PartitionSupervisor, child_spec: DynamicSupervisor, name: Vyasa.Sangh.Assembly},
       # Start to serve requests, typically the last entry
       VyasaWeb.Endpoint
     ]

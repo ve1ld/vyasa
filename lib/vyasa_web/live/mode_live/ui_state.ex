@@ -15,7 +15,8 @@ defmodule VyasaWeb.ModeLive.UiState do
 
   defstruct [
     :show_media_bridge?,
-    :show_action_bar?
+    :show_action_bar?,
+    :focused_binding
   ]
 
   defp set_hide_media_bridge(%UiState{} = state) do
@@ -24,6 +25,15 @@ defmodule VyasaWeb.ModeLive.UiState do
 
   defp set_show_media_bridge(%UiState{} = state) do
     %UiState{state | show_media_bridge?: true}
+  end
+
+  def assign(
+        %{assigns: %{ui_state: curr_state}} = socket,
+        attr,
+        assignment
+      ) do
+
+      socket |> assign(ui_state: %{curr_state | attr => assignment})
   end
 
   def update_media_bridge_visibility(

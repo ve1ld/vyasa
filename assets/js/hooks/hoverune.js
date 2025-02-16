@@ -35,15 +35,17 @@ function floatHoveRune({ clientX, clientY }) {
       top: `${y}px`,
     });
   });
-
-  // computePosition(virtualEl, hoverune, {placement: 'top-end', middleware: [inline(getSelectRect.x, getSelectRect.y), offset(5)]}).then(({x, y}) => {
-  //   hoverune.classList.remove("hidden")
-  //   Object.assign(hoverune.style, {
-  //     left: `${getSelectRect.x}px`,
-  //     top: `${y}px`,
-  //   });
-  // })
 }
+
+const findMatchingSpan = ({ node_id, field }) => {
+  // Early return if missing either criteria
+  if (!node_id || !field) return null;
+
+  // Find first span with both exact matches
+  return document.querySelector(
+    `span[node_id="${node_id}"][field="${field}"]`
+  );
+};
 
 const findHook = (el) => findParent(el, "phx-hook", "HoveRune");
 const findMarginote = (el) => findParent(el, "phx-hook", "MargiNote");
@@ -62,7 +64,20 @@ export default HoveRune = {
     console.log("CHECK HOVERUNE", {
       dset: this.el.dataset,
     });
-    const targetEvents = ["pointerdown", "pointerup"];
+
+    this.handleEvent("bind::jump", (bind) => {
+      console.warn(bind)
+      targetNode = findMatchingSpan(bind)
+      if (targetNode) {
+      targetNode.focus();
+      targetNode.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      }
+
+    });
+        const targetEvents = ["pointerdown", "pointerup"];
     targetEvents.forEach((e) =>
       window.addEventListener(e, ({ target }) => {
         var selection = window.getSelection();
@@ -70,28 +85,31 @@ export default HoveRune = {
           return;
         }
 
-        var getSelectRect = selection.getRangeAt(0).getBoundingClientRect();
+        var range = selection.getRangeAt(0);
+        var getSelectRect = range.getBoundingClientRect();
         const getSelectText = selection.toString();
-        //const validElem = findHook(target)
-        // const isMarginote = findMarginote(target)
         const isNode = findNode(target);
+
+        console.log("binding selected here!")
+        console.log(selection)
 
         if (isNode) {
           binding = forgeBinding(target, [
             "node",
             "node_id",
+            "text",
             "field",
             "verse_id",
           ]);
           binding["selection"] = getSelectText;
-
           console.log("CHECK HOVERUNE", {
             eventTarget: this.eventTarget,
             target: `#${this.eventTarget}`,
             payload: { binding: binding },
           });
-          this.pushEventTo(`#${this.eventTarget}`, "bindHoveRune", {
+          this.pushEvent("bind::to", {
             binding: binding,
+            target: this.eventTarget
           });
 
           console.log(binding);
