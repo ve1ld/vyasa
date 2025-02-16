@@ -607,6 +607,17 @@ defmodule VyasaWeb.Context.Read do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_event(
+        "read::nav_fwd",
+        _,
+        %{assigns: %{session: %{id: sess_id}}} = socket
+      ) do
+    IO.inspect("navigation forward media:session:#{sess_id}", label: "checkpoint")
+    #Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
+    {:noreply, socket}
+  end
+
 
   @impl true
   def handle_event(

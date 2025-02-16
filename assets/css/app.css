@@ -77,7 +77,7 @@
 /* This file is for your main   application CSS */
 
 .emphasized-verse {
-  @apply bg-brandAccentLight border-b-0 border-l-8 border-black p-4 pl-8 rounded-sm;
+  @apply bg-orange-400/30 border-b-0 border-l-8 border-red-600 p-4 pl-8 rounded-sm;
 }
 
 @font-face {

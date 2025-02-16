@@ -33,8 +33,11 @@ defmodule VyasaWeb.Context.Read.Verses do
             </div>
           </:subtitle>
         </.header>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back :if={length(@src.chapters) > 1} patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
+        </.back>
+        <.back :if={length(@src.chapters) <= 1} patch={~p"/explore"}>
+          Back to all Texts
         </.back>
         <div
           id="verses"
@@ -56,7 +59,7 @@ defmodule VyasaWeb.Context.Read.Verses do
                 field: [:body],
                 verseup: {:big, @src.script}
               },
-              %{node: hd(verse.translations), field: [:target, :body_translit], verseup: :mid},
+              %{node: hd(verse.translations), field: [:target, :body_translit], verseup: :big},
               %{node: hd(verse.translations), field: [:target, :body_translit_meant], verseup: :mid},
               %{node: hd(verse.translations), field: [:target, :body], verseup: :mid}
             ]}

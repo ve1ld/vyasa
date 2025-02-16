@@ -40,8 +40,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     ~H"""
     <div id={"verse-#{@verse.id}"} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
-          <dt :if={Map.has_key?(elem, :title)} class="w-full text-center flex-none text-zinc-500">
+        <div :for={elem <- @edge} :if={Struct.get_in(Map.get(elem, :node, @verse), elem.field)}  class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
+          <dt :if={Map.has_key?(elem, :title)} class="w-full text-center  flex-none text-zinc-500">
             <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
           <div class="relative">
@@ -99,7 +99,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     # cant be just pure binary operations
     #IO.inspect(assigns, label: "verse_content expand")
     ~H"""
-    <dd class={"text-zinc-700 relative text-center leading-snug #{verse_class(@verseup)}"}>
+    <dd class={"text-zinc-700  text-center #{verse_class(@verseup)}"}>
       <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
         <%= @content %>
       </span>
@@ -270,7 +270,9 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     """
   end
 
-  defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-xl"
+  defp verse_class({:big, "ta"}), do: "font-ta text-lg sm:text-2xl leading-snug sm:leading-[2]"
+  defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-2xl leading-snug"
+  defp verse_class(:big), do: "font-dn text-lg"
   defp verse_class(:mid), do: "font-dn text-m"
 
   defp is_elem_bound_to_verse(verse, edge_elem) do

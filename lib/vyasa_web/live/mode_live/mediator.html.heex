@@ -27,7 +27,7 @@
     class="absolute p-2 mr-4 w-1/4 top-24  z-10 right-10 font-mono text-xs rounded text-brand "
     phx-hook="SessionBox"
   >
-    <div :if={!@session.name}>
+    <div :if={!@session.name && false}>
       <form class="flex items-center" id="name" phx-submit="name">
         <span class="transition-opacity text-lg duration-700 animate-pulse block">your name:</span>
         <input
@@ -47,7 +47,7 @@
   <main id="main-content" class="flex-grow bg-primaryBackground px-4 py-8 sm:px-6 lg:px-8">
     <div class="fixed top-4 right-4 flex flex-col items-center space-y-2">
       <.live_component id="assembly"  session={@session} sangh={@sangh} class="cursor-pointer transition-opacity duration-300 z-10"  module={VyasaWeb.AssemblyPresence} />
-      <div id="control-panel-container">
+      <div :if={false} id="control-panel-container">
         <.live_component module={@mode.control_panel_component} id="control_panel" mode={@mode} session={@session}/>
       </div>
     </div>
