@@ -29,6 +29,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
       socket
       |> assign(mode: mode)
       |> assign(url_params: nil)
+      |> assign(pid_register: %{})
       |> assign(ui_state: initial_ui_state),
       layout: {VyasaWeb.Layouts, :display_manager}
     }
@@ -42,8 +43,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
      |> assign(url_params: params |> Map.put(:path, URI.parse(url).path))
      |> maybe_focus_binding()
      |> sync_session()
-     |> join_sangh()
-    }
+     |> join_sangh()}
   end
 
   defp maybe_focus_binding(%{assigns: %{url_params: %{"bind" => bind_id},
@@ -157,16 +157,19 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
   @impl true
   def handle_event(
-        "read" <> "::" <> _event = _nav_event,
+        "read::" <> event,
         _,
-        %Socket{
-          assigns: %{
-            mode: %UserMode{
-              mode: _mode_name
-            }
-          }
-        } = socket
+        socket
       ) do
+
+    IO.inspect(event, label: "event context")
+    # send_update(
+    #   self(),
+    #   VyasaWeb.Context.Read,
+    #   id: "read",
+    #   event: event
+    # )
+    #send_update("read", [id: selector, binding: bind])
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
     {:noreply, socket}
@@ -259,17 +262,17 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
 
 
-  @impl true
-  @doc """
-  TODO: update this doc after handling handshakes better
-  Handles the custom message that corresponds to the :media_handshake event with the :init
-  message, regardless of the module that dispatched the message.
+  # @impl true
+  # @doc """
+  # TODO: update this doc after handling handshakes better
+  # Handles the custom message that corresponds to the :media_handshake event with the :init
+  # message, regardless of the module that dispatched the message.
 
-  This indicates an intention to sync the media library with the chapter, hence it
-  returns a message containing %Voice{} info that can be used to generate a playback struct.
-  """
+  # This indicates an intention to sync the media library with the chapter, hence it
+  # returns a message containing %Voice{} info that can be used to generate a playback struct.
+  # """
   def handle_info(
-        {_, :media_handshake, :init} = _msg,
+        %{pid: m_pid, event: :init_handshake, origin: VyasaWeb.MediaLive.MediaBridge} = _msg,
         %{
           assigns: %{
             mode: %UserMode{
@@ -280,9 +283,11 @@ defmodule VyasaWeb.ModeLive.Mediator do
         } = socket
       ) do
 
-        send_update(component, id: selector, event: :media_handshake)
+    IO.inspect("MEDIATOR MEDIA HANDSHOOK")
 
-    {:noreply, socket}
+        send_update(component, id: selector, event: :media_handshake, mediabridge_pid: m_pid)
+
+    {:noreply, socket |> update(:pid_register, &Map.put(&1, :mediabridge, m_pid))}
   end
 
   @impl true

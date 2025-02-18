@@ -17,7 +17,7 @@ defmodule VyasaWeb.Context.Read.Verses do
   # Multiple IDs detected: quick-draft-container. Ensure unique element ids.
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="animate-fade duration-100">
       <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>

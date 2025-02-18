@@ -12,7 +12,6 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Written
   alias VyasaWeb.Utils.Stream
   alias Vyasa.Medium
-  alias Vyasa.Medium.{Voice}
   alias Vyasa.Written.{Source, Chapter, Verse}
   alias Phoenix.LiveView.Socket
   alias Vyasa.Sangh
@@ -44,25 +43,14 @@ defmodule VyasaWeb.Context.Read do
   @impl true
   # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
-        %{id: "read", event: :media_handshake},
+        %{id: "read", event: :media_handshake, mediabridge_pid: m_pid},
         %{
           assigns: %{
-            session: %{id: sess_id},
             chap: %Chapter{no: c_no, source_id: src_id}
           }
         } = socket
       ) do
-    case Medium.get_voice(src_id, c_no, @default_voice_lang) do
-      %Voice{} = v ->
-        Vyasa.PubSub.publish(
-          v,
-          :voice_ack,
-          sess_id
-        )
-
-      _ ->
-        nil
-    end
+        send(m_pid, %{event: :ack_handshake, origin: __MODULE__, voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end})
 
     {:ok, socket}
   end
@@ -241,7 +229,6 @@ defmodule VyasaWeb.Context.Read do
       })
       |> init_drafting_context()
       |> init_reply_to_context()
-      |> sync_media_session()
     else
       _ ->
         raise VyasaWeb.ErrorHTML.FourOFour, message: "Chapter not Found"
@@ -253,19 +240,19 @@ defmodule VyasaWeb.Context.Read do
     socket
   end
 
-  # syncs the media sessions by subscribing and publishing to the relevant channels
-  defp sync_media_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
-       when is_binary(sess_id) do
-    Vyasa.PubSub.subscribe("written:session:" <> sess_id)
-    Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
+  # # syncs the media sessions by subscribing and publishing to the relevant channels
+  # defp sync_media_session(%Socket{assigns: %{session: %{id: sess_id}}} = socket)
+  #      when is_binary(sess_id) do
+  #   Vyasa.PubSub.subscribe("written:session:" <> sess_id)
+  #   Vyasa.PubSub.publish(:init, :written_handshake, "media:session:" <> sess_id)
 
-    socket
-  end
+  #   socket
+  # end
 
-  # fallthrough
-  defp sync_media_session(socket) do
-    socket
-  end
+  # # fallthrough
+  # defp sync_media_session(socket) do
+  #   socket
+  # end
 
   @doc """
   TODO: this functionis still a WIP, will be looked at when we are merging w the permalinking piece
@@ -1433,7 +1420,6 @@ defmodule VyasaWeb.Context.Read do
          } = socket,
          id
        ) do
-    IO.inspect(ui, label: "READ::SHEAF::ui_register_mark")
 
     socket
     |> assign(draft_reflector_ui: ui |> SheafUiState.register_mark(id))
@@ -1447,7 +1433,6 @@ defmodule VyasaWeb.Context.Read do
          } = socket,
          id
        ) do
-    IO.inspect(ui, label: "READ::SHEAF::ui_deregister_mark")
 
     socket
     |> assign(draft_reflector_ui: ui |> SheafUiState.deregister_mark(id))

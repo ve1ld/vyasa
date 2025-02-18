@@ -74,7 +74,7 @@
         id="media-bridge-container"
         class={["fixed inset-x-0 bottom-0 z-10", not @ui_state.show_media_bridge? && "hidden"]}
       >
-        <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge", sticky: true) %>
+        <%= live_render(@socket, VyasaWeb.MediaLive.MediaBridge, id: "MediaBridge") %>
       </div>
   </main>
 </div>

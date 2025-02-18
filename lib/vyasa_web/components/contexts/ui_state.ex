@@ -172,7 +172,6 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
           active: is_active?
         } = _sheaf
       ) do
-    IO.puts("CHECKPOINT get initial ui state HAPPY PATH")
 
     marks_ui =
       case marks do
@@ -188,7 +187,6 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
   end
 
   def get_initial_ui_state() do
-    IO.puts("CHECKPOINT get initial ui state POKEMON")
     struct(SheafUiState, @initial)
   end
 
@@ -264,9 +262,6 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
         mark_id
       )
       when is_binary(mark_id) do
-    IO.inspect(%{mark_id: mark_id, sheaf_ui_state: sheaf_ui_state},
-      label: "UI_STATE::SHEAF::register_mark"
-    )
 
     %SheafUiState{
       sheaf_ui_state
@@ -284,9 +279,7 @@ defmodule VyasaWeb.Context.Components.UiState.Sheaf do
         mark_id
       )
       when is_binary(mark_id) do
-    IO.inspect(%{mark_id: mark_id, sheaf_ui_state: sheaf_ui_state},
-      label: "UI_STATE::SHEAF::deregister_mark"
-    )
+
 
     %SheafUiState{
       sheaf_ui_state

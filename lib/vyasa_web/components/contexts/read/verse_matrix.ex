@@ -270,7 +270,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     """
   end
 
-  defp verse_class({:big, "ta"}), do: "font-ta text-lg sm:text-2xl leading-snug sm:leading-[2]"
+  defp verse_class({:big, "ta"}), do: "font-ta text-xl sm:text-2xl leading-snug sm:leading-[2]"
   defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-2xl leading-snug"
   defp verse_class(:big), do: "font-dn text-lg"
   defp verse_class(:mid), do: "font-dn text-m"

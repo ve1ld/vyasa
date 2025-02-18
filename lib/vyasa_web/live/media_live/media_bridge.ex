@@ -45,27 +45,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @impl true
   def mount(_params, _sess, socket) do
+    if connected?(socket) do
+      send(socket.parent_pid, %{event: :init_handshake, pid: self(), origin: __MODULE__})
+    end
     {:ok,
-     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end)
-     |> sync_session(), layout: false}
-  end
-
-  defp sync_session(%{assigns: %{session: %VyasaWeb.Session{id: id}}} = socket)
-       when is_binary(id) do
-    IO.inspect(
-      "MediaBridge::sync_session  sub to media:session:#{id} pub to written:session:#{id}",
-      label: "SEE ME"
-    )
-
-    Vyasa.PubSub.subscribe("media:session:" <> id)
-
-    Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
-
-    socket
-  end
-
-  defp sync_session(socket) do
-    socket
+     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end), layout: false}
   end
 
   defp update_playback(
@@ -226,8 +210,9 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   @impl true
-  def handle_event(_, _, socket) do
-    IO.puts(~c"[handleEvent] fallthrough handle event")
+  def handle_event(poke_event, poke_message, socket) do
+    IO.puts(~c"[handleEvent] fallthrough #{poke_event} handle event")
+    IO.inspect(poke_message)
     {:noreply, socket}
   end
 
@@ -345,53 +330,23 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   # a playback struct is created that represents this synced-state and the client-side hook is triggerred
   # to register the associated events timeline.
   def handle_info(
-        {_, :voice_ack,
-         %Voice{
-           id: id,
-           video: _video
-         } = voice} = _msg,
+        %{event: :ack_handshake, voice: get_voice},
         %Socket{
           assigns: %{
-            voice: prev_voice
+            voice: curr_voice
           }
         } = socket
       ) do
-    # FIXME: not sure why navigation and voice_ack has a regression bug now...
-    prev_id =
-      cond do
-        is_nil(prev_voice) -> nil
-        %Voice{id: prev_id} = prev_voice -> prev_id
-        true -> nil
-      end
-
-    is_new_voice = id !== prev_id
-
-    cond do
-      is_new_voice ->
-        {:noreply,
+    with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
+         false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
+      {:noreply,
          socket
          |> apply_voice_action(voice)
          |> dispatch_voice_registering_events()}
-
-      true ->
-        {:noreply, socket}
+    else
+      _ -> {:noreply, socket}
     end
-  end
 
-  @doc """
-  Handles the custom message that correponds to the :written_handshake event
-  with the :init msg, regardless of the module that dispatched the message.
-  """
-  def handle_info(
-        {_, :written_handshake, :init} = _msg,
-        %{assigns: %{session: %{id: id}}} = socket
-      ) do
-    # QQ: TODO figure out if te id payload to the message is still necessary ?
-    # NOTE: this is temporary, we will be shifting the way media-handshake works because
-    # of a refactor of how media bridge is supposed to be a nested liveview / slottable entity
-    # use this comment to track what needs to be done.
-    Vyasa.PubSub.publish(:init, :media_handshake, "written:session:" <> id)
-    {:noreply, socket}
   end
 
   # Handles playback sync relative to a particular verse id. In this case, the playback state is expected

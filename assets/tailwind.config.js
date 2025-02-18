@@ -16,9 +16,14 @@ module.exports = {
     extend: {
       animation: {
         ripple: "ripple 1s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+        fade: 'fadeIn 1s ease-in-out',
         pulseBorder: "pulseBorder 1.5s ease-in-out infinite",
       },
       keyframes: {
+        fadeIn: {
+					from: { opacity: 0 },
+					to: { opacity: 1 },
+				},
         ripple: {
           "0%": { transform: "scale(0)", opacity: "1" },
           "100%": { transform: "scale(4)", opacity: "0" },
