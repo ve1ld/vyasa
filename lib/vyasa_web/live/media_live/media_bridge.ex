@@ -352,7 +352,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   # Handles playback sync relative to a particular verse id. In this case, the playback state is expected
   # to get updated to the start of the event corresponding to that particular verse.
   @impl true
-  def handle_info({_, :playback_sync, %{verse_id: verse_id} = _inner_msg} = _msg, socket) do
+  def handle_info(%{event: :playback_sync, payload: %{verse_id: verse_id}}, socket) do
     %{voice: %{events: events} = _voice} = socket.assigns
 
     IO.inspect("handle_info::playback_sync", label: "checkpoint")

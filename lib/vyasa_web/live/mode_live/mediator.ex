@@ -272,7 +272,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   # returns a message containing %Voice{} info that can be used to generate a playback struct.
   # """
   def handle_info(
-        %{pid: m_pid, event: :init_handshake, origin: VyasaWeb.MediaLive.MediaBridge} = _msg,
+        %{pid: m_pid, event: :init_handshake, origin: origin} = _msg,
         %{
           assigns: %{
             mode: %UserMode{
@@ -285,9 +285,23 @@ defmodule VyasaWeb.ModeLive.Mediator do
 
     IO.inspect("MEDIATOR MEDIA HANDSHOOK")
 
-        send_update(component, id: selector, event: :media_handshake, mediabridge_pid: m_pid)
+        send_update(component, id: selector, event: :media_handshake)
 
-    {:noreply, socket |> update(:pid_register, &Map.put(&1, :mediabridge, m_pid))}
+    {:noreply, socket |> update(:pid_register, &Map.put(&1, origin, m_pid))}
+  end
+
+  def handle_info(
+        %{process: destination} = msg,
+        %{
+          assigns: %{
+            pid_register: register
+          }
+        } = socket
+      ) do
+    if is_pid(register[destination]) do
+      send(register[destination], msg)
+    end
+    {:noreply, socket}
   end
 
   @impl true

@@ -33,6 +33,24 @@
 
 <!-- livebook:{"branch_parent_index":0} -->
 
+## ADMIN TASKS
+
+```elixir
+Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
+|> hd()
+|> Map.get(:translations)
+|> hd()
+|> Vyasa.Written.Translation.changeset(%{"type" => "chapters", "target" => %{
+  "title" => "Hanuman Chalisa",
+  "title_translit" => "Hanuman Chalisa",
+    "body" =>"The Hanuman Chalisa, composed by Goswami Tulsidas, is a  40-verse hymn dedicated to Lord Hanuman, highlighting his unwavering devotion to Lord Rama. It is a testament to Hanuman's strength, wisdom, and courage, as well as his role in Lord Rama's epic battles against evil. Reciting this hymn is believed to bestow blessings and protection from Hanuman, fostering spiritual growth and devotion to Lord Rama.",
+    
+    }})
+|> Vyasa.Repo.update!()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
 ## VEL
 
 ```elixir

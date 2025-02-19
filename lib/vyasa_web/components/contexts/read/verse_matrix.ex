@@ -272,8 +272,8 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
 
   defp verse_class({:big, "ta"}), do: "font-ta text-xl sm:text-2xl leading-snug sm:leading-[2]"
   defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-2xl leading-snug"
-  defp verse_class(:big), do: "font-dn text-lg"
-  defp verse_class(:mid), do: "font-dn text-m"
+  defp verse_class(:big), do: "font-dn text-m sm:text-lg"
+  defp verse_class(:mid), do: "font-dn text-sm sm:text-m"
 
   defp is_elem_bound_to_verse(verse, edge_elem) do
 
