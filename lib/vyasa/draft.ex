@@ -18,11 +18,17 @@ defmodule Vyasa.Draft do
   def bind_node(%{"selection" => selection, "text" => text} = node = _bind_target_payload) do
     case :binary.match(text, selection) do
       {start_quote, len} ->
-        bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection, :start_quote => start_quote, :end_quote => start_quote + len}})
+        bind_node(Map.delete(node, "selection"), %Binding{
+          :window => %{
+            :quote => selection,
+            :start_quote => start_quote,
+            :end_quote => start_quote + len
+          }
+        })
+
       _ ->
         bind_node(Map.delete(node, "selection"), %Binding{})
     end
-
   end
 
   # Uses the "field" attribute in the bind_target
@@ -48,8 +54,17 @@ defmodule Vyasa.Draft do
       |> struct()
       |> Binding.field_lookup()
 
-    %{bind | node_field_name => node_id, :node_id => node_id}
-    |> Binding.apply(element)
+    cond do
+      not is_nil(node_field_name) ->
+        bind
+        |> Map.put(node_field_name, node_id)
+        |> Map.put(:node_id, node_id)
+        |> Binding.apply(element)
+
+      true ->
+        bind
+        |> Binding.apply(element)
+    end
   end
 
   def create_binding(%Binding{} = bind) do
@@ -70,7 +85,9 @@ defmodule Vyasa.Draft do
 
   defp nodify(b), do: b
 
-  defp fieldify(%Binding{field_key: keys} = b) when is_list(keys), do: %{b | field: keys |> Enum.join("::")}
+  defp fieldify(%Binding{field_key: keys} = b) when is_list(keys),
+    do: %{b | field: keys |> Enum.join("::")}
+
   defp fieldify(b), do: b
 
   @doc """

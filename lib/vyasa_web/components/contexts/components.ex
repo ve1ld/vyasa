@@ -19,7 +19,7 @@ defmodule VyasaWeb.Context.Components do
   def collapsible_marks_display(assigns) do
     ~H"""
     <!-- <.debug_dump label="Collapsible Marks Dump" class="relative" marks_ui={@marks_ui} /> -->
-    <div :if={not is_nil(@marks_ui)} class="mb-4">
+    <div class="mb-4">
       <div
         id={"collapse-header-container-" <> @id}
         class="flex items-baseline justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm transition-colors duration-200"
@@ -36,7 +36,7 @@ defmodule VyasaWeb.Context.Components do
           />
           <.icon name="hero-bookmark-solid" class="w-5 h-5 mr-2 text-brand" />
           <span class="text-lg font-small text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}" %>
+            {"#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))}"}
           </span>
         </button>
         <button
@@ -120,7 +120,7 @@ defmodule VyasaWeb.Context.Components do
               />
             </button>
             <!-- Displaying Order -->
-            <div class="mx-1 text-center text-md font-light"><%= @mark.order %></div>
+            <div class="mx-1 text-center text-md font-light">{@mark.order}</div>
             <button
               phx-click="dummy_event"
               type="button"
@@ -140,7 +140,7 @@ defmodule VyasaWeb.Context.Components do
           >
             <%= if !is_nil(@mark) && !is_nil(@mark.binding) && !is_nil(@mark.binding.window) && @mark.binding.window.quote !== "" do %>
               <span class="block mb-1 text-sm italic text-secondary">
-                "<%= @mark.binding.window.quote %>"
+                "{@mark.binding.window.quote}"
               </span>
             <% end %>
             <%= if is_binary(@mark.body) do %>
@@ -234,7 +234,7 @@ defmodule VyasaWeb.Context.Components do
                    before:content-['╰'] before:mr-1 before:text-gray-500
                    lg:before:content-none
                    lg:border-l-0 lg:pl-2">
-      SHEAF DISPLAY <%= @sheaf.body %> - <b><%= @sheaf.signature %></b>
+      SHEAF DISPLAY {@sheaf.body} - <b>{@sheaf.signature}</b>
     </span>
     """
   end
@@ -416,11 +416,11 @@ defmodule VyasaWeb.Context.Components do
         :if={@label}
         class="italic text-lg font-normal text-brand-dark pb-1 mb-1 border-b border-gray-400"
       >
-        <%= @label %>
+        {@label}
       </h2>
       <!-- Body Display -->
       <div class="mb-2">
-        <p class="text-brand-dark"><%= @sheaf.body || "EMPTY BODY" %></p>
+        <p class="text-brand-dark">{@sheaf.body || "EMPTY BODY"}</p>
       </div>
       <!-- Signature and Action Button Group -->
       <div class="flex justify-between items-center mt-2">
@@ -455,14 +455,14 @@ defmodule VyasaWeb.Context.Components do
     ~H"""
     <div class="flex mt-2 text-sm text-gray-600">
       <div class="mx-1 text-gray-800">
-        <p>- <%= @sheaf.signature %></p>
+        <p>- {@sheaf.signature}</p>
       </div>
       <!-- Time Display -->
       <div class="mx-1 text-gray-800 text-sm italic">
         <%= if is_nil(@sheaf.updated_at) do %>
-          <%= (@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time %>
+          {(@sheaf.inserted_at |> Utils.Formatters.Time.friendly()).formatted_time}
         <% else %>
-          <%= (@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time %> (edited)
+          {(@sheaf.updated_at |> Utils.Formatters.Time.friendly()).formatted_time} (edited)
         <% end %>
       </div>
     </div>
