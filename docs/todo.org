@@ -1,0 +1,16 @@
+#+title: TODOs
+
+- [ ] Corpus -> [[org:../vyasa/docs/sivaratri.org][Sivaratri Night Bhaj List]]
+* Tracklist
+** Can't be grouped by chapters, can jump to subchapter verse, if just some stanzas from each chapter -> event fragment to voices has to be
+** essentially a trail through with forward and back for that specific jam
+** ordered list
+- [ ] audio player -> event frag handler
+- [ ] Emphasisises DOMNode change
+  ** center
+- [ ] Now Playing Buffer
+
+* Verses
+** Have to be dynamic grouping with intros for protection verses, god salutations, etc. and endings we can look at refrains or reoccuring pieces later --> needs to be declarative, if theres authoritative that variation should be rendered
+* Geneology
+** the hierarchy of inspiration vel vaggupu to vel maaral for e.g.
