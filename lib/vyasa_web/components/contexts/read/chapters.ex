@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Chapters do
+defmodule VyasaWeb.Context.Read.Chapters do
   use VyasaWeb, :live_component
 
   @impl true
@@ -20,7 +20,7 @@ defmodule VyasaWeb.Content.Chapters do
         </div>
       </.header>
 
-      <.back patch={~p"/explore/"}>Back to All Sources</.back>
+      <.back patch={~p"/explore/"}>Back to All Texts</.back>
 
       <.table
         id="chapters"
@@ -49,7 +49,7 @@ defmodule VyasaWeb.Content.Chapters do
         </:col>
       </.table>
 
-      <.back patch={~p"/explore/"}>Back to All Sources</.back>
+      <.back patch={~p"/explore/"}>Back to All Texts</.back>
 
       <span :if={@chapters |> Enum.count() < 10} class="block h-96" />
     </div>

@@ -33,6 +33,724 @@
 
 <!-- livebook:{"branch_parent_index":0} -->
 
+## ADMIN TASKS
+
+```elixir
+Vyasa.Written.get_chapters_by_src("hanuman_chalisa")
+|> hd()
+|> Map.get(:translations)
+|> hd()
+|> Vyasa.Written.Translation.changeset(%{"type" => "chapters", "target" => %{
+  "title" => "Hanuman Chalisa",
+  "title_translit" => "Hanuman Chalisa",
+    "body" =>"The Hanuman Chalisa, composed by Goswami Tulsidas, is a  40-verse hymn dedicated to Lord Hanuman, highlighting his unwavering devotion to Lord Rama. It is a testament to Hanuman's strength, wisdom, and courage, as well as his role in Lord Rama's epic battles against evil. Reciting this hymn is believed to bestow blessings and protection from Hanuman, fostering spiritual growth and devotion to Lord Rama.",
+    
+    }})
+|> Vyasa.Repo.update!()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## VEL
+
+```elixir
+verse = """
+  0. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே
+[இந்த அடியை முதலில் 12 முறை ஓதவும்]
+
+  1. பருத்தமுலை சிறுத்தஇடை வெளுத்தநகை
+        கறுத்தகுழல் சிவத்தஇதழ் மறச்சிறுமி
+        விழிக்குநிகர் ஆகும்  (திரு)
+
+  2. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே  (திரு)
+
+  3. சொலற்(கு)அரிய திருப்புகழை உரைத்தவரை
+         அடுத்தபகை அறுத்(து)எறிய
+         உறுக்கிஎழும் அறத்தைநிலை காணும்  (திரு)
+
+  4. தருக்கிநமன் முருக்கவரின் எருக்குமதி
+         தரித்தமுடி படைத்தவிறல் படைத்தஇறை
+         கழற்குநிகர் ஆகும்  (திரு)
+
+  5. பனைக்கைமுக படக்கரட மதத்தவள
+         கஜக்கடவுள் பதத்(து)இடு(ம்)நி
+         களத்துமுளை தெறிக்கவரம் ஆகும்  (திரு)
+
+  6. சினத்(து)அவுணர் எதிர்த்தரண களத்தில்வெகு
+         குறைத்தலைகள் சிரித்(து)எயிறு
+         கடித்துவிழி விழித்(து)அலற மோதும்  (திரு)
+
+  7. துதிக்கும்அடி யவர்க்(கு)ஒருவர் கெடுக்கஇடர்
+         நினைக்கின்அவர் குலத்தைமுதல் அறக்களையும்
+         எனக்(கு)ஓர் துணை ஆகும்  (திரு)
+
+  8. தலத்தில்உள கணத்தொகுதி களிப்பின்உண
+         வழைப்ப(து) என மலர்க்கமல கரத்தின்முனை
+         விதிர்க்கவளை(வு) ஆகும்  (திரு)
+
+  9. பழுத்தமுது தமிழ்ப்பலகை இருக்கும்ஒரு
+         கவிப்புலவன் இசைக்(கு)உருகி
+         வரைக்குகையை இடித்துவழி காணும்  (திரு)
+
+10. திசைக்கிரியை முதற்குலிசன் அறுத்தசிறை
+         முளைத்த(து)என முகட்டின்இடை
+         பறக்கஅற விசைத்(து) அதிர ஓடும்  (திரு)
+
+11. சுடர்ப்பரிதி ஒளிப்பநில(வு) ஒழுக்கு(ம்)மதி
+         ஒளிப்பஅலை அடக்குதழல் ஒளிப்பஒளிர்
+         ஒளிப்பிரபை வீசும்  (திரு)
+
+12. தனித்துவழி நடக்கும்என(து) இடத்தும்ஒரு
+         வலத்தும்இரு புறத்தும்அரு(கு)
+         அடுத்(து)இரவு பகற்றுணைய(து) ஆகும்  (திரு)
+
+13. பசித்(து)அலகை முசித்(து)அழுது முறைப்படுதல்
+         ஒழித்(து)அவுணர் உரத்(து)உதிர
+         நிணத்தசைகள் புசிக்கஅருள் நேரும்  (திரு)
+
+14. திரைக்கடலை உடைத்துநிறை புனற்கடிது
+         குடித்(து)உடையும் உடைப்(பு) அடைய
+         அடைத்(து)உதிரம் நிறைத்துவிளை யாடும்  (திரு)
+
+15. சுரர்க்கு(ம்)முநி வரர்க்கு(ம்)மக பதிக்கும்விதி
+         தனக்கும்அரி தனக்கும்நரர் தமக்கும்உறும்
+         இடுக்கண்வினை சாடும்  (திரு)
+
+16. சலத்துவரும் அரக்கர்உடல் கொழுத்துவளர்
+         பெருத்தகுடர் சிவத்ததொடை
+         எனச்சிகையில் விருப்பமொடு சூடும்  (திரு)
+
+17. சுரர்க்கு(ம்)முநி வரர்க்கு(ம்)மக பதிக்கும்விதி
+         தனக்கும்அரி தனக்கும்நரர் தமக்கும்உறும்
+         இடுக்கண்வினை சாடும்  (திரு)
+
+18. சலத்துவரும் அரக்கர்உடல் கொழுத்துவளர்
+         பெருத்தகுடர் சிவத்ததொடை
+         எனச்சிகையில் விருப்பமொடு சூடும்  (திரு)
+
+19. பசித்(து)அலகை முசித்(து)அழுது முறைப்படுதல்
+         ஒழித்(து)அவுணர் உரத்(து)உதிர
+         நிணத்தசைகள் புசிக்கஅருள் நேரும்  (திரு)
+
+20. திரைக்கடலை உடைத்துநிறை புனற்கடிது
+         குடித்(து)உடையும் உடைப்(பு) அடைய
+         அடைத்(து)உதிரம் நிறைத்துவிளை யாடும்  (திரு)
+
+21. சுடர்ப்பரிதி ஒளிப்பநில(வு) ஒழுக்கு(ம்)மதி
+         ஒளிப்பஅலை அடக்குதழல் ஒளிப்பஒளிர்
+         ஒளிப்பிரபை வீசும்  (திரு)
+
+22. தனித்துவழி நடக்கும்என(து) இடத்தும்ஒரு
+         வலத்தும்இரு புறத்தும்அரு(கு)
+         அடுத்(து)இரவு பகற்றுணைய(து) ஆகும்  (திரு)
+
+23. பழுத்தமுது தமிழ்ப்பலகை இருக்கும்ஒரு
+         கவிப்புலவன் இசைக்(கு)உருகி
+         வரைக்குகையை இடித்துவழி காணும்  (திரு)
+
+24. திசைக்கிரியை முதற்குலிசன் அறுத்தசிறை
+         முளைத்த(து)என முகட்டின்இடை
+         பறக்கஅற விசைத்(து) அதிர ஓடும்  (திரு)
+
+25. துதிக்கும்அடி யவர்க்(கு)ஒருவர் கெடுக்கஇடர்
+         நினைக்கின்அவர் குலத்தைமுதல் அறக்களையும்
+         எனக்(கு)ஓர் துணை ஆகும்  (திரு)
+
+26. தலத்தில்உள கணத்தொகுதி களிப்பின்உண
+         வழைப்ப(து) என மலர்க்கமல கரத்தின்முனை
+         விதிர்க்கவளை(வு) ஆகும்  (திரு)
+
+27. பனைக்கைமுக படக்கரட மதத்தவள
+         கஜக்கடவுள் பதத்(து)இடு(ம்)நி
+         களத்துமுளை தெறிக்கவரம் ஆகும்  (திரு)
+
+28. சினத்(து)அவுணர் எதிர்த்தரண களத்தில்வெகு
+         குறைத்தலைகள் சிரித்(து)எயிறு
+         கடித்துவிழி விழித்(து)அலற மோதும்  (திரு)
+
+29. சொலற்(கு)அரிய திருப்புகழை உரைத்தவரை
+         அடுத்தபகை அறுத்(து)எறிய
+         உறுக்கிஎழும் அறத்தைநிலை காணும்  (திரு)
+
+30. தருக்கிநமன் முருக்கவரின் எருக்குமதி
+         தரித்தமுடி படைத்தவிறல் படைத்தஇறை
+         கழற்குநிகர் ஆகும்  (திரு)
+
+31. பருத்தமுலை சிறுத்தஇடை வெளுத்தநகை
+        கறுத்தகுழல் சிவத்தஇதழ் மறச்சிறுமி
+        விழிக்குநிகர் ஆகும்  (திரு)
+
+32. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே  (திரு)
+
+33. தருக்கிநமன் முருக்கவரின் எருக்குமதி
+         தரித்தமுடி படைத்தவிறல் படைத்தஇறை
+         கழற்குநிகர் ஆகும்  (திரு)
+
+34. சொலற்(கு)அரிய திருப்புகழை உரைத்தவரை
+         அடுத்தபகை அறுத்(து)எறிய
+         உறுக்கிஎழும் அறத்தைநிலை காணும்  (திரு)
+
+35. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே  (திரு)
+
+36. பருத்தமுலை சிறுத்தஇடை வெளுத்தநகை
+        கறுத்தகுழல் சிவத்தஇதழ் மறச்சிறுமி
+        விழிக்குநிகர் ஆகும்  (திரு)
+
+37. தலத்தில்உள கணத்தொகுதி களிப்பின்உண
+         வழைப்ப(து) என மலர்க்கமல கரத்தின்முனை
+         விதிர்க்கவளை(வு) ஆகும்  (திரு)
+
+38. துதிக்கும்அடி யவர்க்(கு)ஒருவர் கெடுக்கஇடர்
+         நினைக்கின்அவர் குலத்தைமுதல் அறக்களையும்
+         எனக்(கு)ஓர் துணை ஆகும்  (திரு)
+
+39. சினத்(து)அவுணர் எதிர்த்தரண களத்தில்வெகு
+         குறைத்தலைகள் சிரித்(து)எயிறு
+         கடித்துவிழி விழித்(து)அலற மோதும்  (திரு)
+
+40. பனைக்கைமுக படக்கரட மதத்தவள
+         கஜக்கடவுள் பதத்(து)இடு(ம்)நி
+         களத்துமுளை தெறிக்கவரம் ஆகும்  (திரு)
+
+41. தனித்துவழி நடக்கும்என(து) இடத்தும்ஒரு
+         வலத்தும்இரு புறத்தும்அரு(கு)
+         அடுத்(து)இரவு பகற்றுணைய(து) ஆகும்  (திரு)
+
+42. சுடர்ப்பரிதி ஒளிப்பநில(வு) ஒழுக்கு(ம்)மதி
+         ஒளிப்பஅலை அடக்குதழல் ஒளிப்பஒளிர்
+         ஒளிப்பிரபை வீசும்  (திரு)
+
+43. திசைக்கிரியை முதற்குலிசன் அறுத்தசிறை
+         முளைத்த(து)என முகட்டின்இடை
+         பறக்கஅற விசைத்(து) அதிர ஓடும்  (திரு)
+
+44. பழுத்தமுது தமிழ்ப்பலகை இருக்கும்ஒரு
+         கவிப்புலவன் இசைக்(கு)உருகி
+         வரைக்குகையை இடித்துவழி காணும்  (திரு)
+
+45. சலத்துவரும் அரக்கர்உடல் கொழுத்துவளர்
+         பெருத்தகுடர் சிவத்ததொடை
+         எனச்சிகையில் விருப்பமொடு சூடும்  (திரு)
+
+46. சுரர்க்கு(ம்)முநி வரர்க்கு(ம்)மக பதிக்கும்விதி
+         தனக்கும்அரி தனக்கும்நரர் தமக்கும்உறும்
+         இடுக்கண்வினை சாடும்  (திரு)
+
+47. திரைக்கடலை உடைத்துநிறை புனற்கடிது
+         குடித்(து)உடையும் உடைப்(பு) அடைய
+         அடைத்(து)உதிரம் நிறைத்துவிளை யாடும்  (திரு)
+
+48. பசித்(து)அலகை முசித்(து)அழுது முறைப்படுதல்
+         ஒழித்(து)அவுணர் உரத்(து)உதிர
+         நிணத்தசைகள் புசிக்கஅருள் நேரும்  (திரு)
+
+49. திரைக்கடலை உடைத்துநிறை புனற்கடிது
+         குடித்(து)உடையும் உடைப்(பு) அடைய
+         அடைத்(து)உதிரம் நிறைத்துவிளை யாடும்  (திரு)
+
+50. பசித்(து)அலகை முசித்(து)அழுது முறைப்படுதல்
+         ஒழித்(து)அவுணர் உரத்(து)உதிர
+         நிணத்தசைகள் புசிக்கஅருள் நேரும்  (திரு)
+
+51. சலத்துவரும் அரக்கர்உடல் கொழுத்துவளர்
+         பெருத்தகுடர் சிவத்ததொடை
+         எனச்சிகையில் விருப்பமொடு சூடும்  (திரு)
+
+52. சுரர்க்கு(ம்)முநி வரர்க்கு(ம்)மக பதிக்கும்விதி
+         தனக்கும்அரி தனக்கும்நரர் தமக்கும்உறும்
+         இடுக்கண்வினை சாடும்  (திரு)
+
+53. திசைக்கிரியை முதற்குலிசன் அறுத்தசிறை
+         முளைத்த(து)என முகட்டின்இடை
+         பறக்கஅற விசைத்(து) அதிர ஓடும்  (திரு)
+
+54. பழுத்தமுது தமிழ்ப்பலகை இருக்கும்ஒரு
+         கவிப்புலவன் இசைக்(கு)உருகி
+         வரைக்குகையை இடித்துவழி காணும்  (திரு)
+
+55. தனித்துவழி நடக்கும்என(து) இடத்தும்ஒரு
+         வலத்தும்இரு புறத்தும்அரு(கு)
+         அடுத்(து)இரவு பகற்றுணைய(து) ஆகும்  (திரு)
+
+56. சுடர்ப்பரிதி ஒளிப்பநில(வு) ஒழுக்கு(ம்)மதி
+         ஒளிப்பஅலை அடக்குதழல் ஒளிப்பஒளிர்
+         ஒளிப்பிரபை வீசும்  (திரு)
+
+57. சினத்(து)அவுணர் எதிர்த்தரண களத்தில்வெகு
+         குறைத்தலைகள் சிரித்(து)எயிறு
+         கடித்துவிழி விழித்(து)அலற மோதும்  (திரு)
+
+58. பனைக்கைமுக படக்கரட மதத்தவள
+         கஜக்கடவுள் பதத்(து)இடு(ம்)நி
+         களத்துமுளை தெறிக்கவரம் ஆகும்  (திரு)
+
+59. தலத்தில்உள கணத்தொகுதி களிப்பின்உண
+         வழைப்ப(து) என மலர்க்கமல கரத்தின்முனை
+         விதிர்க்கவளை(வு) ஆகும்  (திரு)
+
+60. துதிக்கும்அடி யவர்க்(கு)ஒருவர் கெடுக்கஇடர்
+         நினைக்கின்அவர் குலத்தைமுதல் அறக்களையும்
+         எனக்(கு)ஓர் துணை ஆகும்  (திரு)
+
+61. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே  (திரு)
+
+62. பருத்தமுலை சிறுத்தஇடை வெளுத்தநகை
+        கறுத்தகுழல் சிவத்தஇதழ் மறச்சிறுமி
+        விழிக்குநிகர் ஆகும்  (திரு)
+
+63. தருக்கிநமன் முருக்கவரின் எருக்குமதி
+         தரித்தமுடி படைத்தவிறல் படைத்தஇறை
+         கழற்குநிகர் ஆகும்  (திரு)
+
+64. சொலற்(கு)அரிய திருப்புகழை உரைத்தவரை
+         அடுத்தபகை அறுத்(து)எறிய
+         உறுக்கிஎழும் அறத்தைநிலை காணும்  (திரு)
+
+65. திருத்தணியில் உதித்(து)அருளும் ஒருத்தன்மலை
+        விருத்தன்என(து) உளத்தில்உறை
+        கருத்தன்மயில் நடத்துகுகன் வேலே
+[முடிவிலும் இந்த அடியை 12 முறை ஓதவும்]
+"""
+|> String.split("
+
+")
+|> Enum.map(fn << no::binary-size(4), verse::binary >> -> 
+  {no |> String.trim() # Remove leading/trailing whitespace
+    |> String.replace(".", "") # Remove periods
+    |> String.to_integer(), (verse |>  String.trim())}
+  end)
+|> Enum.into(%{})
+
+```
+
+```elixir
+%{id: sid} =
+  source =
+  %Vyasa.Written.Source{}
+  |> Vyasa.Written.Source.gen_changeset(%{title: "vel_maaral", lang: "ta"})
+  |> Vyasa.Repo.insert!()
+```
+
+```elixir
+translit = 
+"""
+0. Thiruthaniyil Uthithu arulum Oruthan Malai 
+Virudthan Enathu Ullathil Urai 
+Karuthan Mayil Nadaththu Guhan Velae 
+[This verse is to be recited 12 times at the start]
+
+1. Paruthamulai Sirutha Idai Veluththanagai
+Karuthakulal Sivaththa Ithazh Marasirumi
+Vizhikku Nigar Aagum (Thiru)
+
+2. Thiruthaniyil Uthithu Arulum Oruthan Malai
+Viruththan Enathu Ullathil Urai
+Karuthan Mayil Nadaththu Guhan Velae (Thiru)
+
+3. Sollarkku ariya Thirupugazhai Uraithavarai
+aduthapagai aruththu eriya
+Urukki Ezhum araththai nilai Kaanum (Thiru)
+
+4. Tharukkinaman Murukkavarin Erukkumathi
+Tharithamudi Padaiththa Viral Padaiththa Irai
+Kazharku Nigar Aagum (Thiru)
+
+5. Panaikaimuga Padakarada Mathathavala
+Gajakadavul Pathathu Idum Ni-
+Kalathumulai Therikavaram Aagum (Thiru)
+
+6. Sinathu avuNar Ethirtharana Kalathil Vegu
+Kuraithalaigal Siruthu eyiru
+Kadithu Vizhi Vizhiththu alara Mothum (Thiru)
+
+7. Thuthikum adiyavaruku Oruvar Keduka Idar
+Ninaikin avar Kulathai Muthal
+arakkalaiyum Enaku Oore Thunai Aagum (Thiru)
+
+8. Thalaththiluhla ganaththoguthi KalhippinuNa
+Vazhaippathuena Malarkamala Karaththinmunai
+Vithirka valhaivu Aagum (Thiru)
+
+9. Pazhuthamuthu Thamizhppalagai irukkum Oru
+Kavipulavan Isaikku Urugi
+Varaiguhaiyai idiththu Vazhi Kaanum (Thiru)
+
+10. Thisaikkiriyai Mutharrkulisan aruthasirai
+Mulaithathu ena Mugattin Idai
+Parakka ara Visaiththu athira Oodum (Thiru)
+
+11. Sudarpparithi Olippa Nilavu Ozhukkum Mathi
+Olippa alai adakkuthazhl Olippa Olir
+Olip prabai Veesum (Thiru)
+
+12. Thanithuvazhi Nadakkum Enathu idaththum Oru
+Valatthum iru Purathum Arugu
+Aduthu iravu Pagal thunayathu Aagum (Thiru)
+
+13. Pasithu alagai Musithu azhuthu Muraippaduthal
+Ozhithu avuNar Urathu Uthira
+NiNaththasaigal Pusika arul Nerum (Thiru)
+
+14. Thiraikkadalai Udaithunerai Punarkkadithu
+Kudithu Udaiyum Udaippu adaiya
+adaithu Uthiram Niraithu Vilaiyadum (Thiru)
+
+15. Surarkkum Munivararkkum Magapathikumm Vithi
+thanukumm ari thanakumm narar thamakumm Urum
+idukkaN Vinai sAdum (Thiru)
+
+16. Salathuvarum Arakar Udal Kozhuthu Valar
+Peruthakudar Sivathathodai
+Enasegaiyil Viruppamodu sUdum (Thiru)
+
+17. Surarkkum Munivararkkum Magapathikumm Vithi
+thanukumm ari thanakumm narar thamakumm Urum
+idukkaN Vinai sAdum (Thiru)
+
+18. Salathuvarum Arakar Udal Kozhuthu Valar
+Peruthakudar Sivathathodai
+Enasegaiyil Viruppamodu sUdum (Thiru)
+
+19. Pasithu alagai Musithu azhuthu Muraippaduthal
+Ozhithu avuNar Urathu Uthira
+NiNaththasaigal Pusika arul Nerum (Thiru)
+
+20. Thiraikkadalai Udaithunerai Punarkkadithu
+Kudithu Udaiyum Udaippu adaiya
+adaithu Uthiram Niraithu Vilaiyadum (Thiru)
+
+21. Sudarpparithi Olippa Nilavu Ozhukkum Mathi
+Olippa alai adakkuthazhl Olippa Olir
+Olip prabai Veesum (Thiru)
+
+22. Thanithuvazhi Nadakkum Enathu idaththum Oru
+Valatthum iru Purathum Arugu
+Aduthu iravu Pagal thunayathu Aagum (Thiru)
+
+23. Pazhuthamuthu Thamizhppalagai irukkum Oru
+Kavipulavan Isaikku Urugi
+Varaiguhaiyai idiththu Vazhi Kaanum (Thiru)
+
+24. Thisaikkiriyai Mutharrkulisan aruthasirai
+Mulaithathu ena Mugattin Idai
+Parakka ara Visaiththu athira Oodum (Thiru)
+
+25. Thuthikum adiyavaruku Oruvar Keduka Idar
+Ninaikin avar Kulathai Muthal
+arakkalaiyum Enaku Oore Thunai Aagum (Thiru)
+
+26. Thalaththiluhla ganaththoguthi KalhippinuNa
+Vazhaippathuena Malarkamala Karaththinmunai
+Vithirka valhaivu Aagum (Thiru)
+
+27. Panaikaimuga Padakarada Mathathavala
+Gajakadavul Pathathu Idum Ni-
+Kalathumulai Therikavaram Aagum (Thiru)
+
+28. Sinathu avuNar Ethirtharana Kalathil Vegu
+Kuraithalaigal Siruthu eyiru
+Kadithu Vizhi Vizhiththu alara Mothum (Thiru)
+
+29. Sollarkku ariya Thirupugazhai Uraithavarai
+aduthapagai aruththu eriya
+Urukki Ezhum araththai nilai Kaanum (Thiru)
+
+30. Tharukkinaman Murukkavarin Erukkumathi
+Tharithamudi Padaiththa Viral Padaiththa Irai
+Kazharku Nigar Aagum (Thiru)
+
+31. Paruthamulai Sirutha Idai Veluththanagai
+Karuthakulal Sivaththa Ithazh Marasirumi
+Vizhikku Nigar Aagum (Thiru)
+
+32. Thiruthaniyil Uthithu Arulum Oruthan Malai
+Viruththan Enathu Ullathil Urai
+Karuthan Mayil Nadaththu Guhan Velae (Thiru)
+
+33. Tharukkinaman Murukkavarin Erukkumathi
+Tharithamudi Padaiththa Viral Padaiththa Irai
+Kazharku Nigar Aagum (Thiru)
+
+34. Sollarkku ariya Thirupugazhai Uraithavarai
+aduthapagai aruththu eriya
+Urukki Ezhum araththai nilai Kaanum (Thiru)
+
+35. Thiruthaniyil Uthithu Arulum Oruthan Malai
+Viruththan Enathu Ullathil Urai
+Karuthan Mayil Nadaththu Guhan Velae (Thiru)
+
+36. Paruthamulai Sirutha Idai Veluththanagai
+Karuthakulal Sivaththa Ithazh Marasirumi
+Vizhikku Nigar Aagum (Thiru)
+
+37. Thalaththiluhla ganaththoguthi KalhippinuNa
+Vazhaippathuena Malarkamala Karaththinmunai
+Vithirka valhaivu Aagum (Thiru)
+
+38. Thuthikum adiyavaruku Oruvar Keduka Idar
+Ninaikin avar Kulathai Muthal
+arakkalaiyum Enaku Oore Thunai Aagum (Thiru)
+
+39. Sinathu avuNar Ethirtharana Kalathil Vegu
+Kuraithalaigal Siruthu eyiru
+Kadithu Vizhi Vizhiththu alara Mothum (Thiru)
+
+40. Panaikaimuga Padakarada Mathathavala
+Gajakadavul Pathathu Idum Ni-
+Kalathumulai Therikavaram Aagum (Thiru)
+
+41. Thanithuvazhi Nadakkum Enathu idaththum Oru
+Valatthum iru Purathum Arugu
+Aduthu iravu Pagal thunayathu Aagum (Thiru)
+
+42. Sudarpparithi Olippa Nilavu Ozhukkum Mathi
+Olippa alai adakkuthazhl Olippa Olir
+Olip prabai Veesum (Thiru)
+
+43. Pazhuthamuthu Thamizhppalagai irukkum Oru
+Kavipulavan Isaikku Urugi
+Varaiguhaiyai idiththu Vazhi Kaanum (Thiru)
+
+44. Thisaikkiriyai Mutharrkulisan aruthasirai
+Mulaithathu ena Mugattin Idai
+Parakka ara Visaiththu athira Oodum (Thiru)
+
+45. Salathuvarum Arakar Udal Kozhuthu Valar
+Peruthakudar Sivathathodai
+Enasegaiyil Viruppamodu sUdum (Thiru)
+
+46. Surarkkum Munivararkkum Magapathikumm Vithi
+thanukumm ari thanakumm narar thamakumm Urum
+idukkaN Vinai sAdum (Thiru)
+
+47. Thiraikkadalai Udaithunerai Punarkkadithu
+Kudithu Udaiyum Udaippu adaiya
+adaithu Uthiram Niraithu Vilaiyadum (Thiru)
+
+48. Pasithu alagai Musithu azhuthu Muraippaduthal
+Ozhithu avuNar Urathu Uthira
+NiNaththasaigal Pusika arul Nerum (Thiru)
+
+49. Thiraikkadalai Udaithunerai Punarkkadithu
+Kudithu Udaiyum Udaippu adaiya
+adaithu Uthiram Niraithu Vilaiyadum (Thiru)
+
+50. Pasithu alagai Musithu azhuthu Muraippaduthal
+Ozhithu avuNar Urathu Uthira
+NiNaththasaigal Pusika arul Nerum (Thiru)
+
+51. Salathuvarum Arakar Udal Kozhuthu Valar
+Peruthakudar Sivathathodai
+Enasegaiyil Viruppamodu sUdum (Thiru)
+
+52. Surarkkum Munivararkkum Magapathikumm Vithi
+thanukumm ari thanakumm narar thamakumm Urum
+idukkaN Vinai sAdum (Thiru)
+
+53. Thisaikkiriyai Mutharrkulisan aruthasirai
+Mulaithathu ena Mugattin Idai
+Parakka ara Visaiththu athira Oodum (Thiru)
+
+54. Pazhuthamuthu Thamizhppalagai irukkum Oru
+Kavipulavan Isaikku Urugi
+Varaiguhaiyai idiththu Vazhi Kaanum (Thiru)
+
+55. Thanithuvazhi Nadakkum Enathu idaththum Oru
+Valatthum iru Purathum Arugu
+Aduthu iravu Pagal thunayathu Aagum (Thiru)
+
+56. Sudarpparithi Olippa Nilavu Ozhukkum Mathi
+Olippa alai adakkuthazhl Olippa Olir
+Olip prabai Veesum (Thiru)
+
+57. Sinathu avuNar Ethirtharana Kalathil Vegu
+Kuraithalaigal Siruthu eyiru
+Kadithu Vizhi Vizhiththu alara Mothum (Thiru)
+
+58. Panaikaimuga Padakarada Mathathavala
+Gajakadavul Pathathu Idum Ni-
+Kalathumulai Therikavaram Aagum (Thiru)
+
+59. Thalaththiluhla ganaththoguthi KalhippinuNa
+Vazhaippathuena Malarkamala Karaththinmunai
+Vithirka valhaivu Aagum (Thiru)
+
+60. Thuthikum adiyavaruku Oruvar Keduka Idar
+Ninaikin avar Kulathai Muthal
+arakkalaiyum Enaku Oore Thunai Aagum (Thiru)
+
+61. Thiruthaniyil Uthithu Arulum Oruthan Malai
+Viruththan Enathu Ullathil Urai
+Karuthan Mayil Nadaththu Guhan Velae (Thiru)
+
+62. Paruthamulai Sirutha Idai Veluththanagai
+Karuthakulal Sivaththa Ithazh Marasirumi
+Vizhikku Nigar Aagum (Thiru)
+
+63. Tharukkinaman Murukkavarin Erukkumathi
+Tharithamudi Padaiththa Viral Padaiththa Irai
+Kazharku Nigar Aagum (Thiru)
+
+64. Sollarkku ariya Thirupugazhai Uraithavarai
+aduthapagai aruththu eriya
+Urukki Ezhum araththai nilai Kaanum (Thiru)
+
+65. Thiruthaniyil Uthithu arulum Oruthan Malai
+Virudthan Enathu Ullathil Urai
+Karuthan Mayil Nadaththu Guhan Velae
+[Recite The Last Stanza 12 Times Again To Complete It.]
+"""
+|> String.split("
+
+")
+|> Enum.map(fn << no::binary-size(2), verse::binary >> -> 
+  {no |> String.trim() # Remove leading/trailing whitespace
+    |> String.replace(".", "") # Remove periods
+    |> String.to_integer(), (verse |> String.replace(".", "") |>  String.trim())}
+  end)
+|> Enum.into(%{})
+
+```
+
+```elixir
+# %{id: sid} = Vyasa.Written.get_source!("658dfbd6-3a01-46e7-a4ec-f0fe7b4b9c96")
+
+
+#     %Vyasa.Written.Chapter{source_id: sid, no: 1, title: "Vel Maaral", body: "Vel Maaral Maha Mantram is a powerful devotional chant dedicated to Lord Murugan, the Hindu god of war and victory. This unique recitation method, was compiled by Vallimalai Sri Sachchidananda Swamigal based on the first 16 verses of Vel Vaguppu, which was originally composed by Arunagirinathar"}
+#     |> Vyasa.Written.Chapter.changeset(%{"translations" => [%{"lang" => "en",
+#       "type" => "chapters",
+#       "target" => %{"title" => "Spear's Cause", "title_translit" => "Vel Maaral"}, "source_id" => sid}]})
+#     |> Vyasa.Repo.insert!()
+
+# Vyasa.Written.get_chapters_by_src("vel maaral")
+```
+
+```elixir
+translation = """
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+The wide, deep and sharp Vel or Spear is like the eyes of the brave hunter lass Valli who has heavy bosoms, slender waist, gleaming white teeth, black tresses, and red lips.
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+The Spear upholds dharma by fiercely uprooting the bad karma that tries to sprout against those who chant the ineffably beautiful Tiruppugazh hymns with devotion and understanding of its profound meaning.
+The Spear is as praiseworthy as the auspicious feet of the victorious Lord Shiva who wears arka (erukkam) flower and the crescent moon on His tresses and who offers sanctuary to the devotees when Yama approaches them arrogantly to take away their lives.
+Murugan's vel is the saw that cuts through the locks on the chain that Surapadman put on the ankles of Indra whose vehicle is the white Airavata elephant with a trunk that is suspended like a palm tree, with its forehead caparisoned with decorative clothes and with cheeks down which flow the masth water.
+The severed heads of the asuras in the battlefield mockingly laugh at those still advancing toward the Spear, provoking them to grind their teeth and glare in fury as they charge forward onto the Vel, only to be smashed and beheaded.
+The Spear serves as a guardian, not only destroying the bad karma that tries to manifest against its devotees but also its entire chain of karmic consequences from its root, to protect those who worship it.
+The Lord's lotus-like hands extend in an inviting gesture, with delicate fingertips warmly inviting those under His patronage—those hungry for His grace and wisdom—to partake in His infinite benevolence. In perfect harmony, the vel resting on His majestic shoulder bends gracefully, as if to shower divine grace, blessings, and knowledge upon all. 
+Murugan's vel pounded the Tirupparangiri mountain and rescued Nakkeeran and other poets from the cave (where they were imprisoned by a ghost called Karkimukhi) after being touched by the musical renderings of the peerless Nakkeeran, the head of the ancient Tamil Sangam board which is renowned for its knowledge.
+The Spear flies with infinite swiftness across the the crest of the cosmic sphere making the universe quiver and appear as if all the mountains in the eight directions had regenerated their wings that were cut once by Indra.
+The Spear radiates the brilliance of divine knowledge, casting such a resplendent light that even the radiant sun, the serene moon with its soothing rays, and the blazing Vadavamukhagni, which restrains the seas from engulfing the world, are humbled into hiding.
+When I walk alone, the Spear is with me on all sides—before me, behind me, to my left and right, close by both in the day and night, offering me constant protection and companionship.
+The Spear mercifully stops the hungry ghosts from crying aloud and complaining about the lack of food by giving them the blood-soaked fatty flesh of the asuras.
+The Spear tears the wavy sea, closing the breach everywhere so that water is dammed; drinks it swiftly, and again fills it with the blood from the asuras and plays in it.
+The Spear destroys the evils of karma that cause grief to celestials, sages, Indra, Brahma, Vishnu and the humans.
+The Spear wears with delight on its crown, a red garland of the fatty intestines of the fat asuras who charge angrily in the battle field.
+The Spear destroys the evils of karma that cause grief to celestials, sages, Indra, Brahma, Vishnu and the humans.
+The Spear wears with delight on its crown, a red garland of the fatty intestines of the fat asuras who charge angrily in the battle field.
+The Spear mercifully stops the hungry ghosts from crying aloud and complaining about the lack of food by giving them the blood-soaked fatty flesh of the asuras.
+The Spear tears the wavy sea, closing the breach everywhere so that water is dammed; drinks it swiftly, and again fills it with the blood from the asuras and plays in it.
+The Spear radiates the brilliance of divine knowledge, casting such a resplendent light that even the radiant sun, the serene moon with its soothing rays, and the blazing Vadavamukhagni, which restrains the seas from engulfing the world, are humbled into hiding.
+When I walk alone, the Spear is with me on all sides—before me, behind me, to my left and right, close by both in the day and night, offering me constant protection and companionship.
+Murugan's vel pounded the Tirupparangiri mountain and rescued Nakkeeran and other poets from the cave (where they were imprisoned by a ghost called Karkimukhi) after being touched by the musical renderings of the peerless Nakkeeran, the head of the ancient Tamil Sangam board which is renowned for its knowledge.
+The Spear flies with infinite swiftness across the the crest of the cosmic sphere making the universe quiver and appear as if all the mountains in the eight directions had regenerated their wings that were cut once by Indra.
+The Spear serves as a guardian, not only destroying the bad karma that tries to manifest against its devotees but also its entire chain of karmic consequences from its root, to protect those who worship it.
+The Lord's lotus-like hands extend in an inviting gesture, with delicate fingertips warmly inviting those under His patronage—those hungry for His grace and wisdom—to partake in His infinite benevolence. In perfect harmony, the vel resting on His majestic shoulder bends gracefully, as if to shower divine grace, blessings, and knowledge upon all. 
+Murugan's vel is the saw that cuts through the locks on the chain that Surapadman put on the ankles of Indra whose vehicle is the white Airavata elephant with a trunk that is suspended like a palm tree, with its forehead caparisoned with decorative clothes and with cheeks down which flow the masth water.
+The severed heads of the asuras in the battlefield mockingly laugh at those still advancing toward the Spear, provoking them to grind their teeth and glare in fury as they charge forward onto the Vel, only to be smashed and beheaded.
+The Spear upholds dharma by fiercely uprooting the bad karma that tries to sprout against those who chant the ineffably beautiful Tiruppugazh hymns with devotion and understanding of its profound meaning.
+The Spear is as praiseworthy as the auspicious feet of the victorious Lord Shiva who wears arka (erukkam) flower and the crescent moon on His tresses and who offers sanctuary to the devotees when Yama approaches them arrogantly to take away their lives.
+The wide, deep and sharp Vel or Spear is like the eyes of the brave hunter lass Valli who has heavy bosoms, slender waist, gleaming white teeth, black tresses, and red lips.
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+The Spear is as praiseworthy as the auspicious feet of the victorious Lord Shiva who wears arka (erukkam) flower and the crescent moon on His tresses and who offers sanctuary to the devotees when Yama approaches them arrogantly to take away their lives.
+The Spear upholds dharma by fiercely uprooting the bad karma that tries to sprout against those who chant the ineffably beautiful Tiruppugazh hymns with devotion and understanding of its profound meaning.
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+The wide, deep and sharp Vel or Spear is like the eyes of the brave hunter lass Valli who has heavy bosoms, slender waist, gleaming white teeth, black tresses, and red lips.
+The Lord's lotus-like hands extend in an inviting gesture, with delicate fingertips warmly inviting those under His patronage—those hungry for His grace and wisdom—to partake in His infinite benevolence. In perfect harmony, the vel resting on His majestic shoulder bends gracefully, as if to shower divine grace, blessings, and knowledge upon all. 
+The Spear serves as a guardian, not only destroying the bad karma that tries to manifest against its devotees but also its entire chain of karmic consequences from its root, to protect those who worship it.
+The severed heads of the asuras in the battlefield mockingly laugh at those still advancing toward the Spear, provoking them to grind their teeth and glare in fury as they charge forward onto the Vel, only to be smashed and beheaded.
+Murugan's vel is the saw that cuts through the locks on the chain that Surapadman put on the ankles of Indra whose vehicle is the white Airavata elephant with a trunk that is suspended like a palm tree, with its forehead caparisoned with decorative clothes and with cheeks down which flow the masth water.
+When I walk alone, the Spear is with me on all sides—before me, behind me, to my left and right, close by both in the day and night, offering me constant protection and companionship.
+The Spear radiates the brilliance of divine knowledge, casting such a resplendent light that even the radiant sun, the serene moon with its soothing rays, and the blazing Vadavamukhagni, which restrains the seas from engulfing the world, are humbled into hiding.
+Murugan's vel pounded the Tirupparangiri mountain and rescued Nakkeeran and other poets from the cave (where they were imprisoned by a ghost called Karkimukhi) after being touched by the musical renderings of the peerless Nakkeeran, the head of the ancient Tamil Sangam board which is renowned for its knowledge.
+The Spear wears with delight on its crown, a red garland of the fatty intestines of the fat asuras who charge angrily in the battle field.
+The Spear destroys the evils of karma that cause grief to celestials, sages, Indra, Brahma, Vishnu and the humans.
+The Spear tears the wavy sea, closing the breach everywhere so that water is dammed; drinks it swiftly, and again fills it with the blood from the asuras and plays in it.
+The Spear mercifully stops the hungry ghosts from crying aloud and complaining about the lack of food by giving them the blood-soaked fatty flesh of the asuras.
+The Spear tears the wavy sea, closing the breach everywhere so that water is dammed; drinks it swiftly, and again fills it with the blood from the asuras and plays in it.
+The Spear mercifully stops the hungry ghosts from crying aloud and complaining about the lack of food by giving them the blood-soaked fatty flesh of the asuras.
+The Spear wears with delight on its crown, a red garland of the fatty intestines of the fat asuras who charge angrily in the battle field.
+The Spear destroys the evils of karma that cause grief to celestials, sages, Indra, Brahma, Vishnu and the humans.
+The Spear flies with infinite swiftness across the the crest of the cosmic sphere making the universe quiver and appear as if all the mountains in the eight directions had regenerated their wings that were cut once by Indra.
+Murugan's vel pounded the Tirupparangiri mountain and rescued Nakkeeran and other poets from the cave (where they were imprisoned by a ghost called Karkimukhi) after being touched by the musical renderings of the peerless Nakkeeran, the head of the ancient Tamil Sangam board which is renowned for its knowledge.
+When I walk alone, the Spear is with me on all sides—before me, behind me, to my left and right, close by both in the day and night, offering me constant protection and companionship.
+The Spear radiates the brilliance of divine knowledge, casting such a resplendent light that even the radiant sun, the serene moon with its soothing rays, and the blazing Vadavamukhagni, which restrains the seas from engulfing the world, are humbled into hiding.
+The severed heads of the asuras in the battlefield mockingly laugh at those still advancing toward the Spear, provoking them to grind their teeth and glare in fury as they charge forward onto the Vel, only to be smashed and beheaded.
+Murugan's vel is the saw that cuts through the locks on the chain that Surapadman put on the ankles of Indra whose vehicle is the white Airavata elephant with a trunk that is suspended like a palm tree, with its forehead caparisoned with decorative clothes and with cheeks down which flow the masth water.
+The Lord's lotus-like hands extend in an inviting gesture, with delicate fingertips warmly inviting those under His patronage—those hungry for His grace and wisdom—to partake in His infinite benevolence. In perfect harmony, the vel resting on His majestic shoulder bends gracefully, as if to shower divine grace, blessings, and knowledge upon all. 
+The Spear serves as a guardian, not only destroying the bad karma that tries to manifest against its devotees but also its entire chain of karmic consequences from its root, to protect those who worship it.
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+The wide, deep and sharp Vel or Spear is like the eyes of the brave hunter lass Valli who has heavy bosoms, slender waist, gleaming white teeth, black tresses, and red lips.
+The Spear is as praiseworthy as the auspicious feet of the victorious Lord Shiva who wears arka (erukkam) flower and the crescent moon on His tresses and who offers sanctuary to the devotees when Yama approaches them arrogantly to take away their lives.
+The Spear upholds dharma by fiercely uprooting the bad karma that tries to sprout against those who chant the ineffably beautiful Tiruppugazh hymns with devotion and understanding of its profound meaning.
+All these praiseworthy feats are those of the Vel in the hands of the One who rises (like the Sun of Knowledge) at TiruththaNi and is the Old Man of the Hill, who resides in my heart and whose vehicle is the peacock.
+"""
+|> String.split("
+")
+|> Enum.reduce({[], 0}, fn v, {acc, no} ->  {[{no, v} | acc], no+1} end)
+|> elem(0)
+|> Enum.into(%{})
+```
+
+```elixir
+Vyasa.Written.get_verses_in_chapter(1, "658dfbd6-3a01-46e7-a4ec-f0fe7b4b9c96")
+|> Vyasa.Repo.preload([:translations])
+|> Enum.map(fn x -> 
+  Enum.map(x.translations, fn x ->
+      Vyasa.Repo.delete!(x)
+    end)
+  Vyasa.Repo.delete!(x) end)
+```
+
+```elixir
+sid = "658dfbd6-3a01-46e7-a4ec-f0fe7b4b9c96"
+verse |> Enum.map(fn {no, verse} -> 
+%Vyasa.Written.Verse{no: no,  source_id: sid, chapter_no: 1, body: verse}
+    |> Vyasa.Written.Verse.changeset(%{"translations" => [%{"lang" => "en",
+      "type" => "verses",
+      "target" => %{"body_translit" => translit[no],
+        "body" => translation[no]},
+      "source_id" => sid}]})
+    |> Vyasa.Repo.insert!()
+  end)
+```
+
+```elixir
+sid
+```
+
+```elixir
+Vyasa.Written.get_chapters_by_src("vel_maaral")
+```
+
+```elixir
+import Ecto.Query, warn: false
+from(c in Vyasa.Written.Verse,
+      where: c.source_id == ^sid)
+|> Vyasa.Repo.all()
+
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
 ## SAAVN
 
 ```elixir
@@ -169,6 +887,8 @@ data =
   |> Stream.run()
 ```
 
+<!-- livebook:{"branch_parent_index":0} -->
+
 ## GUPOPE
 
 ```elixir
@@ -286,6 +1006,14 @@ v
 # |> Enum.map(fn {verse_number, texts} ->
 #       {verse_number, Enum.reverse(texts)}
 #     end)
+```
+
+```elixir
+Vyasa.Written.get_verses_in_chapter(1, "fcdacf6d-9d2d-4cf5-9a27-a8ef39011d7b")
+|> Enum.map(fn %{no: verse_no, id: verse_id} ->
+   #Vyasa.Written.create_translation(%{"type" => "verses", "lang" => "en", "verse_id" => verse_id})
+   {verse_no, v[verse_no]}
+  end)
 ```
 
 ## Thiruvaasagam

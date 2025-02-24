@@ -11,12 +11,18 @@ defmodule Vyasa.Draft do
 
   # Inits the binding for an empty selection
   def bind_node(%{"selection" => ""} = node = _bind_target_payload) do
-    bind_node(node, %Binding{})
+    bind_node(Map.delete(node, "selection"), %Binding{})
   end
 
   # Shifts the selection within the bind target payload to the %Binding{} struct, and continues with the binding.
-  def bind_node(%{"selection" => selection} = node = _bind_target_payload) do
-    bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection}})
+  def bind_node(%{"selection" => selection, "text" => text} = node = _bind_target_payload) do
+    case :binary.match(text, selection) do
+      {start_quote, len} ->
+        bind_node(Map.delete(node, "selection"), %Binding{:window => %{:quote => selection, :start_quote => start_quote, :end_quote => start_quote + len}})
+      _ ->
+        bind_node(Map.delete(node, "selection"), %Binding{})
+    end
+
   end
 
   # Uses the "field" attribute in the bind_target
@@ -33,7 +39,7 @@ defmodule Vyasa.Draft do
   id as keyed by the node_field_name.
   """
   def bind_node(
-        %{"node" => node, "node_id" => node_id} = _binding_target_payload,
+        %{"node" => node, "node_id" => node_id} = element,
         %Binding{} = bind
       ) do
     node_field_name =
@@ -43,7 +49,29 @@ defmodule Vyasa.Draft do
       |> Binding.field_lookup()
 
     %{bind | node_field_name => node_id, :node_id => node_id}
+    |> Binding.apply(element)
   end
+
+  def create_binding(%Binding{} = bind) do
+    bind
+    |> Repo.insert()
+  end
+
+  def create_binding(attrs) do
+    bind_node(attrs)
+    |> Repo.insert()
+  end
+
+  def get_binding!(id), do: Repo.get!(Binding, id) |> nodify() |> fieldify()
+
+  defp nodify(%Binding{translation_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
+
+  defp nodify(%Binding{verse_id: id} = b) when not is_nil(id), do: %{b | node_id: id}
+
+  defp nodify(b), do: b
+
+  defp fieldify(%Binding{field_key: keys} = b) when is_list(keys), do: %{b | field: keys |> Enum.join("::")}
+  defp fieldify(b), do: b
 
   @doc """
   Returns the list of marks.
@@ -72,7 +100,7 @@ defmodule Vyasa.Draft do
       ** (Ecto.NoResultsError)
 
   """
-  def get_mark!(id), do: Repo.get!(Mark, id)
+  def get_mark(id), do: Repo.get(Mark, id)
 
   @doc """
   Creates a mark.

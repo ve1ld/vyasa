@@ -220,6 +220,18 @@ defmodule Vyasa.Written do
     Repo.all(query_verse)
   end
 
+
+  def create_translation(attrs \\ %{}) do
+    %Translation{}
+    |> Translation.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def delete_translation(%Translation{} = translation) do
+    Repo.delete(translation)
+  end
+
+
   @doc """
   Creates a text.
 

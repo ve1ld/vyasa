@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Verses do
+defmodule VyasaWeb.Context.Read.Verses do
   use VyasaWeb, :live_component
 
   alias Vyasa.Written.{Verse}
@@ -17,7 +17,7 @@ defmodule VyasaWeb.Content.Verses do
   # Multiple IDs detected: quick-draft-container. Ensure unique element ids.
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="animate-fade duration-100">
       <div id="chapter-index-container">
         <.header class="p-4 pb-0">
           <div class={["text-4xl mb-4", "font-" <> @src.script]}>
@@ -33,8 +33,11 @@ defmodule VyasaWeb.Content.Verses do
             </div>
           </:subtitle>
         </.header>
-        <.back patch={~p"/explore/#{@src.title}"}>
+        <.back :if={length(@src.chapters) > 1} patch={~p"/explore/#{@src.title}"}>
           Back to <%= to_title_case(@src.title) %> Chapters
+        </.back>
+        <.back :if={length(@src.chapters) <= 1} patch={~p"/explore"}>
+          Back to all Texts
         </.back>
         <div
           id="verses"
@@ -43,19 +46,20 @@ defmodule VyasaWeb.Content.Verses do
           data-event-target={@user_mode.mode_context_component_selector}
         >
           <.live_component
-            :for={{dom_id, %Verse{} = verse} <- @verses}
-            id={dom_id}
-            module={VyasaWeb.Content.VerseMatrix}
+            :for={{_dom_id, %Verse{} = verse} <- @verses}
+            id={"verse-" <>verse.id}
+            module={VyasaWeb.Context.Read.VerseMatrix}
             verse={verse}
             marks={@marks}
-            event_target={@user_mode.mode_context_component_selector}
+            marks_ui={@marks_ui}
+            event_target="#content-display"
             edge={[
               %{
                 title: "#{verse.chapter_no}.#{verse.no}",
                 field: [:body],
                 verseup: {:big, @src.script}
               },
-              %{node: hd(verse.translations), field: [:target, :body_translit], verseup: :mid},
+              %{node: hd(verse.translations), field: [:target, :body_translit], verseup: :big},
               %{node: hd(verse.translations), field: [:target, :body_translit_meant], verseup: :mid},
               %{node: hd(verse.translations), field: [:target, :body], verseup: :mid}
             ]}
