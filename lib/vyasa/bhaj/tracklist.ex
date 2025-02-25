@@ -4,6 +4,7 @@ defmodule Vyasa.Bhaj.Tracklist do
 
   alias Vyasa.Medium.Track
 
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "tracklists" do
     field :title, :string
     has_many :tracks, Track, references: :id, foreign_key: :trackls_id
@@ -14,7 +15,7 @@ defmodule Vyasa.Bhaj.Tracklist do
   @doc false
   def changeset(track_list, attrs) do
     track_list
-    |> cast(attrs, [:title])
-    |> validate_required([:title])
+    |> cast(attrs, [:id, :title])
+    |> cast_assoc(:tracks)
   end
 end

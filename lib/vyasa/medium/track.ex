@@ -11,15 +11,14 @@ defmodule Vyasa.Medium.Track do
     #has_many :voices, Voice
     belongs_to :trackls, Tracklist, foreign_key: :trackls_id, type: :binary_id
     belongs_to :event, Event, foreign_key: :event_id, type: :binary_id
-
-    timestamps(type: :utc_datetime)
   end
 
 
    def changeset(track, attrs) do
     track
     |> cast(attrs, [:order, :trackls_id, :event_id])
-    |> validate_required([:order, :trackls_id, :event_id])
+    |> validate_required([:order, :trackls_id])
+    |> cast_assoc(:event)
     |> foreign_key_constraint(:trackls_id)
     |> foreign_key_constraint(:event_id)
     #|> unique_constraint([:trackls_id, :order], name: "tracks_trackls_id_order_index")

@@ -211,11 +211,21 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-  def get_verses_in_chapter(no, source_id) do
+  def get_verses_in_chapter(no, source_id) when is_uuid?(source_id) do
     query_verse =
       from v in Verse,
         where: v.chapter_no == ^no and v.source_id == ^source_id,
         preload: [:chapter]
+
+    Repo.all(query_verse)
+  end
+
+  def get_verses_in_chapter(no, source_title) when is_binary(source_title) do
+    %Source{id: id} = _src = get_source_by_title(source_title)
+
+    query_verse =
+      from v in Verse,
+        where: v.chapter_no == ^no and v.source_id == ^id
 
     Repo.all(query_verse)
   end
