@@ -1,0 +1,60 @@
+# Sivarathri
+
+## Root
+
+```elixir
+defmodule R do
+  def recompile() do
+    Mix.Task.reenable("app.start")
+    Mix.Task.reenable("compile")
+    Mix.Task.reenable("compile.all")
+    compilers = Mix.compilers()
+    Enum.each(compilers, &Mix.Task.reenable("compile.#{&1}"))
+    Mix.Task.run("compile.all")
+  end
+end
+
+R.recompile()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Tracklist Gen
+
+```elixir
+{:ok, ts} = Vyasa.Bhaj.create_tracklist(%{id: Ecto.UUID.generate(), title: "Shivaratri"})
+```
+
+```elixir
+[%{source: "gita", chapter_no: 1},
+  %{source: "hanuman_chalisa", chapter_no: 1, start_verse: 5, end_verse: 10}
+]
+
+|> Enum.reduce([], 
+  fn %{source: name, chapter_no: chap_no, start_verse: startv, end_verse: endv}, acc -> 
+    Vyasa.Written.get_verses_in_chapter(chap_no, name)
+    |> Enum.filter(fn %{no: no} -> no >=startv and no<=endv end)
+    |> Enum.reduce(acc, fn x, acc -> [x | acc] end)
+  %{source: name, chapter_no: chap_no}, acc -> 
+    Vyasa.Written.get_verses_in_chapter(chap_no, name)
+    |> Enum.reduce(acc, fn x, acc -> [x | acc] end)
+end)
+|> Enum.reverse()
+|> Enum.with_index()
+|> Enum.map(fn {%{id: verse_id, source_id: sid}, order} ->
+  Vyasa.Bhaj.create_track(%{order: order+1, trackls_id: ts.id,
+    event: %{verse_id: verse_id,
+      source_id: sid
+    }})
+end
+  )
+#
+```
+
+```elixir
+Vyasa.Bhaj.get_tracklist!(ts.id)
+|> Vyasa.Repo.preload([tracks: [event: [:verse]]])
+|> Map.get(:tracks)
+|> Enum.map(fn %{order: order, event: %{verse: %{body: body}}} -> {order, body} end)
+|> Enum.reverse()
+```

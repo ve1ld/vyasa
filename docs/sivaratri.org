@@ -1,5 +1,11 @@
 #+title: Sivarathri Night Kaalam I
 
+** AllNight TODOs [0%]
+- [ ] tracklist view 1hr
+- [ ] click tracklist to go to chapter.verse.permalink 1hr
+- [ ] audio listening labelling 2hr
+- [ ] source - thirumurai, chapter no, starting verse, ending verse 3hrs
+- [ ] events order with, source chapter verse tuple to lookup 2hrs
 * பூழியர்கோன் - நால்வர் துதி
     திருச்சிற்றம்பலம்
     பூழியர்கோன் வெப்பொழித்த புகலியர்கோன்
