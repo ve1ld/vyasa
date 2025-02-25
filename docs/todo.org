@@ -10,7 +10,102 @@
   ** center
 - [ ] Now Playing Buffer
 
+
+* Emphasizing Events, Controlling "Playback"
+This is a little dependent on the tracklist being implemented.
+
+** Context on how it was happening before/currently
+The big picture steps were:
+1. handshakes for readiness (=init_handshake=)
+2. handshake for media sync (=ack_handshake=)
+   - currently this payload is a callback fn that hydrates via VOICE
+     contingent on existence of voice <payload definition>
+
+3. media_bridge uses the callback as part of the media sync to do some state init
+   - hydrate states:
+     * playback
+     * voice
+     * video
+
+   - register client-side events: (client side-registration)
+     * register events timeline
+       - hydrates the event bridge for media, allowing the heartbeat to start, event listeners to register and so on.
+
+       - lookup table for the current way of =emphaizeEvent=
+
+     * register playback
+       - inits the playback state
+
+4. mediabridge ticks the heartbeat, which propagates via the event bridges for it and on each tick, the emphasize event is invoked
+   - this means that the ticking is time-based (heartbeat-based)
+   - this is the current coupling problem
+
+** Some axioms
+1. some data primitives:
+   + tracklists contain tracks in some order
+
+   + a single track is a tuple of <tracklist, event> ==> this is an ordered set of events
+     - track can be "polymorphic":
+       + voice-tracks => becomes an audio album
+       + verse-tracks => becomes a presentation-based
+
+   + events: it's "polymorphic". The tracklist shall determine what "type" it shall be.
+     - can be tied to time ==> time-based events
+     - can be tied to location within a text ==> verse-based events [CURRENT FOCUS]
+     - can be tied to marks ==> mark-based events
+
+2. we shall adhere to separation of concerns.
+   + media bridge:
+     DOs:
+     - handles everything related to what is playing, playback controls and such
+     - NEAR FUTURE: should capture keyboard nav for events in tracklist
+     - NEAR FUTURE: handle broadcasting responsibilities for media syncs across live sessions
+
+     DON'Ts:
+     - TODO media bridge should not be handling the emphasis events because that relates to the content and doesn't exactly matter from playback pov. The better place for this should be the mediator (actually it's mode-slots)
+
+   + mediator ( and mode components )
+     DOs:
+     - handle everything related to content presentation (mode-dependent)
+     - playback may intermediate the playback because of dom-clicks (e.g. if clicking on a) ==> by sending events to the media bridge
+
+     DON'Ts:
+     - should not be the one managing ticks or other time-based playback related things
+
+3. the reponsibility of emphasizing content should rely on the mode-component, the message passing of which is routed via the mediator. Since it's about playback, the now playing queue / next button should be within the media bridge -- and this
+   
+
+3. what shall be kept unchanged:
+   1. =init_handshake= can remain
+   2. =ack_handshake= can remain.
+      Instead of loading voice, *it shall load tracklist instead, that's what the loading shall do*
+      + this means that the state hydration can remain the same pattern
+
+4. what shall change:
+   1. we shall turn off the current =emphasizeEvent= , we shall just make this silent / shim this so it does a NOOP. This is so that our changes for this can just be kept as additive, no destructive changes to the existing flows
+
+   2. we shall use the =JS.add_class= from the server side
+
+** Roadmap
+1. bala handles the tracklist stuff upstream
+
+2. ritesh handles the injection of the tracklist, we shall just do a hardcode
+   - do a tracklist with events from gita and chalisa
+
+3. bala grinds the corpus tasks
+   - source compilation
+
+*** Ritesh Roadmap [0/4]
+**** [ ] Study the tracklist livebook struct
+- preloading make sense?
+- ids present to generate the push-patchable ids?
+**** [ ] Load the media bridge only from the tracklist
+- here's the [[file:~/Projects/vyasa/lib/vyasa_web/components/contexts/read/tracks.ex::@rtshkmr hook to your mediabridge event from here!][injection point]]
+- Add in a rudimentary display for the tracklist, just do a jsonb dump
+**** [ ] Buttons for event triggers and event handlers @ media bridge
+**** [ ] Wire up event handlers on the
 * Verses
 ** Have to be dynamic grouping with intros for protection verses, god salutations, etc. and endings we can look at refrains or reoccuring pieces later --> needs to be declarative, if theres authoritative that variation should be rendered
+
 * Geneology
 ** the hierarchy of inspiration vel vaggupu to vel maaral for e.g.
