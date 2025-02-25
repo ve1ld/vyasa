@@ -1,0 +1,51 @@
+defmodule VyasaWeb.Context.Read.Tracks do
+  use VyasaWeb, :live_component
+
+  @impl true
+  def update(params, socket) do
+    {
+      :ok,
+      socket
+      |> assign(params)
+    }
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div>
+      <.table
+        id="tracks"
+        rows={@tracks}
+        row_click={
+          fn {_id, track} ->
+            JS.push("navigate_from_track",
+              value: %{target: ~p"/explore/#{track.title}/"},
+              target: @myself
+            )
+          end
+        }
+      >
+        <:col :let={{_id, track}} label="">
+          <div class="font-dn text-2xl">
+            <%= to_title_case(track.title) %>
+          </div>
+        </:col>
+      </.table>
+
+      <span :if={@tracks |> Enum.count() < 10} class="block h-96" />
+    </div>
+    """
+  end
+
+  #@rtshkmr hook to your mediabridge event from here!
+  @impl true
+  def handle_event("navigate_from_track", %{"target" => target} = _payload, socket) do
+    IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")
+
+    {:noreply,
+     socket
+     |> push_patch(to: target)
+     |> push_event("scroll-to-top", %{})}
+  end
+end
