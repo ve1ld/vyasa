@@ -28,12 +28,11 @@ defmodule VyasaWeb.Context.Read.Tracks do
         }
       >
         <:col :let={{_id, track}} label="">
-          <div class="font-dn text-2xl">
-            TODO track view: <br /> {to_title_case(track.event.verse.body)}
+          <div id={ "foo_track_" <> track.id } class="font-dn text-2xl">
+            TODO track foo_track_{track.id} view: <br /> {to_title_case(track.event.verse.body)}
           </div>
         </:col>
       </.table>
-
       <span :if={@tracks |> Enum.count() < 10} class="block h-96" />
     </div>
     """

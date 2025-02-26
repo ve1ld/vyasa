@@ -95,3 +95,21 @@ liveSocket.connect();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
+
+
+function toggleEmphasis(selectorId, className) {
+  const element = document.getElementById(selectorId);
+  if (element) {
+    if (element.classList.contains(className)) {
+      element.classList.remove(className);
+    } else {
+      element.classList.add(className);
+    }
+  }
+}
+
+
+window.addEventListener("phx:toggleEmphasis", (e) => {
+  const { selectorId, className } = e.detail;
+  toggleEmphasis(selectorId, className);
+});

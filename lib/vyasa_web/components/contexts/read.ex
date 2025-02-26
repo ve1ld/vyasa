@@ -68,34 +68,42 @@ defmodule VyasaWeb.Context.Read do
         %{
           id: "read",
           event: :set_cursor_in_tracklist,
-          tracklist_cursor: tracklist_cursor,
-          track_id: track_id,
-          tracklist_id: tracklist_id,
-          verse_id: verse_id,
-          chapter_no: chapter_no,
-          source_id: source_id,
-          source: source
+          # tracklist_cursor: tracklist_cursor,
+          track_id: track_id
+          # tracklist_id: tracklist_id,
+          # verse_id: verse_id,
+          # chapter_no: chapter_no,
+          # source_id: source_id,
+          # source: source
         },
         %{
           assigns: %{
-            content_action: :show_tracks,
-            tracklist_cursor: curr_cursor,
-            tracklist_id: curr_tracklist
+            content_action: :show_tracks
+            # tracklist_cursor: curr_cursor
+            # tracklist_id: curr_tracklist
             # chap: %Chapter{no: _c_no, source_id: _src_id}
           }
         } = socket
       ) do
-    # send(self(), %{
-    #   process: MediaBridge,
-    #   event: :ack_handshake,
-    #   voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
-    #   origin: __MODULE__
-    # })
+    ## TODO: this is where i want to do an add class where i can target a particular dom node via its id and apply a style class to it
+    ## for this, i want to use the JS.add_class but dont' konw how
 
-    IO.puts("WALDO is IN READ MODE")
-    dbg()
+    # old_selected = Enum.fil()
+    # old_selector_id = "foo_track_" <> Enum.filter()
+    selector_id = "foo_track_" <> track_id
+    class_name = "emphasized-verse"
 
-    {:ok, socket}
+    # dbg()
+    # cond do
+    #   tracklist_cursor != curr_cursor ->
+    #     # socket |>
+    #     socket
+    #     |> push_event("toggle_class", %{selectorId: selector_id, className: class_name})
+    # end
+
+    {:ok,
+     socket
+     |> push_event("toggleEmphasis", %{selectorId: selector_id, className: class_name})}
   end
 
   # @bala @ritesh this msg recipient is for the flat version
