@@ -99,6 +99,8 @@ The big picture steps were:
 **** [ ] Study the tracklist livebook struct
 - preloading make sense?
 - ids present to generate the push-patchable ids?
+***** Observations:
+  * route named as =/explore/tracks/:id= but it should actually be =/explore/tracklist/id= and the livecomponent ends up being Tracklists!
 **** [ ] Load the media bridge only from the tracklist
 - here's the [[file:~/Projects/vyasa/lib/vyasa_web/components/contexts/read/tracks.ex::@rtshkmr hook to your mediabridge event from here!][injection point]]
 - Add in a rudimentary display for the tracklist, just do a jsonb dump

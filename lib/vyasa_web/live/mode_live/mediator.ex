@@ -36,7 +36,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   @impl true
-
+  # TODO [MAIN]: update this to override the handle_ack and
   def handle_params(params, url, socket) do
     {:noreply,
      socket
@@ -46,14 +46,19 @@ defmodule VyasaWeb.ModeLive.Mediator do
      |> join_sangh()}
   end
 
-  defp maybe_focus_binding(%{assigns: %{url_params: %{"bind" => bind_id},
-                             mode: %UserMode{
-                               mode_context_component: component,
-                               mode_context_component_selector: selector
-                             }}} = socket) do
-
+  defp maybe_focus_binding(
+         %{
+           assigns: %{
+             url_params: %{"bind" => bind_id},
+             mode: %UserMode{
+               mode_context_component: component,
+               mode_context_component_selector: selector
+             }
+           }
+         } = socket
+       ) do
     bind = Draft.get_binding!(bind_id)
-    send_update(component, [id: selector, binding: bind])
+    send_update(component, id: selector, binding: bind)
 
     socket
     |> UiState.assign(:focused_binding, bind)
@@ -63,37 +68,43 @@ defmodule VyasaWeb.ModeLive.Mediator do
     socket
   end
 
-
-  defp join_sangh(%{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket) when is_binary(name) and is_binary(sangh_id) do
-
+  defp join_sangh(
+         %{assigns: %{session: %Session{id: id, name: name, sangh: %{id: sangh_id}}}} = socket
+       )
+       when is_binary(name) and is_binary(sangh_id) do
     # with a name to presence
-    {:ok, workspid} = Assembly.join(self(), sangh_id, %Vyasa.Disciple{id: :crypto.hash(:blake2s, id) |> Base.encode64 |> String.downcase, name: name, action: "active"})
+    {:ok, workspid} =
+      Assembly.join(self(), sangh_id, %Vyasa.Disciple{
+        id: :crypto.hash(:blake2s, id) |> Base.encode64() |> String.downcase(),
+        name: name,
+        action: "active"
+      })
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: workspid})
+    |> assign(
+      sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: workspid}
+    )
   end
 
-
-  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket) when is_binary(sangh_id) do
-
+  defp join_sangh(%{assigns: %{session: %Session{sangh: %{id: sangh_id}}}} = socket)
+       when is_binary(sangh_id) do
     # anon with no name doesn't hook into presence
     Assembly.listen(sangh_id)
 
     socket
-    |> assign(sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: nil})
+    |> assign(
+      sangh: %{joined: sangh_id, disciples: Assembly.id_disciples(sangh_id), workspid: nil}
+    )
   end
-
 
   defp join_sangh(%{assigns: %{session: _sess}} = socket) do
     socket |> assign(sangh: %{joined: nil, disciples: [], workspid: nil})
   end
 
   defp sync_session(%{assigns: %{session: %Session{sangh: %{id: sangh_id}} = sess}} = socket)
-       when  is_binary(sangh_id) do
-
+       when is_binary(sangh_id) do
     socket
     |> push_event("initSession", sess)
-
   end
 
   defp sync_session(%{assigns: %{session: %Session{id: id} = sess}} = socket)
@@ -137,8 +148,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
      socket
      |> assign(session: %{sess | name: name})
      |> sync_session()
-     |> join_sangh()
-    }
+     |> join_sangh()}
   end
 
   @impl true
@@ -161,7 +171,6 @@ defmodule VyasaWeb.ModeLive.Mediator do
         _,
         socket
       ) do
-
     IO.inspect(event, label: "event context")
     # send_update(
     #   self(),
@@ -169,7 +178,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
     #   id: "read",
     #   event: event
     # )
-    #send_update("read", [id: selector, binding: bind])
+    # send_update("read", [id: selector, binding: bind])
     # TODO: implement nav_event handlers from action bar
     # This is also the event handler that needs to be triggerred if the user clicks on the nav buttons on the media bridge.
     {:noreply, socket}
@@ -212,9 +221,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
     {:ok, bind} = Draft.bind_node(bind)
-    #binding point
+    # binding point
     # pass binding contexts to the current mode and drafting reflector
     send_update(component, id: selector, binding: bind)
     # TODO: implement nav_event handlers from action bar
@@ -223,7 +231,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   def handle_event(
-        "bind::share",_,
+        "bind::share",
+        _,
         %Socket{
           assigns: %{
             ui_state: %UiState{focused_binding: bind},
@@ -231,36 +240,39 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
-    {:ok, shared_bind} = bind
-    |> Draft.create_binding()
+    {:ok, shared_bind} =
+      bind
+      |> Draft.create_binding()
 
     IO.inspect(socket.assigns.url_params)
 
-    {:noreply, socket
-    |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [bind: shared_bind.id])})
-    |> put_flash(:info, "binded to your clipboard")}
+    {:noreply,
+     socket
+     |> push_event("session::share", %{
+       url: unverified_url(socket, "#{path}", bind: shared_bind.id)
+     })
+     |> put_flash(:info, "binded to your clipboard")}
   end
 
-
-  def handle_event("sangh::share", _, %{assigns: %{
+  def handle_event(
+        "sangh::share",
+        _,
+        %{
+          assigns: %{
             session: %Session{sangh: %{id: sangh_id}},
             url_params: %{path: path}
           }
-        } = socket) do
-
+        } = socket
+      ) do
     {:noreply,
      socket
-     |> push_event("session::share", %{url: unverified_url(socket,"#{path}", [s: sangh_id])})}
+     |> push_event("session::share", %{url: unverified_url(socket, "#{path}", s: sangh_id)})}
   end
-
 
   def handle_event(event, message, socket) do
     IO.inspect(%{event: event, message: message}, label: "pokemon")
     {:noreply, socket}
   end
-
-
 
   # @impl true
   # @doc """
@@ -282,10 +294,9 @@ defmodule VyasaWeb.ModeLive.Mediator do
           }
         } = socket
       ) do
-
     IO.inspect("MEDIATOR MEDIA HANDSHOOK")
 
-        send_update(component, id: selector, event: :media_handshake)
+    send_update(component, id: selector, event: :media_handshake)
 
     {:noreply, socket |> update(:pid_register, &Map.put(&1, origin, m_pid))}
   end
@@ -301,6 +312,7 @@ defmodule VyasaWeb.ModeLive.Mediator do
     if is_pid(register[destination]) do
       send(register[destination], msg)
     end
+
     {:noreply, socket}
   end
 
@@ -319,17 +331,19 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   def handle_info(
-        {:join, "sangh::" <> _ , %{id: id} = disciple},
+        {:join, "sangh::" <> _, %{id: id} = disciple},
         %{assigns: %{sangh: %{disciples: d}}} = socket
       ) do
-        # latest arriving join message given precedence, should check online_at key
+    # latest arriving join message given precedence, should check online_at key
     {:noreply,
      socket
      |> update(:sangh, &(&1 |> Map.put(:disciples, Map.put(d, id, disciple))))}
   end
 
-  def handle_info({:leave, "sangh::"  <> _ , %{id: id, phx_ref: ref} = _disciple},
-    %{assigns: %{sangh: %{disciples: d}}} = socket) do
+  def handle_info(
+        {:leave, "sangh::" <> _, %{id: id, phx_ref: ref} = _disciple},
+        %{assigns: %{sangh: %{disciples: d}}} = socket
+      ) do
     # ensure latest ref is the same
     if d[id][:phx_ref] == ref do
       {:noreply,

@@ -48,8 +48,9 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     if connected?(socket) do
       send(socket.parent_pid, %{event: :init_handshake, pid: self(), origin: __MODULE__})
     end
-    {:ok,
-     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end), layout: false}
+
+    {:ok, Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end),
+     layout: false}
   end
 
   defp update_playback(
@@ -321,6 +322,28 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     })
   end
 
+  def handle_info(
+        %{event: :load_tracklist, loader: loader},
+        %Socket{
+          assigns:
+            %{
+              # voice: curr_voice
+            }
+        } = socket
+      ) do
+    # with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
+    #      false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
+    #   {:noreply,
+    #      socket
+    #      |> apply_voice_action(voice)
+    #      |> dispatch_voice_registering_events()}
+    # else
+    #   _ -> {:noreply, socket}
+    # end
+    IO.inspect(loader, label: "CHECKPOINT!")
+    {:noreply, socket}
+  end
+
   @impl true
   # On receiving a voice_ack, the written and player contexts are now synced.
   # The voice's id shall be used as a sort of implicit ack number to check if the voice received
@@ -337,16 +360,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           }
         } = socket
       ) do
-    with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
+    with %Voice{id: updated_voice_id} = voice <- get_voice.(),
          false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
       {:noreply,
-         socket
-         |> apply_voice_action(voice)
-         |> dispatch_voice_registering_events()}
+       socket
+       |> apply_voice_action(voice)
+       |> dispatch_voice_registering_events()}
     else
       _ -> {:noreply, socket}
     end
-
   end
 
   # Handles playback sync relative to a particular verse id. In this case, the playback state is expected

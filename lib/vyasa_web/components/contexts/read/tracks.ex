@@ -14,13 +14,14 @@ defmodule VyasaWeb.Context.Read.Tracks do
   def render(assigns) do
     ~H"""
     <div>
+      <div>TRACKS component: shows single track list</div>
       <.table
         id="tracks"
         rows={@tracks}
         row_click={
           fn {_id, track} ->
             JS.push("navigate_from_track",
-              value: %{target: ~p"/explore/#{track.title}/"},
+              value: %{target: ~p"/explore/tracks/#{track.id}/"},
               target: @myself
             )
           end
@@ -28,7 +29,7 @@ defmodule VyasaWeb.Context.Read.Tracks do
       >
         <:col :let={{_id, track}} label="">
           <div class="font-dn text-2xl">
-            <%= to_title_case(track.title) %>
+            TODO track view: <br /> {to_title_case(track.event.verse.body)}
           </div>
         </:col>
       </.table>
@@ -38,14 +39,14 @@ defmodule VyasaWeb.Context.Read.Tracks do
     """
   end
 
-  #@rtshkmr hook to your mediabridge event from here!
+  # @rtshkmr hook to your mediabridge event from here!
   @impl true
   def handle_event("navigate_from_track", %{"target" => target} = _payload, socket) do
     IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")
 
     {:noreply,
      socket
-     |> push_patch(to: target)
+     # |> push_patch(to: target)
      |> push_event("scroll-to-top", %{})}
   end
 end
