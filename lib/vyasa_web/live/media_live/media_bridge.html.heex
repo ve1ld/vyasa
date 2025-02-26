@@ -30,6 +30,7 @@
       tracklist_id={@tracklist_id}
       is_queue_visible={@is_queue_visible}
       is_action_bar_visible={@is_action_bar_visible}
+      tracklist_cursor={@tracklist_cursor}
     />
     <div id="media-process-display-container">
       <div class="bg-white dark:bg-brandDark opacity-85 hover:opacity-100 backdrop-blur-lg p-4">
@@ -114,6 +115,7 @@
         <.playback_queue_toggler is_queue_visible={@is_queue_visible}/>
         <.playback_queue
           is_queue_visible={@is_queue_visible}
+          tracklist_cursor={@tracklist_cursor}
           tracks={@tracks}
         />
       </div>

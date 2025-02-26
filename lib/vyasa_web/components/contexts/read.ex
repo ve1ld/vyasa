@@ -69,7 +69,8 @@ defmodule VyasaWeb.Context.Read do
           assigns: %{
             content_action: :show_tracks,
             tracklist_loader: tracklist_loader,
-            tracklist_id: tracklist_id
+            tracklist_id: tracklist_id,
+            tracklist_cursor: tracklist_cursor
           }
         } = socket
       ) do
@@ -81,6 +82,7 @@ defmodule VyasaWeb.Context.Read do
       process: MediaBridge,
       event: :load_tracklist,
       tracklist_loader: tracklist_loader,
+      tracklist_cursor: tracklist_cursor,
       origin: __MODULE__
     })
 
@@ -283,8 +285,9 @@ defmodule VyasaWeb.Context.Read do
 
   ## FIXME this should be tracks within a particular tracklist, needs tracklist id to be injected in via url params
   defp apply_action(%Socket{} = socket, :show_tracks, _params) do
-    # FIXME: this is a static stub, for now
+    # FIXME: this is a static stub, for now, these can be injected via url params / slug
     tracklist_id = "fc4bb25c-41c0-447a-90c7-894d4f52b183"
+    tracklist_cursor = 2
 
     tracklist =
       Vyasa.Bhaj.get_tracklist(tracklist_id)
@@ -312,6 +315,7 @@ defmodule VyasaWeb.Context.Read do
     |> assign(%{
       tracklist_id: tracklist.id,
       content_action: :show_tracks,
+      tracklist_cursor: tracklist_cursor,
       tracklist_loader: tracklist_loader,
       page_title: "Tracks in {tracklist.title}",
       meta: %{

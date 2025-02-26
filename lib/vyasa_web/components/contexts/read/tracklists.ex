@@ -45,12 +45,12 @@ defmodule VyasaWeb.Context.Read.Tracklists do
 
     # TODO This is what allows the media bridge to be updated with a tracklist, we sync the entire tracklist
     # this should be @ mount of the tracklist page actually
-    send(self(), %{
-      process: MediaBridge,
-      event: :load_tracklist,
-      loader: fn -> Vyasa.Bhaj.get_tracklist("fc4bb25c-41c0-447a-90c7-894d4f52b183") end,
-      origin: __MODULE__
-    })
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :load_tracklist,
+    #   loader: fn -> Vyasa.Bhaj.get_tracklist("fc4bb25c-41c0-447a-90c7-894d4f52b183") end,
+    #   origin: __MODULE__
+    # })
 
     {:noreply,
      socket

@@ -38,6 +38,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   @play_state %{
     playback: nil,
     tracklist_id: nil,
+    tracklist_cursor: 0,
     voice: nil,
     video: nil,
     tracks: nil,
@@ -372,14 +373,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   def handle_info(
-        %{event: :load_tracklist, tracklist_loader: loader},
+        %{event: :load_tracklist, tracklist_loader: loader, tracklist_cursor: tracklist_cursor},
         %Socket{
           assigns:
             %{
               # voice: curr_voice
             }
         } = socket
-      ) do
+      )
+      when is_integer(tracklist_cursor) do
     with %Tracklist{title: title} = tracklist <- loader.() do
       IO.inspect(title, label: "WALDO: loaded the tracklist with title")
 
@@ -388,6 +390,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
        # |> stream(:tracks, tracklist.tracks)
        |> assign(%{
          tracklist_id: tracklist.id,
+         tracklist_cursor: tracklist_cursor,
          tracks: tracklist.tracks
        })}
     else
@@ -727,13 +730,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       background_class="fixed inset-0 bg-transparent"
       focus_container_class="bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[90vh]"
     >
-      <.debug_dump label="Stub for playback queue" class="h-full" />
-      <ul>
-        <li :for={track <- @tracks}>
-          TODO track view: <br /> {to_title_case(track.event.verse.body)}
-        </li>
-      </ul>
+      <div :for={track <- @tracks} :if={@tracks != nil}>
+        <.track_summary track={track} is_now_playing={track.order === @tracklist_cursor} />
+      </div>
     </.generic_modal_wrapper>
+    """
+  end
+
+  def track_summary(assigns) do
+    ~H"""
+    TODO track view: <br />
+    {to_title_case(@track.event.verse.body)} <br /> now playing? {@is_now_playing}
     """
   end
 end
