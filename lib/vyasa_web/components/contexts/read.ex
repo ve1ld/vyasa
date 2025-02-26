@@ -106,6 +106,7 @@ defmodule VyasaWeb.Context.Read do
       cond do
         tracklist_cursor != curr_cursor ->
           socket
+          |> assign(tracklist_cursor: tracklist_cursor)
           |> push_event("removeEmphasis", %{selectorId: old_selector_id, className: class_name})
           |> push_event("addEmphasis", %{selectorId: selector_id, className: class_name})
 

@@ -134,6 +134,7 @@ function addEmphasis(selectorId, className) {
 }
 
 function removeEmphasis(selectorId, className) {
+  console.log("WALDO", {selectorId, className})
   const element = document.getElementById(selectorId);
   if (element && element.classList.contains(className)) {
     element.classList.remove(className);
