@@ -316,11 +316,12 @@ defmodule VyasaWeb.Context.Read do
     })
   end
 
+  ### @bala here's how the injection is being done, we can hardcode inject the tracklist id and cursor and things will work as intended
   ## FIXME this should be tracks within a particular tracklist, needs tracklist id to be injected in via url params
   defp apply_action(%Socket{} = socket, :show_tracks, _params) do
     # FIXME: this is a static stub, for now, these can be injected via url params / slug
     tracklist_id = "fc4bb25c-41c0-447a-90c7-894d4f52b183"
-    tracklist_cursor = 2
+    tracklist_cursor = 1
 
     tracklist =
       Vyasa.Bhaj.get_tracklist(tracklist_id)
