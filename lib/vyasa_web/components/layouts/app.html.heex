@@ -1,25 +1,27 @@
-<header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4">
-      <a href="/" class="">
-        <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal" />
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v<%= Application.spec(:vyasa, :vsn) %>
-      </p>
-    </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <a
-        href="https://github.com/ve1ld/vyasa"
-        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
-      >
-        <span aria-hidden="true">~</span>/vyasa
-      </a>
-    </div>
-  </div>
-</header>
-<main class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
+<!-- <header id="topbar" class="sticky bg-zinc-50/75 backdrop-blur top-0 px-4 sm:px-6 lg:px-8 z-10 w-full"> -->
+<!--   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm"> -->
+<!--     <div class="flex items-center gap-4"> -->
+<!--       <a href="/" class=""> -->
+<!--         <img src={~p"/images/logo.svg"} width="30" class="mix-blend-normal" /> -->
+<!--       </a> -->
+<!--       <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6"> -->
+<!--         v<%= Application.spec(:vyasa, :vsn) %> -->
+<!--       </p> -->
+<!--     </div> -->
+<!--     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900"> -->
+<!--       <a -->
+<!--         href="https://github.com/ve1ld/vyasa" -->
+<!--         class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80" -->
+<!--       > -->
+<!--         <span aria-hidden="true">~</span>/vyasa -->
+<!--       </a> -->
+<!--     </div> -->
+<!--   </div> -->
+<!-- </header> -->
+
+
+<main id="app-container" class="bg-primaryBackground px-4 py-20 sm:px-6 lg:px-8 w-full">
+  <div class="mx-auto max-w-2xl w-full">
     <.flash_group flash={@flash} />
   </div>
   <!-- DM manages the core layouts -->

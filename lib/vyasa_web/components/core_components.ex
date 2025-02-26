@@ -178,6 +178,130 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  attr(:id, :string, required: true)
+  attr(:show, :boolean, default: false)
+
+  attr(:on_cancel_callback, JS,
+    default: %JS{},
+    doc: "Defines a callback to invoke on cancellation / exit of the modal"
+  )
+
+  attr(:on_click_away_callback, :any,
+    default: %JS{},
+    doc: "Defines a callback to invoke on click away of dialog"
+  )
+
+  attr(:cancel_key, :string, default: "escape")
+
+  attr(:on_mount_callback, :any,
+    default: %JS{},
+    doc: "Defines a callback to invoke on mounting of the modal"
+  )
+
+  attr(:window_keydown_callback, :any,
+    default: %JS{},
+    doc: "Defines a callback to invoke on keypress @ the window level"
+  )
+
+  attr(:container_class, :string, default: "", doc: "inline style for the outermost container")
+
+  attr(:background_class, :string,
+    default: "bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+    doc: "inline style for the background / backdrop"
+  )
+
+  attr(:dialog_class, :string, default: "", doc: "inline style for the dialog container")
+  attr(:focus_wrap_class, :string, default: "", doc: "inline style for the focus wrap")
+
+  attr(:inner_block_container_class, :string,
+    default: "",
+    doc: "inline style for the container for the inner content slot"
+  )
+
+  attr(:close_button_icon, :string, default: "hero-x-mark-solid")
+  attr(:close_button_class, :string, default: "")
+  attr(:close_button_icon_class, :string, default: "")
+  attr(:focus_container_class, :string, default: "")
+
+  slot(:inner_block, required: true)
+
+  @doc """
+  A generic implementation of the modal wrapper. The attributes and slots have corresponding docstrings for reference.
+  In order to use this:
+  1) supply the show boolean properly, this controls hidden state
+  2) supply some callbacks:
+     Most of these callbacks target a particular event, the caveat is that if there are
+     multiple events that are expected to fire the same callback, then the current implementation
+     requires some duplication of the callbacks passed.
+
+     For example, if you pass in a callback for on_cancel_callback, you would probably
+     want to do the same for the on_click_away_callback. Currently this duplication
+     is required, in the future if there's no reason to target these events separately,
+     then the function component definition might be changed such that closing and click-away
+     callbacks refer to the same argument.
+
+  3) supply some class definitions to override the default ones provided in this function definition.
+     By inspecting the attributes corresponding to class definitions, we can also determine how this
+     modal-wrapper is structured (containers, children...)
+  """
+  def generic_modal_wrapper(assigns) do
+    ~H"""
+    <div
+      :if={@show}
+      id={@id}
+      phx-mounted={@show && @on_mount_callback && show_modal(@id)}
+      class={["relative z-50 hidden w-full mx-auto", @container_class]}
+    >
+      <div
+        id={"#{@id}-bg"}
+        class={[
+          "fixed inset-0 backdrop-blur-md",
+          @background_class
+        ]}
+        aria-hidden="true"
+      />
+      <div
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+        class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
+      >
+        <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
+          <.focus_wrap
+            id={"#{@id}-container"}
+            phx-mounted={@show && @on_mount_callback && show_modal(@id)}
+            phx-window-keydown={hide_modal(@window_keydown_callback, @id)}
+            phx-key={@cancel_key}
+            phx-click-away={hide_modal(@on_click_away_callback, @id)}
+            class={[
+              "relative flex flex-col w-full",
+              @focus_wrap_class
+            ]}
+          >
+            <div :if={@close_button_icon} class="absolute top-4 right-4">
+              <button
+                phx-click={hide_modal(@on_cancel_callback, @id)}
+                type="button"
+                class={["flex-none p-2 opacity-80 hover:opacity-100", @close_button_class]}
+                aria-label={gettext("close")}
+              >
+                <.icon
+                  name={@close_button_icon}
+                  class={"h-5 w-5 text-black " <> (@close_button_icon_class || "")}
+                />
+              </button>
+            </div>
+            <div id={"#{@id}-content"} class="w-full">
+              <%= render_slot(@inner_block) %>
+            </div>
+          </.focus_wrap>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   @doc """
   Renders a waiting spinner
   """
@@ -834,6 +958,12 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  def icon(%{name: "custom-" <> _} = assigns) do
+    ~H"""
+    <span class={[@name, @class]} />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
@@ -907,5 +1037,30 @@ defmodule VyasaWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  @doc """
+  A generic debug dump component that displays all assigned properties.
+
+  ## Examples
+      <DebugDump assigns={@assigns} label="Custom Label" class={["custom-class", "another-class"]} />
+  """
+  def debug_dump(assigns) do
+    ~H"""
+    <div class={[
+      "relative fixed bottom-0 right-0 m-4 p-4 bg-white border border-gray-300 rounded-lg shadow-lg max-w-md max-h-80 overflow-auto z-50 bg-opacity-50",
+      Map.get(assigns, :class, "")
+    ]}>
+      <h2 class="text-lg font-bold mb-2">
+        <%= Map.get(assigns, :label, "Developer Dump") %>
+      </h2>
+      <div>
+        <h3 class="text-md font-bold mb-2">Parameters:</h3>
+        <pre class="p-2 rounded-md whitespace-pre-wrap">
+          <%= inspect(assigns, pretty: true) %>
+        </pre>
+      </div>
+    </div>
+    """
   end
 end

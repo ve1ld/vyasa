@@ -47,10 +47,9 @@ defmodule Vyasa.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.5", only: :dev},
-      {:phoenix_live_view,
-       github: "phoenixframework/phoenix_live_view", ref: "440fd04", override: true},
+      {:phoenix_live_view, "~> 1.0.4" },
       {:floki, ">= 0.30.0"},
-      {:phoenix_live_dashboard, "~> 0.8.2"},
+      {:phoenix_live_dashboard, "~> 0.8.6"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},
@@ -73,7 +72,9 @@ defmodule Vyasa.MixProject do
       {:recase, "~> 0.5"},
       {:timex, "~> 3.0"},
       {:ua_parser, "~> 1.9"},
-      {:inflex, "~> 2.1"}
+      {:inflex, "~> 2.1"},
+      {:youtube_captions, "~> 0.1.0", runtime: Mix.env() == :dev}
+
     ]
   end
 
