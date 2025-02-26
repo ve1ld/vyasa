@@ -238,6 +238,12 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
      |> push_hook_events()}
   end
 
+  def handle_event("setCursor", %{"order" => order, "id" => id}, socket) do
+    IO.inspect({order, id}, label: "setCursor event received with order and id")
+    # Do something with the order and id here, e.g., update the cursor
+    {:noreply, assign(socket, :tracklist_cursor, order)}
+  end
+
   @impl true
   def handle_event(
         "seekTime",
@@ -750,25 +756,28 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       )
 
     ~H"""
-    <div class={[
-      "p-2 rounded-md hover:bg-gray-100 transition-colors duration-200",
-      @is_now_playing && "bg-brandExtraLight"
-    ]}>
-      <div class="flex items-center justify-between">
+    <button
+      phx-click={JS.push("setCursor", value: %{order: @track.order, id: @track.id})}
+      class={[
+        "w-full p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 flex flex-col items-start",
+        @is_now_playing && "bg-brandExtraLight"
+      ]}
+    >
+      <div :if={@is_now_playing} class="text-xs text-brandAccent font-bold w-full text-left">
+        <.icon name="custom-spinner-bars-scale-middle" class="w-4 h-4 inline-block" />
+      </div>
+      <div class="flex items-center justify-between w-full">
         <div class="flex items-center space-x-2">
           <span class="text-xs text-gray-500">{@track.order}.</span>
           <div class="text-sm font-medium">
             {@verse_blurb}{if String.length(@track.event.verse.body) > 50, do: "..."}
           </div>
         </div>
-        <div :if={@is_now_playing} class="text-xs text-brandAccent font-bold">
-          Now Playing
-        </div>
       </div>
-      <div class="text-xs text-gray-500">
+      <div class="text-xs text-gray-500 w-full text-left">
         {to_title_case(@track.event.verse.source.title)} - Chapter {@track.event.verse.chapter.no}
       </div>
-    </div>
+    </button>
     """
   end
 end
