@@ -61,6 +61,32 @@ defmodule VyasaWeb.Context.Read do
     {:ok, socket}
   end
 
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
+        %{id: "read", event: :media_handshake},
+        %{
+          assigns: %{
+            content_action: :show_tracks,
+            tracklist_loader: tracklist_loader,
+            tracklist_id: tracklist_id
+          }
+        } = socket
+      ) do
+    IO.inspect(tracklist_id,
+      label: "WALDO Received media handshake for :show_tracks where tracklist = #{tracklist_id}"
+    )
+
+    send(self(), %{
+      process: MediaBridge,
+      event: :load_tracklist,
+      tracklist_loader: tracklist_loader,
+      origin: __MODULE__
+    })
+
+    {:ok, socket}
+  end
+
   # received changes to binding
 
   def update(
@@ -257,24 +283,43 @@ defmodule VyasaWeb.Context.Read do
 
   ## FIXME this should be tracks within a particular tracklist, needs tracklist id to be injected in via url params
   defp apply_action(%Socket{} = socket, :show_tracks, _params) do
+    # FIXME: this is a static stub, for now
+    tracklist_id = "fc4bb25c-41c0-447a-90c7-894d4f52b183"
+
     tracklist =
-      Vyasa.Bhaj.get_tracklist("fc4bb25c-41c0-447a-90c7-894d4f52b183")
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
       |> Vyasa.Repo.preload(tracks: [event: [:verse]])
 
-    IO.inspect(tracklist.id, label: "showing tracks in tracklist")
+    IO.inspect(tracklist.title, label: "showing tracks in tracklist")
+
+    tracklist_loader = fn ->
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
+      |> Vyasa.Repo.preload(tracks: [event: [:verse]])
+    end
+
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :load_tracklist,
+    #   tracklist_loader: tracklist_loader,
+    #   origin: __MODULE__
+    # })
+
+    IO.puts("WALDO BEING SEARCHED")
 
     socket
     |> stream(:tracks, tracklist.tracks)
     # |> stream(:tracks, Bhaj.list_tracks())
     |> assign(%{
+      tracklist_id: tracklist.id,
       content_action: :show_tracks,
-      page_title: "Track",
+      tracklist_loader: tracklist_loader,
+      page_title: "Tracks in {tracklist.title}",
       meta: %{
-        title: "Tracklists to follow and listen",
-        description: "Listen and follow along",
+        title: "Following the ",
+        description: "Listen and follow along to {tracklist.title}",
         type: "website",
         image: url(~p"/images/the_vyasa_project_1.png"),
-        url: url(socket, ~p"/explore/tracks")
+        url: url(socket, ~p"/explore/tracks/{tracklist.id}")
       }
     })
   end

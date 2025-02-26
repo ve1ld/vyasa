@@ -16,6 +16,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   alias Phoenix.LiveView.Socket
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback}
+  alias Vyasa.Bhaj.{Tracklist}
 
   @default_player_config %{
     height: "300",
@@ -36,6 +37,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @play_state %{
     playback: nil,
+    tracklist_id: nil,
     voice: nil,
     video: nil,
     should_show_vid: false,
@@ -323,7 +325,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   def handle_info(
-        %{event: :load_tracklist, loader: loader},
+        %{event: :load_tracklist, tracklist_loader: loader},
         %Socket{
           assigns:
             %{
@@ -331,6 +333,18 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
             }
         } = socket
       ) do
+    with %Tracklist{title: title} = tracklist <- loader.() do
+      IO.inspect(title, label: "WALDO: loaded the tracklist with title")
+
+      {:noreply,
+       socket
+       |> assign(%{
+         tracklist_id: tracklist.id
+       })}
+    else
+      _ -> {:noreply, socket}
+    end
+
     # with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
     #      false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
     #   {:noreply,
@@ -340,8 +354,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     # else
     #   _ -> {:noreply, socket}
     # end
-    IO.inspect(loader, label: "CHECKPOINT!")
-    {:noreply, socket}
   end
 
   @impl true

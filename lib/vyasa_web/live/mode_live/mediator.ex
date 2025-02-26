@@ -313,6 +313,8 @@ defmodule VyasaWeb.ModeLive.Mediator do
       send(register[destination], msg)
     end
 
+    IO.puts("MEDIATE IS RELAYING MESSAGE to #{destination}")
+
     {:noreply, socket}
   end
 
