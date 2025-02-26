@@ -726,7 +726,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       id="playback-queue-sheet"
       side_position_class="right-0"
       container_class="fixed inset-0 z-50 flex justify-end"
-      dialog_class="fixed inset-0 w-full max-w-md h-full justify-end"
+      dialog_class="fixed inset-0 w-full h-full justify-end"
       background_class="fixed inset-0 bg-transparent"
       focus_container_class="bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[90vh]"
     >
@@ -738,9 +738,37 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   def track_summary(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :verse_blurb,
+        assigns.track.event.verse.body
+        |> String.slice(0..50)
+        |> String.split("\n")
+        |> List.first()
+        |> String.trim()
+      )
+
     ~H"""
-    TODO track view: <br />
-    {to_title_case(@track.event.verse.body)} <br /> now playing? {@is_now_playing}
+    <div class={[
+      "p-2 rounded-md hover:bg-gray-100 transition-colors duration-200",
+      @is_now_playing && "bg-brandExtraLight"
+    ]}>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-gray-500">{@track.order}.</span>
+          <div class="text-sm font-medium">
+            {@verse_blurb}{if String.length(@track.event.verse.body) > 50, do: "..."}
+          </div>
+        </div>
+        <div :if={@is_now_playing} class="text-xs text-brandAccent font-bold">
+          Now Playing
+        </div>
+      </div>
+      <div class="text-xs text-gray-500">
+        {to_title_case(@track.event.verse.source.title)} - Chapter {@track.event.verse.chapter.no}
+      </div>
+    </div>
     """
   end
 end

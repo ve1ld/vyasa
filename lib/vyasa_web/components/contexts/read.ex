@@ -297,7 +297,7 @@ defmodule VyasaWeb.Context.Read do
 
     tracklist_loader = fn ->
       Vyasa.Bhaj.get_tracklist(tracklist_id)
-      |> Vyasa.Repo.preload(tracks: [event: [:verse]])
+      |> Vyasa.Repo.preload(tracks: [event: [verse: [:source, :chapter]]])
     end
 
     # send(self(), %{
