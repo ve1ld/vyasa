@@ -14,6 +14,7 @@ defmodule VyasaWeb.Context.Read.Tracklists do
   def render(assigns) do
     ~H"""
     <div>
+      <div>TRACK LISTs display component</div>
       <.table
         id="tracklists"
         rows={@tracklists}
@@ -28,7 +29,7 @@ defmodule VyasaWeb.Context.Read.Tracklists do
       >
         <:col :let={{_id, tracklists}} label="">
           <div class="font-dn text-2xl">
-            <%= to_title_case(tracklists.title) %>
+            {to_title_case(tracklists.title)}
           </div>
         </:col>
       </.table>
@@ -41,6 +42,15 @@ defmodule VyasaWeb.Context.Read.Tracklists do
   @impl true
   def handle_event("navigate_to_tracklist", %{"target" => target} = _payload, socket) do
     IO.inspect(target, label: "TRACE: push patch to the following target by @myself:")
+
+    # TODO This is what allows the media bridge to be updated with a tracklist, we sync the entire tracklist
+    # this should be @ mount of the tracklist page actually
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :load_tracklist,
+    #   loader: fn -> Vyasa.Bhaj.get_tracklist("fc4bb25c-41c0-447a-90c7-894d4f52b183") end,
+    #   origin: __MODULE__
+    # })
 
     {:noreply,
      socket

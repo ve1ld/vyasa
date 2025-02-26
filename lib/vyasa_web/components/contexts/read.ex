@@ -51,26 +51,154 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
-
-        send(self(), %{process: MediaBridge, event: :ack_handshake,  voice:  fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end, origin: __MODULE__})
+    send(self(), %{
+      process: MediaBridge,
+      event: :ack_handshake,
+      voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
+      origin: __MODULE__
+    })
 
     {:ok, socket}
   end
 
-  #received changes to binding
+  # @bala @ritesh this msg recipient is for the flat version
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
+        %{
+          id: "read",
+          event: :set_cursor_in_tracklist,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id
+          # verse_id: verse_id,
+          # chapter_no: chapter_no,
+          # source_id: source_id,
+          # source: source
+        },
+        %{
+          assigns: %{
+            content_action: :show_tracks,
+            tracklist_cursor: curr_cursor
+            # streams: %{tracks: tracks}
+            # tracklist_id: curr_tracklist_id
+            # chap: %Chapter{no: _c_no, source_id: _src_id}
+          }
+        } = socket
+      ) do
+    ## TODO: this is where i want to do an add class where i can target a particular dom node via its id and apply a style class to it
+    ## for this, i want to use the JS.add_class but dont' konw how
+
+    # old_selected = Enum.fil()
+    # current_selected_track = Enum.find()
+    curr_tracklist =
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
+      |> Vyasa.Repo.preload(tracks: [event: [verse: [:source, :chapter]]])
+
+    tracks = curr_tracklist.tracks
+    old_selector_id = "foo_track_" <> Enum.find(tracks, fn t -> t.order === curr_cursor end).id
+    selector_id = "foo_track_" <> track_id
+    class_name = "emphasized-verse"
+
+    # dbg()
+
+    socket =
+      cond do
+        tracklist_cursor != curr_cursor ->
+          socket
+          |> assign(tracklist_cursor: tracklist_cursor)
+          |> push_event("removeEmphasis", %{selectorId: old_selector_id, className: class_name})
+          |> push_event("addEmphasis", %{selectorId: selector_id, className: class_name})
+
+        true ->
+          socket
+      end
+
+    {:ok, socket}
+  end
+
+  # @bala @ritesh this msg recipient is for the flat version
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
+        %{
+          id: "read",
+          event: :set_cursor_in_tracklist,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id,
+          verse_id: verse_id,
+          chapter_no: chapter_no,
+          source_id: source_id,
+          source: source
+        },
+        %{
+          assigns: %{
+            content_action: :show_verses,
+            tracklist_cursor: curr_cursor,
+            tracklist_id: curr_tracklist
+            # chap: %Chapter{no: _c_no, source_id: _src_id}
+          }
+        } = socket
+      )
+      when curr_tracklist == tracklist_id do
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :ack_handshake,
+    #   voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
+    #   origin: __MODULE__
+    # })
+
+    IO.puts("WALDO is IN READ MODE")
+    dbg()
+
+    {:ok, socket}
+  end
+
+  # @bala use this to do the check if correct url and push patch prior to calling the  emphasis event
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
+        %{id: "read", event: :media_handshake},
+        %{
+          assigns: %{
+            content_action: :show_tracks,
+            tracklist_loader: tracklist_loader,
+            tracklist_id: tracklist_id,
+            tracklist_cursor: tracklist_cursor
+          }
+        } = socket
+      ) do
+    IO.inspect(tracklist_id,
+      label: "WALDO Received media handshake for :show_tracks where tracklist = #{tracklist_id}"
+    )
+
+    send(self(), %{
+      process: MediaBridge,
+      event: :load_tracklist,
+      tracklist_loader: tracklist_loader,
+      tracklist_cursor: tracklist_cursor,
+      origin: __MODULE__
+    })
+
+    {:ok, socket}
+  end
+
+  # received changes to binding
 
   def update(
-    %{id: "read", binding: bind = %{verse_id: verse_id}},
-    %{
-      assigns: %{
-        kv_verses: verses,
-        draft_reflector:
-        %Sheaf{
-          marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
-        } = draft_reflector
-      }
-    } = socket
-  ) when is_binary(curr_verse_id) and verse_id != curr_verse_id do
+        %{id: "read", binding: bind = %{verse_id: verse_id}},
+        %{
+          assigns: %{
+            kv_verses: verses,
+            draft_reflector:
+              %Sheaf{
+                marks: [%Mark{state: :draft, verse_id: curr_verse_id} = d_mark | marks]
+              } = draft_reflector
+          }
+        } = socket
+      )
+      when is_binary(curr_verse_id) and verse_id != curr_verse_id do
     # binding here blocks the stream from appending to quote
     #
     bound_verses =
@@ -89,7 +217,7 @@ defmodule VyasaWeb.Context.Read do
 
   # already in mark in drafting state, remember to late bind binding => with a fn()
   def update(
-    %{id: "read", binding: bind = %{verse_id: verse_id}},
+        %{id: "read", binding: bind = %{verse_id: verse_id}},
         %{
           assigns: %{
             kv_verses: verses,
@@ -100,7 +228,6 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
-
     # binding here blocks the stream from appending to quote
     bound_verses = put_in(verses[verse_id].binding, bind)
     updated_draft_mark = d_mark |> Mark.update_mark(%{binding: bind, verse_id: verse_id})
@@ -109,14 +236,13 @@ defmodule VyasaWeb.Context.Read do
      socket
      |> mutate_verses(verse_id, bound_verses)
      |> assign(draft_reflector: %Sheaf{draft_reflector | marks: [updated_draft_mark | marks]})
-     |> push_event("bind::jump", bind)
-    }
+     |> push_event("bind::jump", bind)}
   end
 
-
   ## this is a dead clause to catch error states with draft_reflector to ensure the initial draft mark
-  def update(%{id: "read", binding: bind = %{verse_id: verse_id}},
-    %{
+  def update(
+        %{id: "read", binding: bind = %{verse_id: verse_id}},
+        %{
           assigns: %{
             kv_verses: verses,
             draft_reflector:
@@ -126,7 +252,6 @@ defmodule VyasaWeb.Context.Read do
           }
         } = socket
       ) do
-
     bound_verses = put_in(verses[verse_id].binding, bind)
 
     new_marks = [
@@ -140,10 +265,9 @@ defmodule VyasaWeb.Context.Read do
      |> assign(draft_reflector: %Sheaf{draft_reflector | marks: new_marks})}
   end
 
-
   @impl true
-  def update(_assigns, socket) do
-
+  def update(assigns, socket) do
+    IO.inspect(assigns, label: ">> POKEMON update within read")
     {:ok, socket}
   end
 
@@ -255,18 +379,49 @@ defmodule VyasaWeb.Context.Read do
     })
   end
 
+  ### @bala here's how the injection is being done, we can hardcode inject the tracklist id and cursor and things will work as intended
+  ## FIXME this should be tracks within a particular tracklist, needs tracklist id to be injected in via url params
   defp apply_action(%Socket{} = socket, :show_tracks, _params) do
+    # FIXME: this is a static stub, for now, these can be injected via url params / slug
+    tracklist_id = "fc4bb25c-41c0-447a-90c7-894d4f52b183"
+    tracklist_cursor = 1
+
+    tracklist =
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
+      |> Vyasa.Repo.preload(tracks: [event: [:verse]])
+
+    IO.inspect(tracklist.title, label: "showing tracks in tracklist")
+
+    tracklist_loader = fn ->
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
+      |> Vyasa.Repo.preload(tracks: [event: [verse: [:source, :chapter]]])
+    end
+
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :load_tracklist,
+    #   tracklist_loader: tracklist_loader,
+    #   origin: __MODULE__
+    # })
+
+    IO.puts("WALDO BEING SEARCHED")
+
     socket
-    |> stream(:tracks, Bhaj.list_tracks())
+    |> stream(:tracks, tracklist.tracks)
+    # |> stream(:tracks, Bhaj.list_tracks())
     |> assign(%{
-      content_action: :show_tracklists,
-      page_title: "Track",
+      tracklist_id: tracklist.id,
+      content_action: :show_tracks,
+      tracklist_cursor: tracklist_cursor,
+      tracklist_loader: tracklist_loader,
+      page_title: "Tracks in {tracklist.title}",
+      # tracks: tracklist.tracks,
       meta: %{
-        title: "Tracklists to follow and listen",
-        description: "Listen and follow along",
+        title: "Following the ",
+        description: "Listen and follow along to {tracklist.title}",
         type: "website",
         image: url(~p"/images/the_vyasa_project_1.png"),
-        url: url(socket, ~p"/explore/")
+        url: url(socket, ~p"/explore/tracks/{tracklist.id}")
       }
     })
   end
@@ -277,8 +432,16 @@ defmodule VyasaWeb.Context.Read do
   end
 
   # # syncs the media sessions by subscribing and publishing to the relevant channels
-  defp sync_media_bridge(%Socket{assigns: %{chap: %Chapter{no: c_no, source_id: src_id}}} = socket) do
-    send(self(), %{process: MediaBridge, event: :ack_handshake,  voice:  fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end, origin: __MODULE__})
+  defp sync_media_bridge(
+         %Socket{assigns: %{chap: %Chapter{no: c_no, source_id: src_id}}} = socket
+       ) do
+    send(self(), %{
+      process: MediaBridge,
+      event: :ack_handshake,
+      voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
+      origin: __MODULE__
+    })
+
     socket
   end
 
@@ -378,12 +541,10 @@ defmodule VyasaWeb.Context.Read do
 
   # fallthrough
   def init_drafting_context(%Socket{} = socket) do
-
     socket
     |> assign(draft_reflector: %Sheaf{marks: [Mark.get_draft_mark()]})
     |> assign(draft_reflector_ui: nil)
   end
-
 
   @doc """
   Only initialises a draft reflector in the socket state. If there's no existing
@@ -623,7 +784,7 @@ defmodule VyasaWeb.Context.Read do
         %{assigns: %{session: %{id: sess_id}}} = socket
       ) do
     IO.inspect("handle_event::clickVerseToSeek media:session:#{sess_id}", label: "checkpoint")
-     send(self(), %{payload: %{verse_id: verse_id}, event: :playback_sync, process: MediaBridge})
+    send(self(), %{payload: %{verse_id: verse_id}, event: :playback_sync, process: MediaBridge})
     {:noreply, socket}
   end
 
@@ -634,10 +795,9 @@ defmodule VyasaWeb.Context.Read do
         %{assigns: %{session: %{id: sess_id}}} = socket
       ) do
     IO.inspect("navigation forward media:session:#{sess_id}", label: "checkpoint")
-    #Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
+    # Vyasa.PubSub.publish(%{verse_id: verse_id}, :playback_sync, "media:session:" <> sess_id)
     {:noreply, socket}
   end
-
 
   @impl true
   def handle_event(
@@ -1262,41 +1422,48 @@ defmodule VyasaWeb.Context.Read do
   # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
-    <div id={@id} class="flex-grow" >
+    <div id={@id} class="flex-grow">
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl">
-          <.live_component
-            :if={@content_action == :show_sources}
-            module={VyasaWeb.Context.Read.Sources}
-            id="content-sources"
-            sources={@streams.sources}
-            user_mode={@user_mode}
-          />
+        <.debug_dump
+          label="Read Mode State Checks"
+          content_action={@content_action}
+          tracklist_cursor={@tracklist_cursor}
+          tracklist_id={@tracklist_id}
+        />
+        <.live_component
+          :if={@content_action == :show_sources}
+          module={VyasaWeb.Context.Read.Sources}
+          id="content-sources"
+          sources={@streams.sources}
+          user_mode={@user_mode}
+        />
 
-          <.live_component
-            :if={@content_action == :show_chapters}
-            module={VyasaWeb.Context.Read.Chapters}
-            id="content-chapters"
-            source={@source}
-            chapters={@streams.chapters}
-            user_mode={@user_mode}
-          />
+        <.live_component
+          :if={@content_action == :show_chapters}
+          module={VyasaWeb.Context.Read.Chapters}
+          id="content-chapters"
+          source={@source}
+          chapters={@streams.chapters}
+          user_mode={@user_mode}
+        />
 
-          <.live_component
-            :if={@content_action == :show_tracklists}
-            module={VyasaWeb.Context.Read.Tracklists}
-            id="content-tracklists"
-            tracklists={@streams.trackls}
-            user_mode={@user_mode}
-          />
+        <.live_component
+          :if={@content_action == :show_tracklists}
+          module={VyasaWeb.Context.Read.Tracklists}
+          id="content-tracklists"
+          #
+          tracklists={@streams.trackls}
+          user_mode={@user_mode}
+        />
 
-         <.live_component
-            :if={@content_action == :show_tracks}
-            module={VyasaWeb.Context.Read.Tracks}
-            id="content-tracks"
-            tracks={@streams.tracks}
-            user_mode={@user_mode}
-          />
+        <.live_component
+          :if={@content_action == :show_tracks}
+          module={VyasaWeb.Context.Read.Tracks}
+          id="content-tracks"
+          tracks={@streams.tracks}
+          user_mode={@user_mode}
+        />
 
         <%= if @content_action == :show_verses && not is_nil(@draft_reflector_ui) && not is_nil(@draft_reflector) do %>
           <!-- <.debug_dump
@@ -1467,7 +1634,6 @@ defmodule VyasaWeb.Context.Read do
          } = socket,
          id
        ) do
-
     socket
     |> assign(draft_reflector_ui: ui |> SheafUiState.register_mark(id))
   end
@@ -1480,7 +1646,6 @@ defmodule VyasaWeb.Context.Read do
          } = socket,
          id
        ) do
-
     socket
     |> assign(draft_reflector_ui: ui |> SheafUiState.deregister_mark(id))
   end

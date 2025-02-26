@@ -25,6 +25,13 @@
 <div id="media-player-container" phx-hook="MediaBridge" class="sticky top-0">
   <!-- player -->
   <div id="media-player" class="w-full" role="region" aria-label="Player">
+    <.debug_dump
+      label="Loaded tracklist"
+      tracklist_id={@tracklist_id}
+      is_queue_visible={@is_queue_visible}
+      is_action_bar_visible={@is_action_bar_visible}
+      tracklist_cursor={@tracklist_cursor}
+    />
     <div id="media-process-display-container">
       <div class="bg-white dark:bg-brandDark opacity-85 hover:opacity-100 backdrop-blur-lg p-4">
         <div class="flex justify-between items-center space-x-3.5 sm:space-x-5 lg:space-x-3.5 xl:space-x-5 px-2 sm:px-4">
@@ -66,6 +73,13 @@
              px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center"
     >
       <div class="flex items-center space-x-4 sm:space-x-6 lg:space-x-8">
+        <.action_bar_toggler
+          is_action_bar_visible={@is_action_bar_visible}
+        />
+        <.follow_mode_toggler
+          is_follow_mode={@is_follow_mode}
+          class="text-2xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-105"
+        />
         <button
           id="media-bridge-left-nav"
           phx-hook="ButtonClickRelayer"
@@ -75,21 +89,12 @@
           <.icon name="hero-arrow-left-circle" />
         </button>
 
-        <.follow_mode_toggler
-          is_follow_mode={@is_follow_mode}
-          class="text-2xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-105"
-        />
 
         <.play_pause_button
           playback={@playback}
           isReady={not is_nil(@playback)}
           isPlaying={@playback && @playback.playing?}
           class="text-xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-110"
-        />
-
-        <.video_toggler
-          should_show_vid={@should_show_vid}
-          class="text-2xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-105"
         />
 
         <button
@@ -100,6 +105,19 @@
         >
           <.icon name="hero-arrow-right-circle" />
         </button>
+
+
+        <.video_toggler
+          should_show_vid={@should_show_vid}
+          class="text-2xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-105"
+        />
+
+        <.playback_queue_toggler is_queue_visible={@is_queue_visible}/>
+        <.playback_queue
+          is_queue_visible={@is_queue_visible}
+          tracklist_cursor={@tracklist_cursor}
+          tracks={@tracks}
+        />
       </div>
     </div>
   </div>

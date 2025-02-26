@@ -1,6 +1,7 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
+import './utils/emphasis.js'
 
 // You can include dependencies in two ways.
 //
@@ -95,3 +96,57 @@ liveSocket.connect();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
+
+
+function toggleEmphasis(selectorId, className) {
+  const element = document.getElementById(selectorId);
+  if (element) {
+    if (element.classList.contains(className)) {
+      element.classList.remove(className);
+    } else {
+      element.classList.add(className);
+    }
+  }
+}
+
+
+window.addEventListener("phx:toggleEmphasis", (e) => {
+  const { selectorId, className } = e.detail;
+  toggleEmphasis(selectorId, className);
+});
+
+// function addEmphasis(selectorId, className) {
+//   const element = document.getElementById(selectorId);
+//   if (element && !element.classList.contains(className)) {
+//     element.classList.add(className);
+//   }
+// }
+
+function addEmphasis(selectorId, className) {
+  const element = document.getElementById(selectorId);
+  if (element) {
+    if (!element.classList.contains(className)) {
+      element.classList.add(className);
+    }
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.focus({ preventScroll: true });
+  }
+}
+
+function removeEmphasis(selectorId, className) {
+  console.log("WALDO", {selectorId, className})
+  const element = document.getElementById(selectorId);
+  if (element && element.classList.contains(className)) {
+    element.classList.remove(className);
+  }
+}
+
+window.addEventListener("phx:addEmphasis", (e) => {
+  const { selectorId, className } = e.detail;
+  addEmphasis(selectorId, className);
+});
+
+window.addEventListener("phx:removeEmphasis", (e) => {
+  const { selectorId, className } = e.detail;
+  removeEmphasis(selectorId, className);
+});

@@ -16,6 +16,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   alias Phoenix.LiveView.Socket
   alias Vyasa.Medium
   alias Vyasa.Medium.{Voice, Event, Playback}
+  alias Vyasa.Bhaj.{Tracklist}
 
   @default_player_config %{
     height: "300",
@@ -36,9 +37,14 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @play_state %{
     playback: nil,
+    tracklist_id: nil,
+    tracklist_cursor: 0,
     voice: nil,
     video: nil,
+    tracks: nil,
     should_show_vid: false,
+    is_action_bar_visible: true,
+    is_queue_visible: false,
     is_follow_mode: true,
     video_player_config: Jason.encode!(@default_player_config)
   }
@@ -48,8 +54,9 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     if connected?(socket) do
       send(socket.parent_pid, %{event: :init_handshake, pid: self(), origin: __MODULE__})
     end
-    {:ok,
-     Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end), layout: false}
+
+    {:ok, Enum.reduce(@play_state, socket, fn {key, state}, sock -> assign(sock, key, state) end),
+     layout: false}
   end
 
   defp update_playback(
@@ -152,6 +159,50 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   @impl true
   def handle_event(
+        "toggle_is_queue_visible",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    {:noreply, socket |> assign(is_queue_visible: !flag)}
+  end
+
+  @impl true
+  def handle_event(
+        "hide_playback_queue",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    IO.puts("HIDE PLAYBACK QUEUE")
+
+    case flag do
+      true -> {:noreply, socket |> assign(is_queue_visible: false)}
+      false -> {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "show_playback_queue",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    case flag do
+      true -> {:noreply, socket}
+      false -> {:noreply, socket |> assign(is_queue_visible: true)}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_action_bar_visible",
+        _,
+        %{assigns: %{is_action_bar_visible: flag} = _assigns} = socket
+      ) do
+    {:noreply, socket |> assign(is_action_bar_visible: !flag)}
+  end
+
+  @impl true
+  def handle_event(
         "toggle_is_follow_mode",
         _,
         %{assigns: %{is_follow_mode: flag} = _assigns} = socket
@@ -187,6 +238,43 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
      |> push_hook_events()}
   end
 
+  # @bala set cursor handle event passes sufficient info here.
+  def handle_event(
+        "setCursor",
+        %{
+          "track_order" => track_order,
+          "track_id" => track_id,
+          "tracklist_id" => tracklist_id,
+          "verse_id" => verse_id,
+          "chapter_no" => chapter_no,
+          "source_id" => source_id,
+          "source" => source
+          # value: _value
+        },
+        socket
+      ) do
+    IO.inspect({track_order, track_id, tracklist_id, verse_id, chapter_no, source_id, source},
+      label: "setCursor event received with track_order and track_id"
+    )
+
+    # Do something with the track_order and track_id here, e.g., update the cursor
+
+    send(socket.parent_pid, %{
+      event: :set_cursor_in_tracklist,
+      pid: self(),
+      origin: __MODULE__,
+      tracklist_cursor: track_order,
+      track_id: track_id,
+      tracklist_id: tracklist_id,
+      verse_id: verse_id,
+      chapter_no: chapter_no,
+      source_id: source_id,
+      source: source
+    })
+
+    {:noreply, assign(socket, :tracklist_cursor, track_order)}
+  end
+
   @impl true
   def handle_event(
         "seekTime",
@@ -212,7 +300,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   @impl true
   def handle_event(poke_event, poke_message, socket) do
     IO.puts(~c"[handleEvent] fallthrough #{poke_event} handle event")
-    IO.inspect(poke_message)
+    IO.inspect(poke_message, label: "pokemessage")
     {:noreply, socket}
   end
 
@@ -321,6 +409,42 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     })
   end
 
+  def handle_info(
+        %{event: :load_tracklist, tracklist_loader: loader, tracklist_cursor: tracklist_cursor},
+        %Socket{
+          assigns:
+            %{
+              # voice: curr_voice
+            }
+        } = socket
+      )
+      when is_integer(tracklist_cursor) do
+    with %Tracklist{title: title} = tracklist <- loader.() do
+      IO.inspect(title, label: "WALDO: loaded the tracklist with title")
+
+      {:noreply,
+       socket
+       # |> stream(:tracks, tracklist.tracks)
+       |> assign(%{
+         tracklist_id: tracklist.id,
+         tracklist_cursor: tracklist_cursor,
+         tracks: tracklist.tracks
+       })}
+    else
+      _ -> {:noreply, socket}
+    end
+
+    # with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
+    #      false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
+    #   {:noreply,
+    #      socket
+    #      |> apply_voice_action(voice)
+    #      |> dispatch_voice_registering_events()}
+    # else
+    #   _ -> {:noreply, socket}
+    # end
+  end
+
   @impl true
   # On receiving a voice_ack, the written and player contexts are now synced.
   # The voice's id shall be used as a sort of implicit ack number to check if the voice received
@@ -337,16 +461,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           }
         } = socket
       ) do
-    with %Voice{id: updated_voice_id} = voice <-  get_voice.(),
+    with %Voice{id: updated_voice_id} = voice <- get_voice.(),
          false <- is_struct(curr_voice) && updated_voice_id == curr_voice.id do
       {:noreply,
-         socket
-         |> apply_voice_action(voice)
-         |> dispatch_voice_registering_events()}
+       socket
+       |> apply_voice_action(voice)
+       |> dispatch_voice_registering_events()}
     else
       _ -> {:noreply, socket}
     end
-
   end
 
   # Handles playback sync relative to a particular verse id. In this case, the playback state is expected
@@ -569,7 +692,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   def video_player(assigns) do
     ~H"""
-    <div>
+    <button>
       <div
         class={
           if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"
@@ -588,25 +711,116 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           player_config={@player_config}
         />
       </div>
-    </div>
+    </button>
     """
   end
 
   def video_toggler(assigns) do
     ~H"""
-    <div phx-click={JS.push("toggle_should_show_vid")}>
+    <button phx-click={JS.push("toggle_should_show_vid")}>
       <.icon :if={@should_show_vid} name="hero-video-camera-slash" />
       <.icon :if={!@should_show_vid} name="hero-video-camera" />
-    </div>
+    </button>
     """
   end
 
   def follow_mode_toggler(assigns) do
     ~H"""
-    <div phx-click={JS.push("toggle_is_follow_mode")}>
+    <button phx-click={JS.push("toggle_is_follow_mode")}>
       <.icon :if={@is_follow_mode} name="hero-rectangle-stack" />
-      <.icon :if={!@is_follow_mode} name="hero-queue-list" />
-    </div>
+      <.icon :if={!@is_follow_mode} name="hero-rectangle-group" />
+    </button>
+    """
+  end
+
+  def playback_queue_toggler(assigns) do
+    ~H"""
+    <button
+      phx-click={JS.push("toggle_is_queue_visible")}
+      class={if @is_queue_visible, do: "text-primaryAccent", else: ""}
+    >
+      <.icon name="hero-queue-list" />
+    </button>
+    """
+  end
+
+  def action_bar_toggler(assigns) do
+    ~H"""
+    <button
+      id="media-bridge-player-visibility-toggle"
+      phx-click={JS.push("toggle_is_action_bar_visible")}
+      class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110"
+    >
+      <.icon name={if @is_action_bar_visible, do: "hero-eye-slash", else: "hero-eye"} />
+    </button>
+    """
+  end
+
+  def playback_queue(assigns) do
+    ~H"""
+    <.generic_modal_wrapper
+      show={@is_queue_visible}
+      id="playback-queue-sheet"
+      side_position_class="right-0"
+      container_class="fixed inset-0 z-50 flex justify-end"
+      dialog_class="fixed inset-0 w-full h-full justify-end"
+      background_class="fixed inset-0 bg-transparent"
+      focus_container_class="bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[90vh]"
+    >
+      <div :for={track <- @tracks} :if={@tracks != nil}>
+        <.track_summary track={track} is_now_playing={track.order === @tracklist_cursor} />
+      </div>
+    </.generic_modal_wrapper>
+    """
+  end
+
+  def track_summary(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :verse_blurb,
+        assigns.track.event.verse.body
+        |> String.slice(0..50)
+        |> String.split("\n")
+        |> List.first()
+        |> String.trim()
+      )
+
+    ~H"""
+    <button
+      phx-click={
+        JS.push("setCursor",
+          value: %{
+            track_order: @track.order,
+            track_id: @track.id,
+            tracklist_id: @track.trackls_id,
+            verse_id: @track.event.verse.no,
+            chapter_no: @track.event.verse.chapter_no,
+            source_id: @track.event.verse.source_id,
+            source: @track.event.verse.source.title
+          }
+        )
+      }
+      class={[
+        "w-full p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 flex flex-col items-start",
+        @is_now_playing && "bg-brandExtraLight"
+      ]}
+    >
+      <div :if={@is_now_playing} class="text-xs text-brandAccent font-bold w-full text-left">
+        <.icon name="custom-spinner-bars-scale-middle" class="w-4 h-4 inline-block" />
+      </div>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-gray-500">{@track.order}.</span>
+          <div class="text-sm font-medium">
+            {@verse_blurb}{if String.length(@track.event.verse.body) > 50, do: "..."}
+          </div>
+        </div>
+      </div>
+      <div class="text-xs text-gray-500 w-full text-left">
+        {to_title_case(@track.event.verse.source.title)} | Chapter {@track.event.verse.chapter.no} | Verse {@track.event.verse.no}
+      </div>
+    </button>
     """
   end
 end
