@@ -68,9 +68,9 @@ defmodule VyasaWeb.Context.Read do
         %{
           id: "read",
           event: :set_cursor_in_tracklist,
-          # tracklist_cursor: tracklist_cursor,
-          track_id: track_id
-          # tracklist_id: tracklist_id,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id
           # verse_id: verse_id,
           # chapter_no: chapter_no,
           # source_id: source_id,
@@ -78,9 +78,10 @@ defmodule VyasaWeb.Context.Read do
         },
         %{
           assigns: %{
-            content_action: :show_tracks
-            # tracklist_cursor: curr_cursor
-            # tracklist_id: curr_tracklist
+            content_action: :show_tracks,
+            tracklist_cursor: curr_cursor
+            # streams: %{tracks: tracks}
+            # tracklist_id: curr_tracklist_id
             # chap: %Chapter{no: _c_no, source_id: _src_id}
           }
         } = socket
@@ -89,21 +90,30 @@ defmodule VyasaWeb.Context.Read do
     ## for this, i want to use the JS.add_class but dont' konw how
 
     # old_selected = Enum.fil()
-    # old_selector_id = "foo_track_" <> Enum.filter()
+    # current_selected_track = Enum.find()
+    curr_tracklist =
+      Vyasa.Bhaj.get_tracklist(tracklist_id)
+      |> Vyasa.Repo.preload(tracks: [event: [verse: [:source, :chapter]]])
+
+    tracks = curr_tracklist.tracks
+    old_selector_id = "foo_track_" <> Enum.find(tracks, fn t -> t.order === curr_cursor end).id
     selector_id = "foo_track_" <> track_id
     class_name = "emphasized-verse"
 
     # dbg()
-    # cond do
-    #   tracklist_cursor != curr_cursor ->
-    #     # socket |>
-    #     socket
-    #     |> push_event("toggle_class", %{selectorId: selector_id, className: class_name})
-    # end
 
-    {:ok,
-     socket
-     |> push_event("toggleEmphasis", %{selectorId: selector_id, className: class_name})}
+    socket =
+      cond do
+        tracklist_cursor != curr_cursor ->
+          socket
+          |> push_event("removeEmphasis", %{selectorId: old_selector_id, className: class_name})
+          |> push_event("addEmphasis", %{selectorId: selector_id, className: class_name})
+
+        true ->
+          socket
+      end
+
+    {:ok, socket}
   end
 
   # @bala @ritesh this msg recipient is for the flat version
@@ -404,6 +414,7 @@ defmodule VyasaWeb.Context.Read do
       tracklist_cursor: tracklist_cursor,
       tracklist_loader: tracklist_loader,
       page_title: "Tracks in {tracklist.title}",
+      # tracks: tracklist.tracks,
       meta: %{
         title: "Following the ",
         description: "Listen and follow along to {tracklist.title}",
