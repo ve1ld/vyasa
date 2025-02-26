@@ -61,6 +61,7 @@ defmodule VyasaWeb.Context.Read do
     {:ok, socket}
   end
 
+  # @bala @ritesh this msg recipient is for the flat version
   @impl true
   # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
@@ -69,7 +70,11 @@ defmodule VyasaWeb.Context.Read do
           event: :set_cursor_in_tracklist,
           tracklist_cursor: tracklist_cursor,
           track_id: track_id,
-          tracklist_id: tracklist_id
+          tracklist_id: tracklist_id,
+          verse_id: verse_id,
+          chapter_no: chapter_no,
+          source_id: source_id,
+          source: source
         },
         %{
           assigns: %{
@@ -93,6 +98,44 @@ defmodule VyasaWeb.Context.Read do
     {:ok, socket}
   end
 
+  # @bala @ritesh this msg recipient is for the flat version
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
+        %{
+          id: "read",
+          event: :set_cursor_in_tracklist,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id,
+          verse_id: verse_id,
+          chapter_no: chapter_no,
+          source_id: source_id,
+          source: source
+        },
+        %{
+          assigns: %{
+            content_action: :show_verses,
+            tracklist_cursor: curr_cursor,
+            tracklist_id: curr_tracklist
+            # chap: %Chapter{no: _c_no, source_id: _src_id}
+          }
+        } = socket
+      ) do
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :ack_handshake,
+    #   voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
+    #   origin: __MODULE__
+    # })
+
+    IO.puts("WALDO is IN READ MODE")
+    dbg()
+
+    {:ok, socket}
+  end
+
+  # @bala use this to do the check if correct url and push patch prior to calling the  emphasis event
   @impl true
   # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(

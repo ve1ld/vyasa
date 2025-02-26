@@ -238,17 +238,22 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
      |> push_hook_events()}
   end
 
+  # @bala set cursor handle event passes sufficient info here.
   def handle_event(
         "setCursor",
         %{
           "track_order" => track_order,
           "track_id" => track_id,
-          "tracklist_id" => tracklist_id
+          "tracklist_id" => tracklist_id,
+          "verse_id" => verse_id,
+          "chapter_no" => chapter_no,
+          "source_id" => source_id,
+          "source" => source
           # value: _value
         },
         socket
       ) do
-    IO.inspect({track_order, track_id, tracklist_id},
+    IO.inspect({track_order, track_id, tracklist_id, verse_id, chapter_no, source_id, source},
       label: "setCursor event received with track_order and track_id"
     )
 
@@ -260,7 +265,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       origin: __MODULE__,
       tracklist_cursor: track_order,
       track_id: track_id,
-      tracklist_id: tracklist_id
+      tracklist_id: tracklist_id,
+      verse_id: verse_id,
+      chapter_no: chapter_no,
+      source_id: source_id,
+      source: source
     })
 
     {:noreply, assign(socket, :tracklist_cursor, track_order)}
@@ -781,7 +790,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     <button
       phx-click={
         JS.push("setCursor",
-          value: %{track_order: @track.order, track_id: @track.id, tracklist_id: @track.trackls_id}
+          value: %{
+            track_order: @track.order,
+            track_id: @track.id,
+            tracklist_id: @track.trackls_id,
+            verse_id: @track.event.verse.no,
+            chapter_no: @track.event.verse.chapter_no,
+            source_id: @track.event.verse.source_id,
+            source: @track.event.verse.source.title
+          }
         )
       }
       class={[

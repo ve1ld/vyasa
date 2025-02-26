@@ -308,7 +308,11 @@ defmodule VyasaWeb.ModeLive.Mediator do
           origin: origin,
           tracklist_cursor: tracklist_cursor,
           track_id: track_id,
-          tracklist_id: tracklist_id
+          tracklist_id: tracklist_id,
+          verse_id: verse_id,
+          chapter_no: chapter_no,
+          source_id: source_id,
+          source: source
         } = msg,
         %{
           assigns: %{
@@ -331,7 +335,11 @@ defmodule VyasaWeb.ModeLive.Mediator do
       event: :set_cursor_in_tracklist,
       tracklist_cursor: tracklist_cursor,
       track_id: track_id,
-      tracklist_id: tracklist_id
+      tracklist_id: tracklist_id,
+      verse_id: verse_id,
+      chapter_no: chapter_no,
+      source_id: source_id,
+      source: source
     )
 
     {:noreply, socket |> update(:pid_register, &Map.put(&1, origin, m_pid))}
