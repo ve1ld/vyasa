@@ -40,7 +40,10 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     tracklist_id: nil,
     voice: nil,
     video: nil,
+    tracks: nil,
     should_show_vid: false,
+    is_action_bar_visible: true,
+    is_queue_visible: false,
     is_follow_mode: true,
     video_player_config: Jason.encode!(@default_player_config)
   }
@@ -151,6 +154,50 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         %{assigns: %{should_show_vid: flag} = _assigns} = socket
       ) do
     {:noreply, socket |> assign(should_show_vid: !flag)}
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_queue_visible",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    {:noreply, socket |> assign(is_queue_visible: !flag)}
+  end
+
+  @impl true
+  def handle_event(
+        "hide_playback_queue",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    IO.puts("HIDE PLAYBACK QUEUE")
+
+    case flag do
+      true -> {:noreply, socket |> assign(is_queue_visible: false)}
+      false -> {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "show_playback_queue",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    case flag do
+      true -> {:noreply, socket}
+      false -> {:noreply, socket |> assign(is_queue_visible: true)}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_action_bar_visible",
+        _,
+        %{assigns: %{is_action_bar_visible: flag} = _assigns} = socket
+      ) do
+    {:noreply, socket |> assign(is_action_bar_visible: !flag)}
   end
 
   @impl true
@@ -338,8 +385,10 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
       {:noreply,
        socket
+       # |> stream(:tracks, tracklist.tracks)
        |> assign(%{
-         tracklist_id: tracklist.id
+         tracklist_id: tracklist.id,
+         tracks: tracklist.tracks
        })}
     else
       _ -> {:noreply, socket}
@@ -603,7 +652,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   def video_player(assigns) do
     ~H"""
-    <div>
+    <button>
       <div
         class={
           if @should_show_vid, do: "container-YouTubePlayer", else: "container-YouTubePlayerHidden"
@@ -622,25 +671,69 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
           player_config={@player_config}
         />
       </div>
-    </div>
+    </button>
     """
   end
 
   def video_toggler(assigns) do
     ~H"""
-    <div phx-click={JS.push("toggle_should_show_vid")}>
+    <button phx-click={JS.push("toggle_should_show_vid")}>
       <.icon :if={@should_show_vid} name="hero-video-camera-slash" />
       <.icon :if={!@should_show_vid} name="hero-video-camera" />
-    </div>
+    </button>
     """
   end
 
   def follow_mode_toggler(assigns) do
     ~H"""
-    <div phx-click={JS.push("toggle_is_follow_mode")}>
+    <button phx-click={JS.push("toggle_is_follow_mode")}>
       <.icon :if={@is_follow_mode} name="hero-rectangle-stack" />
-      <.icon :if={!@is_follow_mode} name="hero-queue-list" />
-    </div>
+      <.icon :if={!@is_follow_mode} name="hero-rectangle-group" />
+    </button>
+    """
+  end
+
+  def playback_queue_toggler(assigns) do
+    ~H"""
+    <button
+      phx-click={JS.push("toggle_is_queue_visible")}
+      class={if @is_queue_visible, do: "text-primaryAccent", else: ""}
+    >
+      <.icon name="hero-queue-list" />
+    </button>
+    """
+  end
+
+  def action_bar_toggler(assigns) do
+    ~H"""
+    <button
+      id="media-bridge-player-visibility-toggle"
+      phx-click={JS.push("toggle_is_action_bar_visible")}
+      class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110"
+    >
+      <.icon name={if @is_action_bar_visible, do: "hero-eye-slash", else: "hero-eye"} />
+    </button>
+    """
+  end
+
+  def playback_queue(assigns) do
+    ~H"""
+    <.generic_modal_wrapper
+      show={@is_queue_visible}
+      id="playback-queue-sheet"
+      side_position_class="right-0"
+      container_class="fixed inset-0 z-50 flex justify-end"
+      dialog_class="fixed inset-0 w-full max-w-md h-full justify-end"
+      background_class="fixed inset-0 bg-transparent"
+      focus_container_class="bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[90vh]"
+    >
+      <.debug_dump label="Stub for playback queue" class="h-full" />
+      <ul>
+        <li :for={track <- @tracks}>
+          TODO track view: <br /> {to_title_case(track.event.verse.body)}
+        </li>
+      </ul>
+    </.generic_modal_wrapper>
     """
   end
 end
