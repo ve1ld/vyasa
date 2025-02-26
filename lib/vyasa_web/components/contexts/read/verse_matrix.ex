@@ -99,7 +99,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     # cant be just pure binary operations
     #IO.inspect(assigns, label: "verse_content expand")
     ~H"""
-    <dd class={"text-zinc-700  text-center #{verse_class(@verseup)}"}>
+    <dd class={"text-zinc-700  text-justify #{verse_class(@verseup)}"}>
       <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
         <%= @content %>
       </span>

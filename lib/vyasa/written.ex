@@ -323,6 +323,13 @@ defmodule Vyasa.Written do
     |> Repo.insert()
   end
 
+  def fetch_source(%{"title" => title} = attrs) do
+    case get_source_by_title(title) do
+      %Source{} = source -> {:ok, source}
+        _ -> create_source(attrs)
+    end
+  end
+
   @doc """
   Updates a source.
 
@@ -377,4 +384,5 @@ defmodule Vyasa.Written do
 
   # fallthrough to devanagari
   defp lang2script(%Source{} = s), do: %{s | script: "dn"}
+  defp lang2script(_), do: nil
 end

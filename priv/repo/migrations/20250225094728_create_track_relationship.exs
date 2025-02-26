@@ -10,8 +10,7 @@ defmodule Vyasa.Repo.Migrations.CreateTrackRelationship do
     end
 
 
-    create index(:tracks, [:trackls_id])
-    create index(:tracks, [:event_id])
+
 
   end
 
@@ -23,9 +22,13 @@ defmodule Vyasa.Repo.Migrations.CreateTrackRelationship do
       remove :trackls_id, references(:tracklists, column: :id, type: :uuid, on_delete: :delete_all)
     end
 
-    drop index(:tracks, [:trackls_id])
-    drop index(:tracks, [:event_id])
+
 
 
   end
+
+  def change do
+        create index(:tracks, [:trackls_id])
+      create index(:tracks, [:event_id])
+      end
 end

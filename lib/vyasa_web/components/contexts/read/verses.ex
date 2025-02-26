@@ -24,7 +24,7 @@ defmodule VyasaWeb.Context.Read.Verses do
             <%= @selected_transl.target.title_translit %> | <%= @chap.title %>
           </div>
           <div class="font-dn text-2xl mb-4">
-            Chapter <%= @chap.no %> - <%= @selected_transl.target.title %>
+            <span> Chapter <%= @chap.no %> </span> <span :if={@selected_transl.target.title}> -  <%= @selected_transl.target.title %>  </span>
           </div>
 
           <:subtitle>
@@ -59,9 +59,9 @@ defmodule VyasaWeb.Context.Read.Verses do
                 field: [:body],
                 verseup: {:big, @src.script}
               },
-              %{node: hd(verse.translations), field: [:target, :body_translit], verseup: :big},
-              %{node: hd(verse.translations), field: [:target, :body_translit_meant], verseup: :mid},
-              %{node: hd(verse.translations), field: [:target, :body], verseup: :mid}
+              %{node: List.first(verse.translations), field: [:target, :body_translit], verseup: :big},
+              %{node: List.first(verse.translations), field: [:target, :body_translit_meant], verseup: :mid},
+              %{node: List.first(verse.translations), field: [:target, :body], verseup: :mid}
             ]}
           />
         </div>

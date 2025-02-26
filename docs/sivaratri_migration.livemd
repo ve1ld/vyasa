@@ -22,12 +22,34 @@ R.recompile()
 ## Tracklist Gen
 
 ```elixir
-{:ok, ts} = Vyasa.Bhaj.create_tracklist(%{id: Ecto.UUID.generate(), title: "Shivaratri"})
+Vyasa.Bhaj.list_tracks()
 ```
 
 ```elixir
-[%{source: "gita", chapter_no: 1},
-  %{source: "hanuman_chalisa", chapter_no: 1, start_verse: 5, end_verse: 10}
+{:ok, ts} = Vyasa.Bhaj.create_tracklist(%{id: Ecto.UUID.generate(), title: "Shivaratri Kaalam 1"})
+```
+
+```elixir
+[%{source: "naalvar_thuthi", chapter_no: 1},
+  %{source: "first_thirumurai", chapter_no: 123, start_verse: 5, end_verse: 5},
+  %{source: "first_thirumurai", chapter_no: 10},
+  %{source: "second_thirumurai", chapter_no: 85},
+  %{source: "third_thirumurai", chapter_no: 49},
+  %{source: "fourth_thirumurai", chapter_no: 11},
+  %{source: "sundharar_thevaram", chapter_no: 39},
+  %{source: "thiruvasagam", chapter_no: 1},
+  %{source: "thiruppugal", chapter_no: 39},
+  %{source: "thiruppugal", chapter_no: 39, start_verse: 4, end_verse: 4},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 164, end_verse: 165},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 90, end_verse: 93},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 147, end_verse: 154},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 156, end_verse: 157},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 191, end_verse: 192},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 98, end_verse: 98},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 167, end_verse: 167},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 98, end_verse: 98},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 167, end_verse: 167},
+  %{source: "thiruvasagam", chapter_no: 4, start_verse: 224, end_verse: 225}
 ]
 
 |> Enum.reduce([], 
