@@ -64,6 +64,38 @@ defmodule VyasaWeb.Context.Read do
   @impl true
   # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
   def update(
+        %{
+          id: "read",
+          event: :set_cursor_in_tracklist,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id
+        },
+        %{
+          assigns: %{
+            content_action: :show_tracks,
+            tracklist_cursor: curr_cursor,
+            tracklist_id: curr_tracklist
+            # chap: %Chapter{no: _c_no, source_id: _src_id}
+          }
+        } = socket
+      ) do
+    # send(self(), %{
+    #   process: MediaBridge,
+    #   event: :ack_handshake,
+    #   voice: fn -> Medium.get_voice(src_id, c_no, @default_voice_lang) end,
+    #   origin: __MODULE__
+    # })
+
+    IO.puts("WALDO is IN READ MODE")
+    dbg()
+
+    {:ok, socket}
+  end
+
+  @impl true
+  # received updates from parent liveview when a handshake is init with sesion, does a pub for the voice to use
+  def update(
         %{id: "read", event: :media_handshake},
         %{
           assigns: %{
@@ -171,7 +203,8 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
-  def update(_assigns, socket) do
+  def update(assigns, socket) do
+    IO.inspect(assigns, label: ">> POKEMON update within read")
     {:ok, socket}
   end
 
@@ -1327,7 +1360,12 @@ defmodule VyasaWeb.Context.Read do
     <div id={@id} class="flex-grow">
       <!-- CONTENT DISPLAY: -->
       <div id="content-display" class="mx-auto max-w-2xl">
-        <.debug_dump label="Read Mode State Checks" content_action={@content_action} />
+        <.debug_dump
+          label="Read Mode State Checks"
+          content_action={@content_action}
+          tracklist_cursor={@tracklist_cursor}
+          tracklist_id={@tracklist_id}
+        />
         <.live_component
           :if={@content_action == :show_sources}
           module={VyasaWeb.Context.Read.Sources}

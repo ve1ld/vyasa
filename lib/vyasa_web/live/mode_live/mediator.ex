@@ -302,6 +302,42 @@ defmodule VyasaWeb.ModeLive.Mediator do
   end
 
   def handle_info(
+        %{
+          pid: m_pid,
+          event: :set_cursor_in_tracklist,
+          origin: origin,
+          tracklist_cursor: tracklist_cursor,
+          track_id: track_id,
+          tracklist_id: tracklist_id
+        } = msg,
+        %{
+          assigns: %{
+            mode: %UserMode{
+              mode_context_component: component,
+              mode_context_component_selector: selector
+            }
+          }
+        } = socket
+      ) do
+    IO.inspect(%{"msg" => msg, "selector" => selector, "component" => component},
+      label: "WALDO: set_tracklist_in_cursor within mediator"
+    )
+
+    # send_update(component, id: selector, event: :set_cursor_in_tracklist)
+
+    # the verse
+    send_update(component,
+      id: selector,
+      event: :set_cursor_in_tracklist,
+      tracklist_cursor: tracklist_cursor,
+      track_id: track_id,
+      tracklist_id: tracklist_id
+    )
+
+    {:noreply, socket |> update(:pid_register, &Map.put(&1, origin, m_pid))}
+  end
+
+  def handle_info(
         %{process: destination} = msg,
         %{
           assigns: %{

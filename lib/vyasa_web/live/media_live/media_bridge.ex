@@ -238,10 +238,32 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
      |> push_hook_events()}
   end
 
-  def handle_event("setCursor", %{"order" => order, "id" => id}, socket) do
-    IO.inspect({order, id}, label: "setCursor event received with order and id")
-    # Do something with the order and id here, e.g., update the cursor
-    {:noreply, assign(socket, :tracklist_cursor, order)}
+  def handle_event(
+        "setCursor",
+        %{
+          "track_order" => track_order,
+          "track_id" => track_id,
+          "tracklist_id" => tracklist_id
+          # value: _value
+        },
+        socket
+      ) do
+    IO.inspect({track_order, track_id, tracklist_id},
+      label: "setCursor event received with track_order and track_id"
+    )
+
+    # Do something with the track_order and track_id here, e.g., update the cursor
+
+    send(socket.parent_pid, %{
+      event: :set_cursor_in_tracklist,
+      pid: self(),
+      origin: __MODULE__,
+      tracklist_cursor: track_order,
+      track_id: track_id,
+      tracklist_id: tracklist_id
+    })
+
+    {:noreply, assign(socket, :tracklist_cursor, track_order)}
   end
 
   @impl true
@@ -269,7 +291,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   @impl true
   def handle_event(poke_event, poke_message, socket) do
     IO.puts(~c"[handleEvent] fallthrough #{poke_event} handle event")
-    IO.inspect(poke_message)
+    IO.inspect(poke_message, label: "pokemessage")
     {:noreply, socket}
   end
 
@@ -757,7 +779,11 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
     ~H"""
     <button
-      phx-click={JS.push("setCursor", value: %{order: @track.order, id: @track.id})}
+      phx-click={
+        JS.push("setCursor",
+          value: %{track_order: @track.order, track_id: @track.id, tracklist_id: @track.trackls_id}
+        )
+      }
       class={[
         "w-full p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 flex flex-col items-start",
         @is_now_playing && "bg-brandExtraLight"
@@ -775,7 +801,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         </div>
       </div>
       <div class="text-xs text-gray-500 w-full text-left">
-        {to_title_case(@track.event.verse.source.title)} - Chapter {@track.event.verse.chapter.no}
+        {to_title_case(@track.event.verse.source.title)} | Chapter {@track.event.verse.chapter.no} | Verse {@track.event.verse.no}
       </div>
     </button>
     """
