@@ -121,7 +121,8 @@ defmodule VyasaWeb.Context.Read do
             # chap: %Chapter{no: _c_no, source_id: _src_id}
           }
         } = socket
-      ) do
+      )
+      when curr_tracklist == tracklist_id do
     # send(self(), %{
     #   process: MediaBridge,
     #   event: :ack_handshake,
