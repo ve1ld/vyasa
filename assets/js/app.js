@@ -36,6 +36,16 @@ let liveSocket = new LiveSocket("/live", Socket, {
 
     session: fetchSession(),
   },
+  metadata: {
+    keydown: (event, element) => {
+      return {
+        key: event.key,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+      };
+    },
+  },
+
   hooks: Hooks,
 });
 

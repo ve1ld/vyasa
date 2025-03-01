@@ -39,6 +39,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     voice: nil,
     video: nil,
     should_show_vid: false,
+    tracklist: %{cursor: 0 , tracks: []},
+    is_queue_visible: false,
     is_follow_mode: true,
     video_player_config: Jason.encode!(@default_player_config)
   }
@@ -161,6 +163,19 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       socket
       |> assign(is_follow_mode: !flag)
       |> push_event("toggleFollowMode", %{})
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "toggle_is_queue_visible",
+        _,
+        %{assigns: %{is_queue_visible: flag} = _assigns} = socket
+      ) do
+    {
+      :noreply,
+      socket
+      |> assign(is_queue_visible: !flag)
     }
   end
 
@@ -607,6 +622,81 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       <.icon :if={@is_follow_mode} name="hero-rectangle-stack" />
       <.icon :if={!@is_follow_mode} name="hero-queue-list" />
     </div>
+    """
+  end
+
+  def playback_queue_toggler(assigns) do
+    ~H"""
+    <button
+      phx-click={JS.push("toggle_is_queue_visible")}
+      class={@is_queue_visible && "text-primaryAccent" || "text-brandAccentLight"}
+    >
+      <.icon name="hero-queue-list" />
+    </button>
+    """
+  end
+
+  def playback_queue(assigns) do
+    assigns= assign(assigns, :tracks, Vyasa.Bhaj.list_tracks_by_tls("7c302201-c554-4a3f-a8b9-dac97862eca7"))
+    ~H"""
+    <div  :if={@is_queue_visible} class="right-0 top-1/4 fixed justify-end bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[60vh] animate-fade duration-50">
+      <div  :for={track <- @tracks} :if={@tracks != nil}>
+        <.track_summary track={track} is_now_playing={track.order === @tracklist_cursor} />
+      </div>
+      <span class="block h-48" />
+    </div>
+
+    """
+  end
+
+
+  def track_summary(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :verse_blurb,
+        assigns.track.event.verse.body
+        |> String.slice(0..50)
+        |> String.split("\n")
+        |> List.first()
+        |> String.trim()
+      )
+
+    ~H"""
+    <button
+      phx-click={
+        JS.push("setCursor",
+          value: %{
+            track_order: @track.order,
+            track_id: @track.id,
+            tracklist_id: @track.trackls_id,
+            verse_id: @track.event.verse.no,
+            chapter_no: @track.event.verse.chapter_no,
+            source_id: @track.event.verse.source_id,
+            source: @track.event.verse.source.title
+          }
+        )
+      }
+      class={[
+        "w-full p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 flex flex-col items-start",
+        @is_now_playing && "bg-brandExtraLight"
+      ]}
+    >
+      <div :if={@is_now_playing} class="text-xs text-brandAccent font-bold w-full text-left">
+        <.icon name="custom-spinner-bars-scale-middle" class="w-4 h-4 inline-block" />
+      </div>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-gray-500">{@track.order}.</span>
+          <div class="text-sm font-medium">
+            {@verse_blurb}{if String.length(@track.event.verse.body) > 50, do: "..."}
+          </div>
+        </div>
+      </div>
+      <div class="text-xs text-gray-500 w-full text-left">
+        {to_title_case(@track.event.verse.source.title)} | Chapter {@track.event.verse.chapter_no} | Verse {@track.event.verse.no}
+      </div>
+    </button>
     """
   end
 end

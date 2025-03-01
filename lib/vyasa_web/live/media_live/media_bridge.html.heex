@@ -95,11 +95,19 @@
         <button
           id="media-bridge-right-nav"
           phx-hook="ButtonClickRelayer"
+          phx-keydown="nav_fwd"
           data-target-relay-id="action-bar-action-button-nav_fwd"
           class="text-xl sm:text-2xl focus:outline-none hover:text-brand dark:hover:text-brandAccentLight transition-all duration-300 ease-in-out transform hover:scale-110"
         >
           <.icon name="hero-arrow-right-circle" />
         </button>
+
+        <.playback_queue_toggler is_queue_visible={@is_queue_visible}/>
+        <.playback_queue
+          is_queue_visible={@is_queue_visible}
+          tracklist_cursor={@tracklist.cursor}
+          tracks={@tracklist.tracks}
+        />
       </div>
     </div>
   </div>

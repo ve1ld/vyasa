@@ -23,7 +23,8 @@ defmodule Vyasa.Bhaj do
 
     query = from t in Track,
       where: t.trackls_id == ^trackls_id,
-      preload: [event: [:verse]]
+      preload: [event: [verse: [:source]]],
+      order_by: t.order
 
     Repo.all(query)
   end

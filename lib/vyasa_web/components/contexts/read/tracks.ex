@@ -48,7 +48,7 @@ defmodule VyasaWeb.Context.Read.Tracks do
       </.table>
 
       <span :if={@tracks |> Enum.count() <= 10} class="block h-96" />
-      <span :if={@tracks |> Enum.count() > 10} class="block h-48" />
+      <span :if={@tracks |> Enum.count() > 10} class="block h-64" />
     </div>
     """
   end
