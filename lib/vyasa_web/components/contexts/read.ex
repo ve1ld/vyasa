@@ -255,11 +255,13 @@ defmodule VyasaWeb.Context.Read do
     })
   end
 
-  defp apply_action(%Socket{} = socket, :show_tracks, _params) do
+  defp apply_action(%Socket{} = socket, :show_tracks, %{"track_id" => track_id}) do
+    tracks = Bhaj.list_tracks_by_tls(track_id)
     socket
-    |> stream(:tracks, Bhaj.list_tracks())
+    |> stream(:tracks, tracks)
     |> assign(%{
-      content_action: :show_tracklists,
+      kv_tracks: Enum.into(tracks, %{}, &{&1.id, &1}),
+      content_action: :show_tracks,
       page_title: "Track",
       meta: %{
         title: "Tracklists to follow and listen",

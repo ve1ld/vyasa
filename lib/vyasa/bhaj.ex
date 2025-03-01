@@ -19,6 +19,15 @@ defmodule Vyasa.Bhaj do
     Repo.all(Track)
   end
 
+  def list_tracks_by_tls(trackls_id) do
+
+    query = from t in Track,
+      where: t.trackls_id == ^trackls_id,
+      preload: [event: [:verse]]
+
+    Repo.all(query)
+  end
+
   @doc """
   Gets a single track.
 
@@ -33,7 +42,7 @@ defmodule Vyasa.Bhaj do
       ** (Ecto.NoResultsError)
 
   """
-  def get_track!(id), do: Repo.get!(Track, id)
+  def get_track!(id), do: Repo.get!(Track, id) |> Repo.preload([event: [verse: [:source]]])
   def get_track(id), do: Repo.get(Track, id)
 
   @doc """
