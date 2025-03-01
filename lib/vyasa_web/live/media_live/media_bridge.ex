@@ -287,6 +287,32 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> assign(playback: playback)
   end
 
+
+
+  defp apply_track_action(%{assigns: %{tracklist: %{id: id} = prev_tls}} = socket,
+         %Track{
+           order: order,
+           trackls_id: tls_id
+         }
+       )  when id == tls_id do
+    IO.inspect(prev_tls, label: "no change to trackls")
+
+    socket
+    |> assign(tracklist: %{ prev_tls | cursor: order})
+  end
+
+
+  defp apply_track_action(%{assigns: %{tracklist: prev_tls}} = socket,
+         %Track{
+           order: order,
+           trackls_id: tls_id
+         }
+       ) do
+
+    socket
+    |> assign(tracklist: %{ prev_tls | id: tls_id, tracks: Vyasa.Bhaj.list_tracks_by_tls(tls_id), cursor: order})
+  end
+
   defp dispatch_voice_registering_events(
          %Socket{
            assigns: %{
@@ -366,16 +392,13 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
 
-  def handle_info(
-        %{event: :initiate_playback, track: get_track},
-        %Socket{
-          assigns: %{
-            tracklist: %{id: prev_id, order: prev_order}
-          }
-        } = socket
+  def handle_info(%{event: :initiate_playback, track: get_track},
+                  %{assigns: %{tracklist: %{id: prev_id, cursor: prev_cursor}}} = socket
       ) do
-    with %Track{order: order, trackls_id: tls_id} = _track when order !== prev_order or tls_id !== prev_id <-  get_track.() do
-      {:noreply, socket}
+    with %Track{order: order, trackls_id: tls_id} = track when order !== prev_cursor or tls_id !== prev_id <-  get_track.() do
+      {:noreply, socket
+        |> apply_track_action(track)
+      }
     else
       _ -> {:noreply, socket}
     end
@@ -655,7 +678,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   def playback_queue(assigns) do
-    assigns= assign(assigns, :tracks, Vyasa.Bhaj.list_tracks_by_tls("7c302201-c554-4a3f-a8b9-dac97862eca7"))
+    IO.inspect(assigns.tracks)
     ~H"""
     <div  :if={@is_queue_visible} class="right-0 top-1/4 fixed justify-end bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[60vh] animate-fade duration-50">
       <div  :for={track <- @tracks} :if={@tracks != nil}>
@@ -674,7 +697,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         assigns,
         :verse_blurb,
         assigns.track.event.verse.body
-        |> String.slice(0..50)
+        |> String.slice(0..30)
         |> String.split("\n")
         |> List.first()
         |> String.trim()

@@ -1,7 +1,7 @@
 defmodule VyasaWeb.Context.Read.Tracks do
   use VyasaWeb, :live_component
   alias Vyasa.{Bhaj}
-
+  alias VyasaWeb.MediaLive.MediaBridge
   @impl true
   def update(params, socket) do
     IO.inspect("ENTERING TRACKS")
@@ -57,6 +57,8 @@ defmodule VyasaWeb.Context.Read.Tracks do
   @impl true
   def handle_event("navigate_from_track", %{"track_id" => track_id}, socket) do
     %{event: %{verse: %{source: source, chapter_no: chap_no}}} = Bhaj.get_track!(track_id)
+
+    send(self(), %{process: MediaBridge, event: :initiate_playback,  track:  fn -> Bhaj.get_track!(track_id) end, origin: __MODULE__})
 
     {:noreply,
      socket
