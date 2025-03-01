@@ -180,6 +180,23 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     }
   end
 
+
+  def handle_event(
+        "navigate_trackls",
+        %{"key" => "ArrowLeft"},
+        socket
+      ) do
+    {:noreply, socket |> apply_track_action(-1) }
+  end
+
+  def handle_event(
+        "navigate_trackls",
+        %{"key" => "ArrowRight"},
+        socket
+      ) do
+    {:noreply, socket |> apply_track_action(1)}
+  end
+
   @impl true
   @doc """
   Handle the user-generated action of playing or pausing.
@@ -224,6 +241,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
     |> handle_seek(position_ms, "MediaBridge")
   end
+
 
   @impl true
   def handle_event(poke_event, poke_message, socket) do
@@ -304,7 +322,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     |> assign(tracklist: %{ prev_tls | cursor: order})
   end
 
-
   defp apply_track_action(%{assigns: %{tracklist: prev_tls}} = socket,
          %Track{
            order: order,
@@ -320,6 +337,18 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     socket
     |> assign(tracklist: %{ prev_tls | id: tls_id, tracks: tracks, cursor: order})
   end
+
+
+  defp apply_track_action(%{assigns: %{tracklist: %{cursor: cursor, tracks: ts} = tls}} = socket, no)  when is_integer(no) do
+
+    %{event: event} = Enum.find(ts, fn %{order: order} -> order == cursor+no end)
+
+    send(socket.parent_pid, {"mutate_UiState", "update_emphasis", [event]})
+
+    socket
+    |> assign(tracklist: %{ tls | cursor: cursor + no})
+  end
+
 
   defp dispatch_voice_registering_events(
          %Socket{
