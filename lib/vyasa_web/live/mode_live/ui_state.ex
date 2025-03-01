@@ -27,6 +27,7 @@ defmodule VyasaWeb.ModeLive.UiState do
     %UiState{state | show_media_bridge?: true}
   end
 
+
   def assign(
         %{assigns: %{ui_state: curr_state}} = socket,
         attr,
@@ -85,5 +86,13 @@ defmodule VyasaWeb.ModeLive.UiState do
 
   defp should_show_media_bridge(_, _) do
     true
+  end
+
+
+
+
+  def update_emphasis(socket, %{verse_id: verse_id}) do
+    socket
+    |> Phoenix.LiveView.push_event("verseEmphasis", %{verseId: verse_id, className: "emphasized-verse"})
   end
 end

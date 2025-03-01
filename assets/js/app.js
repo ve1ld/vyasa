@@ -83,6 +83,64 @@ function genAnonId(length = 18) {
 }
 
 
+let lastEmphasizedElement = null;
+
+function emphasizeVerseElement(selectorId, className) {
+  console.log("LESGOO EMPHASISE", selectorId);
+
+  // remove emphasis from prev
+  if (lastEmphasizedElement && lastEmphasizedElement.classList.contains(className)) {
+    lastEmphasizedElement.classList.remove(className);
+    lastEmphasizedElement = null;
+  }
+
+  const escapedId = CSS.escape(selectorId);
+  const element = document.querySelector(`[emph_verse_id="${escapedId}"]`);
+
+  if (element) {
+
+    if (!element.classList.contains(className)) {
+      element.classList.add(className);
+    }
+
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+
+    if (element.tabIndex < 0) {
+
+      element.tabIndex = -1;
+    }
+    element.focus({ preventScroll: true });
+
+
+    lastEmphasizedElement = element;
+  } else {
+    console.warn(`Element with verse_id "${selectorId}" not found`);
+
+    // Fallback: try searching by verse_id failed
+    const nodeElement = document.querySelector(`[verse_id="${escapedId}"]`);
+    if (nodeElement) {
+      console.log("Found element by node_id instead");
+      nodeElement.classList.add(className);
+      nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      if (nodeElement.tabIndex < 0) {
+        nodeElement.tabIndex = -1;
+      }
+      nodeElement.focus({ preventScroll: true });
+
+      lastEmphasizedElement = nodeElement;
+    }
+  }
+}
+
+
+window.addEventListener("phx:verseEmphasis", (e) => {
+  const { verseId, className } = e.detail;
+
+  emphasizeVerseElement(verseId, className)
+});
 
 
 // Show progress bar on live navigation and form submits

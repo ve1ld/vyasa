@@ -292,10 +292,13 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   defp apply_track_action(%{assigns: %{tracklist: %{id: id} = prev_tls}} = socket,
          %Track{
            order: order,
+           event_id: event_id,
            trackls_id: tls_id
          }
        )  when id == tls_id do
     IO.inspect(prev_tls, label: "no change to trackls")
+
+    send(socket.parent_pid, %{event: :event_emphasis, event_id: event_id, origin: __MODULE__})
 
     socket
     |> assign(tracklist: %{ prev_tls | cursor: order})
@@ -305,12 +308,17 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   defp apply_track_action(%{assigns: %{tracklist: prev_tls}} = socket,
          %Track{
            order: order,
+           event: event,
            trackls_id: tls_id
          }
        ) do
 
+    tracks = Vyasa.Bhaj.list_tracks_by_tls(tls_id)
+
+    send(socket.parent_pid, {"mutate_UiState", "update_emphasis", [event]})
+
     socket
-    |> assign(tracklist: %{ prev_tls | id: tls_id, tracks: Vyasa.Bhaj.list_tracks_by_tls(tls_id), cursor: order})
+    |> assign(tracklist: %{ prev_tls | id: tls_id, tracks: tracks, cursor: order})
   end
 
   defp dispatch_voice_registering_events(
@@ -678,7 +686,6 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
   def playback_queue(assigns) do
-    IO.inspect(assigns.tracks)
     ~H"""
     <div  :if={@is_queue_visible} class="right-0 top-1/4 fixed justify-end bg-transparent rounded-lg shadow-sm  overflow-y-auto max-h-[60vh] animate-fade duration-50">
       <div  :for={track <- @tracks} :if={@tracks != nil}>
@@ -697,7 +704,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         assigns,
         :verse_blurb,
         assigns.track.event.verse.body
-        |> String.slice(0..30)
+        |> String.slice(0..25)
         |> String.split("\n")
         |> List.first()
         |> String.trim()
@@ -729,8 +736,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       <div class="flex items-center justify-between w-full">
         <div class="flex items-center space-x-2">
           <span class="text-xs text-gray-500">{@track.order}.</span>
-          <div class="text-sm font-medium">
-            {@verse_blurb}{if String.length(@track.event.verse.body) > 50, do: "..."}
+          <div class="text-sm font-medium tracking-tighter">
+            {@verse_blurb}{if String.length(@track.event.verse.body) > 25, do: "..."}
           </div>
         </div>
       </div>

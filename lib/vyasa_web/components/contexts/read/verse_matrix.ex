@@ -38,7 +38,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
 
   def render(assigns) do
     ~H"""
-    <div id={"#{@id}-verse-#{@verse.id}"} class="scroll-m-20  p-4" id={@id}>
+    <div id={"#{@id}-verse-#{@verse.id}"} emph_verse_id={@verse.id} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={elem <- @edge} :if={Struct.get_in(Map.get(elem, :node, @verse), elem.field)}  class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
           <dt :if={Map.has_key?(elem, :title)} class="w-full text-center  flex-none text-zinc-500">
