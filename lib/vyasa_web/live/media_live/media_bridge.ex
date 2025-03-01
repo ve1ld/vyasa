@@ -15,7 +15,8 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   use VyasaWeb, :live_view
   alias Phoenix.LiveView.Socket
   alias Vyasa.Medium
-  alias Vyasa.Medium.{Voice, Event, Playback}
+  alias Vyasa.Medium.{Voice, Event, Playback, Track}
+  alias Vyasa.Bhaj.Tracklist
 
   @default_player_config %{
     height: "300",
@@ -39,7 +40,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
     voice: nil,
     video: nil,
     should_show_vid: false,
-    tracklist: %{cursor: 0 , tracks: []},
+    tracklist: %Tracklist{tracks: []},
     is_queue_visible: false,
     is_follow_mode: true,
     video_player_config: Jason.encode!(@default_player_config)
@@ -364,6 +365,23 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
 
   end
 
+
+  def handle_info(
+        %{event: :initiate_playback, track: get_track},
+        %Socket{
+          assigns: %{
+            tracklist: %{id: prev_id, order: prev_order}
+          }
+        } = socket
+      ) do
+    with %Track{order: order, trackls_id: tls_id} = _track when order !== prev_order or tls_id !== prev_id <-  get_track.() do
+      {:noreply, socket}
+    else
+      _ -> {:noreply, socket}
+    end
+
+  end
+
   # Handles playback sync relative to a particular verse id. In this case, the playback state is expected
   # to get updated to the start of the event corresponding to that particular verse.
   @impl true
@@ -643,7 +661,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       <div  :for={track <- @tracks} :if={@tracks != nil}>
         <.track_summary track={track} is_now_playing={track.order === @tracklist_cursor} />
       </div>
-      <span class="block h-48" />
+      <span phx-window-keyup="navigate_trackls" class="block h-48" />
     </div>
 
     """

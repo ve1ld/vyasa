@@ -214,9 +214,7 @@ defmodule Vyasa.Written do
   def get_verses_in_chapter(no, source_id) when is_uuid?(source_id) do
     query_verse =
       from v in Verse,
-        where: v.chapter_no == ^no and v.source_id == ^source_id,
-        preload: [:chapter]
-
+        where: v.chapter_no == ^no and v.source_id == ^source_id
     Repo.all(query_verse)
   end
 

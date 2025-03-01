@@ -7,6 +7,7 @@ defmodule Vyasa.Bhaj.Tracklist do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "tracklists" do
     field :title, :string
+    field :cursor, :integer, default: 0,  virtual: true #keeps track of stateful order
     has_many :tracks, Track, references: :id, foreign_key: :trackls_id
     has_many :events, through: [:tracks, :event]
     timestamps(type: :utc_datetime)
