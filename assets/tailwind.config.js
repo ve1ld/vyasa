@@ -15,12 +15,32 @@ module.exports = {
   theme: {
     extend: {
       animation: {
-        ripple: "ripple 0.6s linear",
+        ripple: "ripple 1s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+        fade: 'fadeIn 1s ease-in-out',
+        pulseBorder: "pulseBorder 1.5s ease-in-out infinite",
       },
       keyframes: {
+        fadeIn: {
+					from: { opacity: 0 },
+					to: { opacity: 1 },
+				},
         ripple: {
-          "0%": { transform: "scale(0)", opacity: "0.5" },
+          "0%": { transform: "scale(0)", opacity: "1" },
           "100%": { transform: "scale(4)", opacity: "0" },
+        },
+        pulseBorder: {
+          "0%": {
+            borderColor: "transparent",
+            transform: "scale(1)",
+          },
+          "50%": {
+            borderColor: "var(--color-brand)", // Use your defined brand color
+            transform: "scale(1.05)", // Slightly scale up
+          },
+          "100%": {
+            borderColor: "transparent",
+            transform: "scale(1)",
+          },
         },
       },
       fontFamily: {
@@ -28,13 +48,12 @@ module.exports = {
         ta: ['"Vyas", "sans-serif"'],
       },
       fontSize: {
-        xs: "0.65rem",
-      },
-      fontSize: {
+        xxs: "0.25rem",
         xs: "0.65rem",
       },
       colors: {
         primary: "var(--color-primary)",
+        ink: "#1E1024",
         primaryAccent: "var(--color-primary-accent)",
         secondary: "var(--color-secondary)",
         primaryBackground: "var(--color-primary-background)",
@@ -110,6 +129,37 @@ module.exports = {
               [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
               "-webkit-mask": `var(--hero-${name})`,
               mask: `var(--hero-${name})`,
+              "mask-repeat": "no-repeat",
+              "background-color": "currentColor",
+              "vertical-align": "middle",
+              display: "inline-block",
+              width: theme("spacing.5"),
+              height: theme("spacing.5"),
+            };
+          },
+        },
+        { values },
+      );
+    }),
+    // Embeds Custom SVG Icons (https://heroicons.com) into your app.css bundle
+    plugin(function ({ matchComponents, theme }) {
+      let iconsDir = path.join(__dirname, "./vendor/customicons");
+      let values = {};
+      fs.readdirSync(iconsDir).forEach((file) => {
+        let name = path.basename(file, ".svg");
+        values[name] = { name, fullPath: path.join(iconsDir, file) };
+      });
+      matchComponents(
+        {
+          custom: ({ name, fullPath }) => {
+            let content = fs
+              .readFileSync(fullPath)
+              .toString()
+              .replace(/\r?\n|\r/g, "");
+            return {
+              [`--custom-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
+              "-webkit-mask": `var(--custom-${name})`,
+              mask: `var(--custom-${name})`,
               "mask-repeat": "no-repeat",
               "background-color": "currentColor",
               "vertical-align": "middle",

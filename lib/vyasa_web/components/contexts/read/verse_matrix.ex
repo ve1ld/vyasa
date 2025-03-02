@@ -1,8 +1,11 @@
-defmodule VyasaWeb.Content.VerseMatrix do
+defmodule VyasaWeb.Context.Read.VerseMatrix do
   use VyasaWeb, :live_component
   alias Phoenix.LiveView.Socket
-
   alias Utils.Struct
+
+  alias VyasaWeb.Context.Components.UiState.Marks, as: MarksUiState
+
+  import VyasaWeb.Context.Components
 
   def mount(socket) do
     {:ok,
@@ -11,12 +14,16 @@ defmodule VyasaWeb.Content.VerseMatrix do
      |> assign(:form_type, :mark)}
   end
 
-  def update(%{verse: verse, marks: marks, event_target: event_target} = assigns, socket) do
+  def update(
+        %{verse: verse, marks_ui: marks_ui, marks: marks, event_target: event_target} = assigns,
+        socket
+      ) do
     socket =
       socket
       |> assign(assigns)
       |> assign(:verse, verse)
       |> assign(:marks, marks)
+      |> assign(:marks_ui, marks_ui)
       |> assign(:event_target, event_target)
 
     {:ok, socket}
@@ -31,10 +38,10 @@ defmodule VyasaWeb.Content.VerseMatrix do
 
   def render(assigns) do
     ~H"""
-    <div id={"verse-#{@verse.id}"} class="scroll-m-20 mt-8 p-4 border-b-2 border-brandDark" id={@id}>
+    <div id={"#{@id}-verse-#{@verse.id}"} emph_verse_id={@verse.id} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={elem <- @edge} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt :if={Map.has_key?(elem, :title)} class="w-1/12 flex-none text-zinc-500">
+        <div :for={elem <- @edge} :if={Struct.get_in(Map.get(elem, :node, @verse), elem.field)}  class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
+          <dt :if={Map.has_key?(elem, :title)} class="w-full text-center  flex-none text-zinc-500">
             <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
           <div class="relative">
@@ -44,13 +51,14 @@ defmodule VyasaWeb.Content.VerseMatrix do
               node_id={Map.get(elem, :node, @verse).id}
               field={elem.field |> Enum.join("::")}
               verseup={elem.verseup}
+              window={is_elem_bound_to_verse(@verse, elem) && @verse.binding.window}
               content={Struct.get_in(Map.get(elem, :node, @verse), elem.field)}
             />
             <.quick_draft_container
               :if={is_elem_bound_to_verse(@verse, elem)}
               sheafs={@verse.sheafs}
-              show_current_marks?={@show_current_marks?}
               marks={@marks}
+              marks_ui={@marks_ui}
               quote={@verse.binding.window && @verse.binding.window.quote}
               form_type={@form_type}
               myself={@myself}
@@ -59,6 +67,11 @@ defmodule VyasaWeb.Content.VerseMatrix do
           </div>
         </div>
       </dl>
+      <div class="flex items-center justify-center w-full py-6">
+         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+         <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
+         <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+         </div>
     </div>
     """
   end
@@ -67,14 +80,14 @@ defmodule VyasaWeb.Content.VerseMatrix do
     ~H"""
     <button
       phx-click={
-        JS.push("clickVerseToSeek",
-          target: "#" <> @event_target,
+        JS.push("dom_navigation::clickVerseToSeek",
+          target: @event_target,
           value: %{verse_id: @verse_id}
         )
       }
-      class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+      class="text-sm font-semibold text-zinc-900 hover:text-zinc-700"
     >
-      <div class="font-dn text-xl sm:text-2xl mb-4">
+      <div class="font-dn text-xl sm:text-2xl ">
         <%= @title %>
       </div>
     </button>
@@ -82,16 +95,21 @@ defmodule VyasaWeb.Content.VerseMatrix do
   end
 
   def verse_content(assigns) do
+    # we use byte-slice because we are manipulating utf8 strings but using binary we need valid charlist to be spit out
+    # cant be just pure binary operations
+    #IO.inspect(assigns, label: "verse_content expand")
     ~H"""
-    <dd
-      verse_id={@verse_id}
-      node={@node}
-      node_id={@node_id}
-      field={@field}
-      class={"text-zinc-700 #{verse_class(@verseup)}"}
-    >
-      <%= @content %>
+    <dd class={"text-zinc-700  text-justify #{verse_class(@verseup)}"}>
+      <span :if={!@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="whitespace-pre-line inline">
+        <%= @content %>
+      </span>
+      <span :if={@window} verse_id={@verse_id} node={@node} node_id={@node_id} field={@field} text={@content} class="relative whitespace-pre-line group">
+    <%= String.byte_slice(@content, 0, @window.start_quote) %><span class="text-red-600 relative z-10"><.icon name="custom-icon-park-outline-quote-start"  class="absolute -top-3.5 -left-5 cursor-ew-resize select-none text-red-600 opacity-80 z-20"/><%= String.byte_slice(@content, @window.start_quote, @window.end_quote - @window.start_quote) %><span class="absolute inset-0 bg-red-50/20 -mx-1 -my-0.5 rounded blur-sm mix-blend-multiply group-hover:bg-red-50/30 transition-all duration-300"></span></span><%= @window && String.byte_slice(@content, @window.end_quote ,byte_size(@content)-@window.end_quote) %>
+    </span>
+
+
     </dd>
+
     """
   end
 
@@ -99,146 +117,72 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :event_target, :string, required: true
   attr :quote, :string, default: nil
   attr :marks, :list, default: []
-  attr :show_current_marks?, :boolean, default: false
+  attr :marks_ui, MarksUiState, required: true
   attr :form_type, :atom, required: true
   attr :myself, :any
 
+  # TODO: consider merging this with the sheaf container
+  # TODO: instead of showing all sheafs, this should only be showing currently selected sheaf
   def quick_draft_container(assigns) do
     assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-    # TODO: i want a "current_sheaf"
 
     ~H"""
     <div
       id="quick-draft-container"
       class="block mt-4 text-sm text-gray-700 font-serif leading-relaxed opacity-70 transition-opacity duration-300 ease-in-out hover:opacity-100"
     >
-      <.unified_quote_and_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-      <.current_marks myself={@myself} marks={@marks} show_current_marks?={@show_current_marks?} />
-      <.bound_sheafs sheafs={@sheafs} />
-    </div>
-    """
-  end
-
-  def bound_sheafs(assigns) do
-    assigns = assigns |> assign(:elem_id, "sheaf-modal-#{Ecto.UUID.generate()}")
-
-    ~H"""
-    <span
-      :for={sheaf <- @sheafs}
-      class="block
-                 before:content-['╰'] before:mr-1 before:text-gray-500
-                 lg:before:content-none
-                 lg:border-l-0 lg:pl-2"
-    >
-      <%= sheaf.body %> - <b><%= sheaf.signature %></b>
-    </span>
-    """
-  end
-
-  attr :quote, :string, required: true
-  attr :event_target, :string, required: true
-  attr :form_type, :atom, required: true
-  attr :myself, :any, required: true
-
-  def unified_quote_and_form(assigns) do
-    ~H"""
-    <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
-      <.current_quote quote={@quote} form_type={@form_type} />
-      <.quick_draft_form
-        event_target={@event_target}
-        quote={@quote}
-        form_type={@form_type}
-        myself={@myself}
-      />
-    </div>
-    """
-  end
-
-  # FIXME @ks0m1c qq: for current_marks below: when marks are in draft state, you'll help have a default container for it right
-  # i need the invariant to be true: every mark has an associated container it is in, regardless of the state of the mark (draft or live or not)
-  # yeah all marks are stored in this stack
-  # if the stack becomes a list of lists
-  # it is possible to have a single elemented list mark
-  # so should be g
-
-  attr :marks, :list, default: []
-  attr :show_current_marks?, :boolean, default: true
-  attr :myself, :any
-
-  def current_marks(assigns) do
-    ~H"""
-    <div class="mb-4">
-      <button
-        phx-click={JS.push("toggle_show_current_marks", value: %{value: ""})}
-        phx-target={@myself}
-        class="w-full flex items-center justify-between p-2 bg-brand-extra-light rounded-lg shadow-sm hover:bg-brand-light hover:text-white transition-colors duration-200"
-      >
-        <div class="flex items-center">
-          <.icon name="hero-bookmark" class="w-5 h-5 mr-2 text-brand" />
-          <span class="text-sm font-medium text-brand-dark">
-            <%= "#{Enum.count(@marks |> Enum.filter(&(&1.state == :live)))} personal #{ngettext("mark", "marks", Enum.count(@marks))}" %>
-          </span>
-        </div>
-        <.icon
-          name={if @show_current_marks?, do: "hero-chevron-up", else: "hero-chevron-down"}
-          class="w-5 h-5 text-brand-dark"
+      <div class="unified-container bg-brand-extra-light rounded-lg shadow-sm">
+        <.current_context context={@quote && "quoting"} />
+        <.quick_draft_form
+          event_target={@event_target}
+          quote={@quote}
+          form_type={@form_type}
+          myself={@myself}
         />
-      </button>
-
-      <div class={if @show_current_marks?, do: "mt-2", else: "hidden"}>
-        <div class="border-l border-brand-light pl-2">
-          <%= for mark <- @marks |> Enum.reverse() do %>
-            <%= if mark.state == :live do %>
-              <div class="mb-2 bg-brand-light rounded-lg shadow-sm p-2 border-l-2 border-brand">
-                <%= if !is_nil(mark.binding.window) && mark.binding.window.quote !== "" do %>
-                  <span class="block mb-1 text-sm italic text-secondary">
-                    "<%= mark.binding.window.quote %>"
-                  </span>
-                <% end %>
-                <%= if is_binary(mark.body) do %>
-                  <span class="block text-sm text-text">
-                    <%= mark.body %>
-                  </span>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
       </div>
+      <.collapsible_marks_display
+        id="verse-matrix-level"
+        myself={@myself}
+        marks_target={@event_target}
+        marks={@marks}
+        marks_ui={@marks_ui}
+      />
+      <.sheaf_display :for={sheaf <- @sheafs} sheaf={sheaf} />
     </div>
     """
   end
 
-  attr :quote, :string, required: true
-  attr :form_type, :atom, required: true
+  attr :context, :string, required: true
 
-  def current_quote(assigns) do
+  # context list "quoting", "binding" to retvrn back to source of binding, "reply to" to retvrn back to discussion
+  # pattern match in the future
+  def current_context(assigns) do
     ~H"""
-    <%= if !is_nil(@quote) && @quote !== "" do %>
-      <div class="p-2 border-b border-brand">
+    <div :if={@context == "quoting"}
+      class="p-2 transition-opacity duration-700 border-b border-red-900 bg-red-50/50 transition-all duration-300 ease-in-out"
+    >
+      <div class="flex items-center justify-between">
         <div class="flex items-center mb-1">
           <.icon
-            name={
-              if @form_type == :mark,
-                do: "hero-bookmark-solid",
-                else: "hero-chat-bubble-left-ellipsis-solid"
-            }
-            class="w-4 h-4 text-brand mr-2"
+            name="hero-chat-bubble-left-ellipsis-solid"
+            class="w-4 h-4 text-red-900 mr-2 transition-transform duration-300 animate-pulse"
           />
-          <span class="text-xs text-secondary">
-            Current <%= if @form_type == :mark, do: "mark", else: "sheaf" %>'s selection
+          <span class="text-xs text-red-800 font-medieval tracking-wide">
+            Quoting...
           </span>
         </div>
-        <div class="text-sm italic text-secondary">
-          "<%= @quote %>"
-        </div>
+
+        <button
+          type="button"
+          phx-click="bind::share"
+          class="flex items-center px-3 py-1 text-xs text-red-900 bg-red-100
+                 hover:bg-red-200 rounded-full transition-colors duration-200
+                 border border-red-900/20 ">
+          <.icon name="hero-share" class="w-3 h-3 mr-1.5 text-red-900" />
+          Share
+        </button>
       </div>
-    <% end %>
+    </div>
     """
   end
 
@@ -247,70 +191,77 @@ defmodule VyasaWeb.Content.VerseMatrix do
   attr :myself, :any, required: true
   attr :quote, :string, default: nil
 
+  # FIXME 1: the text area will have enter button pressed for new line ==> so the onpress handlers need to change to not trigger wrongly
+  # FIXME 2: I can put multiline inputs in the textarea but the stored string ends up removing the newlines -- why?
   def quick_draft_form(assigns) do
     ~H"""
     <div class="p-2">
       <.form
         for={%{}}
-        phx-submit={(@form_type == :mark && "createMark") || "createSheaf"}
-        phx-target={"#" <> @event_target}
+        phx-submit={(@form_type == :mark && "mark::createMark") || "createSheaf"}
+        phx-target={@event_target}
         class="flex items-center"
       >
-        <input
+        <textarea
           name="body"
-          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 mr-2"
+          id="quick-draft-form-textarea"
+          phx-hook="TextareaAutoResize"
+          class="flex-grow focus:outline-none bg-transparent text-sm text-text placeholder-gray-600 resize-vertical overflow-auto min-h-[2.5rem] max-h-[8rem] p-2 border-t-0 border-l-0 border-r-0 border-b-2 border-b-gray-300"
           placeholder={"Type your #{if @form_type == :mark, do: "mark", else: "sheaf"} here..."}
           phx-focus={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: true}
             )
           }
           phx-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-window-blur={
             JS.push("verses::focus_toggle_on_quick_mark_drafting",
-              target: "#" <> @event_target,
+              target: @event_target,
               value: %{is_focusing?: false}
             )
           }
           phx-keyup="verses::focus_toggle_on_quick_mark_drafting"
-          phx-target={"#" <> @event_target}
+          phx-target={@event_target}
         />
-        <button
-          type="submit"
-          class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
-        >
-          <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
-        </button>
-        <button
-          type="button"
-          phx-click={
-            JS.push("change_form_type",
-              value: %{type: if(@form_type == :mark, do: "sheaf", else: "mark")}
-            )
-          }
-          phx-target={@myself}
-          class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
-        >
-          <.icon
-            name={
-              if @form_type == :mark,
-                do: "hero-chat-bubble-left-ellipsis-solid",
-                else: "hero-bookmark-solid"
+        <div class="flex items-center ml-2">
+          <button
+            type="submit"
+            class="p-1 rounded-full hover:bg-brand-dark transition-colors duration-200"
+          >
+            <.icon name="hero-paper-airplane" class="w-4 h-4 text-brand" />
+          </button>
+          <button
+            type="button"
+            phx-click={
+              JS.push("ui::toggle_show_sheaf_modal?",
+                value: %{}
+              )
             }
-            class="w-4 h-4"
-          />
-        </button>
+            phx-target={@event_target}
+            class="p-1 rounded-full text-gray-400 hover:text-brand transition-colors duration-200 ml-1"
+          >
+            <.icon
+              name={
+                if @form_type == :mark,
+                  do: "hero-chat-bubble-left-ellipsis-solid",
+                  else: "hero-bookmark-solid"
+              }
+              class="w-4 h-4"
+            />
+          </button>
+        </div>
       </.form>
     </div>
     """
   end
 
+  ## these are working on some formatting ui feedbackplays hmm
   def sheaf_mark_separator(assigns) do
     ~H"""
     <span class="text-primaryAccent flex items-center justify-center">
@@ -319,26 +270,17 @@ defmodule VyasaWeb.Content.VerseMatrix do
     """
   end
 
-  defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-xl"
-  defp verse_class(:mid), do: "font-dn text-m"
+  defp verse_class({:big, "ta"}), do: "font-ta text-xl sm:text-2xl 3xl:text-4xl leading-snug sm:leading-[2]"
+  defp verse_class({:big, script}), do: "font-#{script} text-lg sm:text-2xl leading-snug"
+  defp verse_class(:big), do: "font-dn text-m sm:text-lg"
+  defp verse_class(:mid), do: "font-dn text-sm sm:text-m"
 
   defp is_elem_bound_to_verse(verse, edge_elem) do
+
+
     verse.binding &&
       (verse.binding.node_id == Map.get(edge_elem, :node, verse).id &&
          verse.binding.field_key == edge_elem.field)
-  end
-
-  def handle_event(
-        "toggle_show_current_marks",
-        %{"value" => _},
-        %Socket{
-          assigns:
-            %{
-              show_current_marks?: _show_current_marks?
-            } = _assigns
-        } = socket
-      ) do
-    {:noreply, update(socket, :show_current_marks?, &(!&1))}
   end
 
   def handle_event("change_form_type", %{"type" => type}, socket) do

@@ -84,7 +84,7 @@
           playback={@playback}
           isReady={not is_nil(@playback)}
           isPlaying={@playback && @playback.playing?}
-          class="text-3xl sm:text-4xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-110"
+          class="text-xl sm:text-3xl transition-all duration-300 ease-in-out hover:text-brand dark:hover:text-brandAccentLight transform hover:scale-110"
         />
 
         <.video_toggler
@@ -100,6 +100,13 @@
         >
           <.icon name="hero-arrow-right-circle" />
         </button>
+
+        <.playback_queue_toggler is_queue_visible={@is_queue_visible}/>
+        <.playback_queue
+          is_queue_visible={@is_queue_visible}
+          tracklist_cursor={@tracklist.cursor}
+          tracks={@tracklist.tracks}
+        />
       </div>
     </div>
   </div>

@@ -6,14 +6,19 @@ defmodule Vyasa.Sangh do
   import Ecto.Query, warn: false
   import EctoLtree.Functions, only: [nlevel: 1]
   alias Vyasa.Repo
-  alias Vyasa.Sangh.Sheaf
+  # alias Vyasa.Draft
+  alias Vyasa.Sangh.{Sheaf}
 
   @doc """
-  Returns the list of sheafs within a specific session.
+  Returns a list of sheafs associated with a specific session.
+
+  ## Parameters
+
+  - `id`: The ID of the session for which to retrieve sheafs.
 
   ## Examples
 
-  iex> list_sheafs_by_session()
+  iex> list_sheafs_by_session("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c")
   [%Sheaf{}, ...]
 
   """
@@ -26,18 +31,21 @@ defmodule Vyasa.Sangh do
   end
 
   @doc """
-    Creates a sheaf.
+  Creates a new sheaf with the given attributes.
 
-    ## Examples
+  ## Parameters
 
-        iex> create_sheaf(%{field: new_value})
-        {:ok, %Sheaf{}}
+  - `attrs`: A map of attributes used to create the sheaf.
 
-        iex> create_sheaf(%{field: bad_value})
-        {:error, %Ecto.Changeset{}}
+  ## Examples
+
+  iex> create_sheaf(%{field: new_value})
+  {:ok, %Sheaf{}}
+
+  iex> create_sheaf(%{field: bad_value})
+  {:error, %Ecto.Changeset{}}
 
   """
-
   def create_sheaf(attrs \\ %{}) do
     %Sheaf{}
     |> Sheaf.changeset(attrs)
@@ -45,30 +53,73 @@ defmodule Vyasa.Sangh do
   end
 
   @doc """
-    Returns a single sheaf.
+  TODO [TESTING needed by @rtshkmr]
+  Creates a new child sheaf struct from a parent, using the attrs provided.
+  This merely inits the relationships and is not responsible for other state-toggles in
+  either parent or child sheafs.
+  """
+  def create_child_sheaf_from_parent(%Sheaf{path: _parent_path} = parent, child_attrs \\ %{}) do
+    create_sheaf(Map.put(child_attrs, :parent, parent))
+  end
 
-    Raises `Ecto.NoResultsError` if the Sheaf does not exist.
+  @doc """
+  Retrieves a single sheaf by its ID.
 
-    ## Examples
+  Raises `Ecto.NoResultsError` if the sheaf does not exist.
 
-        iex> get_sheaf!(123)
-        %Sheaf{}
+  ## Parameters
 
-        iex> get_sheaf!(456)
-        ** (Ecto.NoResultsError)
+  - `id`: The ID of the sheaf to retrieve.
+
+  ## Examples
+
+  iex> get_sheaf!(123)
+  %Sheaf{}
+
+  iex> get_sheaf!(456)
+  ** (Ecto.NoResultsError)
 
   """
-
   def get_sheaf!(id), do: Repo.get!(Sheaf, id)
 
+  @doc """
+  Fetches a single sheaf by its ID, returning nil if not found.
+
+  ## Parameters
+
+  - `id`: The ID of the sheaf to retrieve.
+
+  ## Examples
+
+  iex> get_sheaf(123)
+  %Sheaf{}
+
+  iex> get_sheaf(456)
+  nil
+
+  """
   def get_sheaf(id) do
     from(c in Sheaf,
       where: c.id == ^id,
-      limit: 1
+      limit: 1,
+      preload: [:parent, marks: [:binding]]
     )
     |> Repo.one()
   end
 
+  @doc """
+  Retrieves all direct descendants of a specific sheaf.
+
+  ## Parameters
+
+  - `id`: The ID of the parent sheaf whose descendants are to be retrieved.
+
+  ## Examples
+
+  iex> get_descendents_sheaf("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c")
+  [%Sheaf{}, ...]
+
+  """
   def get_descendents_sheaf(id) do
     query =
       from c in Sheaf,
@@ -87,13 +138,25 @@ defmodule Vyasa.Sangh do
     Repo.all(query)
   end
 
+  @doc """
+  Retrieves root sheafs that are children of a specified sheaf.
+
+  ## Parameters
+
+  - `id`: The ID of the parent sheaf for which to find root children.
+
+  ## Examples
+
+  iex> get_root_sheafs_by_sheaf("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c")
+  [%Sheaf{}, ...]
+
+  """
   def get_root_sheafs_by_sheaf(id) do
     query =
       from c in Sheaf,
         as: :c,
         where: c.sheaf_id == ^id,
         where: nlevel(c.path) == 1,
-        preload: [:initiator],
         order_by: [desc: c.inserted_at],
         inner_lateral_join:
           sc in subquery(
@@ -102,17 +165,31 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
 
+  @doc """
+  Retrieves paginated descendants of a specific sheaf.
+
+  ## Parameters
+
+  - `id`: The ID of the parent sheaf.
+  - `page`: The page number for pagination.
+
+  ## Examples
+
+  iex> get_descendents_sheaf(1, 2)
+  [%Sheaf{}, ...]
+
+  """
   def get_descendents_sheaf(id, page) do
     query =
       from c in Sheaf,
         as: :c,
         where: c.parent_id == ^id,
-        preload: [:initiator],
         inner_lateral_join:
           sc in subquery(
             from sc in Sheaf,
@@ -124,7 +201,40 @@ defmodule Vyasa.Sangh do
     Repo.Paginated.all(query, page: page, asc: true)
   end
 
-  def get_root_sheafs_by_session(id, page, sort_attribute \\ :inserted_at, limit \\ 12) do
+  @doc """
+  Fetches all root sheafs for a given session where parent_id is nil.
+  TODO: @ks0m1c need to update the other root-fetching functions?
+  """
+  def get_root_sheafs_by_session(session_id) do
+    from(s in Sheaf,
+      where: s.session_id == ^session_id,
+      where: is_nil(s.parent_id)
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Retrieves root sheafs associated with a specific session, with pagination options.
+
+  ## Parameters
+
+  - `id`: The ID of the session.
+  - `page`: The page number for pagination.
+  - `sort_attribute`: The attribute to sort by (default is `inserted_at`).
+  - `limit`: The maximum number of results per page (default is 12).
+
+  ## Examples
+
+  iex> get_root_sheafs_by_session(1, 1)
+  [%Sheaf{}, ...]
+
+  """
+  def get_root_sheafs_by_session(
+        id,
+        page,
+        sort_attribute \\ :inserted_at,
+        limit \\ 12
+      ) do
     query =
       from c in Sheaf,
         as: :c,
@@ -137,11 +247,26 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.Paginated.all(query, page, sort_attribute, limit)
   end
 
+  @doc """
+  Retrieves sheafs associated with a specific session filtered by traits.
+
+  ## Parameters
+
+  - `id`: The ID of the session.
+  - `traits`: A map containing traits for filtering results.
+
+  ## Examples
+
+  iex> get_sheafs_by_session(1, %{traits: ["trait_value"]})
+  [%Sheaf{}, ...]
+
+  """
   def get_sheafs_by_session(id, %{traits: traits}) do
     from(c in Sheaf,
       where: c.session_id == ^id and fragment("? @> ?", c.traits, ^traits),
@@ -151,15 +276,42 @@ defmodule Vyasa.Sangh do
     |> Repo.all()
   end
 
+  @doc """
+  Retrieves all sheafs associated with a specific session sorted by insertion date.
+
+  ## Parameters
+
+  - `id`: The ID of the session.
+
+  ## Examples
+
+  iex> get_sheafs_by_session("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c")
+  [%Sheaf{}, ...]
+
+  """
   def get_sheafs_by_session(id) do
     query =
       Sheaf
       |> where([c], c.session_id == ^id)
+      |> preload(marks: [:binding])
       |> order_by(desc: :inserted_at)
 
     Repo.all(query)
   end
 
+  @doc """
+  Counts the number of sheafs associated with a specific session.
+
+  ## Parameters
+
+  - `id`: The uuid of the session for which to count sheafs.
+  -  can pipe where filters for more granular counts
+  ## Examples
+
+  iex> get_sheaf_count_by_session("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c")
+  10
+
+  """
   def get_sheaf_count_by_session(id) do
     query =
       Sheaf
@@ -169,16 +321,29 @@ defmodule Vyasa.Sangh do
     Repo.one(query)
   end
 
-  # Gets child sheafs 1 level down only
-  def get_child_sheafs_by_session(id, path) do
-    path = path <> ".*{1}"
+  @doc """
+  Retrieves child sheafs that are one level down from a specified path within a session.
+
+  ## Parameters
+
+  - `id`: The ID of the session.
+  - `path`: A string representing the path pattern to match against child sheafs.
+
+  ## Examples
+
+  iex> get_child_sheafs_by_session("f7f1af05-109d-4adc-8987-9b6c4e2bbe5c", "803a126e.539fb291")
+  [%Sheaf{}, ...]
+
+  """
+  def get_child_sheafs_by_session(id, path, depth \\ 1) do
+    path = path <> ".*{#{depth}}"
 
     query =
       from c in Sheaf,
         as: :c,
         where: c.session_id == ^id,
         where: fragment("? ~ ?", c.path, ^path),
-        preload: [:initiator],
+        preload: [marks: [:binding]],
         inner_lateral_join:
           sc in subquery(
             from sc in Sheaf,
@@ -186,20 +351,33 @@ defmodule Vyasa.Sangh do
               select: %{count: count()}
           ),
         on: true,
-        select_merge: %{child_count: sc.count}
+        select_merge: %{child_count: sc.count},
+        preload: [marks: [:binding]]
 
     Repo.all(query)
   end
 
-  # Gets ancestors down up all levels only
-  # TODO: Get root sheafs together
-  def get_ancestor_sheafs_by_sheaf(sheaf_id, path) do
+  @doc """
+  Retrieves all ancestor sheafs for a specified sheaf based on its path.
+
+  ## Parameters
+
+  - `sheaf_id`: The ID of the target sheaf.
+  - `path`: A string representing the path pattern to match against ancestor sheafs.
+
+  ## Examples
+
+  iex> get_ancestor_sheafs_by_sheaf(1, "ancestor_path")
+  [%Sheaf{}, ...]
+
+  """
+  def get_ancestor_sheafs_by_session(session_id, path) do
     query =
       from c in Sheaf,
         as: :c,
-        where: c.sheaf_id == ^sheaf_id,
+        where: c.session_id == ^session_id,
         where: fragment("? @> ?", c.path, ^path),
-        preload: [:initiator],
+        preload: [marks: [:binding]],
         inner_lateral_join:
           sc in subquery(
             from sc in Sheaf,
@@ -247,6 +425,19 @@ defmodule Vyasa.Sangh do
     |> Sheaf.mutate_changeset(attrs)
     |> Repo.update!()
   end
+
+  # def delete_marks_in_sheaf(
+  #       %Sheaf{
+  #         marks: [] = marks
+  #       } = sheaf
+  #     ) do
+  #   marks |> Enum.map(fn m -> Draft.delete_mark(m) end)
+  #   sheaf |> update_sheaf(%{marks: nil})
+  # end
+
+  # def delete_marks_in_sheaf(%Sheaf{} = sheaf) do
+  #   sheaf
+  # end
 
   #   @doc """
   #   Deletes a sheaf.
