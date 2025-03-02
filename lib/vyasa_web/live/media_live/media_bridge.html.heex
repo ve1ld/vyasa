@@ -100,6 +100,13 @@
         >
           <.icon name="hero-arrow-right-circle" />
         </button>
+
+        <.playback_queue_toggler is_queue_visible={@is_queue_visible}/>
+        <.playback_queue
+          is_queue_visible={@is_queue_visible}
+          tracklist_cursor={@tracklist.cursor}
+          tracks={@tracklist.tracks}
+        />
       </div>
     </div>
   </div>

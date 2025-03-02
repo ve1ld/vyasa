@@ -134,6 +134,7 @@ defmodule Vyasa.Medium do
 
   """
   def get_event!(id), do: Repo.get!(Event, id)
+  def get_event(id), do: Repo.get(Event, id)
 
   def get_event_by_order!(%Event{origin: origin, voice_id: v_id}, order) do
     # TODO merge Sangh Filters to fix -1 order case for origin backwards operators

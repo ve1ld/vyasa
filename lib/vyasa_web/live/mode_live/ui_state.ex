@@ -10,6 +10,9 @@ defmodule VyasaWeb.ModeLive.UiState do
   """
   alias Phoenix.LiveView.Socket
   alias VyasaWeb.ModeLive.UiState
+  import Phoenix.VerifiedRoutes
+  @endpoint VyasaWeb.Endpoint
+  @router VyasaWeb.Router
 
   import Phoenix.Component, only: [assign: 2]
 
@@ -26,6 +29,7 @@ defmodule VyasaWeb.ModeLive.UiState do
   defp set_show_media_bridge(%UiState{} = state) do
     %UiState{state | show_media_bridge?: true}
   end
+
 
   def assign(
         %{assigns: %{ui_state: curr_state}} = socket,
@@ -85,5 +89,29 @@ defmodule VyasaWeb.ModeLive.UiState do
 
   defp should_show_media_bridge(_, _) do
     true
+  end
+
+
+
+
+  def update_emphasis(socket, %{verse_id: verse_id}) do
+
+    socket
+    |> maybe_navigate_next(verse_id)
+    |> Phoenix.LiveView.push_event("verseEmphasis", %{verseId: verse_id, className: "emphasized-verse"})
+  end
+
+  defp maybe_navigate_next(%{assigns: %{url_params: %{"chap_no" => prev_chap_no, "source_title" => prev_st}}} = socket, verse_id) do
+    %{chapter_no: chap_no, source: %{title: st}} = Vyasa.Written.get_verse!(verse_id)
+    if chap_no !== prev_chap_no || st !== prev_st do
+      socket
+      |> Phoenix.LiveView.push_patch(to: ~p"/explore/#{st}/#{chap_no}/")
+    else
+      socket
+    end
+  end
+
+  defp maybe_navigate_next(socket, _) do
+    socket
   end
 end

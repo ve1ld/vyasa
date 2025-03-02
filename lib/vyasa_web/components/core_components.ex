@@ -79,7 +79,7 @@ defmodule VyasaWeb.CoreComponents do
                 </button>
               </div>
               <div id={"#{@id}-content"}>
-                <%= render_slot(@inner_block) %>
+                {render_slot(@inner_block)}
               </div>
             </.focus_wrap>
           </div>
@@ -145,7 +145,7 @@ defmodule VyasaWeb.CoreComponents do
                   id={"#{@id}-main"}
                   class="w-full lg:max-w-2xl lg:items-center lg:justify-center flex"
                 >
-                  <%= render_slot(@inner_block) %>
+                  {render_slot(@inner_block)}
                 </div>
                 <div
                   :if={@confirm != [] or @cancel != []}
@@ -159,14 +159,14 @@ defmodule VyasaWeb.CoreComponents do
                     phx-disable-with
                     class="py-2 px-3"
                   >
-                    <%= render_slot(confirm) %>
+                    {render_slot(confirm)}
                   </.button>
                   <.link
                     :for={cancel <- @cancel}
                     phx-click={hide_modal(@on_cancel, @id)}
                     class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                   >
-                    <%= render_slot(cancel) %>
+                    {render_slot(cancel)}
                   </.link>
                 </div>
               </div>
@@ -178,8 +178,16 @@ defmodule VyasaWeb.CoreComponents do
     """
   end
 
+  @doc """
+  A generic implementation of the modal wrapper.
+  """
   attr(:id, :string, required: true)
   attr(:show, :boolean, default: false)
+
+  attr :side, :atom,
+    values: [:top, :bottom, :left, :right, :none],
+    default: :none,
+    doc: "Side from which the sheet slides in"
 
   attr(:on_cancel_callback, JS,
     default: %JS{},
@@ -206,11 +214,15 @@ defmodule VyasaWeb.CoreComponents do
   attr(:container_class, :string, default: "", doc: "inline style for the outermost container")
 
   attr(:background_class, :string,
-    default: "bg-gray-500 dark:bg-black opacity-90 dark:opacity-80",
+    default: "bg-gray-500 dark:bg-black opacity-90 dark:opacity-80  backdrop-blur-md",
     doc: "inline style for the background / backdrop"
   )
 
-  attr(:dialog_class, :string, default: "", doc: "inline style for the dialog container")
+  attr(:dialog_class, :string,
+    default: " items-center justify-center",
+    doc: "inline style for the dialog container"
+  )
+
   attr(:focus_wrap_class, :string, default: "", doc: "inline style for the focus wrap")
 
   attr(:inner_block_container_class, :string,
@@ -223,27 +235,10 @@ defmodule VyasaWeb.CoreComponents do
   attr(:close_button_icon_class, :string, default: "")
   attr(:focus_container_class, :string, default: "")
 
+  attr(:side_position_class, :string, default: "", doc: "inline style for the focus wrap")
+
   slot(:inner_block, required: true)
 
-  @doc """
-  A generic implementation of the modal wrapper. The attributes and slots have corresponding docstrings for reference.
-  In order to use this:
-  1) supply the show boolean properly, this controls hidden state
-  2) supply some callbacks:
-     Most of these callbacks target a particular event, the caveat is that if there are
-     multiple events that are expected to fire the same callback, then the current implementation
-     requires some duplication of the callbacks passed.
-
-     For example, if you pass in a callback for on_cancel_callback, you would probably
-     want to do the same for the on_click_away_callback. Currently this duplication
-     is required, in the future if there's no reason to target these events separately,
-     then the function component definition might be changed such that closing and click-away
-     callbacks refer to the same argument.
-
-  3) supply some class definitions to override the default ones provided in this function definition.
-     By inspecting the attributes corresponding to class definitions, we can also determine how this
-     modal-wrapper is structured (containers, children...)
-  """
   def generic_modal_wrapper(assigns) do
     ~H"""
     <div
@@ -251,11 +246,29 @@ defmodule VyasaWeb.CoreComponents do
       id={@id}
       phx-mounted={@show && @on_mount_callback && show_modal(@id)}
       class={["relative z-50 hidden w-full mx-auto", @container_class]}
+      style={
+        cond do
+          @side == :top ->
+            "top: 0; left: 0; transform: translateY(-100%); transition: transform 0.3s ease-in-out;"
+
+          @side == :bottom ->
+            "bottom: 0; left: 0; transform: translateY(100%); transition: transform 0.3s ease-in-out;"
+
+          @side == :left ->
+            "top: 0; left: 0; transform: translateX(-100%); transition: transform 0.3s ease-in-out;"
+
+          @side == :right ->
+            "top: 0; right: 0; transform: translateX(100%); transition: transform 0.3s ease-in-out;"
+
+          true ->
+            ""
+        end
+      }
     >
       <div
         id={"#{@id}-bg"}
         class={[
-          "fixed inset-0 backdrop-blur-md",
+          "fixed inset-0",
           @background_class
         ]}
         aria-hidden="true"
@@ -265,7 +278,7 @@ defmodule VyasaWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         tabindex="0"
-        class={["fixed inset-0 flex items-center justify-center", @dialog_class]}
+        class={["fixed inset-0 flex", @dialog_class, @side_position_class]}
       >
         <div class={["bg-white rounded-lg overflow-scroll", @focus_container_class]}>
           <.focus_wrap
@@ -293,7 +306,7 @@ defmodule VyasaWeb.CoreComponents do
               </button>
             </div>
             <div id={"#{@id}-content"} class="w-full">
-              <%= render_slot(@inner_block) %>
+              {render_slot(@inner_block)}
             </div>
           </.focus_wrap>
         </div>
@@ -359,9 +372,9 @@ defmodule VyasaWeb.CoreComponents do
       <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
         <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        <%= @title %>
+        {@title}
       </p>
-      <p class="mt-2 text-sm leading-5"><%= msg %></p>
+      <p class="mt-2 text-sm leading-5">{msg}</p>
       <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
       </button>
@@ -437,9 +450,9 @@ defmodule VyasaWeb.CoreComponents do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
       <div class="mt-10 space-y-8 bg-white">
-        <%= render_slot(@inner_block, f) %>
+        {render_slot(@inner_block, f)}
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
-          <%= render_slot(action, f) %>
+          {render_slot(action, f)}
         </div>
       </div>
     </.form>
@@ -479,7 +492,7 @@ defmodule VyasaWeb.CoreComponents do
       ]}
       {@rest}
     >
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </button>
     """
   end
@@ -570,9 +583,9 @@ defmodule VyasaWeb.CoreComponents do
           class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
           {@rest}
         />
-        <%= @label %>
+        {@label}
       </label>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -580,7 +593,7 @@ defmodule VyasaWeb.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <select
         id={@id}
         name={@name}
@@ -588,10 +601,10 @@ defmodule VyasaWeb.CoreComponents do
         multiple={@multiple}
         {@rest}
       >
-        <option :if={@prompt} value=""><%= @prompt %></option>
-        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+        <option :if={@prompt} value="">{@prompt}</option>
+        {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -599,7 +612,7 @@ defmodule VyasaWeb.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <textarea
         id={@id}
         name={@name}
@@ -611,7 +624,7 @@ defmodule VyasaWeb.CoreComponents do
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -620,7 +633,7 @@ defmodule VyasaWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <input
         type={@type}
         name={@name}
@@ -634,7 +647,7 @@ defmodule VyasaWeb.CoreComponents do
         ]}
         {@rest}
       />
-      <.error :for={msg <- @errors}><%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -648,7 +661,7 @@ defmodule VyasaWeb.CoreComponents do
   def label(assigns) do
     ~H"""
     <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </label>
     """
   end
@@ -662,7 +675,7 @@ defmodule VyasaWeb.CoreComponents do
     ~H"""
     <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </p>
     """
   end
@@ -681,13 +694,13 @@ defmodule VyasaWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
         <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          <%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
-          <%= render_slot(@subtitle) %>
+          {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -735,7 +748,7 @@ defmodule VyasaWeb.CoreComponents do
                     <div class="pb-px mr-2 w-1 bg-yellow-500 rounded"></div>
                     <div class="overflow-hidden">
                       <span class="text-left no-underline">
-                        <%= render_slot(@quote) %>
+                        {render_slot(@quote)}
                       </span>
                     </div>
                   </div>
@@ -824,9 +837,9 @@ defmodule VyasaWeb.CoreComponents do
       <table class="w-[40rem] mt-11 sm:w-full">
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%= col[:label] %></th>
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
             <th :if={@action != []} class="relative p-0 pb-4">
-              <span class="sr-only"><%= gettext("Actions") %></span>
+              <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
@@ -844,7 +857,7 @@ defmodule VyasaWeb.CoreComponents do
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%= render_slot(col, @row_item.(row)) %>
+                  {render_slot(col, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -855,7 +868,7 @@ defmodule VyasaWeb.CoreComponents do
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%= render_slot(action, @row_item.(row)) %>
+                  {render_slot(action, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -883,13 +896,13 @@ defmodule VyasaWeb.CoreComponents do
   def list(assigns) do
     ~H"""
     <div class="mt-14">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt :if={Map.has_key?(item, :title)} class="w-1/6 flex-none text-zinc-500">
-            <%= item.title %>
+            {item.title}
           </dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
+          <dd class="text-zinc-700">{render_slot(item)}</dd>
         </div>
       </dl>
     </div>
@@ -916,7 +929,7 @@ defmodule VyasaWeb.CoreComponents do
           class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
         >
           <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-          <%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </.link>
       <% else %>
         <.link
@@ -924,7 +937,7 @@ defmodule VyasaWeb.CoreComponents do
           class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
         >
           <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-          <%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </.link>
       <% end %>
     </div>
@@ -1052,7 +1065,7 @@ defmodule VyasaWeb.CoreComponents do
       Map.get(assigns, :class, "")
     ]}>
       <h2 class="text-lg font-bold mb-2">
-        <%= Map.get(assigns, :label, "Developer Dump") %>
+        {Map.get(assigns, :label, "Developer Dump")}
       </h2>
       <div>
         <h3 class="text-md font-bold mb-2">Parameters:</h3>
@@ -1063,4 +1076,90 @@ defmodule VyasaWeb.CoreComponents do
     </div>
     """
   end
+
+  @doc """
+  Renders a sheet (modal sliding from the side/top).
+
+  Leverages existing modal-related JS functions (show_modal, hide_modal)
+  for consistency with other modal components.
+  """
+  attr :id, :string, required: true, doc: "Unique ID for the sheet."
+  attr :show, :boolean, default: false, doc: "Controls the visibility of the sheet."
+
+  attr :side, :atom,
+    values: [:top, :bottom, :left, :right],
+    default: :right,
+    doc: "The side from which the sheet slides in."
+
+  attr :on_cancel, JS,
+    default: %JS{},
+    doc: "JS commands to execute when the sheet is closed/cancelled."
+
+  attr :close_button, :boolean, default: true, doc: "Show a close button."
+  attr :trap_focus, :boolean, default: true, doc: "Trap focus within the sheet."
+
+  attr :esc_to_close, :boolean,
+    default: true,
+    doc: "Close the sheet when the Escape key is pressed."
+
+  attr :click_away_to_close, :boolean,
+    default: true,
+    doc: "Close the sheet when clicking outside."
+
+  slot :trigger, doc: "The element that triggers the sheet to open."
+  slot :content, required: true, doc: "The content of the sheet."
+
+  def sheet(assigns) do
+    ~H"""
+    <div class="relative">
+      {render_slot(@trigger)}
+
+      <div
+        :if={@show}
+        id={@id}
+        phx-mounted={@show && show_modal(@id)}
+        phx-remove={hide_modal(@id)}
+        class="relative z-50 hidden"
+      >
+        <div
+          class="fixed inset-0 transition-opacity"
+          aria-hidden="true"
+          phx-click={if @click_away_to_close, do: JS.exec(@on_cancel, to: "##{@id}")}
+        >
+          <div class="absolute inset-0 bg-gray-500/75 backdrop-blur-sm"></div>
+        </div>
+
+        <div class="fixed inset-y-0 flex max-w-full outline-none" class={sheet_slide_classes(@side)}>
+          <div
+            id={"#{@id}-panel"}
+            phx-window-keydown={if @esc_to_close, do: JS.exec(@on_cancel, to: "##{@id}"), else: nil}
+            phx-key="escape"
+            class="flex h-full flex-col overflow-y-auto bg-white shadow-xl"
+          >
+            <div class="flex items-center justify-end py-2 px-4">
+              <button
+                :if={@close_button}
+                phx-click={JS.exec(@on_cancel, to: "##{@id}")}
+                type="button"
+                class="-m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              >
+                <span class="sr-only">Close panel</span>
+                <.icon name="hero-x-mark-solid" class="h-6 w-6" />
+              </button>
+            </div>
+
+            <div class="relative flex-1 px-4 py-6 sm:px-6">
+              {render_slot(@content)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp sheet_slide_classes(:top), do: "inset-x-0 top-0 transform translate-y-[-100%]"
+  defp sheet_slide_classes(:bottom), do: "inset-x-0 bottom-0 transform translate-y-[100%]"
+  defp sheet_slide_classes(:left), do: "inset-y-0 left-0 transform translate-x-[-100%]"
+  defp sheet_slide_classes(:right), do: "inset-y-0 right-0 transform translate-x-[100%]"
 end
