@@ -706,6 +706,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   def playback_queue_toggler(assigns) do
     ~H"""
     <button
+      phx-window-keyup="navigate_trackls"
       phx-click={JS.push("toggle_is_queue_visible")}
       class={@is_queue_visible && "text-primaryAccent" || "text-brandAccentLight"}
     >
@@ -720,7 +721,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
       <div  :for={track <- @tracks} :if={@tracks != nil}>
         <.track_summary track={track} is_now_playing={track.order === @tracklist_cursor} />
       </div>
-      <span phx-window-keyup="navigate_trackls" class="block h-48" />
+      <span class="block h-48" />
     </div>
 
     """

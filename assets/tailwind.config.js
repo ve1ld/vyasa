@@ -48,9 +48,7 @@ module.exports = {
         ta: ['"Vyas", "sans-serif"'],
       },
       fontSize: {
-        xs: "0.65rem",
-      },
-      fontSize: {
+        xxs: "0.25rem",
         xs: "0.65rem",
       },
       colors: {

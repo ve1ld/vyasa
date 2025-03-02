@@ -94,6 +94,7 @@ defmodule Vyasa.Written do
       ** (Ecto.NoResultsError)
 
   """
+  def get_verse!(id), do: Repo.get!(Verse, id) |> Repo.preload([:source])
   def get_text!(id), do: Repo.get!(Text, id)
 
   def get_text_by_title!(title), do: Repo.get_by!(Text, title: title)
