@@ -186,7 +186,7 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         %{"key" => "ArrowLeft"},
         socket
       ) do
-    {:noreply, socket |> apply_track_action(-1) }
+    {:noreply, socket |> apply_track_action({:relative, -1}) }
   end
 
   def handle_event(
@@ -194,7 +194,15 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
         %{"key" => "ArrowRight"},
         socket
       ) do
-    {:noreply, socket |> apply_track_action(1)}
+    {:noreply, socket |> apply_track_action({:relative, 1})}
+  end
+
+  def handle_event(
+        "setCursor",
+        %{"track_order" => order},
+        socket
+      ) do
+    {:noreply, socket |> apply_track_action({:absolute, order})}
   end
 
   @impl true
@@ -339,15 +347,29 @@ defmodule VyasaWeb.MediaLive.MediaBridge do
   end
 
 
-  defp apply_track_action(%{assigns: %{tracklist: %{cursor: cursor, tracks: ts} = tls}} = socket, no)  when is_integer(no) do
+  defp apply_track_action(%{assigns: %{tracklist: %{cursor: cursor, tracks: ts} = tls}} = socket, {:relative, no})  when is_integer(no) do
+    case Enum.find(ts, fn %{order: order} -> order == cursor+no end) do
+      %{event: event} ->
+        send(socket.parent_pid, {"mutate_UiState", "update_emphasis", [event]})
 
-    %{event: event} = Enum.find(ts, fn %{order: order} -> order == cursor+no end)
-
-    send(socket.parent_pid, {"mutate_UiState", "update_emphasis", [event]})
-
-    socket
-    |> assign(tracklist: %{ tls | cursor: cursor + no})
+        socket
+        |> assign(tracklist: %{ tls | cursor: cursor + no})
+     _ -> socket 
+    end    
   end
+
+
+  defp apply_track_action(%{assigns: %{tracklist: %{cursor: cursor, tracks: ts} = tls}} = socket, {:absolute, no})  when is_integer(no) do
+    case Enum.find(ts, fn %{order: order} -> order == no end) do
+      %{event: event} ->
+        send(socket.parent_pid, {"mutate_UiState", "update_emphasis", [event]})
+
+        socket
+        |> assign(tracklist: %{ tls | cursor: cursor + no})
+     _ -> socket 
+    end    
+  end
+
 
 
   defp dispatch_voice_registering_events(

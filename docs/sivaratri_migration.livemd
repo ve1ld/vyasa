@@ -26,7 +26,38 @@ Vyasa.Bhaj.list_tracks()
 ```
 
 ```elixir
+Vyasa.Bhaj.get_tracklist!("4837bfb4-836d-4e74-acbe-ff6b1f96b5ff")
+|>Vyasa.Bhaj.delete_tracklist()
+```
+
+```elixir
 {:ok, ts} = Vyasa.Bhaj.create_tracklist(%{id: Ecto.UUID.generate(), title: "Thiruvasagha Mootrothal"})
+```
+
+```elixir
+Enum.reduce(1..51, [], fn chap_no, acc ->
+  [%{source: "thiruvasagam", chapter_no: chap_no} | acc]
+end)
+|> Enum.reverse()
+|> Enum.flat_map(fn
+  %{source: name, chapter_no: chap_no, start_verse: startv, end_verse: endv} ->
+    Vyasa.Written.get_verses_in_chapter(chap_no, name)
+    |> Enum.filter(fn %{no: no} -> no >= startv and no <= endv end)
+    |> Enum.sort_by(fn %{no: no} -> no end)
+
+  %{source: name, chapter_no: chap_no} ->
+    Vyasa.Written.get_verses_in_chapter(chap_no, name)
+    |> Enum.sort_by(fn %{no: no} -> no end)
+end)
+|> Enum.with_index(1)
+|> Enum.map(fn {%{id: verse_id, source_id: sid}, order} ->
+  Vyasa.Bhaj.create_track(%{
+    order: order,
+    trackls_id: ts.id,
+    event: %{verse_id: verse_id, source_id: sid}
+  })
+end)
+
 ```
 
 ```elixir
