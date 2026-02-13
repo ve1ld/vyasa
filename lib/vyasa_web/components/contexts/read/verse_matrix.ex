@@ -41,7 +41,7 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
     <div id={"#{@id}-verse-#{@verse.id}"} emph_verse_id={@verse.id} class="scroll-m-20  p-4" id={@id}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={elem <- @edge} :if={Struct.get_in(Map.get(elem, :node, @verse), elem.field)}  class="grid flex gap-4 py-4 text-sm leading-6 sm:gap-8 justify-items-center">
-          <dt :if={Map.has_key?(elem, :title)} class="w-full text-center  flex-none text-zinc-500">
+          <dt :if={Map.has_key?(elem, :title)} class="zen w-full text-center  flex-none text-zinc-500">
             <.verse_title_button verse_id={@verse.id} title={elem.title} event_target={@event_target} />
           </dt>
           <div class="relative">
@@ -66,11 +66,13 @@ defmodule VyasaWeb.Context.Read.VerseMatrix do
             />
           </div>
         </div>
-      </dl>
+        </dl>
+       <div class="zen">
       <div class="flex items-center justify-center w-full py-6">
          <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
          <span class="mx-4 text-brandAccentLight text-xl">ॐ</span>
          <div class="flex-grow h-px bg-gradient-to-r from-transparent via-brandAccentLight to-transparent" />
+         </div>
          </div>
     </div>
     """

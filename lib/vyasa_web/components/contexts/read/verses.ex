@@ -59,7 +59,7 @@ defmodule VyasaWeb.Context.Read.Verses do
                 field: [:body],
                 verseup: {:big, @src.script}
               },
-              %{node: List.first(verse.translations), field: [:target, :body_translit], verseup: :big},
+              # %{node: List.first(verse.translations), field: [:target, :body_translit], verseup: :big},
               %{node: List.first(verse.translations), field: [:target, :body_translit_meant], verseup: :mid},
               %{node: List.first(verse.translations), field: [:target, :body], verseup: :mid}
             ]}

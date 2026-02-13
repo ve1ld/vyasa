@@ -10,7 +10,7 @@ defmodule VyasaWeb.AssemblyPresence do
       <!-- Main Toggle Button -->
       <button
         id="user-presence-toggle"
-        phx-click={toggle_panel(@panel_open) |> JS.push("toggle_panel", target: @myself)}
+        phx-click={%JS{} |> toggle_panel(@panel_open) |> JS.push("toggle_panel", target: @myself)}
         class="bg-white/30 hover:bg-white/40 text-white
                rounded-full focus:outline-none
                transition-all duration-300 backdrop-blur-lg
@@ -24,6 +24,7 @@ defmodule VyasaWeb.AssemblyPresence do
                       transition-colors duration-200 stroke-2"
         />
       </button>
+        
       <!-- Expanded Panel -->
       <div
         id="user-presence-panel"
@@ -32,12 +33,14 @@ defmodule VyasaWeb.AssemblyPresence do
           !@panel_open && "hidden translate-x-4",
           "flex items-center gap-2 mr-16"
         ]}
-      >
+        >
+        
         <!-- Overlapping Avatar Stack -->
         <div
           id="user-avatars"
           class="flex items-center"
-        >
+          >
+          
           <%= for {{ref, dis}, index} <- Enum.with_index(@sangh.disciples |> Enum.sort_by(&elem(&1, 1).online_at, :desc)) do %>
             <div
               id={"user-avatar-#{ref}"}
@@ -60,7 +63,23 @@ defmodule VyasaWeb.AssemblyPresence do
               </button>
 
             </div>
-          <% end %>
+            <% end %>
+            <button
+        id="user-zen-toggle"
+        phx-click={toggle_zen() |> toggle_panel(@panel_open) |> JS.push("toggle_panel", target: @myself)}
+        class="bg-white/30 hover:bg-white/40 text-white
+               rounded-full focus:outline-none
+               transition-all duration-300 backdrop-blur-lg
+               shadow-lg active:scale-95
+               flex items-center justify-center
+               w-11 h-11 p-1
+               border border-white/20"
+      >
+        <.icon name="hero-finger-print"
+               class="w-5 h-5 text-gray-500 hover:text-primaryAccent
+                      transition-colors duration-200 stroke-2"
+        />
+      </button>
           <!-- Share Button -->
         <button
           phx-click="sangh::share"
@@ -94,16 +113,28 @@ defmodule VyasaWeb.AssemblyPresence do
     {:noreply, update(socket, :panel_open, &(!&1))}
   end
 
-  defp toggle_panel(false) do
-    JS.toggle(
+
+  defp toggle_zen(pipe \\ %JS{}) do
+    pipe
+    |> JS.toggle(
+      to: ".zen",
+      in: {"ease-out duration-300", "opacity-0 translate-y-10", "opacity-100 translate-y-0"},
+      out: {"ease-in duration-300", "opacity-100 translate-y-0", "opacity-0 -translate-y-10"}
+    )
+  end
+
+  defp toggle_panel(pipe, false) do
+    (pipe || %JS{}) 
+    |> JS.toggle(
       to: "#user-presence-panel",
       in: {"ease-out duration-300", "opacity-0 translate-x-4", "opacity-100 translate-x-0"},
       out: {"ease-in duration-200", "opacity-100 translate-x-0", "opacity-0 -translate-x-4"}
     )
   end
 
-  defp toggle_panel(true) do
-    JS.hide(
+  defp toggle_panel(pipe, true) do
+    (pipe || %JS{}) 
+     |> JS.hide(
       to: "#user-presence-panel",
       transition: {"ease-in duration-200", "opacity-100 translate-x-0", "opacity-0 -translate-x-4"}
     )
