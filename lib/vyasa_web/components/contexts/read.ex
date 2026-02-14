@@ -260,7 +260,6 @@ defmodule VyasaWeb.Context.Read do
     socket
     |> stream(:tracks, tracks)
     |> assign(%{
-      kv_tracks: Enum.into(tracks, %{}, &{&1.id, &1}),
       content_action: :show_tracks,
       page_title: "Track",
       meta: %{
@@ -1260,13 +1259,14 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  # where state is passed to child context
   # TODO: UI-polish: prevent the button click for creating sheaf if there's no active sheaf (no reflected sheaf)
   # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
     <div id={@id} class="flex-grow" >
       <!-- CONTENT DISPLAY: -->
-      <div id="content-display" class="mx-auto max-w-2xl">
+      <div id="content-display" class="mx-auto">
           <.live_component
             :if={@content_action == :show_sources}
             module={VyasaWeb.Context.Read.Sources}

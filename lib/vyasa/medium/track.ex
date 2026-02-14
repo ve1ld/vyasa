@@ -8,9 +8,11 @@ defmodule Vyasa.Medium.Track do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "tracks" do
     field :order, :integer
+    field :cluster_id, :string, virtual: true
     #has_many :voices, Voice
     belongs_to :trackls, Tracklist, foreign_key: :trackls_id, type: :binary_id
     belongs_to :event, Event, foreign_key: :event_id, type: :binary_id
+    
   end
 
 

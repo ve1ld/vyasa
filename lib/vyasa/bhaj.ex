@@ -2,6 +2,7 @@ defmodule Vyasa.Bhaj do
   import Ecto.Query
   alias Vyasa.Repo
   alias Vyasa.Medium
+  alias Vyasa.Written.Chapter
   alias Vyasa.Medium.Track
   alias Vyasa.Bhaj.Tracklist
 
@@ -20,13 +21,22 @@ defmodule Vyasa.Bhaj do
   end
 
   def list_tracks_by_tls(trackls_id) do
-
     query = from t in Track,
+      join: e in assoc(t, :event),
+      join: v in assoc(e, :verse),
+      join: s in assoc(v, :source),
+      join: c in Chapter, on: c.no == v.chapter_no and c.source_id == s.id,
       where: t.trackls_id == ^trackls_id,
-      preload: [event: [verse: [:source]]],
-      order_by: t.order
+      order_by: t.order,
+      select: %{t | event: %{e | verse: %{v | chapter: c, source: s}}}
 
     Repo.all(query)
+    |> Enum.reduce({nil, []}, fn %{event: %{verse: %{source: %{id: src_id}, chapter: %{no: ch_no}}}} = t, {prev, acc} ->
+      cluster = "#{src_id}:#{ch_no}"
+      {cluster, [if(cluster != prev, do: %{t | cluster_id: cluster}, else: t) | acc]}
+    end)
+    |> elem(1)
+    |> Enum.reverse()
   end
 
   @doc """
