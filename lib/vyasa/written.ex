@@ -94,6 +94,7 @@ defmodule Vyasa.Written do
       ** (Ecto.NoResultsError)
 
   """
+  def get_verse!(id), do: Repo.get!(Verse, id) |> Repo.preload([:source])
   def get_text!(id), do: Repo.get!(Text, id)
 
   def get_text_by_title!(title), do: Repo.get_by!(Text, title: title)
@@ -211,14 +212,34 @@ defmodule Vyasa.Written do
     |> Repo.one()
   end
 
-  def get_verses_in_chapter(no, source_id) do
+  def get_verses_in_chapter(no, source_id) when is_uuid?(source_id) do
     query_verse =
       from v in Verse,
-        where: v.chapter_no == ^no and v.source_id == ^source_id,
-        preload: [:chapter]
+        where: v.chapter_no == ^no and v.source_id == ^source_id
+    Repo.all(query_verse)
+  end
+
+  def get_verses_in_chapter(no, source_title) when is_binary(source_title) do
+    %Source{id: id} = _src = get_source_by_title(source_title)
+
+    query_verse =
+      from v in Verse,
+        where: v.chapter_no == ^no and v.source_id == ^id
 
     Repo.all(query_verse)
   end
+
+
+  def create_translation(attrs \\ %{}) do
+    %Translation{}
+    |> Translation.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def delete_translation(%Translation{} = translation) do
+    Repo.delete(translation)
+  end
+
 
   @doc """
   Creates a text.
@@ -301,6 +322,13 @@ defmodule Vyasa.Written do
     |> Repo.insert()
   end
 
+  def fetch_source(%{"title" => title} = attrs) do
+    case get_source_by_title(title) do
+      %Source{} = source -> {:ok, source}
+        _ -> create_source(attrs)
+    end
+  end
+
   @doc """
   Updates a source.
 
@@ -355,4 +383,5 @@ defmodule Vyasa.Written do
 
   # fallthrough to devanagari
   defp lang2script(%Source{} = s), do: %{s | script: "dn"}
+  defp lang2script(_), do: nil
 end

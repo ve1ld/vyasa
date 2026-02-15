@@ -17,6 +17,16 @@ defmodule R do
 end
 ```
 
+## exploring sangh
+
+Need to explore how the sangh, sheaf and marks work
+
+```elixir
+Vyasa.Sangh.list_sheafs_by_session("c105c705-66fd-4f99-9fd8-ece09ad262e3") |> Vyasa.Repo.preload([:marks])
+```
+
+## exploring voice hydration
+
 ```elixir
 voice_id = "b1db78be-0bdf-443c-afdf-3221bac38758"
 loaded_voice = Vyasa.Repo.get(Vyasa.Medium.Voice, voice_id)
@@ -249,4 +259,4 @@ ext = ".png"
 |> (&(&1 <> ext)).()
 ```
 
-<!-- livebook:{"offset":6722,"stamp":{"token":"XCP.54eYP5Sf0Py6qILuLMDvMYoLEBWWfqnzZ7e1agLQSlpjqC1sIebjwu_LzV6GThCheCRzwoFJvvm7P9Y86PFjp3imJfH7ePmBdOWry8wFBoEyJzMjXWUWLHR5BYHu20w6-QY8Xs_wQVAv7cuXSA","version":2}} -->
+<!-- livebook:{"offset":6941,"stamp":{"token":"XCP.BC0hIMSxSMHXMow_e-e0-0yCpIracfulvZGhUongDFpyBfD6wGDJR_Sw2xIUuah-aOEabTE3b2ZRm-Mq80yCkrEOslpEyBYCNRh7SOn8cqm-WcbZhVW2B5iGUZaFSO_Xf_RZknTIq6C1X0fWvg","version":2}} -->

@@ -1,4 +1,4 @@
-defmodule VyasaWeb.Content.Sources do
+defmodule VyasaWeb.Context.Read.Sources do
   use VyasaWeb, :live_component
 
   @impl true

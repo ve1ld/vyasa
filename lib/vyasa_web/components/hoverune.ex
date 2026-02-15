@@ -31,7 +31,7 @@ defmodule VyasaWeb.HoveRune do
 
   def get_quick_action_click_event(action) when is_atom(action) do
     case action do
-      :mark_quote -> "markQuote"
+      :mark_quote -> "quote::markQuote"
       _ -> ""
     end
   end

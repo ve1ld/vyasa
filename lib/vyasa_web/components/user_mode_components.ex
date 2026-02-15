@@ -87,16 +87,16 @@ defmodule VyasaWeb.UserMode.Components do
 
   attr :mode, UserMode, required: true
   attr :myself, :any, required: true
+  attr :session_active?, :boolean, default: true
 
-  @doc """
-  The current user mode is indicated by this button that shall always be present and hovering, regardless whether
-  the Control Panel is collapsed or not.
-  """
   def control_panel_mode_indicator(assigns) do
     ~H"""
     <button
       id="control-panel-indicator"
-      class="bg-white/30 hover:bg-white/40 text-white rounded-full focus:outline-none transition-all duration-300 backdrop-blur-lg shadow-lg active:scale-95 flex items-center justify-center w-11 h-11 p-1 border border-white/20"
+      class={[
+        "bg-white/30 hover:bg-white/40 text-white rounded-full focus:outline-none transition-all duration-300 backdrop-blur-lg shadow-lg active:scale-95 flex items-center justify-center w-11 h-11 p-1 border border-white/20 backdrop-blur-lg",
+        @session_active? && "animate-pulseBorder"
+      ]}
       phx-click={JS.push("toggle_show_control_panel")}
       phx-target={@myself}
     >

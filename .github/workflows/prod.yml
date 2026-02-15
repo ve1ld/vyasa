@@ -24,8 +24,8 @@ jobs:
           --health-retries 5
     strategy:
       matrix:
-        otp: ['26.2']
-        elixir: ['1.16.3']
+        otp: ['27.2']
+        elixir: ['1.17.3']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4  # Pin to a specific version for stability
