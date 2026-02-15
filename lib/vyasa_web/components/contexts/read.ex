@@ -14,7 +14,7 @@ defmodule VyasaWeb.Context.Read do
   alias Vyasa.Medium
   alias Vyasa.Written.{Source, Chapter, Verse}
   alias Phoenix.LiveView.Socket
-  alias Vyasa.Sangh
+  alias Vyasa.{Sangh, Bhaj}
   alias Vyasa.Sangh.{Mark, Sheaf}
   alias VyasaWeb.OgImageController
   alias VyasaWeb.MediaLive.MediaBridge
@@ -236,6 +236,40 @@ defmodule VyasaWeb.Context.Read do
       _ ->
         raise VyasaWeb.ErrorHTML.FourOFour, message: "Chapter not Found"
     end
+  end
+
+  # trackls and tracks
+  defp apply_action(%Socket{} = socket, :show_tracklists, _params) do
+    socket
+    |> stream(:trackls, Bhaj.list_tracklists())
+    |> assign(%{
+      content_action: :show_tracklists,
+      page_title: "Tracklists",
+      meta: %{
+        title: "Tracklists to follow and listen",
+        description: "The hymns and bhajans of what is past, or passing, or to come",
+        type: "website",
+        image: url(~p"/images/the_vyasa_project_1.png"),
+        url: url(socket, ~p"/explore/")
+      }
+    })
+  end
+
+  defp apply_action(%Socket{} = socket, :show_tracks, %{"track_id" => track_id}) do
+    tracks = Bhaj.list_tracks_by_tls(track_id)
+    socket
+    |> stream(:tracks, tracks)
+    |> assign(%{
+      content_action: :show_tracks,
+      page_title: "Track",
+      meta: %{
+        title: "Tracklists to follow and listen",
+        description: "Listen and follow along",
+        type: "website",
+        image: url(~p"/images/the_vyasa_project_1.png"),
+        url: url(socket, ~p"/explore/")
+      }
+    })
   end
 
   # fallthrough
@@ -1225,31 +1259,46 @@ defmodule VyasaWeb.Context.Read do
   end
 
   @impl true
+  # where state is passed to child context
   # TODO: UI-polish: prevent the button click for creating sheaf if there's no active sheaf (no reflected sheaf)
   # TODO: sheaf-crud: reply_to is currently set to the same as the active_sheaf
   def render(assigns) do
     ~H"""
     <div id={@id} class="flex-grow" >
       <!-- CONTENT DISPLAY: -->
-      <div id="content-display" class="mx-auto max-w-2xl">
-        <%= if @content_action == :show_sources do %>
+      <div id="content-display" class="mx-auto">
           <.live_component
+            :if={@content_action == :show_sources}
             module={VyasaWeb.Context.Read.Sources}
             id="content-sources"
             sources={@streams.sources}
             user_mode={@user_mode}
           />
-        <% end %>
 
-        <%= if @content_action == :show_chapters do %>
           <.live_component
+            :if={@content_action == :show_chapters}
             module={VyasaWeb.Context.Read.Chapters}
             id="content-chapters"
             source={@source}
             chapters={@streams.chapters}
             user_mode={@user_mode}
           />
-        <% end %>
+
+          <.live_component
+            :if={@content_action == :show_tracklists}
+            module={VyasaWeb.Context.Read.Tracklists}
+            id="content-tracklists"
+            tracklists={@streams.trackls}
+            user_mode={@user_mode}
+          />
+
+         <.live_component
+            :if={@content_action == :show_tracks}
+            module={VyasaWeb.Context.Read.Tracks}
+            id="content-tracks"
+            tracks={@streams.tracks}
+            user_mode={@user_mode}
+          />
 
         <%= if @content_action == :show_verses && not is_nil(@draft_reflector_ui) && not is_nil(@draft_reflector) do %>
           <!-- <.debug_dump

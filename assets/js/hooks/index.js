@@ -14,6 +14,7 @@ import ButtonClickRelayer from "./button_click_relayer.js";
 import SessionBox from "./session_box.js";
 import TextareaAutoResize from "./textarea_auto_resize.js";
 import PseudoForm from "./pseudo_form.js";
+import BhajStage from "./bhaj_stage.js";
 
 let Hooks = {
   ShareQuoteButton,
@@ -30,6 +31,7 @@ let Hooks = {
   SessionBox,
   TextareaAutoResize,
   PseudoForm,
+  BhajStage
 };
 
 export default Hooks;

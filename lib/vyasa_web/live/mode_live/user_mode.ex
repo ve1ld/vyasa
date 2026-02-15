@@ -52,7 +52,7 @@ defmodule VyasaWeb.ModeLive.UserMode do
       quick_actions: @quick_actions,
       control_panel_modes: ["discuss"],
       mode_actions: @mode_actions,
-      default_ui_state: %UiState{show_media_bridge?: true, show_action_bar?: true},
+      default_ui_state: %UiState{show_media_bridge?: true, show_action_bar?: false},
       # NOTE: so when it's used, the event name will end up being
       # "quick_mark_nav-dec"  ==> moves backwawrd in the order of the list
       action_bar_actions: [:nav_back, :nav_fwd]

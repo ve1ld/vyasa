@@ -28,7 +28,7 @@ defmodule Vyasa.Medium.Event do
     event
     |> cast(attrs, [:origin, :duration, :phase, :verse_id, :voice_id, :source_id])
     |> cast_embed(:fragments, with: &frag_changeset/2)
-    |> validate_required([:origin, :duration, :fragments, :source_id])
+    |> validate_required([:fragments, :source_id])
     |> validate_inclusion(:phase, ["start", "end"])
   end
 
